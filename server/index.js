@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 app.use(cors());
@@ -15,6 +17,17 @@ app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 
 app.get('/api/health', (_, res) => res.json({ ok: true }));
+
+// Serve built frontend in production/standalone mode
+const distPath = path.join(__dirname, '..', 'client', 'dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(distPath, 'index.html'));
+    }
+  });
+}
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
