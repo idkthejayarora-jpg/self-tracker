@@ -1,39 +1,91 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
-  <rect width="120" height="120" rx="28" fill="#0e0c2e"/>
-  <!-- Glow bg -->
-  <circle cx="60" cy="62" r="38" fill="url(#glow)" opacity="0.18"/>
-  <!-- Leaf motifs -->
-  <ellipse cx="28" cy="52" rx="9" ry="4.5" fill="#7c3aed" transform="rotate(-40 28 52)" opacity="0.75"/>
-  <ellipse cx="22" cy="66" rx="7" ry="3.5" fill="#6d28d9" transform="rotate(-55 22 66)" opacity="0.6"/>
-  <ellipse cx="93" cy="44" rx="8" ry="4" fill="#3b82f6" transform="rotate(35 93 44)" opacity="0.7"/>
-  <ellipse cx="97" cy="58" rx="6" ry="3" fill="#2563eb" transform="rotate(50 97 58)" opacity="0.55"/>
-  <ellipse cx="85" cy="82" rx="7" ry="3.5" fill="#8b5cf6" transform="rotate(20 85 82)" opacity="0.6"/>
-  <ellipse cx="35" cy="84" rx="6" ry="3" fill="#6366f1" transform="rotate(-20 35 84)" opacity="0.55"/>
-  <!-- Running figure (stylized) -->
-  <!-- Head -->
-  <circle cx="72" cy="28" r="9" fill="none" stroke="url(#figgrad)" stroke-width="3.5" stroke-linecap="round"/>
-  <!-- Torso -->
-  <path d="M67 37 C63 46 58 54 55 60" stroke="url(#figgrad)" stroke-width="3.5" stroke-linecap="round"/>
-  <!-- Forward arm (reaching ahead) -->
-  <path d="M65 43 C56 40 48 38 44 35" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/>
-  <!-- Back arm -->
-  <path d="M66 46 C72 50 78 52 82 50" stroke="#a78bfa" stroke-width="3" stroke-linecap="round"/>
-  <!-- Forward leg (stride) -->
-  <path d="M55 60 C49 68 42 76 38 84" stroke="url(#figgrad)" stroke-width="3.5" stroke-linecap="round"/>
-  <!-- Back leg (push off) -->
-  <path d="M55 60 C60 70 66 78 68 88" stroke="#a78bfa" stroke-width="3" stroke-linecap="round"/>
-  <!-- Motion lines -->
-  <line x1="40" y1="56" x2="30" y2="56" stroke="#6366f1" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
-  <line x1="38" y1="62" x2="27" y2="64" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round" opacity="0.45"/>
-  <line x1="36" y1="68" x2="28" y2="71" stroke="#6366f1" stroke-width="1" stroke-linecap="round" opacity="0.3"/>
+  <!-- Off-white background like comic paper -->
+  <rect width="120" height="120" rx="26" fill="#f5f0e8"/>
+  <rect width="120" height="120" rx="26" fill="url(#hexbg)" opacity="0.18"/>
+
+  <!-- Hex tile texture overlay (subtle) -->
   <defs>
-    <linearGradient id="figgrad" x1="38" y1="28" x2="82" y2="90" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#a78bfa"/>
-      <stop offset="100%" stop-color="#3b82f6"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#7c3aed"/>
-      <stop offset="100%" stop-color="#1e1b4b" stop-opacity="0"/>
-    </radialGradient>
+    <pattern id="hexbg" width="14" height="16" patternUnits="userSpaceOnUse">
+      <polygon points="7,1 13,4.5 13,11.5 7,15 1,11.5 1,4.5" fill="none" stroke="#c8b89a" stroke-width="0.5"/>
+    </pattern>
+    <!-- Thick comic ink style -->
+    <filter id="ink">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
   </defs>
+
+  <!-- Lightning bolts (background) -->
+  <path d="M18 22 L13 32 L19 32 L14 44" stroke="#1a1a1a" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M98 28 L93 38 L99 38 L94 50" stroke="#1a1a1a" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M104 72 L99 82 L105 82 L100 92" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M12 74 L8 82 L13 82 L9 90" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+
+  <!-- Web in corner -->
+  <g transform="translate(80,78)">
+    <line x1="0" y1="0" x2="0" y2="-18" stroke="#1a1a1a" stroke-width="1.2"/>
+    <line x1="0" y1="0" x2="15.6" y2="-9" stroke="#1a1a1a" stroke-width="1.2"/>
+    <line x1="0" y1="0" x2="15.6" y2="9" stroke="#1a1a1a" stroke-width="1.2"/>
+    <line x1="0" y1="0" x2="0" y2="18" stroke="#1a1a1a" stroke-width="1.2"/>
+    <line x1="0" y1="0" x2="-15.6" y2="9" stroke="#1a1a1a" stroke-width="1.2"/>
+    <line x1="0" y1="0" x2="-15.6" y2="-9" stroke="#1a1a1a" stroke-width="1.2"/>
+    <ellipse cx="0" cy="0" rx="6"  ry="6"  fill="none" stroke="#1a1a1a" stroke-width="1.1"/>
+    <ellipse cx="0" cy="0" rx="11" ry="11" fill="none" stroke="#1a1a1a" stroke-width="1.1"/>
+    <ellipse cx="0" cy="0" rx="17" ry="17" fill="none" stroke="#1a1a1a" stroke-width="1.1"/>
+  </g>
+
+  <!-- Graffiti "ST" tag top-right -->
+  <text x="82" y="22" font-family="Arial Black, sans-serif" font-weight="900" font-size="13" fill="#cc2200" stroke="#1a1a1a" stroke-width="1" paint-order="stroke" letter-spacing="-1">ST</text>
+
+  <!-- Face base (red mask) -->
+  <ellipse cx="57" cy="60" rx="26" ry="28" fill="#cc2200" stroke="#1a1a1a" stroke-width="3.5"/>
+
+  <!-- Web pattern on face -->
+  <!-- Radial lines from center of face -->
+  <line x1="57" y1="32" x2="57" y2="88" stroke="#1a1a1a" stroke-width="1.2" opacity="0.5"/>
+  <line x1="31" y1="60" x2="83" y2="60" stroke="#1a1a1a" stroke-width="1.2" opacity="0.5"/>
+  <line x1="38" y1="40" x2="76" y2="80" stroke="#1a1a1a" stroke-width="1.2" opacity="0.5"/>
+  <line x1="76" y1="40" x2="38" y2="80" stroke="#1a1a1a" stroke-width="1.2" opacity="0.5"/>
+  <!-- Concentric arcs -->
+  <ellipse cx="57" cy="60" rx="9"  ry="9"  fill="none" stroke="#1a1a1a" stroke-width="1.1" opacity="0.45"/>
+  <ellipse cx="57" cy="60" rx="16" ry="16" fill="none" stroke="#1a1a1a" stroke-width="1.1" opacity="0.45"/>
+  <ellipse cx="57" cy="60" rx="23" ry="23" fill="none" stroke="#1a1a1a" stroke-width="1.1" opacity="0.45"/>
+
+  <!-- Eyes (white lens shapes) -->
+  <ellipse cx="47" cy="54" rx="9" ry="7" fill="white" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-10 47 54)"/>
+  <ellipse cx="67" cy="54" rx="9" ry="7" fill="white" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(10 67 54)"/>
+  <!-- Eye inner sheen -->
+  <ellipse cx="44" cy="52" rx="3" ry="2.5" fill="#e0e0e0" transform="rotate(-10 44 52)"/>
+  <ellipse cx="64" cy="52" rx="3" ry="2.5" fill="#e0e0e0" transform="rotate(10 64 52)"/>
+
+  <!-- Headphones band (over top of head) -->
+  <path d="M31 56 Q57 22 83 56" stroke="#1a1a1a" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M31 56 Q57 24 83 56" stroke="#3a3a3a" stroke-width="3" stroke-linecap="round" fill="none"/>
+
+  <!-- Left ear cup -->
+  <rect x="22" y="53" width="16" height="20" rx="6" fill="#1a1a1a"/>
+  <rect x="25" y="56" width="10" height="14" rx="4" fill="#2e2e2e"/>
+  <rect x="27" y="59" width="6" height="8" rx="2" fill="#444"/>
+
+  <!-- Right ear cup -->
+  <rect x="82" y="53" width="16" height="20" rx="6" fill="#1a1a1a"/>
+  <rect x="85" y="56" width="10" height="14" rx="4" fill="#2e2e2e"/>
+  <rect x="87" y="59" width="6" height="8" rx="2" fill="#444"/>
+
+  <!-- Face outline redraw on top for crispness -->
+  <ellipse cx="57" cy="60" rx="26" ry="28" fill="none" stroke="#1a1a1a" stroke-width="3.5"/>
+
+  <!-- Spider symbol on chin area -->
+  <g transform="translate(57,78) scale(0.9)">
+    <path d="M0,-5 L2,-1 L6,0 L2,1 L0,5 L-2,1 L-6,0 L-2,-1 Z" fill="#1a1a1a"/>
+    <line x1="-7" y1="-3" x2="-14" y2="-6" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="-7" y1="0"  x2="-14" y2="0"  stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="-7" y1="3"  x2="-14" y2="6"  stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="7"  y1="-3" x2="14"  y2="-6" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="7"  y1="0"  x2="14"  y2="0"  stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="7"  y1="3"  x2="14"  y2="6"  stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- "WEB" graffiti tag bottom-left -->
+  <text x="8" y="112" font-family="Arial Black, sans-serif" font-weight="900" font-size="11" fill="#1a1a1a" stroke="#f5f0e8" stroke-width="1" paint-order="stroke" letter-spacing="1">WEB</text>
 </svg>
