@@ -57,3 +57,54 @@ CREATE TABLE IF NOT EXISTS streaks (
   last_activity_date DATE,
   UNIQUE(user_id, activity_type)
 );
+
+-- Workout tracking
+CREATE TABLE IF NOT EXISTS exercises (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  category TEXT DEFAULT 'other' CHECK(category IN ('push','pull','legs','cardio','core','other')),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS workout_sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  name TEXT,
+  notes TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS workout_sets (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id INTEGER NOT NULL REFERENCES workout_sessions(id) ON DELETE CASCADE,
+  exercise_id INTEGER NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+  reps INTEGER,
+  weight REAL,
+  duration_seconds INTEGER,
+  sort_order INTEGER DEFAULT 0
+);
+
+-- Life progress
+CREATE TABLE IF NOT EXISTS life_areas (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  icon TEXT DEFAULT '🎯',
+  color TEXT DEFAULT '#6366f1',
+  vision TEXT,
+  progress INTEGER DEFAULT 0 CHECK(progress BETWEEN 0 AND 100),
+  sort_order INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS life_milestones (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  area_id INTEGER NOT NULL REFERENCES life_areas(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  completed INTEGER DEFAULT 0,
+  completed_at DATETIME,
+  target_date DATE,
+  sort_order INTEGER DEFAULT 0
+);

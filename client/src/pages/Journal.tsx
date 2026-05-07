@@ -1,8 +1,58 @@
-import { useEffect, useState, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { ChevronLeft, ChevronRight, Save, Mic, MicOff } from 'lucide-react';
 import { format, addDays, subDays, parseISO } from 'date-fns';
 import api from '../lib/api';
 import type { JournalEntry } from '../types';
+
+// Web Speech API types
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+interface SpeechRecognitionInstance extends EventTarget {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  start(): void;
+  stop(): void;
+  onresult: ((e: SpeechRecognitionEvent) => void) | null;
+  onerror: ((e: Event) => void) | null;
+  onend: (() => void) | null;
+}
+declare const SpeechRecognition: new () => SpeechRecognitionInstance;
+declare const webkitSpeechRecognition: new () => SpeechRecognitionInstance;
+
+function useSpeech(onTranscript: (text: string) => void) {
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const [listening, setListening] = useState(false);
+  const [supported] = useState(() => typeof SpeechRecognition !== 'undefined' || typeof webkitSpeechRecognition !== 'undefined');
+
+  const start = useCallback(() => {
+    const Rec = (typeof SpeechRecognition !== 'undefined' ? SpeechRecognition : webkitSpeechRecognition);
+    const rec = new Rec();
+    rec.lang = 'en-US';
+    rec.continuous = true;
+    rec.interimResults = false;
+    rec.onresult = (e: SpeechRecognitionEvent) => {
+      const transcript = Array.from(e.results)
+        .slice(e.results.length - 1)
+        .map(r => r[0].transcript)
+        .join('');
+      onTranscript(transcript);
+    };
+    rec.onerror = () => { setListening(false); };
+    rec.onend = () => { setListening(false); };
+    rec.start();
+    recognitionRef.current = rec;
+    setListening(true);
+  }, [onTranscript]);
+
+  const stop = useCallback(() => {
+    recognitionRef.current?.stop();
+    setListening(false);
+  }, []);
+
+  return { listening, supported, start, stop };
+}
 
 const MOODS = [
   { value: 1, emoji: '😞', label: 'Terrible' },
@@ -20,6 +70,12 @@ export default function Journal() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [recent, setRecent] = useState<JournalEntry[]>([]);
+
+  const appendTranscript = useCallback((text: string) => {
+    setContent(prev => prev ? prev + ' ' + text : text);
+    setSaved(false);
+  }, []);
+  const { listening, supported, start, stop } = useSpeech(appendTranscript);
 
   const loadEntry = useCallback(async (d: string) => {
     setSaved(false);
@@ -103,14 +159,32 @@ export default function Journal() {
           </div>
         </div>
 
-        {/* Content */}
-        <textarea
-          value={content}
-          onChange={e => { setContent(e.target.value); setSaved(false); }}
-          rows={10}
-          placeholder="Write about your day..."
-          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none leading-relaxed"
-        />
+        {/* Content + voice */}
+        <div className="relative">
+          <textarea
+            value={content}
+            onChange={e => { setContent(e.target.value); setSaved(false); }}
+            rows={10}
+            placeholder="Write about your day... or tap the mic to speak."
+            className={`w-full bg-gray-800 border rounded-lg px-3 py-3 pr-12 text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none leading-relaxed transition-colors ${listening ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-700'}`}
+          />
+          {supported && (
+            <button
+              type="button"
+              onClick={listening ? stop : start}
+              title={listening ? 'Stop recording' : 'Speak your entry (English)'}
+              className={`absolute top-2.5 right-2.5 p-1.5 rounded-lg transition-all ${listening ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}
+            >
+              {listening ? <MicOff size={16} /> : <Mic size={16} />}
+            </button>
+          )}
+        </div>
+        {listening && (
+          <p className="text-xs text-red-400 flex items-center gap-1.5">
+            <span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+            Listening in English — speak clearly, tap the mic to stop
+          </p>
+        )}
 
         {/* Tags */}
         <input

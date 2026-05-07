@@ -6,6 +6,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import Journal from './pages/Journal';
+import Workout from './pages/Workout';
+import LifeProgress from './pages/LifeProgress';
 import Reminders from './pages/Reminders';
 import Analytics from './pages/Analytics';
 
@@ -27,6 +29,8 @@ function AppRoutes() {
         <Route index element={<Dashboard />} />
         <Route path="tasks" element={<Tasks />} />
         <Route path="journal" element={<Journal />} />
+        <Route path="workout" element={<Workout />} />
+        <Route path="life" element={<LifeProgress />} />
         <Route path="reminders" element={<Reminders />} />
         <Route path="analytics" element={<Analytics />} />
       </Route>

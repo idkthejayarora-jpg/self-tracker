@@ -1,11 +1,13 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, CheckSquare, BookOpen, Bell, BarChart2, LogOut } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, BookOpen, Bell, BarChart2, Dumbbell, Sparkles, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const NAV = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/tasks', icon: CheckSquare, label: 'Tasks' },
   { to: '/journal', icon: BookOpen, label: 'Journal' },
+  { to: '/workout', icon: Dumbbell, label: 'Workout' },
+  { to: '/life', icon: Sparkles, label: 'Life' },
   { to: '/reminders', icon: Bell, label: 'Reminders' },
   { to: '/analytics', icon: BarChart2, label: 'Analytics' },
 ];
