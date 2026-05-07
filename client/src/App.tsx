@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { useReminders } from './hooks/useReminders';
 import Layout from './components/Layout';
 import Login from './pages/Login';
@@ -10,6 +11,7 @@ import Workout from './pages/Workout';
 import LifeProgress from './pages/LifeProgress';
 import Reminders from './pages/Reminders';
 import Analytics from './pages/Analytics';
+import Diet from './pages/Diet';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -33,6 +35,7 @@ function AppRoutes() {
         <Route path="life" element={<LifeProgress />} />
         <Route path="reminders" element={<Reminders />} />
         <Route path="analytics" element={<Analytics />} />
+        <Route path="diet" element={<Diet />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
@@ -42,9 +45,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

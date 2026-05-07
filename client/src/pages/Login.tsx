@@ -30,7 +30,10 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-bold text-white mb-2">Self Tracker</h1>
+        <div className="flex items-center gap-3 mb-2">
+          <img src="/logo.svg" alt="Self Tracker" className="w-12 h-12 rounded-2xl" />
+          <h1 className="text-3xl font-bold text-white">Self Tracker</h1>
+        </div>
         <p className="text-gray-400 mb-8">Track tasks, journal, streaks & more.</p>
 
         <form onSubmit={submit} className="bg-gray-900 rounded-2xl p-6 space-y-4 border border-gray-800">

@@ -17,6 +17,7 @@ app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/workout', require('./routes/workout'));
 app.use('/api/life', require('./routes/life'));
+app.use('/api/diet', require('./routes/diet'));
 
 app.get('/api/health', (_, res) => res.json({ ok: true }));
 

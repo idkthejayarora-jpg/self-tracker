@@ -108,3 +108,31 @@ CREATE TABLE IF NOT EXISTS life_milestones (
   target_date DATE,
   sort_order INTEGER DEFAULT 0
 );
+
+-- Diet: saved meal templates
+CREATE TABLE IF NOT EXISTS saved_meals (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  calories INTEGER DEFAULT 0,
+  protein_g REAL DEFAULT 0,
+  carbs_g REAL DEFAULT 0,
+  fat_g REAL DEFAULT 0,
+  notes TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Diet: daily food log entries
+CREATE TABLE IF NOT EXISTS food_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date DATE NOT NULL DEFAULT (date('now')),
+  meal_type TEXT DEFAULT 'snack' CHECK(meal_type IN ('breakfast','lunch','dinner','snack')),
+  name TEXT NOT NULL,
+  calories INTEGER DEFAULT 0,
+  protein_g REAL DEFAULT 0,
+  carbs_g REAL DEFAULT 0,
+  fat_g REAL DEFAULT 0,
+  saved_meal_id INTEGER REFERENCES saved_meals(id) ON DELETE SET NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);

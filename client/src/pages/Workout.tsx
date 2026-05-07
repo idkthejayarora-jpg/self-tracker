@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Plus, Trash2, ChevronDown, ChevronUp, Dumbbell, TrendingUp } from 'lucide-react';
+import WorkoutAvatar from '../components/WorkoutAvatar';
 import { format, parseISO } from 'date-fns';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
@@ -339,6 +340,11 @@ export default function Workout() {
       {/* ── STATS TAB ── */}
       {tab === 'stats' && stats && (
         <div className="space-y-5">
+          <WorkoutAvatar stats={{
+            weekly_sessions: stats.weekly[stats.weekly.length - 1]?.sessions ?? 0,
+            total_sets: sessions.reduce((s, sess) => s + (sess.set_count || 0), 0),
+            personal_bests: stats.pbs.length,
+          }} />
           {stats.weekly.length > 0 && (
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
               <h3 className="text-sm font-semibold text-white mb-4">Sessions per week</h3>
