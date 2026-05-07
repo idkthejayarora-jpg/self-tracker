@@ -2,10 +2,12 @@ const Database = require('better-sqlite3');
 const fs = require('fs');
 const path = require('path');
 
-const DB_PATH = path.join(__dirname, '..', 'data', 'tracker.db');
+// DATA_PATH env var → Railway Volume mount point (e.g. /data)
+// Falls back to local server/data for development
+const DB_DIR = process.env.DATA_PATH || path.join(__dirname, '..', 'data');
+const DB_PATH = path.join(DB_DIR, 'tracker.db');
 
-// Ensure data directory exists
-fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+fs.mkdirSync(DB_DIR, { recursive: true });
 
 const db = new Database(DB_PATH);
 
