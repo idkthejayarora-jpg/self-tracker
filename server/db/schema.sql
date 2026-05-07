@@ -1,0 +1,59 @@
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS tasks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  due_date DATE,
+  due_time TEXT,
+  priority TEXT DEFAULT 'medium' CHECK(priority IN ('low','medium','high','urgent')),
+  status TEXT DEFAULT 'pending' CHECK(status IN ('pending','in_progress','completed','cancelled')),
+  completed_at DATETIME,
+  is_recurring INTEGER DEFAULT 0,
+  recur_interval TEXT CHECK(recur_interval IN ('daily','weekly','monthly')),
+  follow_up_date DATE,
+  deferred_count INTEGER DEFAULT 0,
+  tags TEXT DEFAULT '[]',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS journal_entries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  content TEXT NOT NULL,
+  mood INTEGER CHECK(mood BETWEEN 1 AND 5),
+  tags TEXT DEFAULT '[]',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, date)
+);
+
+CREATE TABLE IF NOT EXISTS reminders (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  remind_at DATETIME NOT NULL,
+  repeat TEXT DEFAULT 'none' CHECK(repeat IN ('none','daily','weekly')),
+  related_task_id INTEGER REFERENCES tasks(id) ON DELETE SET NULL,
+  status TEXT DEFAULT 'pending' CHECK(status IN ('pending','dismissed','snoozed')),
+  snoozed_until DATETIME,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS streaks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  activity_type TEXT NOT NULL CHECK(activity_type IN ('tasks','journal','overall')),
+  current_streak INTEGER DEFAULT 0,
+  longest_streak INTEGER DEFAULT 0,
+  last_activity_date DATE,
+  UNIQUE(user_id, activity_type)
+);

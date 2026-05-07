@@ -1,0 +1,94 @@
+export interface User {
+  id: number;
+  username: string;
+}
+
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+export type RecurInterval = 'daily' | 'weekly' | 'monthly';
+
+export interface Task {
+  id: number;
+  user_id: number;
+  title: string;
+  description: string | null;
+  due_date: string | null;
+  due_time: string | null;
+  priority: TaskPriority;
+  status: TaskStatus;
+  completed_at: string | null;
+  is_recurring: number;
+  recur_interval: RecurInterval | null;
+  follow_up_date: string | null;
+  deferred_count: number;
+  tags: string; // JSON string
+  created_at: string;
+  priority_score?: number;
+}
+
+export interface JournalEntry {
+  id: number;
+  user_id: number;
+  date: string;
+  content: string;
+  mood: number | null;
+  tags: string; // JSON string
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Reminder {
+  id: number;
+  user_id: number;
+  title: string;
+  description: string | null;
+  remind_at: string;
+  repeat: 'none' | 'daily' | 'weekly';
+  related_task_id: number | null;
+  task_title?: string | null;
+  status: 'pending' | 'dismissed' | 'snoozed';
+  snoozed_until: string | null;
+  created_at: string;
+}
+
+export interface StreakInfo {
+  current: number;
+  longest: number;
+  lastDate?: string | null;
+}
+
+export interface Streaks {
+  tasks?: StreakInfo;
+  journal?: StreakInfo;
+  overall?: StreakInfo;
+}
+
+export interface DashboardData {
+  today: string;
+  pendingToday: Task[];
+  priorityQueue: Task[];
+  journal: JournalEntry | null;
+  streaks: Streaks;
+  stats: {
+    totalTasks: number;
+    completedTasks: number;
+    totalJournal: number;
+  };
+}
+
+export interface WeeklyAnalytics {
+  week: string;
+  start: string;
+  end: string;
+  task_score: number | null;
+  journal_score: number;
+  avg_mood: number | null;
+  tasks_created: number;
+  tasks_completed: number;
+  journal_entries: number;
+}
+
+export interface MoodDataPoint {
+  date: string;
+  mood: number;
+}
