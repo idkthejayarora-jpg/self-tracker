@@ -12,6 +12,7 @@ import LifeProgress from './pages/LifeProgress';
 import Reminders from './pages/Reminders';
 import Analytics from './pages/Analytics';
 import Diet from './pages/Diet';
+import SocialDetox from './pages/SocialDetox';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -36,6 +37,7 @@ function AppRoutes() {
         <Route path="reminders" element={<Reminders />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="diet" element={<Diet />} />
+        <Route path="detox" element={<SocialDetox />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

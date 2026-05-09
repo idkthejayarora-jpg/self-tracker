@@ -136,3 +136,27 @@ CREATE TABLE IF NOT EXISTS food_logs (
   saved_meal_id INTEGER REFERENCES saved_meals(id) ON DELETE SET NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Social media detox
+CREATE TABLE IF NOT EXISTS detox_apps (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  icon TEXT DEFAULT '📱',
+  color TEXT DEFAULT '#6366f1',
+  daily_limit_minutes INTEGER DEFAULT 0,
+  sort_order INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS detox_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  app_id INTEGER NOT NULL REFERENCES detox_apps(id) ON DELETE CASCADE,
+  date DATE NOT NULL DEFAULT (date('now')),
+  status TEXT DEFAULT 'clean' CHECK(status IN ('clean','slipped','logged')),
+  minutes_used INTEGER DEFAULT 0,
+  note TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, app_id, date)
+);

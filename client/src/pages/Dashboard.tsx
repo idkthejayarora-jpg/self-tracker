@@ -118,7 +118,7 @@ export default function Dashboard() {
   const pct = stats.totalTasks > 0 ? Math.round((stats.completedTasks / stats.totalTasks) * 100) : 0;
 
   return (
-    <div className="max-w-xl space-y-3">
+    <div className="max-w-xl space-y-3 anim-page">
 
       {/* ── Greeting ── */}
       <div className="mb-5">

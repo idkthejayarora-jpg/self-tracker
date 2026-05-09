@@ -3,13 +3,14 @@ import { useState } from 'react';
 import {
   LayoutDashboard, CheckSquare, BookOpen, Bell, BarChart2,
   Dumbbell, Sparkles, LogOut, Sun, Moon, Palette, X, Salad, KeyRound,
+  ShieldOff, MoreHorizontal,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, ACCENT_PRESETS } from '../contexts/ThemeContext';
 import api from '../lib/api';
 
 const NAV = [
-  { to: '/',          icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/',          icon: LayoutDashboard, label: 'Home'      },
   { to: '/tasks',     icon: CheckSquare,     label: 'Tasks'     },
   { to: '/journal',   icon: BookOpen,        label: 'Journal'   },
   { to: '/workout',   icon: Dumbbell,        label: 'Workout'   },
@@ -17,7 +18,11 @@ const NAV = [
   { to: '/life',      icon: Sparkles,        label: 'Life'      },
   { to: '/reminders', icon: Bell,            label: 'Reminders' },
   { to: '/analytics', icon: BarChart2,       label: 'Analytics' },
+  { to: '/detox',     icon: ShieldOff,       label: 'Detox'     },
 ];
+
+const PRIMARY_NAV = NAV.slice(0, 4);
+const MORE_NAV = NAV.slice(4);
 
 function ChangePasswordModal({ onClose }: { onClose: () => void }) {
   const [current, setCurrent] = useState('');
@@ -104,6 +109,7 @@ export default function Layout() {
   const { toggleMode, isLight, accent, setAccent } = useTheme();
   const [showTheme, setShowTheme] = useState(false);
   const [showChangePw, setShowChangePw] = useState(false);
+  const [showMoreSheet, setShowMoreSheet] = useState(false);
 
   const navItemStyle = (isActive: boolean) => ({
     display: 'flex', alignItems: 'center', gap: '10px',
@@ -251,27 +257,62 @@ export default function Layout() {
         </main>
 
         {/* Mobile bottom nav */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 flex justify-around py-2 px-1 z-50"
-          style={{ background: 'var(--s1)', borderTop: '1px solid var(--b)', paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}>
-          {NAV.map(({ to, icon: Icon, label }) => (
-            <NavLink key={to} to={to} end={to === '/'}
-              className="flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-xl text-[10px] transition-all min-w-0"
-              style={({ isActive }) => isActive
-                ? { color: `rgb(var(--accent-rgb-light))` }
-                : { color: '#475569' }
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <div className={`p-1 rounded-lg transition-all ${isActive ? 'bg-white/5' : ''}`}>
-                    <Icon size={18} />
-                  </div>
-                  <span className="truncate">{label}</span>
-                </>
-              )}
-            </NavLink>
-          ))}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50"
+          style={{ background: 'var(--s1)', borderTop: '1px solid var(--b)' }}>
+          <div className="flex items-center justify-around px-2 py-2"
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}>
+            {PRIMARY_NAV.map(({ to, icon: Icon, label }) => (
+              <NavLink key={to} to={to} end={to === '/'}
+                className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[10px] font-medium tap"
+                style={({ isActive }) => ({ color: isActive ? `rgb(var(--accent-rgb-light))` : '#52525b' })}>
+                {({ isActive }) => (
+                  <>
+                    <div className="relative">
+                      <Icon size={20} />
+                      {isActive && (
+                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+                          style={{ background: `rgb(var(--accent-rgb))` }} />
+                      )}
+                    </div>
+                    <span>{label}</span>
+                  </>
+                )}
+              </NavLink>
+            ))}
+            {/* More button */}
+            <button onClick={() => setShowMoreSheet(s => !s)}
+              className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[10px] font-medium tap"
+              style={{ color: showMoreSheet ? `rgb(var(--accent-rgb-light))` : '#52525b' }}>
+              <MoreHorizontal size={20} />
+              <span>More</span>
+            </button>
+          </div>
         </nav>
+
+        {/* More sheet */}
+        {showMoreSheet && (
+          <div className="md:hidden fixed inset-0 z-40" onClick={() => setShowMoreSheet(false)}>
+            <div className="absolute bottom-16 left-0 right-0 rounded-t-2xl p-4 slide-up"
+              style={{ background: 'var(--s1)', border: '1px solid var(--b)', borderBottom: 'none' }}
+              onClick={e => e.stopPropagation()}>
+              <div className="w-8 h-1 rounded-full mx-auto mb-4" style={{ background: 'var(--s3)' }} />
+              <div className="grid grid-cols-4 gap-3">
+                {MORE_NAV.map(({ to, icon: Icon, label }) => (
+                  <NavLink key={to} to={to}
+                    onClick={() => setShowMoreSheet(false)}
+                    className="flex flex-col items-center gap-1.5 py-3 rounded-xl text-xs font-medium tap"
+                    style={({ isActive }) => ({
+                      background: isActive ? 'rgb(var(--accent-rgb) / 0.1)' : 'var(--s2)',
+                      color: isActive ? 'rgb(var(--accent-rgb-light))' : '#a1a1aa',
+                    })}>
+                    <Icon size={22} />
+                    <span>{label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {showChangePw && <ChangePasswordModal onClose={() => setShowChangePw(false)} />}
