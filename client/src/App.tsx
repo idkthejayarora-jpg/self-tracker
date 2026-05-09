@@ -13,6 +13,10 @@ import Reminders from './pages/Reminders';
 import Analytics from './pages/Analytics';
 import Diet from './pages/Diet';
 import SocialDetox from './pages/SocialDetox';
+import Habits from './pages/Habits';
+import BodyStats from './pages/BodyStats';
+import Sleep from './pages/Sleep';
+import Finance from './pages/Finance';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -38,6 +42,10 @@ function AppRoutes() {
         <Route path="analytics" element={<Analytics />} />
         <Route path="diet" element={<Diet />} />
         <Route path="detox" element={<SocialDetox />} />
+        <Route path="habits" element={<Habits />} />
+        <Route path="body" element={<BodyStats />} />
+        <Route path="sleep" element={<Sleep />} />
+        <Route path="finance" element={<Finance />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

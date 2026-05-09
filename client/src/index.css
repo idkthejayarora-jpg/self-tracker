@@ -11,6 +11,9 @@
   --accent-rgb-dark:  79 70 229;
   --accent-rgb-light: 129 140 248;
 
+  /* Mobile left sidebar width */
+  --sidebar-w: 52px;
+
   /* Pure black surface stack */
   --s0: #000000;
   --s1: #0f0f0f;
@@ -149,6 +152,10 @@ html.light .card-raised { background-color: var(--s2); }
 .scale-in  { animation: scaleIn 0.22s ease-out both; }
 .fade-in   { animation: fadeIn  0.25s ease-out both; }
 .count-up  { animation: countUp 0.35s ease-out both; }
+
+/* Mobile sidebar content offset */
+.mob-offset { margin-left: var(--sidebar-w); }
+@media (min-width: 768px) { .mob-offset { margin-left: 0; } }
 
 /* Interactive feedback */
 .tap { transition: transform 0.12s, opacity 0.12s; }

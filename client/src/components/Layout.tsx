@@ -3,7 +3,7 @@ import { useState } from 'react';
 import {
   LayoutDashboard, CheckSquare, BookOpen, Bell, BarChart2,
   Dumbbell, Sparkles, LogOut, Sun, Moon, Palette, X, Salad, KeyRound,
-  ShieldOff, MoreHorizontal,
+  ShieldOff, Target, Activity, Wallet,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, ACCENT_PRESETS } from '../contexts/ThemeContext';
@@ -13,16 +13,17 @@ const NAV = [
   { to: '/',          icon: LayoutDashboard, label: 'Home'      },
   { to: '/tasks',     icon: CheckSquare,     label: 'Tasks'     },
   { to: '/journal',   icon: BookOpen,        label: 'Journal'   },
+  { to: '/habits',    icon: Target,          label: 'Habits'    },
   { to: '/workout',   icon: Dumbbell,        label: 'Workout'   },
   { to: '/diet',      icon: Salad,           label: 'Diet'      },
+  { to: '/body',      icon: Activity,        label: 'Body'      },
+  { to: '/sleep',     icon: Moon,            label: 'Sleep'     },
+  { to: '/finance',   icon: Wallet,          label: 'Finance'   },
   { to: '/life',      icon: Sparkles,        label: 'Life'      },
   { to: '/reminders', icon: Bell,            label: 'Reminders' },
   { to: '/analytics', icon: BarChart2,       label: 'Analytics' },
   { to: '/detox',     icon: ShieldOff,       label: 'Detox'     },
 ];
-
-const PRIMARY_NAV = NAV.slice(0, 4);
-const MORE_NAV = NAV.slice(4);
 
 function ChangePasswordModal({ onClose }: { onClose: () => void }) {
   const [current, setCurrent] = useState('');
@@ -55,7 +56,6 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
           <h3 className="font-semibold text-white">Change password</h3>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-300"><X size={16} /></button>
         </div>
-
         {success ? (
           <div className="text-center py-4 space-y-3">
             <p className="text-green-400 font-medium">Password updated!</p>
@@ -65,36 +65,15 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-3">
-            <input
-              type="password"
-              placeholder="Current password"
-              value={current}
-              onChange={e => setCurrent(e.target.value)}
-              required
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-            />
-            <input
-              type="password"
-              placeholder="New password"
-              value={next}
-              onChange={e => setNext(e.target.value)}
-              required
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-            />
-            <input
-              type="password"
-              placeholder="Confirm new password"
-              value={confirm}
-              onChange={e => setConfirm(e.target.value)}
-              required
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-            />
+            <input type="password" placeholder="Current password" value={current} onChange={e => setCurrent(e.target.value)} required
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            <input type="password" placeholder="New password" value={next} onChange={e => setNext(e.target.value)} required
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            <input type="password" placeholder="Confirm new password" value={confirm} onChange={e => setConfirm(e.target.value)} required
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
             {error && <p className="text-red-400 text-xs">{error}</p>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white py-2 rounded-lg text-sm font-medium transition-colors"
-            >
+            <button type="submit" disabled={loading}
+              className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white py-2 rounded-lg text-sm font-medium transition-colors">
               {loading ? 'Updating...' : 'Update password'}
             </button>
           </form>
@@ -109,7 +88,6 @@ export default function Layout() {
   const { toggleMode, isLight, accent, setAccent } = useTheme();
   const [showTheme, setShowTheme] = useState(false);
   const [showChangePw, setShowChangePw] = useState(false);
-  const [showMoreSheet, setShowMoreSheet] = useState(false);
 
   const navItemStyle = (isActive: boolean) => ({
     display: 'flex', alignItems: 'center', gap: '10px',
@@ -122,10 +100,24 @@ export default function Layout() {
     ...(isActive ? { borderLeft: `2px solid rgb(var(--accent-rgb))`, paddingLeft: '9px' } : {}),
   });
 
+  const mobileIconStyle = (isActive: boolean): React.CSSProperties => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '36px',
+    height: '36px',
+    borderRadius: '10px',
+    background: isActive ? `rgb(var(--accent-rgb) / 0.12)` : 'transparent',
+    color: isActive ? `rgb(var(--accent-rgb-light))` : '#52525b',
+    transition: 'all 0.15s',
+    textDecoration: 'none',
+    position: 'relative',
+  });
+
   return (
     <div className="flex min-h-screen" style={{ background: 'var(--s0)' }}>
 
-      {/* ── Sidebar ── */}
+      {/* ── Desktop Sidebar ── */}
       <aside className="hidden md:flex flex-col w-52 py-5 px-3 shrink-0"
         style={{ background: 'var(--s1)', borderRight: '1px solid var(--b)' }}>
 
@@ -143,8 +135,8 @@ export default function Layout() {
           {NAV.map(({ to, icon: Icon, label }) => (
             <NavLink key={to} to={to} end={to === '/'}
               style={({ isActive }) => navItemStyle(isActive) as any}
-              onMouseEnter={e => { if (!(e.currentTarget as any)._active) e.currentTarget.style.color = '#e4e4e7'; }}
-              onMouseLeave={e => { if (!(e.currentTarget as any)._active) e.currentTarget.style.color = '#71717a'; }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#e4e4e7'; }}
+              onMouseLeave={e => { if (!e.currentTarget.classList.contains('active')) e.currentTarget.style.color = '#71717a'; }}
             >
               <Icon size={15} />
               {label}
@@ -182,9 +174,7 @@ export default function Layout() {
             <div className="rounded-xl p-3 space-y-2" style={{ background: 'var(--s2)', border: '1px solid var(--b)' }}>
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold" style={{ color: '#71717a' }}>ACCENT COLOR</span>
-                <button onClick={() => setShowTheme(false)} style={{ color: '#52525b' }}>
-                  <X size={12} />
-                </button>
+                <button onClick={() => setShowTheme(false)} style={{ color: '#52525b' }}><X size={12} /></button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {ACCENT_PRESETS.map(p => (
@@ -213,106 +203,93 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* ── Main ── */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile header */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3"
+      {/* ── Mobile Left Icon Sidebar ── */}
+      <aside className="md:hidden fixed left-0 top-0 bottom-0 z-50 flex flex-col items-center py-3 gap-0.5 overflow-y-auto"
+        style={{ width: 'var(--sidebar-w)', background: 'var(--s1)', borderRight: '1px solid var(--b)' }}>
+
+        {/* Logo */}
+        <img src="/logo.svg" alt="" className="w-7 h-7 rounded-lg mb-2 shrink-0" />
+
+        {/* Nav icons */}
+        {NAV.map(({ to, icon: Icon, label }) => (
+          <NavLink key={to} to={to} end={to === '/'}
+            title={label}
+            style={({ isActive }) => mobileIconStyle(isActive)}>
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full"
+                    style={{ background: `rgb(var(--accent-rgb))` }} />
+                )}
+                <Icon size={18} />
+              </>
+            )}
+          </NavLink>
+        ))}
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Utilities */}
+        <div className="flex flex-col items-center gap-0.5 pb-2" style={{ borderTop: '1px solid var(--b)', paddingTop: '8px' }}>
+          <button onClick={toggleMode} title={isLight ? 'Dark mode' : 'Light mode'}
+            className="flex items-center justify-center w-9 h-9 rounded-xl tap transition-colors"
+            style={{ color: '#71717a' }}>
+            {isLight ? <Moon size={17} /> : <Sun size={17} />}
+          </button>
+          <button onClick={() => setShowChangePw(true)} title="Change password"
+            className="flex items-center justify-center w-9 h-9 rounded-xl tap transition-colors"
+            style={{ color: '#71717a' }}>
+            <KeyRound size={17} />
+          </button>
+          <button onClick={() => setShowTheme(s => !s)} title="Accent color"
+            className="flex items-center justify-center w-9 h-9 rounded-xl tap transition-colors"
+            style={{ color: '#71717a' }}>
+            <Palette size={17} />
+          </button>
+          <button onClick={logout} title="Sign out"
+            className="flex items-center justify-center w-9 h-9 rounded-xl tap transition-colors"
+            style={{ color: '#52525b' }}>
+            <LogOut size={17} />
+          </button>
+        </div>
+      </aside>
+
+      {/* Mobile accent color picker */}
+      {showTheme && (
+        <div className="md:hidden fixed z-40"
+          style={{ left: 'calc(var(--sidebar-w) + 8px)', bottom: '80px', background: 'var(--s2)', border: '1px solid var(--b)', borderRadius: '12px', padding: '12px', minWidth: '160px' }}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-semibold" style={{ color: '#71717a' }}>ACCENT</span>
+            <button onClick={() => setShowTheme(false)} style={{ color: '#52525b' }}><X size={12} /></button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {ACCENT_PRESETS.map(p => (
+              <button key={p.id} title={p.label}
+                onClick={() => { setAccent(p); setShowTheme(false); }}
+                className="w-5 h-5 rounded-full transition-all hover:scale-110"
+                style={{
+                  background: p.main,
+                  outline: accent.id === p.id ? `2px solid #f4f4f5` : 'none',
+                  outlineOffset: '2px',
+                }} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Main content ── */}
+      <div className="mob-offset flex-1 flex flex-col min-w-0">
+        {/* Mobile top header — slim, just username */}
+        <header className="md:hidden flex items-center justify-between px-3 py-2.5"
           style={{ background: 'var(--s1)', borderBottom: '1px solid var(--b)' }}>
-          <div className="flex items-center gap-2">
-            <img src="/logo.svg" alt="" className="w-7 h-7 rounded-lg" />
-            <span className="text-[13px] font-bold text-head">Self Tracker</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <button onClick={() => setShowChangePw(true)} className="p-1.5 transition-colors" style={{ color: '#71717a' }}>
-              <KeyRound size={15} />
-            </button>
-            <button onClick={toggleMode} className="p-1.5 transition-colors" style={{ color: '#71717a' }}>
-              {isLight ? <Moon size={15} /> : <Sun size={15} />}
-            </button>
-            <button onClick={() => setShowTheme(s => !s)} className="p-1.5 transition-colors" style={{ color: '#71717a' }}>
-              <Palette size={15} />
-            </button>
-          </div>
+          <span className="text-[12px] font-semibold text-head">@{user?.username}</span>
+          <span className="text-[11px]" style={{ color: '#52525b' }}>Self Tracker</span>
         </header>
 
-        {showTheme && (
-          <div className="md:hidden px-4 py-3" style={{ background: 'var(--s1)', borderBottom: '1px solid var(--b)' }}>
-            <div className="flex flex-wrap gap-3 justify-center">
-              {ACCENT_PRESETS.map(p => (
-                <button key={p.id} title={p.label}
-                  onClick={() => { setAccent(p); setShowTheme(false); }}
-                  className="w-6 h-6 rounded-full transition-all"
-                  style={{
-                    background: p.main,
-                    outline: accent.id === p.id ? `2px solid #f4f4f5` : 'none',
-                    outlineOffset: '2px',
-                  }} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6 max-w-5xl w-full mx-auto">
+        <main className="flex-1 p-4 md:p-6 max-w-5xl w-full mx-auto">
           <Outlet />
         </main>
-
-        {/* Mobile bottom nav */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50"
-          style={{ background: 'var(--s1)', borderTop: '1px solid var(--b)' }}>
-          <div className="flex items-center justify-around px-2 py-2"
-            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}>
-            {PRIMARY_NAV.map(({ to, icon: Icon, label }) => (
-              <NavLink key={to} to={to} end={to === '/'}
-                className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[10px] font-medium tap"
-                style={({ isActive }) => ({ color: isActive ? `rgb(var(--accent-rgb-light))` : '#52525b' })}>
-                {({ isActive }) => (
-                  <>
-                    <div className="relative">
-                      <Icon size={20} />
-                      {isActive && (
-                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-                          style={{ background: `rgb(var(--accent-rgb))` }} />
-                      )}
-                    </div>
-                    <span>{label}</span>
-                  </>
-                )}
-              </NavLink>
-            ))}
-            {/* More button */}
-            <button onClick={() => setShowMoreSheet(s => !s)}
-              className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[10px] font-medium tap"
-              style={{ color: showMoreSheet ? `rgb(var(--accent-rgb-light))` : '#52525b' }}>
-              <MoreHorizontal size={20} />
-              <span>More</span>
-            </button>
-          </div>
-        </nav>
-
-        {/* More sheet */}
-        {showMoreSheet && (
-          <div className="md:hidden fixed inset-0 z-40" onClick={() => setShowMoreSheet(false)}>
-            <div className="absolute bottom-16 left-0 right-0 rounded-t-2xl p-4 slide-up"
-              style={{ background: 'var(--s1)', border: '1px solid var(--b)', borderBottom: 'none' }}
-              onClick={e => e.stopPropagation()}>
-              <div className="w-8 h-1 rounded-full mx-auto mb-4" style={{ background: 'var(--s3)' }} />
-              <div className="grid grid-cols-4 gap-3">
-                {MORE_NAV.map(({ to, icon: Icon, label }) => (
-                  <NavLink key={to} to={to}
-                    onClick={() => setShowMoreSheet(false)}
-                    className="flex flex-col items-center gap-1.5 py-3 rounded-xl text-xs font-medium tap"
-                    style={({ isActive }) => ({
-                      background: isActive ? 'rgb(var(--accent-rgb) / 0.1)' : 'var(--s2)',
-                      color: isActive ? 'rgb(var(--accent-rgb-light))' : '#a1a1aa',
-                    })}>
-                    <Icon size={22} />
-                    <span>{label}</span>
-                  </NavLink>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {showChangePw && <ChangePasswordModal onClose={() => setShowChangePw(false)} />}

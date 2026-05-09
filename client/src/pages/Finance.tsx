@@ -1,0 +1,387 @@
+import { useEffect, useState, useCallback } from 'react';
+import { Wallet, Plus, Trash2, ChevronLeft, ChevronRight, Target, TrendingUp, TrendingDown } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import api from '../lib/api';
+import { useSync } from '../hooks/useSync';
+import { format } from 'date-fns';
+import type { FinanceEntry, FinanceGoal } from '../types';
+
+const EXPENSE_CATS = ['food', 'rent', 'transport', 'health', 'fitness', 'entertainment', 'shopping', 'education', 'subscriptions', 'other'];
+const INCOME_CATS  = ['salary', 'freelance', 'investment', 'gift', 'refund', 'other'];
+
+interface Summary {
+  income: number;
+  expenses: number;
+  net: number;
+  categories: { category: string; income: number; expense: number; net: number }[];
+}
+
+function fmt(n: number) {
+  return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);
+}
+
+const emptyEntry = (type: 'income' | 'expense') => ({
+  date: new Date().toISOString().slice(0, 10),
+  type,
+  category: type === 'income' ? 'salary' : 'food',
+  amount: '',
+  note: '',
+});
+
+export default function Finance() {
+  const now = new Date();
+  const [month, setMonth] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+  const [entries, setEntries] = useState<FinanceEntry[]>([]);
+  const [summary, setSummary] = useState<Summary | null>(null);
+  const [goals, setGoals] = useState<FinanceGoal[]>([]);
+
+  const [showEntry, setShowEntry] = useState(false);
+  const [entryForm, setEntryForm] = useState(emptyEntry('expense'));
+  const [savingEntry, setSavingEntry] = useState(false);
+
+  const [showGoal, setShowGoal] = useState(false);
+  const [goalForm, setGoalForm] = useState({ name: '', target_amount: '', saved_amount: '', deadline: '', color: '#22c55e' });
+  const [savingGoal, setSavingGoal] = useState(false);
+
+  const load = useCallback(async () => {
+    const [entRes, sumRes, goalRes] = await Promise.all([
+      api.get<FinanceEntry[]>(`/finance/entries?month=${month}`),
+      api.get<Summary>(`/finance/summary?month=${month}`),
+      api.get<FinanceGoal[]>('/finance/goals'),
+    ]);
+    setEntries(entRes.data);
+    setSummary(sumRes.data);
+    setGoals(goalRes.data);
+  }, [month]);
+
+  useEffect(() => { load(); }, [load]);
+  useSync(load, 120000);
+
+  const shiftMonth = (delta: number) => {
+    const [y, m] = month.split('-').map(Number);
+    const d = new Date(y, m - 1 + delta);
+    setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  };
+
+  const addEntry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingEntry(true);
+    try {
+      await api.post('/finance/entries', { ...entryForm, amount: parseFloat(entryForm.amount as any) });
+      setEntryForm(emptyEntry('expense'));
+      setShowEntry(false);
+      load();
+    } finally { setSavingEntry(false); }
+  };
+
+  const delEntry = async (id: number) => {
+    await api.delete(`/finance/entries/${id}`);
+    setEntries(prev => prev.filter(e => e.id !== id));
+    load(); // refresh summary
+  };
+
+  const addGoal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingGoal(true);
+    try {
+      await api.post('/finance/goals', {
+        name: goalForm.name,
+        target_amount: parseFloat(goalForm.target_amount),
+        saved_amount: goalForm.saved_amount ? parseFloat(goalForm.saved_amount) : 0,
+        deadline: goalForm.deadline || null,
+        color: goalForm.color,
+      });
+      setGoalForm({ name: '', target_amount: '', saved_amount: '', deadline: '', color: '#22c55e' });
+      setShowGoal(false);
+      load();
+    } finally { setSavingGoal(false); }
+  };
+
+  const updateGoalSaved = async (goal: FinanceGoal, delta: number) => {
+    const newSaved = Math.max(0, goal.saved_amount + delta);
+    await api.put(`/finance/goals/${goal.id}`, { saved_amount: newSaved });
+    setGoals(prev => prev.map(g => g.id === goal.id ? { ...g, saved_amount: newSaved } : g));
+  };
+
+  const delGoal = async (id: number) => {
+    await api.delete(`/finance/goals/${id}`);
+    setGoals(prev => prev.filter(g => g.id !== id));
+  };
+
+  const catChartData = (summary?.categories ?? [])
+    .map(c => ({ name: c.category, income: c.income, expense: c.expense }))
+    .filter(c => c.income > 0 || c.expense > 0)
+    .sort((a, b) => (b.income + b.expense) - (a.income + a.expense))
+    .slice(0, 8);
+
+  const monthLabel = format(new Date(`${month}-15`), 'MMMM yyyy');
+
+  return (
+    <div className="max-w-xl space-y-4 anim-page">
+
+      {/* Header + month selector */}
+      <div>
+        <h1 className="text-2xl font-bold text-head tracking-tight">Finance</h1>
+        <div className="flex items-center gap-2 mt-1">
+          <button onClick={() => shiftMonth(-1)} className="tap" style={{ color: '#71717a' }}><ChevronLeft size={16} /></button>
+          <span className="text-sm font-semibold text-head">{monthLabel}</span>
+          <button onClick={() => shiftMonth(1)} className="tap" style={{ color: '#71717a' }}><ChevronRight size={16} /></button>
+        </div>
+      </div>
+
+      {/* Add buttons */}
+      <div className="flex gap-2">
+        <button onClick={() => { setEntryForm(emptyEntry('expense')); setShowEntry(s => !s); }}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold tap"
+          style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+          <TrendingDown size={14} /> Add Expense
+        </button>
+        <button onClick={() => { setEntryForm(emptyEntry('income')); setShowEntry(s => !s); }}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold tap"
+          style={{ background: 'rgb(34 197 94 / 0.1)', color: '#4ade80' }}>
+          <TrendingUp size={14} /> Add Income
+        </button>
+      </div>
+
+      {/* Add entry form */}
+      {showEntry && (
+        <form onSubmit={addEntry} className="card px-4 py-4 space-y-3 scale-in">
+          <div className="flex gap-2">
+            {(['expense', 'income'] as const).map(t => (
+              <button key={t} type="button"
+                onClick={() => setEntryForm(f => ({ ...f, type: t, category: t === 'income' ? 'salary' : 'food' }))}
+                className="flex-1 py-1.5 rounded-lg text-xs font-semibold capitalize tap"
+                style={{
+                  background: entryForm.type === t ? (t === 'income' ? 'rgb(34 197 94 / 0.12)' : 'rgb(239 68 68 / 0.12)') : 'var(--s3)',
+                  color: entryForm.type === t ? (t === 'income' ? '#4ade80' : '#f87171') : '#71717a',
+                }}>
+                {t}
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>AMOUNT</label>
+              <input type="number" step="0.01" min="0" required
+                value={entryForm.amount} onChange={e => setEntryForm(f => ({ ...f, amount: e.target.value }))}
+                placeholder="0.00"
+                className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>DATE</label>
+              <input type="date" value={entryForm.date} onChange={e => setEntryForm(f => ({ ...f, date: e.target.value }))}
+                className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
+            </div>
+          </div>
+          <div>
+            <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>CATEGORY</label>
+            <div className="flex flex-wrap gap-1.5 mt-1">
+              {(entryForm.type === 'income' ? INCOME_CATS : EXPENSE_CATS).map(cat => (
+                <button key={cat} type="button"
+                  onClick={() => setEntryForm(f => ({ ...f, category: cat }))}
+                  className="px-2.5 py-1 rounded-full text-xs font-medium capitalize tap"
+                  style={{
+                    background: entryForm.category === cat ? `rgb(var(--accent-rgb) / 0.12)` : 'var(--s3)',
+                    color: entryForm.category === cat ? `rgb(var(--accent-rgb-light))` : '#71717a',
+                  }}>
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>NOTE</label>
+            <input value={entryForm.note} onChange={e => setEntryForm(f => ({ ...f, note: e.target.value }))}
+              placeholder="e.g. Groceries"
+              className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
+          </div>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setShowEntry(false)}
+              className="flex-1 py-2 rounded-lg text-sm font-medium tap"
+              style={{ background: 'var(--s3)', color: '#71717a' }}>Cancel</button>
+            <button type="submit" disabled={savingEntry}
+              className="flex-1 py-2 rounded-lg text-sm font-semibold tap disabled:opacity-50"
+              style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
+              {savingEntry ? 'Saving...' : 'Add'}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Summary cards */}
+      {summary && (
+        <div className="grid grid-cols-3 gap-2">
+          <div className="card px-3 py-3">
+            <p className="text-[10px] font-medium mb-1" style={{ color: '#52525b' }}>Income</p>
+            <p className="text-base font-bold" style={{ color: '#22c55e' }}>₹{fmt(summary.income)}</p>
+          </div>
+          <div className="card px-3 py-3">
+            <p className="text-[10px] font-medium mb-1" style={{ color: '#52525b' }}>Expenses</p>
+            <p className="text-base font-bold" style={{ color: '#ef4444' }}>₹{fmt(summary.expenses)}</p>
+          </div>
+          <div className="card px-3 py-3">
+            <p className="text-[10px] font-medium mb-1" style={{ color: '#52525b' }}>Net</p>
+            <p className="text-base font-bold" style={{ color: summary.net >= 0 ? '#22c55e' : '#ef4444' }}>
+              {summary.net >= 0 ? '+' : ''}₹{fmt(summary.net)}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Category chart */}
+      {catChartData.length > 0 && (
+        <div className="card px-4 py-4">
+          <p className="text-xs font-semibold mb-3" style={{ color: '#52525b', letterSpacing: '0.05em' }}>BY CATEGORY</p>
+          <ResponsiveContainer width="100%" height={catChartData.length * 28 + 10} minHeight={80}>
+            <BarChart data={catChartData} layout="vertical" barSize={10}>
+              <XAxis type="number" tick={{ fontSize: 10, fill: '#52525b' }} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: '#a1a1aa' }} width={70} />
+              <Tooltip
+                contentStyle={{ background: 'var(--s2)', border: '1px solid var(--b)', borderRadius: 8, fontSize: 12 }}
+              />
+              <Bar dataKey="expense" name="Expense" radius={[0, 4, 4, 0]}>
+                {catChartData.map((_, i) => <Cell key={i} fill="#ef4444" fillOpacity={0.7} />)}
+              </Bar>
+              <Bar dataKey="income" name="Income" radius={[0, 4, 4, 0]}>
+                {catChartData.map((_, i) => <Cell key={i} fill="#22c55e" fillOpacity={0.7} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Entries */}
+      {entries.length > 0 && (
+        <div className="card px-4 py-4">
+          <p className="text-xs font-semibold mb-3" style={{ color: '#52525b', letterSpacing: '0.05em' }}>TRANSACTIONS</p>
+          <div className="space-y-0">
+            {entries.map(e => (
+              <div key={e.id} className="flex items-center gap-3 py-2.5" style={{ borderBottom: '1px solid var(--b)' }}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-semibold text-head capitalize">{e.category}</p>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full capitalize font-medium"
+                      style={{
+                        background: e.type === 'income' ? 'rgb(34 197 94 / 0.1)' : 'rgb(239 68 68 / 0.1)',
+                        color: e.type === 'income' ? '#4ade80' : '#f87171',
+                      }}>
+                      {e.type}
+                    </span>
+                  </div>
+                  <p className="text-[11px] mt-0.5" style={{ color: '#71717a' }}>
+                    {format(new Date(e.date), 'd MMM')}{e.note ? ` · ${e.note}` : ''}
+                  </p>
+                </div>
+                <p className="text-sm font-bold shrink-0" style={{ color: e.type === 'income' ? '#22c55e' : '#ef4444' }}>
+                  {e.type === 'income' ? '+' : '-'}₹{fmt(e.amount)}
+                </p>
+                <button onClick={() => delEntry(e.id)} className="tap" style={{ color: '#52525b' }}>
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Savings Goals */}
+      <div className="card px-4 py-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-semibold" style={{ color: '#52525b', letterSpacing: '0.05em' }}>SAVINGS GOALS</p>
+          <button onClick={() => setShowGoal(s => !s)}
+            className="flex items-center gap-1 text-[11px] font-semibold tap"
+            style={{ color: `rgb(var(--accent-rgb-light))` }}>
+            <Plus size={12} /> Add goal
+          </button>
+        </div>
+
+        {showGoal && (
+          <form onSubmit={addGoal} className="space-y-3 mb-4 p-3 rounded-xl" style={{ background: 'var(--s2)' }}>
+            <input required value={goalForm.name} onChange={e => setGoalForm(f => ({ ...f, name: e.target.value }))}
+              placeholder="Goal name (e.g. Emergency fund)"
+              className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none" />
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>TARGET (₹)</label>
+                <input type="number" min="0" required
+                  value={goalForm.target_amount} onChange={e => setGoalForm(f => ({ ...f, target_amount: e.target.value }))}
+                  className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
+              </div>
+              <div>
+                <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>SAVED SO FAR (₹)</label>
+                <input type="number" min="0"
+                  value={goalForm.saved_amount} onChange={e => setGoalForm(f => ({ ...f, saved_amount: e.target.value }))}
+                  className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
+              </div>
+            </div>
+            <div>
+              <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>DEADLINE (optional)</label>
+              <input type="date" value={goalForm.deadline} onChange={e => setGoalForm(f => ({ ...f, deadline: e.target.value }))}
+                className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
+            </div>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setShowGoal(false)}
+                className="flex-1 py-2 rounded-lg text-sm font-medium tap"
+                style={{ background: 'var(--s3)', color: '#71717a' }}>Cancel</button>
+              <button type="submit" disabled={savingGoal}
+                className="flex-1 py-2 rounded-lg text-sm font-semibold tap disabled:opacity-50"
+                style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
+                {savingGoal ? '...' : 'Create Goal'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {goals.length === 0 && !showGoal && (
+          <p className="text-sm text-center py-4" style={{ color: '#52525b' }}>No goals yet</p>
+        )}
+
+        <div className="space-y-3">
+          {goals.map(g => {
+            const pct = g.target_amount > 0 ? Math.min(100, Math.round((g.saved_amount / g.target_amount) * 100)) : 0;
+            return (
+              <div key={g.id} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Target size={13} style={{ color: g.color }} />
+                    <p className="text-sm font-semibold text-head">{g.name}</p>
+                    {g.deadline && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: 'var(--s3)', color: '#71717a' }}>
+                        {format(new Date(g.deadline), 'MMM yyyy')}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold" style={{ color: g.color }}>{pct}%</span>
+                    <button onClick={() => delGoal(g.id)} className="tap" style={{ color: '#52525b' }}>
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                </div>
+                <div className="h-1.5 rounded-full w-full" style={{ background: 'var(--s3)' }}>
+                  <div className="h-1.5 rounded-full bar-fill" style={{ width: `${pct}%`, background: g.color }} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => updateGoalSaved(g, -1000)}
+                      className="text-[11px] px-2 py-0.5 rounded tap" style={{ background: 'var(--s3)', color: '#71717a' }}>−₹1k</button>
+                    <button onClick={() => updateGoalSaved(g, 1000)}
+                      className="text-[11px] px-2 py-0.5 rounded tap" style={{ background: 'var(--s3)', color: `rgb(var(--accent-rgb-light))` }}>+₹1k</button>
+                  </div>
+                  <p className="text-[11px]" style={{ color: '#71717a' }}>₹{fmt(g.saved_amount)} / ₹{fmt(g.target_amount)}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {entries.length === 0 && !showEntry && summary?.income === 0 && summary?.expenses === 0 && (
+        <div className="card py-12 text-center">
+          <Wallet size={28} style={{ color: '#52525b', margin: '0 auto 8px' }} />
+          <p className="text-sm font-medium" style={{ color: '#71717a' }}>No transactions for {monthLabel}</p>
+        </div>
+      )}
+    </div>
+  );
+}

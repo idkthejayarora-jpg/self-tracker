@@ -160,3 +160,79 @@ CREATE TABLE IF NOT EXISTS detox_logs (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(user_id, app_id, date)
 );
+
+-- Habits
+CREATE TABLE IF NOT EXISTS habits (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  icon TEXT DEFAULT '✅',
+  category TEXT DEFAULT 'discipline' CHECK(category IN ('discipline','physical','mental','health','other')),
+  color TEXT DEFAULT '#6366f1',
+  sort_order INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS habit_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  habit_id INTEGER NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
+  date DATE NOT NULL DEFAULT (date('now')),
+  done INTEGER DEFAULT 0,
+  note TEXT,
+  UNIQUE(user_id, habit_id, date)
+);
+
+-- Body Stats
+CREATE TABLE IF NOT EXISTS body_stats (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date DATE NOT NULL DEFAULT (date('now')),
+  weight_kg REAL,
+  body_fat_pct REAL,
+  chest_cm REAL,
+  waist_cm REAL,
+  hips_cm REAL,
+  neck_cm REAL,
+  bicep_cm REAL,
+  notes TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, date)
+);
+
+-- Sleep
+CREATE TABLE IF NOT EXISTS sleep_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date DATE NOT NULL DEFAULT (date('now')),
+  bedtime TEXT,
+  wake_time TEXT,
+  duration_minutes INTEGER,
+  quality INTEGER CHECK(quality BETWEEN 1 AND 5),
+  notes TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, date)
+);
+
+-- Finance
+CREATE TABLE IF NOT EXISTS finance_entries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date DATE NOT NULL DEFAULT (date('now')),
+  type TEXT NOT NULL CHECK(type IN ('income','expense')),
+  category TEXT DEFAULT 'other',
+  amount REAL NOT NULL,
+  note TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS finance_goals (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  target_amount REAL NOT NULL,
+  saved_amount REAL DEFAULT 0,
+  deadline DATE,
+  color TEXT DEFAULT '#22c55e',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);

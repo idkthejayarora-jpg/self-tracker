@@ -18,7 +18,11 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/workout', require('./routes/workout'));
 app.use('/api/life', require('./routes/life'));
 app.use('/api/diet', require('./routes/diet'));
-app.use('/api/detox', require('./routes/detox'));
+app.use('/api/detox',   require('./routes/detox'));
+app.use('/api/habits',  require('./routes/habits'));
+app.use('/api/body',    require('./routes/body'));
+app.use('/api/sleep',   require('./routes/sleep'));
+app.use('/api/finance', require('./routes/finance'));
 
 app.get('/api/health', (_, res) => res.json({ ok: true }));
 

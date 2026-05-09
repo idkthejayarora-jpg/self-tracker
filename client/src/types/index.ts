@@ -92,3 +92,59 @@ export interface MoodDataPoint {
   date: string;
   mood: number;
 }
+
+export interface Habit {
+  id: number;
+  user_id: number;
+  name: string;
+  icon: string;
+  category: string;
+  color: string;
+  sort_order: number;
+  created_at: string;
+  done?: boolean;
+  streak?: number;
+  log_id?: number | null;
+  week?: { date: string; done: boolean }[];
+}
+
+export interface BodyStat {
+  id: number;
+  date: string;
+  weight_kg?: number | null;
+  body_fat_pct?: number | null;
+  chest_cm?: number | null;
+  waist_cm?: number | null;
+  hips_cm?: number | null;
+  neck_cm?: number | null;
+  bicep_cm?: number | null;
+  notes?: string | null;
+}
+
+export interface SleepLog {
+  id: number;
+  date: string;
+  bedtime?: string | null;
+  wake_time?: string | null;
+  duration_minutes?: number | null;
+  quality?: number | null;
+  notes?: string | null;
+}
+
+export interface FinanceEntry {
+  id: number;
+  date: string;
+  type: 'income' | 'expense';
+  category: string;
+  amount: number;
+  note?: string | null;
+}
+
+export interface FinanceGoal {
+  id: number;
+  name: string;
+  target_amount: number;
+  saved_amount: number;
+  deadline?: string | null;
+  color: string;
+}
