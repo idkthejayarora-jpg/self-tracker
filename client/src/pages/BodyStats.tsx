@@ -85,7 +85,7 @@ export default function BodyStats() {
         <div>
           <h1 className="text-2xl font-bold text-head tracking-tight">Body Stats</h1>
           <p className="text-sm mt-0.5" style={{ color: '#71717a' }}>
-            {latest ? `Last logged ${format(new Date(latest.date), 'd MMM yyyy')}` : 'No entries yet'}
+            {latest ? `Last logged ${format(new Date(latest.date + 'T12:00:00'), 'd MMM yyyy')}` : 'No entries yet'}
           </p>
         </div>
         <button onClick={() => setShowForm(s => !s)}
@@ -99,7 +99,7 @@ export default function BodyStats() {
       {latest && (
         <div className="card px-4 py-4">
           <p className="text-xs font-semibold mb-3" style={{ color: '#52525b', letterSpacing: '0.05em' }}>
-            LATEST — {format(new Date(latest.date), 'd MMM yyyy')}
+            LATEST — {format(new Date(latest.date + 'T12:00:00'), 'd MMM yyyy')}
           </p>
           <div className="grid grid-cols-3 gap-3">
             {FIELDS.map(({ key, label, unit }) => {
@@ -195,7 +195,7 @@ export default function BodyStats() {
               <div key={s.id} className="flex items-center gap-3 py-2" style={{ borderBottom: '1px solid var(--b)' }}>
                 <Activity size={13} style={{ color: '#52525b', flexShrink: 0 }} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-head">{format(new Date(s.date), 'd MMM yyyy')}</p>
+                  <p className="text-xs font-semibold text-head">{format(new Date(s.date + 'T12:00:00'), 'd MMM yyyy')}</p>
                   <p className="text-[11px] mt-0.5" style={{ color: '#71717a' }}>
                     {[
                       s.weight_kg != null && `${s.weight_kg}kg`,

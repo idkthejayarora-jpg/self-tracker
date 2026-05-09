@@ -136,7 +136,10 @@ export default function Layout() {
             <NavLink key={to} to={to} end={to === '/'}
               style={({ isActive }) => navItemStyle(isActive) as any}
               onMouseEnter={e => { e.currentTarget.style.color = '#e4e4e7'; }}
-              onMouseLeave={e => { if (!e.currentTarget.classList.contains('active')) e.currentTarget.style.color = '#71717a'; }}
+              onMouseLeave={e => {
+                const isActive = e.currentTarget.getAttribute('aria-current') === 'page';
+                e.currentTarget.style.color = isActive ? '#f4f4f5' : '#71717a';
+              }}
             >
               <Icon size={15} />
               {label}
@@ -204,34 +207,36 @@ export default function Layout() {
       </aside>
 
       {/* ── Mobile Left Icon Sidebar ── */}
-      <aside className="md:hidden fixed left-0 top-0 bottom-0 z-50 flex flex-col items-center py-3 gap-0.5 overflow-y-auto"
+      <aside className="md:hidden fixed left-0 top-0 bottom-0 z-50 flex flex-col items-center"
         style={{ width: 'var(--sidebar-w)', background: 'var(--s1)', borderRight: '1px solid var(--b)' }}>
 
-        {/* Logo */}
-        <img src="/logo.svg" alt="" className="w-7 h-7 rounded-lg mb-2 shrink-0" />
+        {/* Logo — fixed at top */}
+        <div className="shrink-0 pt-3 pb-2">
+          <img src="/logo.svg" alt="" className="w-7 h-7 rounded-lg" />
+        </div>
 
-        {/* Nav icons */}
-        {NAV.map(({ to, icon: Icon, label }) => (
-          <NavLink key={to} to={to} end={to === '/'}
-            title={label}
-            style={({ isActive }) => mobileIconStyle(isActive)}>
-            {({ isActive }) => (
-              <>
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full"
-                    style={{ background: `rgb(var(--accent-rgb))` }} />
-                )}
-                <Icon size={18} />
-              </>
-            )}
-          </NavLink>
-        ))}
+        {/* Scrollable nav icons — takes all remaining space */}
+        <div className="flex-1 min-h-0 overflow-y-auto hide-scroll w-full flex flex-col items-center gap-0.5 py-1">
+          {NAV.map(({ to, icon: Icon, label }) => (
+            <NavLink key={to} to={to} end={to === '/'}
+              title={label}
+              style={({ isActive }) => mobileIconStyle(isActive)}>
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full"
+                      style={{ background: `rgb(var(--accent-rgb))` }} />
+                  )}
+                  <Icon size={18} />
+                </>
+              )}
+            </NavLink>
+          ))}
+        </div>
 
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* Utilities */}
-        <div className="flex flex-col items-center gap-0.5 pb-2" style={{ borderTop: '1px solid var(--b)', paddingTop: '8px' }}>
+        {/* Utilities — always pinned at bottom */}
+        <div className="shrink-0 flex flex-col items-center gap-0.5 py-2"
+          style={{ borderTop: '1px solid var(--b)' }}>
           <button onClick={toggleMode} title={isLight ? 'Dark mode' : 'Light mode'}
             className="flex items-center justify-center w-9 h-9 rounded-xl tap transition-colors"
             style={{ color: '#71717a' }}>

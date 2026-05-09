@@ -16,7 +16,7 @@ const CAT_COLOR: Record<string, string> = {
 
 const ICONS = ['✅', '💪', '🧠', '🏃', '📚', '🧘', '💧', '🥗', '😴', '🚫', '🎯', '⚡', '🔥', '🌅', '🧹'];
 
-const today = new Date().toISOString().slice(0, 10);
+function getToday() { return new Date().toISOString().slice(0, 10); }
 
 export default function Habits() {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -27,8 +27,9 @@ export default function Habits() {
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
+    const td = getToday();
     const [habitsRes, streaksRes] = await Promise.all([
-      api.get<Habit[]>(`/habits/logs?date=${today}`),
+      api.get<Habit[]>(`/habits/logs?date=${td}`),
       api.get<{ habit_id: number; streak: number }[]>('/habits/streaks'),
     ]);
     setHabits(habitsRes.data);
@@ -41,9 +42,10 @@ export default function Habits() {
   useSync(load, 60000);
 
   const toggle = async (habit: Habit) => {
+    const td = getToday();
     const newDone = !habit.done;
     setHabits(prev => prev.map(h => h.id === habit.id ? { ...h, done: newDone } : h));
-    await api.put(`/habits/log/${habit.id}`, { date: today, done: newDone });
+    await api.put(`/habits/log/${habit.id}`, { date: td, done: newDone });
     load();
   };
 

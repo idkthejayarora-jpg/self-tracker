@@ -213,7 +213,7 @@ export default function Sleep() {
                 <Moon size={13} style={{ color: '#52525b', flexShrink: 0 }} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-xs font-semibold text-head">{format(new Date(l.date), 'd MMM')}</p>
+                    <p className="text-xs font-semibold text-head">{format(new Date(l.date + 'T12:00:00'), 'd MMM')}</p>
                     {l.bedtime && l.wake_time && (
                       <span className="text-[11px]" style={{ color: '#71717a' }}>{l.bedtime} → {l.wake_time}</span>
                     )}

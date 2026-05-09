@@ -157,6 +157,10 @@ html.light .card-raised { background-color: var(--s2); }
 .mob-offset { margin-left: var(--sidebar-w); }
 @media (min-width: 768px) { .mob-offset { margin-left: 0; } }
 
+/* Hide scrollbar but keep scrollable */
+.hide-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+.hide-scroll::-webkit-scrollbar { display: none; }
+
 /* Interactive feedback */
 .tap { transition: transform 0.12s, opacity 0.12s; }
 .tap:active { transform: scale(0.96); opacity: 0.85; }

@@ -131,12 +131,12 @@ export default function Finance() {
 
       {/* Add buttons */}
       <div className="flex gap-2">
-        <button onClick={() => { setEntryForm(emptyEntry('expense')); setShowEntry(s => !s); }}
+        <button onClick={() => { setEntryForm(emptyEntry('expense')); setShowEntry(true); }}
           className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold tap"
           style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
           <TrendingDown size={14} /> Add Expense
         </button>
-        <button onClick={() => { setEntryForm(emptyEntry('income')); setShowEntry(s => !s); }}
+        <button onClick={() => { setEntryForm(emptyEntry('income')); setShowEntry(true); }}
           className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold tap"
           style={{ background: 'rgb(34 197 94 / 0.1)', color: '#4ade80' }}>
           <TrendingUp size={14} /> Add Income
@@ -269,7 +269,7 @@ export default function Finance() {
                     </span>
                   </div>
                   <p className="text-[11px] mt-0.5" style={{ color: '#71717a' }}>
-                    {format(new Date(e.date), 'd MMM')}{e.note ? ` · ${e.note}` : ''}
+                    {format(new Date(e.date + 'T12:00:00'), 'd MMM')}{e.note ? ` · ${e.note}` : ''}
                   </p>
                 </div>
                 <p className="text-sm font-bold shrink-0" style={{ color: e.type === 'income' ? '#22c55e' : '#ef4444' }}>
@@ -347,7 +347,7 @@ export default function Finance() {
                     <p className="text-sm font-semibold text-head">{g.name}</p>
                     {g.deadline && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: 'var(--s3)', color: '#71717a' }}>
-                        {format(new Date(g.deadline), 'MMM yyyy')}
+                        {format(new Date(g.deadline + 'T12:00:00'), 'MMM yyyy')}
                       </span>
                     )}
                   </div>
