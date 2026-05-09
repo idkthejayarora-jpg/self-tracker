@@ -4,49 +4,107 @@
 
 /* ── Accent CSS variables (set by ThemeContext) ── */
 :root {
-  --accent:           #0ea5e9;
-  --accent-dark:      #0284c7;
-  --accent-light:     #38bdf8;
-  --accent-rgb:       14 165 233;
-  --accent-rgb-dark:  2 132 199;
-  --accent-rgb-light: 56 189 248;
+  --accent:           #6366f1;
+  --accent-dark:      #4f46e5;
+  --accent-light:     #818cf8;
+  --accent-rgb:       99 102 241;
+  --accent-rgb-dark:  79 70 229;
+  --accent-rgb-light: 129 140 248;
+
+  /* Surface palette – deep navy */
+  --s0: #060c18;
+  --s1: #0b1425;
+  --s2: #111e35;
+  --s3: #182544;
+  --s4: #1e2d52;
+  --border: rgba(148,163,184,0.07);
+  --border-strong: rgba(148,163,184,0.13);
 }
 
+/* ── Base ── */
 @layer base {
   body {
-    @apply bg-gray-950 text-gray-100 min-h-screen;
+    background-color: var(--s0);
+    color: #e2e8f0;
+    min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  #root {
-    @apply min-h-screen;
+  #root { min-height: 100vh; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.15); border-radius: 99px; }
+
+  /* Selection */
+  ::selection { background: rgb(var(--accent-rgb) / 0.25); }
+}
+
+/* ── Override gray classes → deep navy palette ── */
+.bg-gray-950    { background-color: var(--s0) !important; }
+.bg-gray-900    { background-color: var(--s1) !important; }
+.bg-gray-800    { background-color: var(--s2) !important; }
+.bg-gray-700    { background-color: var(--s3) !important; }
+.border-gray-800 { border-color: var(--border) !important; }
+.border-gray-700 { border-color: var(--border-strong) !important; }
+.bg-gray-800\/40 { background-color: rgba(17,30,53,0.5) !important; }
+
+/* ── Utility classes ── */
+@layer utilities {
+  /* Glass card */
+  .card {
+    background: linear-gradient(135deg, var(--s1) 0%, var(--s2) 100%);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    background: linear-gradient(135deg, rgb(var(--accent-rgb-light)), rgb(var(--accent-rgb)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glow ring */
+  .ring-accent { box-shadow: 0 0 0 2px rgb(var(--accent-rgb) / 0.4); }
+
+  /* Subtle inner glow on focus */
+  .focus-glow:focus-within {
+    box-shadow: 0 0 0 1px rgb(var(--accent-rgb) / 0.3), inset 0 0 12px rgb(var(--accent-rgb) / 0.04);
   }
 }
 
-/* ── Light mode overrides ── */
-html.light body                         { background-color: #f1f5f9; color: #0f172a; }
-html.light .bg-gray-950                 { background-color: #f1f5f9 !important; }
-html.light .bg-gray-900                 { background-color: #f8fafc !important; }
-html.light .bg-gray-800                 { background-color: #e2e8f0 !important; }
-html.light .bg-gray-700                 { background-color: #cbd5e1 !important; }
-html.light .bg-gray-800\/40             { background-color: rgb(226 232 240 / 0.6) !important; }
-html.light .border-gray-800            { border-color: #cbd5e1 !important; }
-html.light .border-gray-700            { border-color: #94a3b8 !important; }
-html.light .border-t.border-gray-800   { border-color: #cbd5e1 !important; }
-html.light .border-r.border-gray-800   { border-color: #cbd5e1 !important; }
-html.light .text-white                  { color: #0f172a !important; }
-html.light .text-gray-100              { color: #0f172a !important; }
-html.light .text-gray-200              { color: #1e293b !important; }
-html.light .text-gray-300              { color: #334155 !important; }
-html.light .text-gray-400              { color: #475569 !important; }
-html.light .text-gray-500              { color: #64748b !important; }
-html.light .text-gray-600              { color: #94a3b8 !important; }
+/* ── Light mode ── */
+html.light {
+  --s0: #f1f5f9;
+  --s1: #ffffff;
+  --s2: #f8fafc;
+  --s3: #e2e8f0;
+  --s4: #cbd5e1;
+  --border: rgba(15,23,42,0.07);
+  --border-strong: rgba(15,23,42,0.13);
+}
+html.light body                        { background-color: var(--s0); color: #0f172a; }
+html.light .bg-gray-950                { background-color: var(--s0) !important; }
+html.light .bg-gray-900                { background-color: var(--s1) !important; }
+html.light .bg-gray-800                { background-color: var(--s2) !important; }
+html.light .bg-gray-700                { background-color: var(--s3) !important; }
+html.light .border-gray-800           { border-color: var(--border) !important; }
+html.light .border-gray-700           { border-color: var(--border-strong) !important; }
+html.light .text-white                 { color: #0f172a !important; }
+html.light .text-gray-100             { color: #0f172a !important; }
+html.light .text-gray-200             { color: #1e293b !important; }
+html.light .text-gray-300             { color: #334155 !important; }
+html.light .text-gray-400             { color: #475569 !important; }
+html.light .text-gray-500             { color: #64748b !important; }
 html.light .placeholder-gray-500::placeholder { color: #94a3b8 !important; }
-html.light .hover\:bg-gray-800:hover   { background-color: #e2e8f0 !important; }
-html.light .hover\:bg-gray-700:hover   { background-color: #cbd5e1 !important; }
-html.light input,
-html.light textarea,
-html.light select                       { background-color: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
-html.light input::placeholder,
-html.light textarea::placeholder        { color: #94a3b8; }
-html.light .bg-gray-800.border          { background-color: #e2e8f0 !important; }
+html.light .hover\:bg-gray-800:hover  { background-color: var(--s2) !important; }
+html.light .hover\:bg-gray-700:hover  { background-color: var(--s3) !important; }
+html.light input, html.light textarea, html.light select {
+  background-color: var(--s2); color: #0f172a; border-color: var(--border-strong);
+}
+html.light .card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}

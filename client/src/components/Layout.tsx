@@ -107,111 +107,118 @@ export default function Layout() {
 
   return (
     <div className="flex min-h-screen bg-gray-950">
-      {/* Sidebar */}
-      <aside className="hidden md:flex flex-col w-56 bg-gray-900 border-r border-gray-800 py-5 px-3">
+      {/* ── Sidebar ── */}
+      <aside className="hidden md:flex flex-col w-56 border-r py-5 px-3"
+        style={{ backgroundColor: 'var(--s1)', borderColor: 'var(--border)' }}>
+
+        {/* Logo */}
         <div className="mb-6 px-2 flex items-center gap-2.5">
-          <img src="/logo.svg" alt="Self Tracker" className="w-9 h-9 rounded-xl shrink-0" />
+          <div className="relative shrink-0">
+            <img src="/logo.svg" alt="Self Tracker" className="w-9 h-9 rounded-xl" />
+            <div className="absolute inset-0 rounded-xl opacity-30 blur-md -z-10"
+              style={{ background: `rgb(var(--accent-rgb))` }} />
+          </div>
           <div>
-            <h1 className="text-sm font-bold text-white leading-tight">Self Tracker</h1>
-            <p className="text-xs text-gray-500">@{user?.username}</p>
+            <h1 className="text-sm font-bold text-white leading-tight tracking-tight">Self Tracker</h1>
+            <p className="text-[11px] text-slate-500">@{user?.username}</p>
           </div>
         </div>
 
+        {/* Nav */}
         <nav className="flex-1 space-y-0.5">
           {NAV.map(({ to, icon: Icon, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/'}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-brand-600 text-white'
-                    : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100'
-                }`
+            <NavLink key={to} to={to} end={to === '/'}
+              className={({ isActive }) => isActive
+                ? 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold text-white transition-all'
+                : 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-100 transition-colors'
               }
+              style={({ isActive }) => isActive ? {
+                background: `linear-gradient(90deg, rgb(var(--accent-rgb) / 0.25), rgb(var(--accent-rgb) / 0.08))`,
+                borderLeft: `2px solid rgb(var(--accent-rgb))`,
+                paddingLeft: '10px',
+              } : {}}
             >
-              <Icon size={17} />
+              <Icon size={16} />
               {label}
             </NavLink>
           ))}
         </nav>
 
-        <div className="mt-auto space-y-1 pt-3 border-t border-gray-800">
-          <button
-            onClick={toggleMode}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition-colors"
-          >
-            {isLight ? <Moon size={16} /> : <Sun size={16} />}
+        {/* Bottom controls */}
+        <div className="mt-auto pt-3 space-y-0.5" style={{ borderTop: '1px solid var(--border)' }}>
+          <button onClick={toggleMode}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-200 transition-colors"
+            style={{ '--hover-bg': 'var(--s2)' } as any}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--s2)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+            {isLight ? <Moon size={15} /> : <Sun size={15} />}
             {isLight ? 'Dark mode' : 'Light mode'}
           </button>
 
-          <button
-            onClick={() => setShowTheme(s => !s)}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition-colors"
-          >
-            <Palette size={16} />
-            <span className="flex-1 text-left">Accent color</span>
-            <span className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: accent.main }} />
+          <button onClick={() => setShowTheme(s => !s)}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-200 transition-colors"
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--s2)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+            <Palette size={15} />
+            <span className="flex-1 text-left">Theme</span>
+            <span className="w-3 h-3 rounded-full shrink-0 ring-1 ring-white/20" style={{ backgroundColor: accent.main }} />
           </button>
 
           {showTheme && (
-            <div className="bg-gray-800 rounded-xl p-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-gray-300 font-medium">Pick accent</span>
-                <button onClick={() => setShowTheme(false)} className="text-gray-500 hover:text-gray-300">
-                  <X size={13} />
+            <div className="rounded-xl p-3 space-y-2" style={{ background: 'var(--s2)', border: '1px solid var(--border)' }}>
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wide">Accent</span>
+                <button onClick={() => setShowTheme(false)} className="text-slate-500 hover:text-slate-300">
+                  <X size={12} />
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {ACCENT_PRESETS.map(p => (
-                  <button
-                    key={p.id}
-                    title={p.label}
+                  <button key={p.id} title={p.label}
                     onClick={() => { setAccent(p); setShowTheme(false); }}
-                    className={`w-5 h-5 rounded-full transition-all ${accent.id === p.id ? 'ring-2 ring-white scale-125' : 'hover:scale-110'}`}
-                    style={{ backgroundColor: p.main }}
-                  />
+                    className={`w-5 h-5 rounded-full transition-all hover:scale-110 ${accent.id === p.id ? 'scale-125 ring-2 ring-white/60' : ''}`}
+                    style={{ backgroundColor: p.main }} />
                 ))}
               </div>
             </div>
           )}
 
-          <button
-            onClick={() => setShowChangePw(true)}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition-colors"
-          >
-            <KeyRound size={16} />
-            Change password
+          <button onClick={() => setShowChangePw(true)}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-200 transition-colors"
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--s2)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+            <KeyRound size={15} />
+            Password
           </button>
 
-          <button
-            onClick={logout}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-gray-500 hover:text-red-400 hover:bg-gray-800 transition-colors"
-          >
-            <LogOut size={16} />
+          <button onClick={logout}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-slate-500 hover:text-red-400 transition-colors"
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--s2)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+            <LogOut size={15} />
             Sign out
           </button>
         </div>
       </aside>
 
-      {/* Main */}
+      {/* ── Main area ── */}
       <div className="flex-1 flex flex-col">
         {/* Mobile top bar */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-gray-900 border-b border-gray-800">
+        <header className="md:hidden flex items-center justify-between px-4 py-3"
+          style={{ backgroundColor: 'var(--s1)', borderBottom: '1px solid var(--border)' }}>
           <div className="flex items-center gap-2">
             <img src="/logo.svg" alt="" className="w-7 h-7 rounded-lg" />
             <span className="text-sm font-bold text-white">Self Tracker</span>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setShowChangePw(true)} className="p-1.5 text-gray-400 hover:text-gray-200">
-              <KeyRound size={16} />
+          <div className="flex items-center gap-1">
+            <button onClick={() => setShowChangePw(true)} className="p-1.5 text-slate-400 hover:text-slate-200">
+              <KeyRound size={15} />
             </button>
-            <button onClick={toggleMode} className="p-1.5 text-gray-400 hover:text-gray-200">
-              {isLight ? <Moon size={16} /> : <Sun size={16} />}
+            <button onClick={toggleMode} className="p-1.5 text-slate-400 hover:text-slate-200">
+              {isLight ? <Moon size={15} /> : <Sun size={15} />}
             </button>
-            <button onClick={() => setShowTheme(s => !s)} className="p-1.5 text-gray-400 hover:text-gray-200">
-              <Palette size={16} />
+            <button onClick={() => setShowTheme(s => !s)} className="p-1.5 text-slate-400 hover:text-slate-200">
+              <Palette size={15} />
             </button>
           </div>
         </header>
@@ -232,24 +239,29 @@ export default function Layout() {
           </div>
         )}
 
-        <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6 max-w-5xl w-full mx-auto">
+        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6 max-w-5xl w-full mx-auto">
           <Outlet />
         </main>
 
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 flex justify-around py-2 z-50">
+        {/* Mobile bottom nav */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 flex justify-around py-2 px-1 z-50"
+          style={{ backgroundColor: 'var(--s1)', borderTop: '1px solid var(--border)', paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}>
           {NAV.map(({ to, icon: Icon, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/'}
-              className={({ isActive }) =>
-                `flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs transition-colors ${
-                  isActive ? 'text-brand-400' : 'text-gray-500'
-                }`
+            <NavLink key={to} to={to} end={to === '/'}
+              className="flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-xl text-[10px] transition-all min-w-0"
+              style={({ isActive }) => isActive
+                ? { color: `rgb(var(--accent-rgb-light))` }
+                : { color: '#475569' }
               }
             >
-              <Icon size={19} />
-              <span>{label}</span>
+              {({ isActive }) => (
+                <>
+                  <div className={`p-1 rounded-lg transition-all ${isActive ? 'bg-white/5' : ''}`}>
+                    <Icon size={18} />
+                  </div>
+                  <span className="truncate">{label}</span>
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
