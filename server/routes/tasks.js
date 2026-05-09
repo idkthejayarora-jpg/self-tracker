@@ -12,7 +12,7 @@ router.get('/', (req, res) => {
   const params = [req.user.id];
   if (status) { sql += ' AND status = ?'; params.push(status); }
   if (priority) { sql += ' AND priority = ?'; params.push(priority); }
-  sql += ' ORDER BY CASE status WHEN "completed" THEN 1 WHEN "cancelled" THEN 1 ELSE 0 END, due_date ASC, created_at ASC';
+  sql += " ORDER BY CASE status WHEN 'completed' THEN 1 WHEN 'cancelled' THEN 1 ELSE 0 END, due_date ASC, created_at ASC";
   res.json(db.prepare(sql).all(...params));
 });
 
@@ -53,11 +53,25 @@ router.patch('/:id', (req, res) => {
   const task = db.prepare('SELECT * FROM tasks WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id);
   if (!task) return res.status(404).json({ error: 'Not found' });
 
-  const { title, description, due_date, due_time, priority, status, is_recurring, recur_interval, follow_up_date, tags } = req.body;
+  const body = req.body;
+  const has = (k) => Object.prototype.hasOwnProperty.call(body, k);
 
-  // Track deferred: if pushing due_date forward on a non-completed overdue task
+  // Use provided value if key is present; otherwise keep existing.
+  // Nullable fields: explicit '' or null clears the field.
+  const title          = has('title')          ? (body.title || task.title)         : task.title;
+  const description    = has('description')    ? (body.description || null)         : task.description;
+  const due_date       = has('due_date')        ? (body.due_date   || null)         : task.due_date;
+  const due_time       = has('due_time')        ? (body.due_time   || null)         : task.due_time;
+  const priority       = has('priority')        ? (body.priority   || task.priority): task.priority;
+  const status         = has('status')          ? body.status                       : task.status;
+  const is_recurring   = has('is_recurring')    ? (body.is_recurring ? 1 : 0)      : task.is_recurring;
+  const recur_interval = has('recur_interval')  ? (body.recur_interval || null)     : task.recur_interval;
+  const follow_up_date = has('follow_up_date')  ? (body.follow_up_date || null)     : task.follow_up_date;
+  const tags           = has('tags')            ? JSON.stringify(body.tags || [])   : task.tags;
+
+  // Track deferred: pushing due_date forward on an overdue pending task
   let deferredCount = task.deferred_count;
-  if (due_date && due_date > task.due_date && task.status !== 'completed' && task.due_date) {
+  if (has('due_date') && due_date && due_date > task.due_date && task.status !== 'completed' && task.due_date) {
     const now = new Date().toISOString().slice(0, 10);
     if (task.due_date < now) deferredCount++;
   }
@@ -68,45 +82,34 @@ router.patch('/:id', (req, res) => {
   if (justCompleted) {
     completedAt = new Date().toISOString();
 
-    // Auto-recreate recurring task
-    if (task.is_recurring && task.recur_interval) {
-      const d = new Date(due_date || task.due_date || new Date());
-      if (task.recur_interval === 'daily') d.setDate(d.getDate() + 1);
-      else if (task.recur_interval === 'weekly') d.setDate(d.getDate() + 7);
-      else if (task.recur_interval === 'monthly') d.setMonth(d.getMonth() + 1);
+    // Auto-recreate recurring task — use T12:00:00 to avoid UTC midnight edge case
+    if (is_recurring && recur_interval) {
+      const base = due_date || task.due_date;
+      const d = base ? new Date(base + 'T12:00:00') : new Date();
+      if (recur_interval === 'daily')        d.setDate(d.getDate() + 1);
+      else if (recur_interval === 'weekly')  d.setDate(d.getDate() + 7);
+      else if (recur_interval === 'monthly') d.setMonth(d.getMonth() + 1);
 
       db.prepare(`
         INSERT INTO tasks (user_id, title, description, due_date, due_time, priority, is_recurring, recur_interval, follow_up_date, tags)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(task.user_id, task.title, task.description, d.toISOString().slice(0, 10),
-        task.due_time, task.priority, task.is_recurring, task.recur_interval, null, task.tags);
+      `).run(task.user_id, title, description, d.toISOString().slice(0, 10),
+        due_time, priority, is_recurring, recur_interval, null, tags);
     }
-  } else if (status && status !== 'completed') {
+  } else if (status !== 'completed') {
     completedAt = null;
   }
 
   db.prepare(`
     UPDATE tasks SET
-      title = COALESCE(?, title),
-      description = COALESCE(?, description),
-      due_date = COALESCE(?, due_date),
-      due_time = COALESCE(?, due_time),
-      priority = COALESCE(?, priority),
-      status = COALESCE(?, status),
-      completed_at = ?,
-      is_recurring = COALESCE(?, is_recurring),
-      recur_interval = COALESCE(?, recur_interval),
-      follow_up_date = COALESCE(?, follow_up_date),
-      deferred_count = ?,
-      tags = COALESCE(?, tags)
+      title = ?, description = ?, due_date = ?, due_time = ?, priority = ?,
+      status = ?, completed_at = ?, is_recurring = ?, recur_interval = ?,
+      follow_up_date = ?, deferred_count = ?, tags = ?
     WHERE id = ? AND user_id = ?
   `).run(title, description, due_date, due_time, priority, status, completedAt,
-    is_recurring !== undefined ? (is_recurring ? 1 : 0) : null,
-    recur_interval, follow_up_date, deferredCount,
-    tags !== undefined ? JSON.stringify(tags) : null,
+    is_recurring, recur_interval, follow_up_date, deferredCount, tags,
     req.params.id, req.user.id);
 
-  // Update streaks after DB write so maybeUpdateOverall can see the completed task
   if (justCompleted) {
     updateStreak(req.user.id, 'tasks');
     maybeUpdateOverallStreak(req.user.id);
