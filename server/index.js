@@ -37,5 +37,16 @@ if (fs.existsSync(distPath)) {
   });
 }
 
+// Global error handler — catches sync throws and next(err) from route handlers
+app.use((err, req, res, _next) => {
+  console.error('[ERROR]', req.method, req.path, err);
+  res.status(500).json({ error: err.message || 'Internal server error' });
+});
+
+// Catch unhandled promise rejections so they don't silently crash routes
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason);
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
