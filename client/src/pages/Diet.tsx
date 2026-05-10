@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, BookMarked, ChevronLeft, ChevronRight, X, Save } from 'lucide-react';
+import { Plus, Trash2, BookMarked, ChevronLeft, ChevronRight, X, Save, Pencil, Check } from 'lucide-react';
 import { format, parseISO, addDays, subDays } from 'date-fns';
 import api from '../lib/api';
 
@@ -32,13 +32,16 @@ const MEAL_EMOJI: Record<MealType, string> = {
   breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍎',
 };
 
-const CALORIE_GOAL = 2000;
+function getStoredGoal() {
+  const v = localStorage.getItem('calorie_goal');
+  return v ? parseInt(v, 10) : 2000;
+}
 
 function MacroPill({ label, value, unit, color }: { label: string; value: number; unit: string; color: string }) {
   return (
     <div className="flex flex-col items-center">
       <span className="text-lg font-bold" style={{ color }}>{Math.round(value)}</span>
-      <span className="text-xs text-gray-500">{unit} {label}</span>
+      <span className="text-xs" style={{ color: '#71717a' }}>{unit} {label}</span>
     </div>
   );
 }
@@ -83,20 +86,25 @@ function AddEntryForm({
   }
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
+    <div className="card px-4 py-4 space-y-3 scale-in">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-semibold text-white">Add food</span>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-300"><X size={15} /></button>
+        <span className="text-sm font-semibold text-head">Add food</span>
+        <button onClick={onClose} className="tap" style={{ color: '#71717a' }}><X size={15} /></button>
       </div>
 
       {/* Quick-fill from saved meals */}
       {savedMeals.length > 0 && (
         <div>
-          <p className="text-xs text-gray-500 mb-1.5">Quick-add from saved meals</p>
+          <p className="text-[11px] font-medium mb-1.5" style={{ color: '#71717a' }}>QUICK-ADD FROM SAVED</p>
           <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
             {savedMeals.map(m => (
               <button key={m.id} onClick={() => fillFromSaved(m)}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${selectedSaved === m.id ? 'bg-brand-600 border-brand-600 text-white' : 'border-gray-700 text-gray-300 hover:border-brand-500'}`}>
+                className="text-xs px-2.5 py-1 rounded-full tap"
+                style={{
+                  background: selectedSaved === m.id ? `rgb(var(--accent-rgb) / 0.15)` : 'var(--s3)',
+                  color: selectedSaved === m.id ? `rgb(var(--accent-rgb-light))` : '#71717a',
+                  border: `1px solid ${selectedSaved === m.id ? `rgb(var(--accent-rgb) / 0.4)` : 'transparent'}`,
+                }}>
                 {m.name} · {m.calories} kcal
               </button>
             ))}
@@ -107,15 +115,21 @@ function AddEntryForm({
       <div className="grid grid-cols-4 gap-1.5">
         {MEAL_TYPES.map(t => (
           <button key={t} onClick={() => setMealType(t)}
-            className={`py-1.5 text-xs rounded-lg border capitalize transition-colors ${mealType === t ? 'bg-brand-600 border-brand-600 text-white' : 'border-gray-700 text-gray-400 hover:border-gray-600'}`}>
+            className="py-1.5 text-xs rounded-lg capitalize tap"
+            style={{
+              background: mealType === t ? `rgb(var(--accent-rgb) / 0.15)` : 'var(--s3)',
+              color: mealType === t ? `rgb(var(--accent-rgb-light))` : '#71717a',
+              border: `1px solid ${mealType === t ? `rgb(var(--accent-rgb) / 0.3)` : 'transparent'}`,
+            }}>
             {MEAL_EMOJI[t]} {t}
           </button>
         ))}
       </div>
 
       <input value={name} onChange={e => { setName(e.target.value); setSelectedSaved(null); }}
+        onKeyDown={e => e.key === 'Enter' && submit()}
         placeholder="Food name"
-        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+        className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none" />
 
       <div className="grid grid-cols-4 gap-2">
         {[
@@ -125,15 +139,16 @@ function AddEntryForm({
           { val: fat,      set: setFat,      label: 'fat g' },
         ].map(({ val, set, label }) => (
           <div key={label}>
-            <p className="text-xs text-gray-500 mb-1">{label}</p>
+            <p className="text-[11px] font-medium mb-1" style={{ color: '#71717a' }}>{label}</p>
             <input type="number" min={0} value={val} onChange={e => set(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              className="w-full rounded-lg px-2 py-1.5 text-sm border focus:outline-none" />
           </div>
         ))}
       </div>
 
       <button onClick={submit} disabled={!name.trim()}
-        className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white py-2 rounded-lg text-sm font-medium transition-colors">
+        className="w-full py-2 rounded-lg text-sm font-semibold tap disabled:opacity-50"
+        style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
         Add to log
       </button>
     </div>
@@ -149,14 +164,14 @@ function SaveMealModal({ onSave, onClose }: { onSave: (m: Omit<SavedMeal, 'id'>)
   const [notes, setNotes] = useState('');
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 w-full max-w-sm space-y-3">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
+      <div className="card px-5 py-5 w-full max-w-sm space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-white">Save meal template</h3>
-          <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+          <h3 className="font-semibold text-head">Save meal template</h3>
+          <button onClick={onClose} className="tap" style={{ color: '#71717a' }}><X size={16} /></button>
         </div>
         <input value={name} onChange={e => setName(e.target.value)} placeholder="Meal name (e.g. Protein shake)"
-          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none" />
         <div className="grid grid-cols-4 gap-2">
           {[
             { val: calories, set: setCalories, label: 'kcal' },
@@ -165,17 +180,19 @@ function SaveMealModal({ onSave, onClose }: { onSave: (m: Omit<SavedMeal, 'id'>)
             { val: fat,      set: setFat,      label: 'fat g' },
           ].map(({ val, set, label }) => (
             <div key={label}>
-              <p className="text-xs text-gray-500 mb-1">{label}</p>
+              <p className="text-[11px] font-medium mb-1" style={{ color: '#71717a' }}>{label}</p>
               <input type="number" min={0} value={val} onChange={e => set(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                className="w-full rounded-lg px-2 py-1.5 text-sm border focus:outline-none" />
             </div>
           ))}
         </div>
         <input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes (optional)"
-          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500" />
-        <button onClick={() => { if (name.trim()) onSave({ name: name.trim(), calories: Number(calories)||0, protein_g: Number(protein)||0, carbs_g: Number(carbs)||0, fat_g: Number(fat)||0, notes }); }}
+          className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none" />
+        <button
+          onClick={() => { if (name.trim()) onSave({ name: name.trim(), calories: Number(calories)||0, protein_g: Number(protein)||0, carbs_g: Number(carbs)||0, fat_g: Number(fat)||0, notes }); }}
           disabled={!name.trim()}
-          className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+          className="w-full py-2 rounded-lg text-sm font-semibold tap disabled:opacity-50 flex items-center justify-center gap-2"
+          style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
           <Save size={14} /> Save meal
         </button>
       </div>
@@ -191,6 +208,11 @@ export default function Diet() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'log' | 'meals'>('log');
 
+  // Editable calorie goal — persisted in localStorage
+  const [calorieGoal, setCalorieGoal] = useState<number>(getStoredGoal);
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [goalInput, setGoalInput] = useState('');
+
   const isToday = date === new Date().toISOString().slice(0, 10);
 
   const loadLog = useCallback(async (d: string) => {
@@ -205,6 +227,20 @@ export default function Diet() {
 
   useEffect(() => { loadLog(date); }, [date, loadLog]);
   useEffect(() => { loadSavedMeals(); }, [loadSavedMeals]);
+
+  function startEditGoal() {
+    setGoalInput(String(calorieGoal));
+    setEditingGoal(true);
+  }
+
+  function saveGoal() {
+    const val = parseInt(goalInput, 10);
+    if (val > 0) {
+      setCalorieGoal(val);
+      localStorage.setItem('calorie_goal', String(val));
+    }
+    setEditingGoal(false);
+  }
 
   async function addEntry(entry: Omit<FoodLog, 'id' | 'date'>) {
     await api.post('/diet/log', { ...entry, date });
@@ -237,7 +273,7 @@ export default function Diet() {
     (acc, e) => ({ cal: acc.cal + e.calories, p: acc.p + e.protein_g, c: acc.c + e.carbs_g, f: acc.f + e.fat_g }),
     { cal: 0, p: 0, c: 0, f: 0 }
   );
-  const calPct = Math.min(100, Math.round((totals.cal / CALORIE_GOAL) * 100));
+  const calPct = Math.min(100, Math.round((totals.cal / calorieGoal) * 100));
   const calColor = calPct > 110 ? '#f43f5e' : calPct > 85 ? '#22c55e' : '#f59e0b';
 
   const byMealType = MEAL_TYPES.reduce<Record<string, FoodLog[]>>((acc, t) => {
@@ -246,37 +282,45 @@ export default function Diet() {
   }, {} as Record<string, FoodLog[]>);
 
   return (
-    <div className="space-y-5 max-w-2xl">
+    <div className="space-y-4 max-w-xl anim-page">
+
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Diet</h1>
+        <h1 className="text-2xl font-bold text-head tracking-tight">Diet</h1>
         <div className="flex gap-2">
           <button onClick={() => setShowSaveModal(true)}
-            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-200 bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors">
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tap"
+            style={{ background: 'var(--s3)', color: '#71717a' }}>
             <BookMarked size={13} /> Save meal
           </button>
           <button onClick={() => setActiveTab(t => t === 'log' ? 'meals' : 'log')}
-            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-200 bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors">
-            {activeTab === 'log' ? '📚 Saved meals' : '📋 Daily log'}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tap"
+            style={{ background: 'var(--s3)', color: '#71717a' }}>
+            {activeTab === 'log' ? '📚 Saved' : '📋 Log'}
           </button>
         </div>
       </div>
 
       {/* Date nav */}
       <div className="flex items-center gap-3">
-        <button onClick={() => goDay(-1)} className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors">
-          <ChevronLeft size={18} />
+        <button onClick={() => goDay(-1)}
+          className="p-2 rounded-lg tap"
+          style={{ background: 'var(--s3)', color: '#71717a' }}>
+          <ChevronLeft size={16} />
         </button>
         <div className="flex-1 text-center">
-          <p className="text-white font-medium">{format(parseISO(date), 'EEE, d MMM yyyy')}</p>
-          {isToday && <span className="text-xs text-brand-400">Today</span>}
+          <p className="text-sm font-semibold text-head">{format(parseISO(date), 'EEE, d MMM yyyy')}</p>
+          {isToday && <span className="text-xs" style={{ color: `rgb(var(--accent-rgb-light))` }}>Today</span>}
         </div>
         <button onClick={() => goDay(1)} disabled={isToday}
-          className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 disabled:opacity-30 text-gray-300 transition-colors">
-          <ChevronRight size={18} />
+          className="p-2 rounded-lg tap disabled:opacity-30"
+          style={{ background: 'var(--s3)', color: '#71717a' }}>
+          <ChevronRight size={16} />
         </button>
         {!isToday && (
           <button onClick={() => setDate(new Date().toISOString().slice(0, 10))}
-            className="text-xs text-brand-400 px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors">
+            className="text-xs px-3 py-1.5 rounded-lg tap font-semibold"
+            style={{ background: `rgb(var(--accent-rgb) / 0.12)`, color: `rgb(var(--accent-rgb-light))` }}>
             Today
           </button>
         )}
@@ -285,11 +329,40 @@ export default function Diet() {
       {activeTab === 'log' ? (
         <>
           {/* Daily summary card */}
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+          <div className="card px-4 py-4">
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-2xl font-bold" style={{ color: calColor }}>{Math.round(totals.cal)}</p>
-                <p className="text-xs text-gray-500">/ {CALORIE_GOAL} kcal goal</p>
+                {/* Editable calorie goal */}
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  {editingGoal ? (
+                    <>
+                      <span className="text-xs" style={{ color: '#71717a' }}>/ </span>
+                      <input
+                        type="number"
+                        value={goalInput}
+                        onChange={e => setGoalInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') saveGoal(); if (e.key === 'Escape') setEditingGoal(false); }}
+                        className="w-20 rounded px-1.5 py-0.5 text-xs border focus:outline-none"
+                        autoFocus
+                      />
+                      <span className="text-xs" style={{ color: '#71717a' }}>kcal</span>
+                      <button onClick={saveGoal} className="tap" style={{ color: '#22c55e' }}>
+                        <Check size={13} />
+                      </button>
+                      <button onClick={() => setEditingGoal(false)} className="tap" style={{ color: '#71717a' }}>
+                        <X size={13} />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xs" style={{ color: '#71717a' }}>/ {calorieGoal} kcal goal</span>
+                      <button onClick={startEditGoal} className="tap" style={{ color: '#52525b' }}>
+                        <Pencil size={11} />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
               <div className="flex gap-5">
                 <MacroPill label="protein" value={totals.p} unit="g" color="#60a5fa" />
@@ -297,15 +370,16 @@ export default function Diet() {
                 <MacroPill label="fat"     value={totals.f} unit="g" color="#fbbf24" />
               </div>
             </div>
-            <div className="w-full bg-gray-800 rounded-full h-2">
-              <div className="h-2 rounded-full transition-all duration-500" style={{ width: `${calPct}%`, backgroundColor: calColor }} />
+            <div className="w-full rounded-full h-1.5" style={{ background: 'var(--s3)' }}>
+              <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${calPct}%`, backgroundColor: calColor }} />
             </div>
-            <p className="text-xs text-gray-600 mt-1">{calPct}% of daily goal</p>
+            <p className="text-xs mt-1" style={{ color: '#52525b' }}>{calPct}% of daily goal</p>
           </div>
 
-          {/* Add entry */}
+          {/* Add entry button */}
           <button onClick={() => setShowAdd(s => !s)}
-            className="flex items-center gap-2 text-sm bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold tap"
+            style={{ background: `rgb(var(--accent-rgb) / 0.12)`, color: `rgb(var(--accent-rgb-light))` }}>
             <Plus size={15} /> Add food
           </button>
 
@@ -322,21 +396,21 @@ export default function Diet() {
               <div key={mt} className="space-y-1.5">
                 <div className="flex items-center gap-2">
                   <span className="text-base">{MEAL_EMOJI[mt]}</span>
-                  <span className="text-sm font-semibold text-gray-300 capitalize">{mt}</span>
-                  <span className="text-xs text-gray-500 ml-auto">{Math.round(subtotal)} kcal</span>
+                  <span className="text-sm font-semibold text-head capitalize">{mt}</span>
+                  <span className="text-xs ml-auto" style={{ color: '#71717a' }}>{Math.round(subtotal)} kcal</span>
                 </div>
                 {entries.map(e => (
-                  <div key={e.id} className="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-xl px-3 py-2.5">
+                  <div key={e.id} className="card flex items-center gap-3 px-3 py-2.5">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate">{e.name}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-sm font-medium text-head truncate">{e.name}</p>
+                      <p className="text-xs mt-0.5" style={{ color: '#71717a' }}>
                         {e.calories} kcal
                         {e.protein_g > 0 && ` · ${e.protein_g}g P`}
                         {e.carbs_g > 0 && ` · ${e.carbs_g}g C`}
                         {e.fat_g > 0 && ` · ${e.fat_g}g F`}
                       </p>
                     </div>
-                    <button onClick={() => deleteEntry(e.id)} className="text-gray-700 hover:text-red-400 transition-colors">
+                    <button onClick={() => deleteEntry(e.id)} className="tap" style={{ color: '#52525b' }}>
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -346,10 +420,12 @@ export default function Diet() {
           })}
 
           {log.length === 0 && !showAdd && (
-            <div className="text-center py-12 text-gray-600">
+            <div className="card py-12 text-center">
               <p className="text-3xl mb-2">🥗</p>
-              <p className="text-sm">Nothing logged yet for this day</p>
-              <button onClick={() => setShowAdd(true)} className="mt-3 text-xs text-brand-400 hover:text-brand-300">
+              <p className="text-sm font-medium" style={{ color: '#71717a' }}>Nothing logged yet for this day</p>
+              <button onClick={() => setShowAdd(true)}
+                className="mt-3 text-xs font-semibold tap"
+                style={{ color: `rgb(var(--accent-rgb-light))` }}>
                 + Add your first meal
               </button>
             </div>
@@ -358,29 +434,28 @@ export default function Diet() {
       ) : (
         /* Saved meals library */
         <div className="space-y-3">
-          <p className="text-sm text-gray-400">
-            Saved meals let you quickly add common foods. Use the
-            <span className="text-brand-400"> Save meal</span> button to add new ones.
+          <p className="text-sm" style={{ color: '#71717a' }}>
+            Saved meals let you quickly add common foods. Tap <span style={{ color: `rgb(var(--accent-rgb-light))` }}>Save meal</span> to add new ones.
           </p>
           {savedMeals.length === 0 && (
-            <div className="text-center py-10 text-gray-600">
+            <div className="card py-10 text-center">
               <p className="text-3xl mb-2">📚</p>
-              <p className="text-sm">No saved meals yet</p>
+              <p className="text-sm" style={{ color: '#71717a' }}>No saved meals yet</p>
             </div>
           )}
           {savedMeals.map(m => (
-            <div key={m.id} className="flex items-start gap-3 bg-gray-900 border border-gray-800 rounded-xl px-4 py-3">
+            <div key={m.id} className="card flex items-start gap-3 px-4 py-3">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white">{m.name}</p>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-sm font-semibold text-head">{m.name}</p>
+                <p className="text-xs mt-0.5" style={{ color: '#71717a' }}>
                   {m.calories} kcal
                   {m.protein_g > 0 && ` · ${m.protein_g}g protein`}
                   {m.carbs_g > 0 && ` · ${m.carbs_g}g carbs`}
                   {m.fat_g > 0 && ` · ${m.fat_g}g fat`}
                 </p>
-                {m.notes && <p className="text-xs text-gray-600 mt-1 italic">{m.notes}</p>}
+                {m.notes && <p className="text-xs mt-1 italic" style={{ color: '#52525b' }}>{m.notes}</p>}
               </div>
-              <button onClick={() => deleteSavedMeal(m.id)} className="text-gray-700 hover:text-red-400 transition-colors mt-0.5">
+              <button onClick={() => deleteSavedMeal(m.id)} className="tap mt-0.5" style={{ color: '#52525b' }}>
                 <Trash2 size={14} />
               </button>
             </div>
