@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Plus, Check, Trash2, ChevronDown, ChevronUp, Zap, Pencil, Save } from 'lucide-react';
+import { Plus, Check, Trash2, ChevronDown, ChevronUp, Zap, Pencil, Save, AlertCircle } from 'lucide-react';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
 import type { Task, TaskPriority, TaskStatus } from '../types';
@@ -27,38 +27,43 @@ interface TaskFormData {
   is_recurring: boolean;
   recur_interval: string;
   follow_up_date: string;
-  tags: string[];
 }
 
-const EMPTY_FORM: TaskFormData = {
-  title: '', description: '', due_date: '', due_time: '',
-  priority: 'medium', is_recurring: false, recur_interval: 'daily',
-  follow_up_date: '', tags: [],
-};
+function emptyForm(): TaskFormData {
+  return { title: '', description: '', due_date: '', due_time: '',
+    priority: 'medium', is_recurring: false, recur_interval: 'daily', follow_up_date: '' };
+}
 
 export default function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [loadErr, setLoadErr] = useState('');
   const [queueView, setQueueView] = useState(false);
   const [filter, setFilter] = useState<'all' | TaskStatus>('all');
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<TaskFormData>(EMPTY_FORM);
+  const [form, setForm] = useState<TaskFormData>(emptyForm());
+  const [formErr, setFormErr] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [expanded, setExpanded] = useState<number | null>(null);
   const [editId, setEditId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<TaskFormData>>({});
+  const [editErr, setEditErr] = useState('');
   const titleRef = useRef<HTMLInputElement>(null);
 
   const fetchTasks = useCallback(async () => {
-    const url = queueView ? '/tasks/priority-queue' : '/tasks';
-    const params = !queueView && filter !== 'all' ? { status: filter } : {};
-    const res = await api.get<Task[]>(url, { params });
-    setTasks(res.data);
+    try {
+      setLoadErr('');
+      const url = queueView ? '/tasks/priority-queue' : '/tasks';
+      const params = !queueView && filter !== 'all' ? { status: filter } : {};
+      const res = await api.get<Task[]>(url, { params });
+      setTasks(res.data);
+    } catch (e: any) {
+      setLoadErr(e?.response?.data?.error || e?.message || 'Failed to load tasks');
+    }
   }, [queueView, filter]);
 
   useEffect(() => { fetchTasks(); }, [fetchTasks]);
   useSync(fetchTasks, 30000);
 
-  // Auto-focus title when form opens
   useEffect(() => {
     if (showForm) setTimeout(() => titleRef.current?.focus(), 50);
   }, [showForm]);
@@ -66,17 +71,24 @@ export default function Tasks() {
   async function createTask() {
     if (!form.title.trim()) return;
     setSubmitting(true);
+    setFormErr('');
     try {
       await api.post('/tasks', {
-        ...form,
-        recur_interval: form.is_recurring ? form.recur_interval : undefined,
-        follow_up_date: form.follow_up_date || undefined,
-        due_date: form.due_date || undefined,
-        due_time: form.due_time || undefined,
+        title: form.title.trim(),
+        description: form.description || null,
+        due_date: form.due_date || null,
+        due_time: form.due_time || null,
+        priority: form.priority,
+        is_recurring: form.is_recurring,
+        recur_interval: form.is_recurring ? form.recur_interval : null,
+        follow_up_date: form.follow_up_date || null,
+        tags: [],
       });
-      setForm(EMPTY_FORM);
+      setForm(emptyForm());
       setShowForm(false);
-      fetchTasks();
+      await fetchTasks();
+    } catch (e: any) {
+      setFormErr(e?.response?.data?.error || e?.message || 'Failed to create task. Check your connection.');
     } finally {
       setSubmitting(false);
     }
@@ -84,17 +96,26 @@ export default function Tasks() {
 
   async function toggleStatus(task: Task) {
     const newStatus: TaskStatus = task.status === 'completed' ? 'pending' : 'completed';
-    await api.patch(`/tasks/${task.id}`, { status: newStatus });
-    fetchTasks();
+    try {
+      await api.patch(`/tasks/${task.id}`, { status: newStatus });
+      await fetchTasks();
+    } catch {
+      await fetchTasks();
+    }
   }
 
   async function deleteTask(id: number) {
-    await api.delete(`/tasks/${id}`);
-    setTasks(prev => prev.filter(t => t.id !== id));
+    try {
+      await api.delete(`/tasks/${id}`);
+      setTasks(prev => prev.filter(t => t.id !== id));
+    } catch {
+      await fetchTasks();
+    }
   }
 
   function startEdit(task: Task) {
     setEditId(task.id);
+    setEditErr('');
     setEditForm({
       title: task.title,
       description: task.description || '',
@@ -106,9 +127,21 @@ export default function Tasks() {
   }
 
   async function saveEdit(id: number) {
-    await api.patch(`/tasks/${id}`, editForm);
-    setEditId(null);
-    fetchTasks();
+    setEditErr('');
+    try {
+      await api.patch(`/tasks/${id}`, {
+        title: editForm.title || undefined,
+        description: editForm.description ?? null,
+        due_date: editForm.due_date || null,
+        due_time: editForm.due_time || null,
+        priority: editForm.priority,
+        follow_up_date: editForm.follow_up_date || null,
+      });
+      setEditId(null);
+      await fetchTasks();
+    } catch (e: any) {
+      setEditErr(e?.response?.data?.error || e?.message || 'Failed to save');
+    }
   }
 
   const today = new Date().toISOString().slice(0, 10);
@@ -120,7 +153,7 @@ export default function Tasks() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-head tracking-tight">Tasks</h1>
         <button
-          onClick={() => { setShowForm(s => !s); setForm(EMPTY_FORM); }}
+          onClick={() => { setShowForm(s => !s); setForm(emptyForm()); setFormErr(''); }}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold tap"
           style={{ background: `rgb(var(--accent-rgb) / 0.12)`, color: `rgb(var(--accent-rgb-light))` }}>
           <Plus size={15} /> New task
@@ -131,11 +164,20 @@ export default function Tasks() {
       {showForm && (
         <div className="card px-4 py-4 space-y-3 scale-in">
           <p className="text-sm font-semibold text-head">New task</p>
+
+          {formErr && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
+              style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+              <AlertCircle size={13} />
+              {formErr}
+            </div>
+          )}
+
           <input
             ref={titleRef}
             placeholder="Task title"
             value={form.title}
-            onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+            onChange={e => { setForm(f => ({ ...f, title: e.target.value })); setFormErr(''); }}
             onKeyDown={e => e.key === 'Enter' && createTask()}
             className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none"
           />
@@ -172,7 +214,7 @@ export default function Tasks() {
                 className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
             </div>
             <div>
-              <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>FOLLOW-UP DATE</label>
+              <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>FOLLOW-UP</label>
               <input type="date" value={form.follow_up_date}
                 onChange={e => setForm(f => ({ ...f, follow_up_date: e.target.value }))}
                 className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
@@ -196,7 +238,7 @@ export default function Tasks() {
             )}
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setShowForm(false)}
+            <button onClick={() => { setShowForm(false); setFormErr(''); }}
               className="flex-1 py-2 rounded-lg text-sm font-medium tap"
               style={{ background: 'var(--s3)', color: '#71717a' }}>Cancel</button>
             <button onClick={createTask} disabled={submitting || !form.title.trim()}
@@ -234,9 +276,18 @@ export default function Tasks() {
         ))}
       </div>
 
+      {/* Load error */}
+      {loadErr && (
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs"
+          style={{ background: 'rgb(239 68 68 / 0.08)', color: '#f87171', border: '1px solid rgb(239 68 68 / 0.2)' }}>
+          <AlertCircle size={13} />
+          {loadErr} — <button onClick={fetchTasks} className="underline tap">retry</button>
+        </div>
+      )}
+
       {/* Task list */}
       <div className="space-y-2">
-        {tasks.length === 0 && (
+        {!loadErr && tasks.length === 0 && (
           <div className="card py-12 text-center">
             <p className="text-sm font-medium" style={{ color: '#71717a' }}>No tasks found</p>
             <p className="text-xs mt-1" style={{ color: '#52525b' }}>Tap "New task" to get started</p>
@@ -254,7 +305,6 @@ export default function Tasks() {
 
               {/* Main row */}
               <div className="flex items-center gap-3 px-4 py-3">
-                {/* Complete toggle */}
                 <button
                   onClick={() => toggleStatus(task)}
                   className="flex items-center justify-center rounded-full border-2 tap transition-all"
@@ -266,7 +316,6 @@ export default function Tasks() {
                   {task.status === 'completed' && <Check size={12} color="#fff" strokeWidth={3} />}
                 </button>
 
-                {/* Title + meta */}
                 <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setExpanded(isExpanded ? null : task.id)}>
                   <p className="text-sm font-medium text-head truncate"
                     style={{ textDecoration: task.status === 'completed' ? 'line-through' : 'none', opacity: task.status === 'completed' ? 0.5 : 1 }}>
@@ -291,7 +340,6 @@ export default function Tasks() {
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center gap-1" style={{ flexShrink: 0 }}>
                   <button onClick={() => setExpanded(isExpanded ? null : task.id)}
                     className="p-1 tap" style={{ color: '#52525b' }}>
@@ -308,8 +356,13 @@ export default function Tasks() {
               {isExpanded && (
                 <div className="px-4 pb-4 pt-3 space-y-3" style={{ borderTop: '1px solid var(--b)' }}>
                   {isEditing ? (
-                    /* Edit form */
                     <div className="space-y-2">
+                      {editErr && (
+                        <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs"
+                          style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+                          <AlertCircle size={12} />{editErr}
+                        </div>
+                      )}
                       <input value={editForm.title ?? ''}
                         onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
                         onKeyDown={e => e.key === 'Enter' && saveEdit(task.id)}
@@ -339,7 +392,7 @@ export default function Tasks() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button onClick={() => setEditId(null)}
+                        <button onClick={() => { setEditId(null); setEditErr(''); }}
                           className="flex-1 py-1.5 rounded-lg text-xs font-medium tap"
                           style={{ background: 'var(--s3)', color: '#71717a' }}>Cancel</button>
                         <button onClick={() => saveEdit(task.id)}
@@ -350,7 +403,6 @@ export default function Tasks() {
                       </div>
                     </div>
                   ) : (
-                    /* View mode */
                     <>
                       {task.description && (
                         <p className="text-sm" style={{ color: '#a1a1aa' }}>{task.description}</p>
@@ -361,7 +413,6 @@ export default function Tasks() {
                         {task.deferred_count > 0 && <span style={{ color: '#f97316' }}>Deferred {task.deferred_count}×</span>}
                         <span>Created: {task.created_at.slice(0, 10)}</span>
                       </div>
-                      {/* Status buttons */}
                       <div className="flex gap-1.5 flex-wrap">
                         {(['pending', 'in_progress', 'completed', 'cancelled'] as TaskStatus[]).map(s => (
                           <button key={s}
@@ -376,7 +427,6 @@ export default function Tasks() {
                           </button>
                         ))}
                       </div>
-                      {/* Edit button */}
                       <button onClick={() => startEdit(task)}
                         className="flex items-center gap-1.5 text-xs tap font-semibold"
                         style={{ color: '#71717a' }}>
