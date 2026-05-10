@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Plus, Bell, Trash2, AlarmClock, Check } from 'lucide-react';
+import { Plus, Bell, Trash2, AlarmClock, Check, AlertCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
@@ -18,7 +18,7 @@ interface FormData {
   repeat: 'none' | 'daily' | 'weekly';
 }
 
-const EMPTY: FormData = { title: '', description: '', remind_at: '', repeat: 'none' };
+const emptyForm = (): FormData => ({ title: '', description: '', remind_at: '', repeat: 'none' });
 
 function toUTCIso(localDt: string) {
   return new Date(localDt).toISOString();
@@ -27,44 +27,67 @@ function toUTCIso(localDt: string) {
 export default function Reminders() {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<FormData>(EMPTY);
+  const [form, setForm] = useState<FormData>(emptyForm());
   const [submitting, setSubmitting] = useState(false);
+  const [formErr, setFormErr] = useState('');
+  const [loadErr, setLoadErr] = useState('');
 
   const fetchReminders = useCallback(async () => {
-    const res = await api.get<Reminder[]>('/reminders');
-    setReminders(res.data);
+    try {
+      setLoadErr('');
+      const res = await api.get<Reminder[]>('/reminders');
+      setReminders(res.data);
+    } catch (e: any) {
+      setLoadErr(e?.response?.data?.error || e?.message || 'Failed to load reminders');
+    }
   }, []);
 
   useEffect(() => { fetchReminders(); }, [fetchReminders]);
   useSync(fetchReminders, 30000);
 
-  async function createReminder() {
+  async function createReminder(e: React.FormEvent) {
+    e.preventDefault();
     if (!form.title.trim() || !form.remind_at) return;
     setSubmitting(true);
+    setFormErr('');
     try {
       await api.post('/reminders', { ...form, remind_at: toUTCIso(form.remind_at) });
-      setForm(EMPTY);
+      setForm(emptyForm());
       setShowForm(false);
-      fetchReminders();
+      await fetchReminders();
+    } catch (err: any) {
+      setFormErr(err?.response?.data?.error || err?.message || 'Failed to create reminder');
     } finally {
       setSubmitting(false);
     }
   }
 
   async function dismiss(id: number) {
-    await api.patch(`/reminders/${id}`, { status: 'dismissed' });
-    fetchReminders();
+    try {
+      await api.patch(`/reminders/${id}`, { status: 'dismissed' });
+      await fetchReminders();
+    } catch {
+      // silently retry on next sync
+    }
   }
 
   async function snooze(id: number, minutes: number) {
-    const until = new Date(Date.now() + minutes * 60000).toISOString();
-    await api.patch(`/reminders/${id}`, { status: 'snoozed', snoozed_until: until });
-    fetchReminders();
+    try {
+      const until = new Date(Date.now() + minutes * 60000).toISOString();
+      await api.patch(`/reminders/${id}`, { status: 'snoozed', snoozed_until: until });
+      await fetchReminders();
+    } catch {
+      // silently retry on next sync
+    }
   }
 
   async function deleteReminder(id: number) {
-    await api.delete(`/reminders/${id}`);
-    setReminders(prev => prev.filter(r => r.id !== id));
+    try {
+      await api.delete(`/reminders/${id}`);
+      setReminders(prev => prev.filter(r => r.id !== id));
+    } catch (e: any) {
+      alert(e?.response?.data?.error || 'Failed to delete reminder');
+    }
   }
 
   const now = new Date();
@@ -75,16 +98,24 @@ export default function Reminders() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-white">Reminders</h1>
-        <button onClick={() => setShowForm(s => !s)}
+        <button type="button" onClick={() => { setShowForm(s => !s); setFormErr(''); }}
           className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
           <Plus size={16} /> New reminder
         </button>
       </div>
 
+      {loadErr && (
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs"
+          style={{ background: 'rgb(239 68 68 / 0.08)', color: '#f87171', border: '1px solid rgb(239 68 68 / 0.2)' }}>
+          <AlertCircle size={13} />
+          {loadErr} — <button type="button" onClick={fetchReminders} className="underline">retry</button>
+        </div>
+      )}
+
       {showForm && (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
+        <form onSubmit={createReminder} className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
           <input placeholder="Reminder title" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-            autoFocus
+            autoFocus required
             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
           <input placeholder="Description (optional)" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
@@ -92,6 +123,7 @@ export default function Reminders() {
             <div>
               <label className="text-xs text-gray-400 block mb-1">Remind at</label>
               <input type="datetime-local" value={form.remind_at} onChange={e => setForm(f => ({ ...f, remind_at: e.target.value }))}
+                required
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
             </div>
             <div>
@@ -104,14 +136,19 @@ export default function Reminders() {
               </select>
             </div>
           </div>
+          {formErr && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs" style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+              <AlertCircle size={13} />{formErr}
+            </div>
+          )}
           <div className="flex gap-2 justify-end">
-            <button onClick={() => setShowForm(false)} className="px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200">Cancel</button>
-            <button onClick={createReminder} disabled={submitting || !form.title.trim() || !form.remind_at}
+            <button type="button" onClick={() => { setShowForm(false); setFormErr(''); }} className="px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200">Cancel</button>
+            <button type="submit" disabled={submitting || !form.title.trim() || !form.remind_at}
               className="px-4 py-1.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-sm rounded-lg font-medium transition-colors">
               {submitting ? 'Adding...' : 'Add reminder'}
             </button>
           </div>
-        </div>
+        </form>
       )}
 
       {/* Due / overdue */}
@@ -129,12 +166,12 @@ export default function Reminders() {
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {SNOOZE_OPTIONS.map(s => (
-                      <button key={s.minutes} onClick={() => snooze(r.id, s.minutes)}
+                      <button key={s.minutes} type="button" onClick={() => snooze(r.id, s.minutes)}
                         className="text-xs px-2 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded transition-colors">
                         {s.label}
                       </button>
                     ))}
-                    <button onClick={() => dismiss(r.id)} className="p-1.5 bg-green-800 hover:bg-green-700 text-white rounded-lg transition-colors">
+                    <button type="button" onClick={() => dismiss(r.id)} className="p-1.5 bg-green-800 hover:bg-green-700 text-white rounded-lg transition-colors">
                       <Check size={14} />
                     </button>
                   </div>
@@ -161,7 +198,7 @@ export default function Reminders() {
                   {r.repeat !== 'none' && <span className="ml-2 text-brand-400">↻ {r.repeat}</span>}
                 </p>
               </div>
-              <button onClick={() => deleteReminder(r.id)} className="p-1.5 text-gray-600 hover:text-red-400 transition-colors shrink-0">
+              <button type="button" onClick={() => deleteReminder(r.id)} className="p-1.5 text-gray-600 hover:text-red-400 transition-colors shrink-0">
                 <Trash2 size={16} />
               </button>
             </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Moon, Plus, Trash2, Star, Clock } from 'lucide-react';
+import { Moon, Plus, Trash2, Star, Clock, AlertCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
@@ -37,16 +37,23 @@ export default function Sleep() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [formErr, setFormErr] = useState('');
+  const [loadErr, setLoadErr] = useState('');
 
   const autoDuration = calcDuration(form.bedtime, form.wake_time);
 
   const load = useCallback(async () => {
-    const [logsRes, statsRes] = await Promise.all([
-      api.get<SleepLog[]>('/sleep'),
-      api.get('/sleep/stats'),
-    ]);
-    setLogs(logsRes.data);
-    setStats(statsRes.data);
+    try {
+      setLoadErr('');
+      const [logsRes, statsRes] = await Promise.all([
+        api.get<SleepLog[]>('/sleep'),
+        api.get('/sleep/stats'),
+      ]);
+      setLogs(logsRes.data);
+      setStats(statsRes.data);
+    } catch (e: any) {
+      setLoadErr(e?.response?.data?.error || e?.message || 'Failed to load sleep logs');
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -55,27 +62,33 @@ export default function Sleep() {
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setFormErr('');
     try {
-      const duration = autoDuration;
       await api.post('/sleep', {
         date: form.date,
         bedtime: form.bedtime || null,
         wake_time: form.wake_time || null,
-        duration_minutes: duration,
+        duration_minutes: autoDuration,
         quality: form.quality,
         notes: form.notes || null,
       });
       setForm(emptyForm());
       setShowForm(false);
-      load();
+      await load();
+    } catch (err: any) {
+      setFormErr(err?.response?.data?.error || err?.message || 'Failed to save. Try again.');
     } finally {
       setSaving(false);
     }
   };
 
   const del = async (id: number) => {
-    await api.delete(`/sleep/${id}`);
-    setLogs(prev => prev.filter(l => l.id !== id));
+    try {
+      await api.delete(`/sleep/${id}`);
+      setLogs(prev => prev.filter(l => l.id !== id));
+    } catch (e: any) {
+      alert(e?.response?.data?.error || 'Failed to delete log');
+    }
   };
 
   const last7 = [...logs].slice(0, 7).reverse();
@@ -97,12 +110,20 @@ export default function Sleep() {
             {stats && stats.avgDuration ? `Avg ${fmtDuration(stats.avgDuration)} / night this week` : 'Track your sleep'}
           </p>
         </div>
-        <button onClick={() => setShowForm(s => !s)}
+        <button type="button" onClick={() => { setShowForm(s => !s); setFormErr(''); }}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold tap"
           style={{ background: `rgb(var(--accent-rgb) / 0.12)`, color: `rgb(var(--accent-rgb-light))` }}>
           <Plus size={15} /> Log
         </button>
       </div>
+
+      {loadErr && (
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs"
+          style={{ background: 'rgb(239 68 68 / 0.08)', color: '#f87171', border: '1px solid rgb(239 68 68 / 0.2)' }}>
+          <AlertCircle size={13} />
+          {loadErr} — <button type="button" onClick={load} className="underline tap">retry</button>
+        </div>
+      )}
 
       {/* Stats row */}
       {stats && stats.count > 0 && (
@@ -170,8 +191,14 @@ export default function Sleep() {
               placeholder="Dreamt well, woke up refreshed..."
               className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
           </div>
+          {formErr && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
+              style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+              <AlertCircle size={13} />{formErr}
+            </div>
+          )}
           <div className="flex gap-2">
-            <button type="button" onClick={() => setShowForm(false)}
+            <button type="button" onClick={() => { setShowForm(false); setFormErr(''); }}
               className="flex-1 py-2 rounded-lg text-sm font-medium tap"
               style={{ background: 'var(--s3)', color: '#71717a' }}>Cancel</button>
             <button type="submit" disabled={saving}
