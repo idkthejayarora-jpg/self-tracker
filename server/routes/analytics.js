@@ -50,6 +50,40 @@ router.get('/weekly', (req, res) => {
       WHERE user_id = ? AND date BETWEEN ? AND ? AND mood IS NOT NULL
     `).get(uid, start, end);
 
+    // Habits score
+    let habitsScore = null;
+    try {
+      const totalHabits = (db.prepare('SELECT COUNT(*) as c FROM habits WHERE user_id = ?').get(uid) || {}).c || 0;
+      if (totalHabits > 0) {
+        const doneCount = (db.prepare(`
+          SELECT COUNT(*) as c FROM habit_logs
+          WHERE user_id = ? AND done = 1 AND date BETWEEN ? AND ?
+        `).get(uid, start, end) || {}).c || 0;
+        const possible = totalHabits * 7;
+        habitsScore = Math.min(Math.round((doneCount / possible) * 100), 100);
+      }
+    } catch (_) {}
+
+    // Sleep avg hrs
+    let sleepAvgHrs = null;
+    try {
+      const sleepRow = db.prepare(`
+        SELECT AVG(duration_minutes) as avg_min FROM sleep_logs
+        WHERE user_id = ? AND date BETWEEN ? AND ? AND duration_minutes IS NOT NULL
+      `).get(uid, start, end);
+      if (sleepRow && sleepRow.avg_min != null) {
+        sleepAvgHrs = Math.round((sleepRow.avg_min / 60) * 10) / 10;
+      }
+    } catch (_) {}
+
+    // Workout sessions
+    let workoutSessions = 0;
+    try {
+      workoutSessions = (db.prepare(`
+        SELECT COUNT(*) as c FROM workout_sessions WHERE user_id = ? AND date BETWEEN ? AND ?
+      `).get(uid, start, end) || {}).c || 0;
+    } catch (_) {}
+
     data.push({
       week: label,
       start,
@@ -59,7 +93,10 @@ router.get('/weekly', (req, res) => {
       avg_mood: moodRow.avg_mood ? Math.round(moodRow.avg_mood * 10) / 10 : null,
       tasks_created: taskStats.created,
       tasks_completed: taskStats.completed,
-      journal_entries: journalCount
+      journal_entries: journalCount,
+      habits_score: habitsScore,
+      sleep_avg_hrs: sleepAvgHrs,
+      workout_sessions: workoutSessions
     });
   }
 

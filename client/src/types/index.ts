@@ -61,6 +61,20 @@ export interface Streaks {
   tasks?: StreakInfo;
   journal?: StreakInfo;
   overall?: StreakInfo;
+  workout?: StreakInfo;
+  sleep?: StreakInfo;
+}
+
+export interface DashboardSnapshot {
+  habitsDone: number;
+  habitsTotal: number;
+  lastSleep: { date: string; duration_minutes: number | null; quality: number | null } | null;
+  lastWorkout: { date: string; name: string | null } | null;
+  todayCalories: number | null;
+  todayProtein: number | null;
+  latestBody: { weight_kg: number | null; body_fat_pct: number | null; date: string } | null;
+  financeIncome: number | null;
+  financeExpenses: number | null;
 }
 
 export interface DashboardData {
@@ -74,6 +88,7 @@ export interface DashboardData {
     completedTasks: number;
     totalJournal: number;
   };
+  snapshot?: DashboardSnapshot;
 }
 
 export interface WeeklyAnalytics {
@@ -86,6 +101,9 @@ export interface WeeklyAnalytics {
   tasks_created: number;
   tasks_completed: number;
   journal_entries: number;
+  habits_score: number | null;
+  sleep_avg_hrs: number | null;
+  workout_sessions: number;
 }
 
 export interface MoodDataPoint {

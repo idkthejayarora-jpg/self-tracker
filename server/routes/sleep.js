@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
 const db = require('../db/database');
+const { updateStreak } = require('../utils/streakUtils');
 
 router.use(authMiddleware);
 
@@ -54,6 +55,7 @@ router.post('/', (req, res) => {
          duration_minutes ?? null, quality ?? null, notes ?? null);
 
   const row = db.prepare('SELECT * FROM sleep_logs WHERE user_id = ? AND date = ?').get(req.user.id, logDate);
+  updateStreak(req.user.id, 'sleep');
   res.json(row);
 });
 

@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
+const { updateStreak } = require('../utils/streakUtils');
 
 router.use(authMiddleware);
 
@@ -41,6 +42,7 @@ router.post('/sessions', (req, res) => {
   const { date, name, notes } = req.body;
   if (!date) return res.status(400).json({ error: 'Date required' });
   const r = db.prepare('INSERT INTO workout_sessions (user_id, date, name, notes) VALUES (?, ?, ?, ?)').run(req.user.id, date, name || null, notes || null);
+  updateStreak(req.user.id, 'workout');
   res.status(201).json(db.prepare('SELECT * FROM workout_sessions WHERE id = ?').get(r.lastInsertRowid));
 });
 

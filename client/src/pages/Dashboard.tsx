@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Flame, CheckSquare, BookOpen, Zap, Clock, ArrowRight } from 'lucide-react';
+import { Flame, CheckSquare, BookOpen, Zap, Clock, ArrowRight, Dumbbell, Moon } from 'lucide-react';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
 import { useAuth } from '../contexts/AuthContext';
-import type { DashboardData, Task } from '../types';
+import type { DashboardData, DashboardSnapshot, Task } from '../types';
 import { format } from 'date-fns';
 
 const PRIORITY_DOT: Record<string, string> = {
@@ -62,6 +62,93 @@ function TaskRow({ task }: { task: Task }) {
       <span className="text-[11px] shrink-0 font-medium capitalize" style={{ color: dot }}>
         {task.priority}
       </span>
+    </div>
+  );
+}
+
+/* ── Snapshot mini-cards ── */
+function fmtDuration(mins: number | null | undefined) {
+  if (mins == null) return null;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
+function SnapshotSection({ snap }: { snap: DashboardSnapshot }) {
+  const cards: { to: string; title: string; line1: string; line2?: string }[] = [];
+
+  // Habits
+  cards.push({
+    to: '/habits',
+    title: 'Habits',
+    line1: snap.habitsTotal > 0 ? `${snap.habitsDone}/${snap.habitsTotal} done` : 'None set',
+    line2: snap.habitsTotal > 0
+      ? `${Math.round((snap.habitsDone / snap.habitsTotal) * 100)}%`
+      : undefined,
+  });
+
+  // Sleep
+  const sleepDur = snap.lastSleep ? fmtDuration(snap.lastSleep.duration_minutes) : null;
+  cards.push({
+    to: '/sleep',
+    title: 'Sleep',
+    line1: sleepDur ?? 'No log',
+    line2: snap.lastSleep?.quality != null
+      ? `quality ${snap.lastSleep.quality}/5`
+      : snap.lastSleep?.date ?? undefined,
+  });
+
+  // Workout
+  cards.push({
+    to: '/workout',
+    title: 'Workout',
+    line1: snap.lastWorkout ? (snap.lastWorkout.name ?? 'Session') : 'No session',
+    line2: snap.lastWorkout?.date ?? undefined,
+  });
+
+  // Calories
+  cards.push({
+    to: '/diet',
+    title: 'Calories',
+    line1: snap.todayCalories != null ? `${snap.todayCalories} kcal` : 'Not logged',
+    line2: snap.todayProtein != null ? `${snap.todayProtein}g protein` : undefined,
+  });
+
+  // Body
+  cards.push({
+    to: '/body',
+    title: 'Body',
+    line1: snap.latestBody?.weight_kg != null ? `${snap.latestBody.weight_kg} kg` : 'No data',
+    line2: snap.latestBody?.body_fat_pct != null
+      ? `${snap.latestBody.body_fat_pct}% body fat`
+      : snap.latestBody?.date ?? undefined,
+  });
+
+  // Finance
+  const net = (snap.financeIncome ?? 0) - (snap.financeExpenses ?? 0);
+  cards.push({
+    to: '/finance',
+    title: 'Finance',
+    line1: snap.financeIncome != null || snap.financeExpenses != null
+      ? `▲ ${snap.financeIncome ?? 0} / ▼ ${snap.financeExpenses ?? 0}`
+      : 'No entries',
+    line2: snap.financeIncome != null || snap.financeExpenses != null
+      ? `net ${net >= 0 ? '+' : ''}${Math.round(net * 100) / 100}`
+      : undefined,
+  });
+
+  return (
+    <div>
+      <p className="text-xs font-semibold mb-2" style={{ color: '#52525b', letterSpacing: '0.05em' }}>TODAY AT A GLANCE</p>
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        {cards.map(c => (
+          <Link key={c.to} to={c.to} className="card px-3 py-3 flex flex-col gap-1 min-w-[110px] shrink-0 no-underline">
+            <p className="text-[11px] font-semibold" style={{ color: '#52525b' }}>{c.title}</p>
+            <p className="text-sm font-bold text-head leading-tight">{c.line1}</p>
+            {c.line2 && <p className="text-[11px]" style={{ color: '#71717a' }}>{c.line2}</p>}
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
@@ -138,11 +225,16 @@ export default function Dashboard() {
       </div>
 
       {/* ── Streaks ── */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
         <StreakCard value={streaks.tasks?.current   ?? 0} best={streaks.tasks?.longest   ?? 0} label="tasks"   color="#6366f1" icon={CheckSquare} />
         <StreakCard value={streaks.journal?.current ?? 0} best={streaks.journal?.longest ?? 0} label="journal" color="#a855f7" icon={BookOpen}   />
         <StreakCard value={streaks.overall?.current ?? 0} best={streaks.overall?.longest ?? 0} label="overall" color="#f97316" icon={Flame}      />
+        <StreakCard value={streaks.workout?.current ?? 0} best={streaks.workout?.longest ?? 0} label="workout" color="#f97316" icon={Dumbbell}   />
+        <StreakCard value={streaks.sleep?.current   ?? 0} best={streaks.sleep?.longest   ?? 0} label="sleep"   color="#6366f1" icon={Moon}       />
       </div>
+
+      {/* ── Today at a glance ── */}
+      {data.snapshot && <SnapshotSection snap={data.snapshot} />}
 
       {/* ── Task progress ── */}
       {stats.totalTasks > 0 && (
