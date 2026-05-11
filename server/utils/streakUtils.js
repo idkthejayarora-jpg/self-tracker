@@ -16,35 +16,40 @@ function yesterday() {
  * Resets to 1 if gap > 1 day.
  */
 function updateStreak(userId, activityType) {
-  const todayStr = today();
-  const yesterdayStr = yesterday();
+  try {
+    const todayStr = today();
+    const yesterdayStr = yesterday();
 
-  const existing = db
-    .prepare('SELECT * FROM streaks WHERE user_id = ? AND activity_type = ?')
-    .get(userId, activityType);
+    const existing = db
+      .prepare('SELECT * FROM streaks WHERE user_id = ? AND activity_type = ?')
+      .get(userId, activityType);
 
-  if (!existing) {
+    if (!existing) {
+      db.prepare(`
+        INSERT INTO streaks (user_id, activity_type, current_streak, longest_streak, last_activity_date)
+        VALUES (?, ?, 1, 1, ?)
+      `).run(userId, activityType, todayStr);
+      return;
+    }
+
+    if (existing.last_activity_date === todayStr) return; // already counted today
+
+    let newStreak;
+    if (existing.last_activity_date === yesterdayStr) {
+      newStreak = existing.current_streak + 1;
+    } else {
+      newStreak = 1; // gap — reset
+    }
+
+    const longest = Math.max(newStreak, existing.longest_streak);
     db.prepare(`
-      INSERT INTO streaks (user_id, activity_type, current_streak, longest_streak, last_activity_date)
-      VALUES (?, ?, 1, 1, ?)
-    `).run(userId, activityType, todayStr);
-    return;
+      UPDATE streaks SET current_streak = ?, longest_streak = ?, last_activity_date = ?
+      WHERE user_id = ? AND activity_type = ?
+    `).run(newStreak, longest, todayStr, userId, activityType);
+  } catch (e) {
+    // Streak updates are non-critical — never crash the calling route
+    console.error('[streak] updateStreak failed:', activityType, e.message);
   }
-
-  if (existing.last_activity_date === todayStr) return; // already counted today
-
-  let newStreak;
-  if (existing.last_activity_date === yesterdayStr) {
-    newStreak = existing.current_streak + 1;
-  } else {
-    newStreak = 1; // gap — reset
-  }
-
-  const longest = Math.max(newStreak, existing.longest_streak);
-  db.prepare(`
-    UPDATE streaks SET current_streak = ?, longest_streak = ?, last_activity_date = ?
-    WHERE user_id = ? AND activity_type = ?
-  `).run(newStreak, longest, todayStr, userId, activityType);
 }
 
 /**

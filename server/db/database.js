@@ -59,4 +59,36 @@ addColumnIfMissing('exercises', 'category', "TEXT DEFAULT 'other'");
 // workout_sets
 addColumnIfMissing('workout_sets', 'sort_order', 'INTEGER DEFAULT 0');
 
+// ── Streaks CHECK constraint migration ────────────────────────────────────────
+// The original schema only allowed ('tasks','journal','overall').
+// We need to expand it to include 'workout' and 'sleep'.
+// SQLite can't ALTER a CHECK constraint, so we recreate the table.
+try {
+  const row = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='streaks'").get();
+  if (row && !row.sql.includes("'workout'")) {
+    db.exec(`
+      BEGIN;
+      CREATE TABLE streaks_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        activity_type TEXT NOT NULL CHECK(activity_type IN ('tasks','journal','overall','workout','sleep')),
+        current_streak INTEGER DEFAULT 0,
+        longest_streak INTEGER DEFAULT 0,
+        last_activity_date DATE,
+        UNIQUE(user_id, activity_type)
+      );
+      INSERT OR IGNORE INTO streaks_new
+        (id, user_id, activity_type, current_streak, longest_streak, last_activity_date)
+        SELECT id, user_id, activity_type, current_streak, longest_streak, last_activity_date
+        FROM streaks;
+      DROP TABLE streaks;
+      ALTER TABLE streaks_new RENAME TO streaks;
+      COMMIT;
+    `);
+    console.log('[migration] Expanded streaks.activity_type CHECK to include workout/sleep');
+  }
+} catch (e) {
+  console.error('[migration] streaks CHECK expand failed:', e.message);
+}
+
 module.exports = db;
