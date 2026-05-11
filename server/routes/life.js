@@ -78,6 +78,11 @@ router.delete('/areas/:id', (req, res) => {
 router.post('/areas/:id/milestones', (req, res) => {
   const { title, target_date } = req.body;
   if (!title) return res.status(400).json({ error: 'Title required' });
+
+  // Verify area belongs to this user
+  const area = db.prepare('SELECT id FROM life_areas WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id);
+  if (!area) return res.status(404).json({ error: 'Area not found' });
+
   const maxOrder = db.prepare('SELECT MAX(sort_order) as m FROM life_milestones WHERE area_id = ?').get(req.params.id);
   const r = db.prepare('INSERT INTO life_milestones (area_id, title, target_date, sort_order) VALUES (?, ?, ?, ?)').run(
     req.params.id, title, target_date || null, (maxOrder.m ?? -1) + 1

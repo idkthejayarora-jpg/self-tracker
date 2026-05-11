@@ -39,8 +39,9 @@ if (fs.existsSync(distPath)) {
 
 // Global error handler — catches sync throws and next(err) from route handlers
 app.use((err, req, res, _next) => {
-  console.error('[ERROR]', req.method, req.path, err);
-  res.status(500).json({ error: err.message || 'Internal server error' });
+  console.error('[ERROR]', req.method, req.path, err.message);
+  // Include route path in the response so the client error banner shows exactly which endpoint failed
+  res.status(500).json({ error: `${err.message || 'Internal server error'} [${req.method} ${req.path}]` });
 });
 
 // Catch unhandled promise rejections so they don't silently crash routes

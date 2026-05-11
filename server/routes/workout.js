@@ -72,6 +72,14 @@ router.post('/sessions/:id/sets', (req, res) => {
   const { exercise_id, reps, weight, duration_seconds } = req.body;
   if (!exercise_id) return res.status(400).json({ error: 'exercise_id required' });
 
+  // Verify session belongs to this user
+  const session = db.prepare('SELECT id FROM workout_sessions WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id);
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+
+  // Verify exercise belongs to this user
+  const exercise = db.prepare('SELECT id FROM exercises WHERE id = ? AND user_id = ?').get(exercise_id, req.user.id);
+  if (!exercise) return res.status(404).json({ error: 'Exercise not found' });
+
   const maxOrder = db.prepare('SELECT MAX(sort_order) as m FROM workout_sets WHERE session_id = ?').get(req.params.id);
   const order = (maxOrder.m ?? -1) + 1;
 

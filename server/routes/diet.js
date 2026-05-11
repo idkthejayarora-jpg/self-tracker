@@ -61,10 +61,18 @@ router.post('/log', (req, res) => {
           carbs_g = 0, fat_g = 0, saved_meal_id = null } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Name required' });
   const logDate = date || new Date().toISOString().slice(0, 10);
+
+  // Validate saved_meal_id belongs to this user — nullify if invalid to avoid FK error
+  let validMealId = null;
+  if (saved_meal_id) {
+    const meal = db.prepare('SELECT id FROM saved_meals WHERE id = ? AND user_id = ?').get(saved_meal_id, req.user.id);
+    validMealId = meal ? saved_meal_id : null;
+  }
+
   const result = db.prepare(`
     INSERT INTO food_logs (user_id, date, meal_type, name, calories, protein_g, carbs_g, fat_g, saved_meal_id)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(req.user.id, logDate, meal_type, name.trim(), calories, protein_g, carbs_g, fat_g, saved_meal_id);
+  `).run(req.user.id, logDate, meal_type, name.trim(), calories, protein_g, carbs_g, fat_g, validMealId);
   res.status(201).json(db.prepare('SELECT * FROM food_logs WHERE id = ?').get(result.lastInsertRowid));
 });
 
