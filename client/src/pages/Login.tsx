@@ -1,18 +1,37 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../lib/api';
+
+type Mode = 'login' | 'register' | 'reset';
 
 export default function Login() {
   const { login, register } = useAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+
+  const [mode, setMode] = useState<Mode>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPw, setShowPw] = useState(false);
+
+  // Reset-specific
+  const [resetCode, setResetCode] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
+
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
-  async function submit(e: FormEvent) {
+  function switchMode(m: Mode) {
+    setMode(m);
+    setError('');
+    setSuccess('');
+  }
+
+  async function handleLoginRegister(e: FormEvent) {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -21,73 +40,189 @@ export default function Login() {
       else await register(username, password);
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Something went wrong');
+      setError(err.response?.data?.error || 'Something went wrong. Check your connection.');
     } finally {
       setLoading(false);
     }
   }
 
+  async function handleReset(e: FormEvent) {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    if (newPw !== confirmPw) { setError("New passwords don't match"); return; }
+    if (newPw.length < 4)    { setError('Password must be at least 4 characters'); return; }
+    setLoading(true);
+    try {
+      await api.post('/auth/reset', {
+        secret: resetCode,
+        username,
+        new_password: newPw,
+      });
+      setSuccess('Password reset! You can now sign in.');
+      setResetCode(''); setNewPw(''); setConfirmPw('');
+      setTimeout(() => switchMode('login'), 1800);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Reset failed. Check your recovery code.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const inputCls = 'w-full rounded-xl px-3 py-2.5 text-sm border focus:outline-none';
+
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
-          <img src="/logo.svg" alt="Self Tracker" className="w-20 h-20 rounded-3xl mb-3 shadow-lg" />
-          <h1 className="text-2xl font-bold text-white">Self Tracker</h1>
-          <p className="text-gray-500 text-sm mt-1">Track tasks, journal, streaks & more</p>
+    <div className="min-h-screen flex items-center justify-center px-4"
+      style={{ background: 'var(--s0)' }}>
+      <div className="w-full max-w-sm space-y-5">
+
+        {/* Logo + heading */}
+        <div className="flex flex-col items-center gap-3">
+          <div className="rounded-2xl overflow-hidden shadow-lg"
+            style={{ width: 80, height: 80, background: '#e3dfda', boxShadow: '0 0 0 1px rgba(0,0,0,0.08)' }}>
+            <img src="/logo.png" alt="logo"
+              className="w-full h-full object-cover"
+              style={{ objectPosition: 'center top' }} />
+          </div>
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-head tracking-tight">Self Tracker</h1>
+            <p className="text-sm mt-0.5" style={{ color: '#71717a' }}>Track tasks, journal, streaks & more</p>
+          </div>
         </div>
 
-        {/* Tab switcher */}
-        <div className="flex bg-gray-900 border border-gray-800 rounded-xl p-1 mb-4">
-          <button
-            type="button"
-            onClick={() => { setMode('login'); setError(''); }}
-            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'login' ? 'bg-brand-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}
-          >
-            Sign in
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode('register'); setError(''); }}
-            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'register' ? 'bg-brand-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}
-          >
-            Create account
-          </button>
+        {/* Mode tabs */}
+        <div className="flex rounded-xl p-1 gap-1" style={{ background: 'var(--s2)', border: '1px solid var(--b)' }}>
+          {(['login', 'register', 'reset'] as Mode[]).map(m => (
+            <button key={m} type="button" onClick={() => switchMode(m)}
+              className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize"
+              style={{
+                background: mode === m ? 'var(--s3)' : 'transparent',
+                color: mode === m ? 'rgb(var(--accent-rgb-light))' : '#71717a',
+              }}>
+              {m === 'reset' ? 'Reset' : m === 'login' ? 'Sign in' : 'Register'}
+            </button>
+          ))}
         </div>
 
-        <form onSubmit={submit} className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3">
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            autoFocus
-            required
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
+        {/* Form card */}
+        <div className="card px-5 py-5">
 
-          {error && (
-            <p className="text-red-400 text-sm bg-red-950/40 border border-red-900/50 rounded-lg px-3 py-2">
-              {error}
-            </p>
+          {/* ── Sign in / Register ── */}
+          {(mode === 'login' || mode === 'register') && (
+            <form onSubmit={handleLoginRegister} className="space-y-3">
+              <div>
+                <label className="text-[11px] font-semibold" style={{ color: '#71717a' }}>USERNAME</label>
+                <input type="text" value={username} onChange={e => setUsername(e.target.value)}
+                  placeholder="your_username" required autoFocus autoCapitalize="none"
+                  className={inputCls} style={{ marginTop: 4 }} />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-semibold" style={{ color: '#71717a' }}>PASSWORD</label>
+                <div className="relative mt-1">
+                  <input type={showPw ? 'text' : 'password'} value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••" required
+                    className={inputCls} style={{ paddingRight: 40 }} />
+                  <button type="button" onClick={() => setShowPw(s => !s)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 tap"
+                    style={{ color: '#52525b' }}>
+                    {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
+                  style={{ background: 'rgb(239 68 68 / 0.08)', color: '#f87171', border: '1px solid rgb(239 68 68 / 0.2)' }}>
+                  <AlertCircle size={13} />{error}
+                </div>
+              )}
+
+              <button type="submit" disabled={loading}
+                className="w-full py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 tap"
+                style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
+                {loading ? '...' : mode === 'login' ? 'Sign in' : 'Create account'}
+              </button>
+
+              {mode === 'login' && (
+                <p className="text-center text-xs" style={{ color: '#52525b' }}>
+                  Forgot your password?{' '}
+                  <button type="button" onClick={() => switchMode('reset')}
+                    className="underline tap" style={{ color: 'rgb(var(--accent-rgb-light))' }}>
+                    Reset it
+                  </button>
+                </p>
+              )}
+            </form>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition-colors"
-          >
-            {loading ? '...' : mode === 'login' ? 'Sign in' : 'Create account'}
-          </button>
-        </form>
+          {/* ── Reset password ── */}
+          {mode === 'reset' && (
+            <form onSubmit={handleReset} className="space-y-3">
+              <p className="text-xs mb-1" style={{ color: '#71717a' }}>
+                Enter your username, the recovery code set in your server environment
+                (<code className="text-[11px]" style={{ color: 'rgb(var(--accent-rgb-light))' }}>RESET_SECRET</code>),
+                and your new password.
+              </p>
+
+              <div>
+                <label className="text-[11px] font-semibold" style={{ color: '#71717a' }}>USERNAME</label>
+                <input type="text" value={username} onChange={e => setUsername(e.target.value)}
+                  placeholder="your_username" required autoCapitalize="none"
+                  className={inputCls} style={{ marginTop: 4 }} />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-semibold" style={{ color: '#71717a' }}>RECOVERY CODE</label>
+                <input type="password" value={resetCode} onChange={e => setResetCode(e.target.value)}
+                  placeholder="Server RESET_SECRET value" required
+                  className={inputCls} style={{ marginTop: 4 }} />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-semibold" style={{ color: '#71717a' }}>NEW PASSWORD</label>
+                <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)}
+                  placeholder="••••••••" required minLength={4}
+                  className={inputCls} style={{ marginTop: 4 }} />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-semibold" style={{ color: '#71717a' }}>CONFIRM PASSWORD</label>
+                <input type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)}
+                  placeholder="••••••••" required
+                  className={inputCls} style={{ marginTop: 4 }} />
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
+                  style={{ background: 'rgb(239 68 68 / 0.08)', color: '#f87171', border: '1px solid rgb(239 68 68 / 0.2)' }}>
+                  <AlertCircle size={13} />{error}
+                </div>
+              )}
+              {success && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
+                  style={{ background: 'rgb(34 197 94 / 0.08)', color: '#4ade80', border: '1px solid rgb(34 197 94 / 0.2)' }}>
+                  <CheckCircle2 size={13} />{success}
+                </div>
+              )}
+
+              <button type="submit" disabled={loading}
+                className="w-full py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 tap"
+                style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
+                {loading ? 'Resetting...' : 'Reset password'}
+              </button>
+
+              <p className="text-center text-xs" style={{ color: '#52525b' }}>
+                Remember it?{' '}
+                <button type="button" onClick={() => switchMode('login')}
+                  className="underline tap" style={{ color: 'rgb(var(--accent-rgb-light))' }}>
+                  Sign in
+                </button>
+              </p>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
