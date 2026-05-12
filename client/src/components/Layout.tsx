@@ -123,7 +123,12 @@ export default function Layout() {
 
         {/* Logo */}
         <div className="mb-7 px-1 flex items-center gap-2.5">
-          <img src="/logo.svg" alt="Self Tracker" className="w-8 h-8 rounded-lg shrink-0" />
+          <div className="shrink-0 rounded-xl overflow-hidden"
+            style={{ width: 44, height: 44, background: '#e3dfda', boxShadow: '0 0 0 1px rgba(0,0,0,0.08)' }}>
+            <img src="/logo.png" alt="logo"
+              className="w-full h-full object-cover"
+              style={{ objectPosition: 'center top' }} />
+          </div>
           <div>
             <p className="text-[13px] font-bold text-head leading-tight">Self Tracker</p>
             <p className="text-[11px]" style={{ color: '#52525b' }}>@{user?.username}</p>
@@ -212,7 +217,12 @@ export default function Layout() {
 
         {/* Logo — fixed at top */}
         <div className="shrink-0 pt-3 pb-2">
-          <img src="/logo.svg" alt="" className="w-7 h-7 rounded-lg" />
+          <div className="rounded-xl overflow-hidden"
+            style={{ width: 38, height: 38, background: '#e3dfda', boxShadow: '0 0 0 1px rgba(0,0,0,0.08)' }}>
+            <img src="/logo.png" alt="logo"
+              className="w-full h-full object-cover"
+              style={{ objectPosition: 'center top' }} />
+          </div>
         </div>
 
         {/* Scrollable nav icons — takes all remaining space */}
