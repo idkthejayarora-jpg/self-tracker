@@ -39,12 +39,26 @@ router.post('/', (req, res) => {
   const { title, description, due_date, due_time, priority, is_recurring, recur_interval, follow_up_date, tags } = req.body;
   if (!title) return res.status(400).json({ error: 'Title required' });
 
+  const uid = req.user.id;
+
+  // Verify user exists (belt-and-suspenders — auth middleware already checks this,
+  // but if it somehow slips through we want a clean 401 not a FK crash)
+  const userRow = db.prepare('SELECT id FROM users WHERE id = ?').get(uid);
+  if (!userRow) {
+    console.error('[tasks POST] user_id not found in DB:', uid);
+    return res.status(401).json({ error: 'Session invalid. Please log out and log back in.' });
+  }
+
+  const params = [uid, title, description || null, due_date || null, due_time || null,
+    priority || 'medium', is_recurring ? 1 : 0, recur_interval || null, follow_up_date || null,
+    JSON.stringify(tags || [])];
+
+  console.log('[tasks POST] uid=%s title=%s priority=%s', uid, title, priority || 'medium');
+
   const result = db.prepare(`
     INSERT INTO tasks (user_id, title, description, due_date, due_time, priority, is_recurring, recur_interval, follow_up_date, tags)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(req.user.id, title, description || null, due_date || null, due_time || null,
-    priority || 'medium', is_recurring ? 1 : 0, recur_interval || null, follow_up_date || null,
-    JSON.stringify(tags || []));
+  `).run(...params);
 
   res.status(201).json(db.prepare('SELECT * FROM tasks WHERE id = ?').get(result.lastInsertRowid));
 });

@@ -19,6 +19,12 @@ db.pragma('foreign_keys = ON');
 const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
 db.exec(schema);
 
+// Log the production tasks table definition so we can see its FK/CHECK constraints
+try {
+  const tasksDef = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='tasks'").get();
+  console.log('[db] tasks table SQL:', tasksDef?.sql?.replace(/\s+/g, ' '));
+} catch (_) {}
+
 // ── Column migrations ─────────────────────────────────────────────────────────
 // ALTER TABLE … ADD COLUMN is safe to run repeatedly — we catch DUPLICATE errors.
 // This handles production DBs created before new columns were added.
