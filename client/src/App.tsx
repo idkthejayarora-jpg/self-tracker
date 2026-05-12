@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { useReminders } from './hooks/useReminders';
 import Layout from './components/Layout';
+import UrgentTasksModal from './components/UrgentTasksModal';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
@@ -30,6 +31,8 @@ function AppRoutes() {
   useReminders(!!user);
 
   return (
+    <>
+    {user && <UrgentTasksModal />}
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
@@ -49,6 +52,7 @@ function AppRoutes() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }
 

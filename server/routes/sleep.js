@@ -3,6 +3,7 @@ const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
 const db = require('../db/database');
 const { updateStreak } = require('../utils/streakUtils');
+const { awardPoints } = require('../utils/pointsUtils');
 
 router.use(authMiddleware);
 
@@ -56,6 +57,15 @@ router.post('/', (req, res) => {
 
   const row = db.prepare('SELECT * FROM sleep_logs WHERE user_id = ? AND date = ?').get(req.user.id, logDate);
   updateStreak(req.user.id, 'sleep');
+
+  // Award 15 pts once per day for logging sleep
+  const alreadyAwarded = db.prepare(
+    "SELECT 1 FROM points_log WHERE user_id=? AND source='sleep' AND DATE(created_at)=date('now')"
+  ).get(req.user.id);
+  if (!alreadyAwarded) {
+    awardPoints(req.user.id, 'sleep', 'log', 15, null, logDate);
+  }
+
   res.json(row);
 });
 

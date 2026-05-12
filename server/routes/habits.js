@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
 const db = require('../db/database');
+const { awardPoints } = require('../utils/pointsUtils');
 
 router.use(authMiddleware);
 
@@ -60,6 +61,17 @@ router.put('/log/:habitId', (req, res) => {
 
   const log = db.prepare('SELECT * FROM habit_logs WHERE user_id = ? AND habit_id = ? AND date = ?')
     .get(req.user.id, req.params.habitId, logDate);
+
+  // Award 10 pts when marking done — once per habit per day
+  if (done) {
+    const alreadyAwarded = db.prepare(
+      "SELECT 1 FROM points_log WHERE user_id=? AND source='habit' AND source_id=? AND DATE(created_at)=?"
+    ).get(req.user.id, req.params.habitId, logDate);
+    if (!alreadyAwarded) {
+      awardPoints(req.user.id, 'habit', 'complete', 10, parseInt(req.params.habitId), habit.name);
+    }
+  }
+
   res.json(log);
 });
 

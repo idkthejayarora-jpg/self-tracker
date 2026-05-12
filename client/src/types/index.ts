@@ -77,6 +77,15 @@ export interface DashboardSnapshot {
   financeExpenses: number | null;
 }
 
+export interface PointsSummary {
+  total: number;
+  today: number;
+  level: number;
+  levelLabel: string;
+  nextLevel: number | null;
+  progressPct: number;
+}
+
 export interface DashboardData {
   today: string;
   pendingToday: Task[];
@@ -89,6 +98,7 @@ export interface DashboardData {
     totalJournal: number;
   };
   snapshot?: DashboardSnapshot;
+  points?: PointsSummary;
 }
 
 export interface WeeklyAnalytics {

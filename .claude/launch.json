@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "self-tracker-client",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "/Users/jaigopalarora/self-tracker/client",
+      "port": 5173
+    }
+  ]
+}

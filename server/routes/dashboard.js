@@ -2,6 +2,7 @@ const router = require('express').Router();
 const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
 const { computePriorityScore } = require('../utils/priorityScore');
+const { getTotalPoints, getLevelInfo } = require('../utils/pointsUtils');
 
 router.use(authMiddleware);
 
@@ -93,6 +94,14 @@ router.get('/', (req, res) => {
     financeIncome, financeExpenses
   };
 
+  // Points / score
+  let points = { total: 0, today: 0, level: 1, levelLabel: 'Beginner', nextLevel: 500, progressPct: 0 };
+  try {
+    const totalPts  = getTotalPoints(uid);
+    const todayPts  = (db.prepare("SELECT SUM(points) as s FROM points_log WHERE user_id = ? AND DATE(created_at) = date('now')").get(uid) || {}).s || 0;
+    points = { total: totalPts, today: todayPts, ...getLevelInfo(totalPts) };
+  } catch (_) {}
+
   res.json({
     today,
     pendingToday,
@@ -100,7 +109,8 @@ router.get('/', (req, res) => {
     journal,
     streaks,
     stats: { totalTasks, completedTasks, totalJournal },
-    snapshot
+    snapshot,
+    points
   });
 });
 

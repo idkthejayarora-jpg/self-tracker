@@ -3,6 +3,7 @@ const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
 const { updateStreak, maybeUpdateOverallStreak } = require('../utils/streakUtils');
 const { computePriorityScore } = require('../utils/priorityScore');
+const { awardPoints } = require('../utils/pointsUtils');
 
 router.use(authMiddleware);
 
@@ -127,6 +128,9 @@ router.patch('/:id', (req, res) => {
   if (justCompleted) {
     updateStreak(req.user.id, 'tasks');
     maybeUpdateOverallStreak(req.user.id);
+    const pointsForPriority = { urgent: 50, high: 30, medium: 20, low: 10 };
+    const pts = pointsForPriority[priority] || 20;
+    awardPoints(req.user.id, 'task', 'complete', pts, task.id, task.title);
   }
 
   res.json(db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id));

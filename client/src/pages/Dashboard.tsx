@@ -4,7 +4,7 @@ import { Flame, CheckSquare, BookOpen, Zap, Clock, ArrowRight, Dumbbell, Moon } 
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
 import { useAuth } from '../contexts/AuthContext';
-import type { DashboardData, DashboardSnapshot, Task } from '../types';
+import type { DashboardData, DashboardSnapshot, PointsSummary, Task } from '../types';
 import { format } from 'date-fns';
 
 const PRIORITY_DOT: Record<string, string> = {
@@ -153,6 +153,43 @@ function SnapshotSection({ snap }: { snap: DashboardSnapshot }) {
   );
 }
 
+/* ── Score card ── */
+const LEVEL_COLORS = ['','#6366f1','#3b82f6','#22c55e','#f97316','#ef4444','#a855f7'];
+
+function ScoreCard({ pts }: { pts: PointsSummary }) {
+  const color = LEVEL_COLORS[pts.level] ?? '#6366f1';
+  return (
+    <div className="card px-4 py-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+            style={{ background: `${color}22`, color }}>
+            LVL {pts.level}
+          </span>
+          <span className="text-xs font-semibold" style={{ color }}>{pts.levelLabel}</span>
+        </div>
+        <div className="text-right">
+          <span className="text-lg font-bold text-head tabular-nums">{pts.total.toLocaleString()}</span>
+          <span className="text-xs ml-1" style={{ color: '#52525b' }}>pts</span>
+        </div>
+      </div>
+      {/* Progress bar */}
+      <div className="h-1.5 rounded-full w-full mb-1.5" style={{ background: 'var(--s3)' }}>
+        <div className="h-1.5 rounded-full transition-all duration-700"
+          style={{ width: `${pts.progressPct}%`, background: color }} />
+      </div>
+      <div className="flex justify-between">
+        <span className="text-[10px]" style={{ color: '#52525b' }}>
+          {pts.today > 0 ? `+${pts.today} today` : 'Earn pts by completing tasks, logging habits & more'}
+        </span>
+        <span className="text-[10px]" style={{ color: '#52525b' }}>
+          {pts.nextLevel != null ? `${pts.nextLevel} to next level` : 'Max level'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 /* ── Section header ── */
 function Section({ icon: Icon, iconColor, title, action, count }: {
   icon: any; iconColor: string; title: string;
@@ -223,6 +260,9 @@ export default function Dashboard() {
             : 'No tasks yet — add something to work on'}
         </p>
       </div>
+
+      {/* ── Score ── */}
+      {data.points && <ScoreCard pts={data.points} />}
 
       {/* ── Streaks ── */}
       <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">

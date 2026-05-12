@@ -23,6 +23,7 @@ app.use('/api/habits',  require('./routes/habits'));
 app.use('/api/body',    require('./routes/body'));
 app.use('/api/sleep',   require('./routes/sleep'));
 app.use('/api/finance', require('./routes/finance'));
+app.use('/api/points', require('./routes/points'));
 
 app.get('/api/health', (_, res) => res.json({ ok: true }));
 

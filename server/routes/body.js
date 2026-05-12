@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
 const db = require('../db/database');
+const { awardPoints } = require('../utils/pointsUtils');
 
 router.use(authMiddleware);
 
@@ -42,6 +43,15 @@ router.post('/', (req, res) => {
          hips_cm ?? null, neck_cm ?? null, bicep_cm ?? null, notes ?? null);
 
   const row = db.prepare('SELECT * FROM body_stats WHERE user_id = ? AND date = ?').get(req.user.id, logDate);
+
+  // Award 10 pts once per day for logging body stats
+  const alreadyAwarded = db.prepare(
+    "SELECT 1 FROM points_log WHERE user_id=? AND source='body' AND DATE(created_at)=date('now')"
+  ).get(req.user.id);
+  if (!alreadyAwarded) {
+    awardPoints(req.user.id, 'body', 'log_stats', 10, null, logDate);
+  }
+
   res.json(row);
 });
 

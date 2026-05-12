@@ -2,6 +2,7 @@ const router = require('express').Router();
 const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
 const { updateStreak, maybeUpdateOverallStreak } = require('../utils/streakUtils');
+const { awardPoints } = require('../utils/pointsUtils');
 
 router.use(authMiddleware);
 
@@ -39,6 +40,14 @@ router.put('/:date', (req, res) => {
 
   updateStreak(req.user.id, 'journal');
   maybeUpdateOverallStreak(req.user.id);
+
+  // Award 20 pts once per day for journaling
+  const alreadyAwarded = db.prepare(
+    "SELECT 1 FROM points_log WHERE user_id=? AND source='journal' AND DATE(created_at)=date('now')"
+  ).get(req.user.id);
+  if (!alreadyAwarded) {
+    awardPoints(req.user.id, 'journal', 'write', 20, null, req.params.date);
+  }
 
   res.json(db.prepare('SELECT * FROM journal_entries WHERE user_id = ? AND date = ?')
     .get(req.user.id, req.params.date));

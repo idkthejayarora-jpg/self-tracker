@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
+const { awardPoints } = require('../utils/pointsUtils');
 
 router.use(authMiddleware);
 
@@ -73,6 +74,7 @@ router.post('/log', (req, res) => {
     INSERT INTO food_logs (user_id, date, meal_type, name, calories, protein_g, carbs_g, fat_g, saved_meal_id)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(req.user.id, logDate, meal_type, name.trim(), calories, protein_g, carbs_g, fat_g, validMealId);
+  awardPoints(req.user.id, 'diet', 'log_food', 5, result.lastInsertRowid, name.trim());
   res.status(201).json(db.prepare('SELECT * FROM food_logs WHERE id = ?').get(result.lastInsertRowid));
 });
 
