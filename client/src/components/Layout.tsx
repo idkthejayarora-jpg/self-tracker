@@ -3,13 +3,14 @@ import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, CheckSquare, BookOpen, Bell, BarChart2,
   Dumbbell, Sparkles, LogOut, Sun, Moon, Palette, X, Salad, KeyRound,
-  ShieldOff, Target, Activity, Wallet,
+  ShieldOff, Target, Activity, Wallet, Swords,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, ACCENT_PRESETS } from '../contexts/ThemeContext';
 import api from '../lib/api';
 
 const NAV = [
+  { to: '/me',        icon: Swords,          label: 'Me'        },
   { to: '/',          icon: LayoutDashboard, label: 'Home'      },
   { to: '/tasks',     icon: CheckSquare,     label: 'Tasks'     },
   { to: '/journal',   icon: BookOpen,        label: 'Journal'   },

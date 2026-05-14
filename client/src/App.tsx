@@ -18,6 +18,7 @@ import Habits from './pages/Habits';
 import BodyStats from './pages/BodyStats';
 import Sleep from './pages/Sleep';
 import Finance from './pages/Finance';
+import Me from './pages/Me';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -49,6 +50,7 @@ function AppRoutes() {
         <Route path="body" element={<BodyStats />} />
         <Route path="sleep" element={<Sleep />} />
         <Route path="finance" element={<Finance />} />
+        <Route path="me" element={<Me />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

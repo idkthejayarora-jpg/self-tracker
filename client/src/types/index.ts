@@ -177,6 +177,69 @@ export interface FinanceGoal {
   color: string;
 }
 
+export interface MeProfile {
+  id?: number;
+  character_name: string;
+  title: string;
+  class: string;
+  bio: string;
+  adventure: string;
+  avatar_emoji: string;
+}
+
+export interface MeSkill {
+  id: number;
+  name: string;
+  description: string;
+  level: number;
+  xp: number;
+  icon: string;
+  category: string;
+  sort_order: number;
+}
+
+export interface MeClaim {
+  id: number;
+  title: string;
+  description: string;
+  claim_type: 'quest' | 'achievement' | 'legacy';
+  status: 'active' | 'claimed' | 'failed';
+  deadline: string | null;
+  reward_text: string;
+  icon: string;
+}
+
+export interface MeMentor {
+  id: number;
+  name: string;
+  era: string;
+  domain: string;
+  trait: string;
+  progress: number;
+  icon: string;
+  notes: string;
+}
+
+export interface MeStats {
+  strength: number;
+  vitality: number;
+  discipline: number;
+  focus: number;
+  endurance: number;
+  wealth: number;
+}
+
+export interface MeSummary {
+  profile: MeProfile;
+  rank: string;
+  rankColor: string;
+  totalPoints: number;
+  stats: MeStats;
+  skills: MeSkill[];
+  claims: MeClaim[];
+  mentors: MeMentor[];
+}
+
 export interface CheckinResult {
   mood: number | null;
   sleep_logged: boolean;

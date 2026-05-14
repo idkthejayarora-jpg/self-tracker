@@ -25,6 +25,7 @@ app.use('/api/sleep',   require('./routes/sleep'));
 app.use('/api/finance', require('./routes/finance'));
 app.use('/api/points', require('./routes/points'));
 app.use('/api/checkin', require('./routes/checkin'));
+app.use('/api/me',      require('./routes/me'));
 
 app.get('/api/health', (_, res) => res.json({ ok: true }));
 

@@ -247,3 +247,58 @@ CREATE TABLE IF NOT EXISTS points_log (
   note TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ── Me / Character ────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS me_profile (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+  character_name TEXT DEFAULT '',
+  title TEXT DEFAULT '',
+  class TEXT DEFAULT '',
+  bio TEXT DEFAULT '',
+  adventure TEXT DEFAULT '',
+  avatar_emoji TEXT DEFAULT '⚔️',
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS me_skills (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  level INTEGER DEFAULT 1,
+  xp INTEGER DEFAULT 0,
+  icon TEXT DEFAULT '⚡',
+  category TEXT DEFAULT 'general',
+  sort_order INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS me_claims (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  claim_type TEXT DEFAULT 'quest' CHECK(claim_type IN ('quest','achievement','legacy')),
+  status TEXT DEFAULT 'active' CHECK(status IN ('active','claimed','failed')),
+  deadline DATE,
+  reward_text TEXT DEFAULT '',
+  icon TEXT DEFAULT '🎯',
+  sort_order INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS me_mentors (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  era TEXT DEFAULT '',
+  domain TEXT DEFAULT '',
+  trait TEXT DEFAULT '',
+  progress INTEGER DEFAULT 0,
+  icon TEXT DEFAULT '👤',
+  notes TEXT DEFAULT '',
+  sort_order INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
