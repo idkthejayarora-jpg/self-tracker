@@ -4,6 +4,17 @@ const jwt = require('jsonwebtoken');
 const db = require('../db/database');
 const { JWT_SECRET } = require('../middleware/auth');
 
+// Wipe ALL users (and all their data via CASCADE): POST /api/auth/wipe-all { secret }
+// One-time use to give a clean slate. Requires RESET_SECRET.
+router.post('/wipe-all', (req, res) => {
+  const { secret } = req.body;
+  const expected = process.env.RESET_SECRET;
+  if (!expected || secret !== expected) return res.status(403).json({ error: 'Forbidden' });
+  const { changes } = db.prepare('DELETE FROM users').run();
+  console.log(`[wipe-all] Deleted ${changes} user(s) and all cascaded data.`);
+  res.json({ ok: true, users_deleted: changes });
+});
+
 // Emergency reset: POST /api/auth/reset  { secret, username, new_password }
 // Requires RESET_SECRET env var to be set on the server
 router.post('/reset', (req, res) => {

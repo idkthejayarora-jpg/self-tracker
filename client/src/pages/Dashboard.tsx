@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Flame, CheckSquare, BookOpen, Zap, Clock, ArrowRight, Dumbbell, Moon, Sparkles, Send, X } from 'lucide-react';
+import { Flame, CheckSquare, BookOpen, Zap, Clock, ArrowRight, Dumbbell, Moon, Sparkles, Send, X, Mic, MicOff, Volume2, ChevronDown } from 'lucide-react';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
 import { useAuth } from '../contexts/AuthContext';
@@ -225,26 +225,135 @@ const PROMPTS = [
   "How are you feeling? What's on your mind?",
   "Summarise your day — I'll handle the rest.",
 ];
-
 const MOOD_EMOJI_MAP = ['', '😞', '😕', '😐', '🙂', '😄'];
+
+// Get the SpeechRecognition constructor cross-browser
+const SR: typeof SpeechRecognition | null =
+  (typeof window !== 'undefined' &&
+    ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)) || null;
+
+function useSpeechVoices() {
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    const load = () => {
+      const all = window.speechSynthesis.getVoices();
+      const en = all.filter(v => v.lang.startsWith('en'));
+      if (en.length) setVoices(en);
+    };
+    load();
+    window.speechSynthesis.onvoiceschanged = load;
+    return () => { window.speechSynthesis.onvoiceschanged = null; };
+  }, []);
+  return voices;
+}
+
+function speak(text: string, voice: SpeechSynthesisVoice | null) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = 'en-US';
+  utt.rate = 1.0;
+  utt.pitch = 1.0;
+  if (voice) utt.voice = voice;
+  window.speechSynthesis.speak(utt);
+}
 
 function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
   const today = new Date().toISOString().slice(0, 10);
   const storageKey = `checkin_${today}`;
+  const voiceKey = 'checkin_voice_name';
+
+  const voices = useSpeechVoices();
+  const [selectedVoiceName, setSelectedVoiceName] = useState<string>(
+    () => localStorage.getItem(voiceKey) ?? ''
+  );
+  const [showVoicePicker, setShowVoicePicker] = useState(false);
+  const selectedVoice = voices.find(v => v.name === selectedVoiceName) ?? voices[0] ?? null;
 
   const [open, setOpen] = useState(() => localStorage.getItem(storageKey) !== 'done');
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CheckinResult | null>(null);
   const [error, setError] = useState('');
+  const [listening, setListening] = useState(false);
+  const [interimText, setInterimText] = useState('');
+
   const promptRef = useRef(PROMPTS[Math.floor(Math.random() * PROMPTS.length)]);
   const taRef = useRef<HTMLTextAreaElement>(null);
+  const srRef = useRef<SpeechRecognition | null>(null);
+  const baseTextRef = useRef(''); // text committed before current recording session
 
+  // Focus textarea when opened
   useEffect(() => {
     if (open && !result && taRef.current) taRef.current.focus();
   }, [open, result]);
 
+  // Pick a default voice once voices load (pick first US English female if available)
+  useEffect(() => {
+    if (!voices.length || selectedVoiceName) return;
+    const preferred = voices.find(v => /samantha|karen|tessa|moira|zira|hazel/i.test(v.name))
+      ?? voices.find(v => v.lang === 'en-US')
+      ?? voices[0];
+    if (preferred) {
+      setSelectedVoiceName(preferred.name);
+      localStorage.setItem(voiceKey, preferred.name);
+    }
+  }, [voices, selectedVoiceName]);
+
+  function pickVoice(v: SpeechSynthesisVoice) {
+    setSelectedVoiceName(v.name);
+    localStorage.setItem(voiceKey, v.name);
+    setShowVoicePicker(false);
+    // Preview the voice
+    speak('Got it, I\'ll use this voice.', v);
+  }
+
+  function toggleListening() {
+    if (!SR) return;
+    if (listening) {
+      srRef.current?.stop();
+      return;
+    }
+    const sr = new SR();
+    srRef.current = sr;
+    sr.lang = 'en-US';
+    sr.continuous = true;
+    sr.interimResults = true;
+
+    baseTextRef.current = text; // save what's already typed
+
+    sr.onstart = () => setListening(true);
+
+    sr.onresult = (e: SpeechRecognitionEvent) => {
+      let interim = '';
+      let final = baseTextRef.current;
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) {
+          final += (final ? ' ' : '') + t.trim();
+          baseTextRef.current = final;
+        } else {
+          interim = t;
+        }
+      }
+      setText(final + (interim ? ' ' + interim : ''));
+      setInterimText(interim);
+    };
+
+    sr.onerror = () => { setListening(false); setInterimText(''); };
+    sr.onend = () => {
+      setListening(false);
+      setInterimText('');
+      // Trim any trailing interim ghost text
+      setText(baseTextRef.current);
+    };
+
+    sr.start();
+  }
+
   async function submit() {
+    if (listening) { srRef.current?.stop(); }
     if (!text.trim() || loading) return;
     setLoading(true);
     setError('');
@@ -253,6 +362,10 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
       setResult(res.data);
       localStorage.setItem(storageKey, 'done');
       onCheckinDone();
+      // Read the response aloud
+      if (res.data.friendly_response) {
+        setTimeout(() => speak(res.data.friendly_response, selectedVoice), 300);
+      }
     } catch (e: any) {
       setError(e.response?.data?.error || 'Something went wrong. Try again.');
     } finally {
@@ -261,6 +374,8 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
   }
 
   function dismiss() {
+    srRef.current?.stop();
+    window.speechSynthesis?.cancel();
     setOpen(false);
     localStorage.setItem(storageKey, 'done');
   }
@@ -270,6 +385,8 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
     setResult(null);
     setText('');
     setError('');
+    setListening(false);
+    setInterimText('');
   }
 
   if (!open) {
@@ -283,39 +400,90 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
     );
   }
 
+  // Short display name for voice button
+  const voiceLabel = selectedVoice
+    ? selectedVoice.name.replace(/\s*\(.*?\)/g, '').trim()
+    : 'Voice';
+
   return (
     <div className="card px-4 py-4 space-y-3">
-      {/* Header */}
+      {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sparkles size={14} style={{ color: 'rgb(var(--accent-rgb-light))' }} />
           <span className="text-sm font-semibold text-head">Daily Check-in</span>
         </div>
-        <button onClick={dismiss} className="tap" style={{ color: '#52525b' }}>
-          <X size={14} />
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Voice picker trigger */}
+          {voices.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setShowVoicePicker(v => !v)}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium tap"
+                style={{ background: 'var(--s2)', color: '#71717a', border: '1px solid var(--b)' }}>
+                <Volume2 size={11} />
+                {voiceLabel}
+                <ChevronDown size={10} />
+              </button>
+              {showVoicePicker && (
+                <div className="absolute right-0 top-7 z-50 rounded-xl p-2 shadow-xl"
+                  style={{ background: 'var(--s1)', border: '1px solid var(--b)', minWidth: 190, maxHeight: 220, overflowY: 'auto' }}>
+                  <p className="text-[10px] font-semibold px-2 pb-1.5" style={{ color: '#52525b', letterSpacing: '0.06em' }}>
+                    ENGLISH VOICES
+                  </p>
+                  {voices.map(v => (
+                    <button key={v.name} onClick={() => pickVoice(v)}
+                      className="w-full text-left px-2 py-1.5 rounded-lg text-xs tap"
+                      style={{
+                        color: v.name === selectedVoiceName ? 'rgb(var(--accent-rgb-light))' : '#a1a1aa',
+                        background: v.name === selectedVoiceName ? 'rgb(var(--accent-rgb) / 0.08)' : 'transparent',
+                        fontWeight: v.name === selectedVoiceName ? 600 : 400,
+                      }}>
+                      {v.name.replace(/\s*\(.*?\)/g, '')}
+                      <span className="ml-1 text-[9px]" style={{ color: '#52525b' }}>
+                        {v.lang}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          <button onClick={dismiss} className="tap" style={{ color: '#52525b' }}>
+            <X size={14} />
+          </button>
+        </div>
       </div>
 
       {result ? (
         /* ── Result panel ── */
         <div className="space-y-3">
-          {/* Mood + friendly message */}
-          <div className="rounded-xl px-3 py-3 space-y-1.5"
+          <div className="rounded-xl px-3 py-3 space-y-2"
             style={{ background: 'rgb(var(--accent-rgb) / 0.07)', border: '1px solid rgb(var(--accent-rgb) / 0.15)' }}>
-            {result.mood && (
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xl leading-none">{MOOD_EMOJI_MAP[result.mood]}</span>
-                <span className="text-xs font-semibold" style={{ color: 'rgb(var(--accent-rgb-light))' }}>
-                  Mood detected
-                </span>
-              </div>
-            )}
+            <div className="flex items-center justify-between">
+              {result.mood ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xl leading-none">{MOOD_EMOJI_MAP[result.mood]}</span>
+                  <span className="text-xs font-semibold" style={{ color: 'rgb(var(--accent-rgb-light))' }}>
+                    Mood detected
+                  </span>
+                </div>
+              ) : <span />}
+              {/* Replay response button */}
+              {voices.length > 0 && (
+                <button
+                  onClick={() => speak(result.friendly_response, selectedVoice)}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] tap"
+                  style={{ background: 'var(--s2)', color: '#71717a', border: '1px solid var(--b)' }}>
+                  <Volume2 size={11} /> Replay
+                </button>
+              )}
+            </div>
             <p className="text-sm leading-relaxed" style={{ color: '#a1a1aa' }}>
               {result.friendly_response}
             </p>
           </div>
 
-          {/* Action chips */}
           {result.actions_taken.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {result.actions_taken.map((a, i) => (
@@ -328,10 +496,7 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
             </div>
           )}
 
-          {/* Log again link */}
-          <button onClick={reopen}
-            className="text-[11px] underline tap"
-            style={{ color: '#52525b' }}>
+          <button onClick={reopen} className="text-[11px] underline tap" style={{ color: '#52525b' }}>
             Log again
           </button>
         </div>
@@ -339,35 +504,71 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
         /* ── Input panel ── */
         <>
           <p className="text-xs" style={{ color: '#71717a' }}>{promptRef.current}</p>
-          <textarea
-            ref={taRef}
-            rows={4}
-            value={text}
-            onChange={e => setText(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit(); }}
-            placeholder="Slept at 11, woke at 7. Hit the gym, finished the project proposal. Feeling good but a bit tired…"
-            className="w-full rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none"
-            style={{
-              background: 'var(--s2)',
-              border: '1px solid var(--b)',
-              color: 'var(--text-body, #a1a1aa)',
-            }}
-          />
-          {error && (
-            <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>
+
+          {/* Textarea */}
+          <div className="relative">
+            <textarea
+              ref={taRef}
+              rows={4}
+              value={text}
+              onChange={e => { setText(e.target.value); baseTextRef.current = e.target.value; }}
+              onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit(); }}
+              placeholder="Slept at 11, woke at 7. Hit the gym, finished the project proposal. Feeling good but a bit tired…"
+              className="w-full rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none"
+              style={{
+                background: 'var(--s2)',
+                border: `1px solid ${listening ? 'rgb(var(--accent-rgb) / 0.5)' : 'var(--b)'}`,
+                color: '#a1a1aa',
+                transition: 'border-color 0.2s',
+              }}
+            />
+            {/* Interim ghost text overlay hint */}
+            {listening && interimText && (
+              <p className="absolute bottom-2.5 left-3 right-3 text-sm pointer-events-none truncate"
+                style={{ color: 'rgb(var(--accent-rgb-light))', opacity: 0.5 }}>
+                {interimText}…
+              </p>
+            )}
+          </div>
+
+          {/* Live recording status */}
+          {listening && (
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#ef4444' }} />
+              <span className="text-xs" style={{ color: '#ef4444' }}>Listening… speak naturally</span>
+            </div>
           )}
-          <div className="flex items-center justify-between">
-            <span className="text-[10px]" style={{ color: '#52525b' }}>⌘↵ to submit</span>
+
+          {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
+
+          {/* Bottom row: mic + hint + submit */}
+          <div className="flex items-center gap-2">
+            {SR ? (
+              <button
+                onClick={toggleListening}
+                className="flex items-center justify-center w-9 h-9 rounded-xl tap transition-all shrink-0"
+                style={{
+                  background: listening ? '#ef4444' : 'var(--s2)',
+                  color: listening ? '#fff' : '#71717a',
+                  border: listening ? 'none' : '1px solid var(--b)',
+                  boxShadow: listening ? '0 0 0 4px rgba(239,68,68,0.2)' : 'none',
+                }}
+                title={listening ? 'Stop recording' : 'Speak your check-in'}>
+                {listening ? <MicOff size={15} /> : <Mic size={15} />}
+              </button>
+            ) : null}
+            <span className="text-[10px] flex-1" style={{ color: '#52525b' }}>
+              {SR ? (listening ? 'Click mic to stop' : 'Tap mic or type') : ''}
+              {!SR && '⌘↵ to submit'}
+            </span>
             <button
               onClick={submit}
               disabled={loading || !text.trim()}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-40 tap"
               style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
-              {loading ? (
-                <span className="w-3 h-3 rounded-full border border-white/40 border-t-white animate-spin" />
-              ) : (
-                <Send size={11} />
-              )}
+              {loading
+                ? <span className="w-3 h-3 rounded-full border border-white/40 border-t-white animate-spin" />
+                : <Send size={11} />}
               {loading ? 'Logging…' : 'Log it'}
             </button>
           </div>
