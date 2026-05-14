@@ -541,26 +541,55 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
 
           {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
 
-          {/* Bottom row: mic + hint + submit */}
+          {/* Bottom row: mic + waveform + hint + submit */}
           <div className="flex items-center gap-2">
             {SR ? (
-              <button
-                onClick={toggleListening}
-                className="flex items-center justify-center w-9 h-9 rounded-xl tap transition-all shrink-0"
-                style={{
-                  background: listening ? '#ef4444' : 'var(--s2)',
-                  color: listening ? '#fff' : '#71717a',
-                  border: listening ? 'none' : '1px solid var(--b)',
-                  boxShadow: listening ? '0 0 0 4px rgba(239,68,68,0.2)' : 'none',
-                }}
-                title={listening ? 'Stop recording' : 'Speak your check-in'}>
-                {listening ? <MicOff size={15} /> : <Mic size={15} />}
-              </button>
+              <div className="relative shrink-0" style={{ width: 36, height: 36 }}>
+                {/* Expanding rings when listening */}
+                {listening && (
+                  <>
+                    <span className="mic-ring" />
+                    <span className="mic-ring mic-ring-2" />
+                    <span className="mic-ring mic-ring-3" />
+                  </>
+                )}
+                <button
+                  onClick={toggleListening}
+                  className={`flex items-center justify-center w-9 h-9 rounded-xl tap transition-all ${listening ? 'mic-listening' : ''}`}
+                  style={{
+                    background: listening ? '#ef4444' : 'var(--s2)',
+                    color: listening ? '#fff' : 'var(--t-dim)',
+                    border: listening ? 'none' : '1px solid var(--b)',
+                    position: 'relative', zIndex: 1,
+                  }}
+                  title={listening ? 'Stop recording' : 'Speak your check-in'}>
+                  {listening ? <MicOff size={14} /> : <Mic size={14} />}
+                </button>
+              </div>
             ) : null}
-            <span className="text-[10px] flex-1" style={{ color: '#52525b' }}>
-              {SR ? (listening ? 'Click mic to stop' : 'Tap mic or type') : ''}
-              {!SR && '⌘↵ to submit'}
-            </span>
+
+            {/* Animated waveform bars while listening */}
+            {listening ? (
+              <div className="flex items-end gap-0.5 flex-1" style={{ height: 20 }}>
+                {[0, 80, 160, 100, 200, 130, 60].map((delay, i) => (
+                  <span key={i} className="waveform-bar"
+                    style={{
+                      height: '100%',
+                      background: 'rgb(var(--accent-rgb-light))',
+                      animationDelay: `${delay}ms`,
+                      opacity: 0.8,
+                    }} />
+                ))}
+                <span className="text-[10px] ml-2 self-center" style={{ color: '#ef4444' }}>
+                  listening…
+                </span>
+              </div>
+            ) : (
+              <span className="text-[10px] flex-1" style={{ color: 'var(--t-faint)' }}>
+                {SR ? 'Tap mic or type · ⌘↵ submit' : '⌘↵ to submit'}
+              </span>
+            )}
+
             <button
               onClick={submit}
               disabled={loading || !text.trim()}
