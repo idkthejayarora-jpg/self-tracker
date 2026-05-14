@@ -60,6 +60,22 @@ router.post('/login', (req, res) => {
   res.json({ token, user: { id: user.id, username: user.username } });
 });
 
+// Token health-check — called on app startup to verify session is still valid
+router.get('/me', (req, res) => {
+  const header = req.headers.authorization;
+  if (!header?.startsWith('Bearer ')) return res.status(401).json({ error: 'No token' });
+  try {
+    const { JWT_SECRET } = require('../middleware/auth');
+    const jwt = require('jsonwebtoken');
+    const payload = jwt.verify(header.slice(7), JWT_SECRET);
+    const user = db.prepare('SELECT id, username FROM users WHERE id = ?').get(payload.id);
+    if (!user) return res.status(401).json({ error: 'session_gone', message: 'Account no longer exists — server was restarted. Please register again.' });
+    res.json({ user });
+  } catch {
+    res.status(401).json({ error: 'invalid_token' });
+  }
+});
+
 router.post('/change-password', (req, res) => {
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });

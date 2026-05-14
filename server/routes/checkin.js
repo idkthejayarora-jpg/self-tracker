@@ -1,20 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const Anthropic = require('@anthropic-ai/sdk');
+const { parse } = require('../utils/localParser');
 const { authMiddleware } = require('../middleware/auth');
 const db = require('../db/database');
 const { awardPoints } = require('../utils/pointsUtils');
 const { updateStreak } = require('../utils/streakUtils');
 
 router.use(authMiddleware);
-
-// Lazy-init so a missing key gives a clear error at call-time, not at startup
-function getClient() {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    throw new Error('ANTHROPIC_API_KEY is not set. Add it to your Railway environment variables.');
-  }
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-}
 
 router.post('/', async (req, res) => {
   const uid = req.user.id;
@@ -23,7 +15,7 @@ router.post('/', async (req, res) => {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  // ── 1. Gather context for Claude ───────────────────────────────────────────
+  // ── 1. Gather tasks & habits context ──────────────────────────────────────
   const tasks = db.prepare(
     "SELECT id, title, priority FROM tasks WHERE user_id = ? AND status IN ('pending','in_progress') ORDER BY created_at DESC LIMIT 40"
   ).all(uid);
@@ -38,63 +30,14 @@ router.post('/', async (req, res) => {
     done: logMap[h.id] ? !!logMap[h.id].done : false,
   }));
 
-  // ── 2. Build Claude prompt ─────────────────────────────────────────────────
-  const tasksList = tasks.length
-    ? tasks.map(t => `[${t.id}] "${t.title}" (${t.priority})`).join('\n')
-    : '(no pending tasks)';
-
-  const habitsList = habits.length
-    ? habits.map(h => `[${h.id}] "${h.name}" — already done today: ${h.done}`).join('\n')
-    : '(no habits set up)';
-
-  const systemPrompt = `You are a friendly personal assistant parsing a user's daily check-in message.
-Return ONLY valid JSON — absolutely no markdown fences, no prose outside the JSON object.
-
-CONTEXT
--------
-Today's date: ${today}
-
-Pending tasks (id + title + priority):
-${tasksList}
-
-Habits for today (id + name + already-done status):
-${habitsList}
-
-INSTRUCTIONS
-------------
-Analyse the user's message and extract:
-- mood: integer 1–5 based on emotional tone (1=terrible/anxious/depressed, 2=bad/stressed, 3=okay/neutral, 4=good/happy, 5=great/amazing/proud). null if no emotional content.
-- journal_entry: a clean version of the full message suitable to save as a journal entry (keep personal details, remove filler, preserve venting/emotional content). Empty string if nothing useful.
-- completed_task_ids: array of task IDs the user clearly mentions completing or having done. Use fuzzy/partial matching on task titles (case-insensitive). Empty array if none.
-- completed_habit_ids: array of habit IDs the user mentions doing today. Use fuzzy/partial matching on habit names. Empty array if none.
-- sleep: object with bedtime (HH:MM 24h), wake_time (HH:MM 24h), quality (1–5), notes. Set any unknown fields to null. Set the whole sleep field to null if sleep is not mentioned at all.
-- friendly_response: a warm, human 2–3 sentence summary of what was recorded. Be encouraging. Mention specific things you detected (e.g. "Logged your 7-hour sleep", "Marked 'Morning run' as done"). Keep it short and friendly.`;
-
-  // ── 3. Call Claude ─────────────────────────────────────────────────────────
-  let parsed;
+  // ── 2. Load user skills for XP upgrades ───────────────────────────────────
+  let userSkills = [];
   try {
-    const anthropic = getClient();
-    const message = await anthropic.messages.create({
-      model: 'claude-3-5-haiku-20241022',
-      max_tokens: 1024,
-      temperature: 0,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: text.trim() }],
-    });
+    userSkills = db.prepare('SELECT * FROM me_skills WHERE user_id = ?').all(uid);
+  } catch (_) { /* me_skills table may not exist yet — safe to skip */ }
 
-    const raw = message.content[0].text.trim();
-    // Strip any accidental markdown fences
-    const clean = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
-    parsed = JSON.parse(clean);
-  } catch (err) {
-    console.error('[checkin] Claude/parse error:', err.message);
-    const msg = err.message?.includes('ANTHROPIC_API_KEY')
-      ? 'ANTHROPIC_API_KEY is not configured. Add it in Railway → Variables.'
-      : err.message?.includes('401') || err.message?.includes('authentication')
-      ? 'Invalid ANTHROPIC_API_KEY. Check the key in Railway → Variables.'
-      : `AI parsing failed: ${err.message}`;
-    return res.status(502).json({ error: msg });
-  }
+  // ── 3. Run local rule-based parser ────────────────────────────────────────
+  const parsed = parse(text.trim(), tasks, habits, userSkills);
 
   const actions_taken = [];
 
@@ -196,6 +139,21 @@ Analyse the user's message and extract:
     actions_taken.push(`📓 Journal saved${mood ? ` (mood: ${['','😞','😕','😐','🙂','😄'][mood]})` : ''}`);
   }
 
+  // ── 4e. Skill XP upgrades ──────────────────────────────────────────────────
+  let skills_upgraded = 0;
+  for (const upgrade of (parsed.skillUpgrades || [])) {
+    const skill = db.prepare('SELECT * FROM me_skills WHERE id = ? AND user_id = ?').get(upgrade.skill_id, uid);
+    if (!skill) continue;
+    let newXp    = (skill.xp    || 0) + upgrade.xp_delta;
+    let newLevel = (skill.level || 1);
+    while (newXp >= 100) { newLevel++; newXp -= 100; }
+    db.prepare('UPDATE me_skills SET xp = ?, level = ? WHERE id = ? AND user_id = ?')
+      .run(newXp, newLevel, skill.id, uid);
+    const levelUp = newLevel > (skill.level || 1);
+    actions_taken.push(`⚡ ${upgrade.skill_name} +${upgrade.xp_delta} XP${levelUp ? ` → LVL ${newLevel}!` : ''}`);
+    skills_upgraded++;
+  }
+
   // ── 5. Respond ─────────────────────────────────────────────────────────────
   res.json({
     mood: parsed.mood || null,
@@ -203,6 +161,7 @@ Analyse the user's message and extract:
     tasks_completed: completedTaskIds.length,
     habits_completed: completedHabitIds.length,
     journal_saved,
+    skills_upgraded,
     actions_taken,
     friendly_response: parsed.friendly_response || 'All logged! Keep it up.',
   });

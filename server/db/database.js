@@ -7,6 +7,12 @@ const path = require('path');
 const DB_DIR = process.env.DATA_PATH || path.join(__dirname, '..', 'data');
 const DB_PATH = path.join(DB_DIR, 'tracker.db');
 
+if (!process.env.DATA_PATH && process.env.NODE_ENV === 'production') {
+  console.warn('⚠️  [db] DATA_PATH is not set! Database is stored in the container filesystem and will be WIPED on every deploy.');
+  console.warn('⚠️  [db] Fix: Add a Railway Volume at /data and set DATA_PATH=/data in environment variables.');
+}
+console.log(`[db] Database path: ${DB_PATH}`);
+
 fs.mkdirSync(DB_DIR, { recursive: true });
 
 const db = new Database(DB_PATH);

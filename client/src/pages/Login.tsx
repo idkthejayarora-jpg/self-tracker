@@ -12,8 +12,9 @@ export default function Login() {
   const navigate = useNavigate();
 
   const [mode, setMode] = useState<Mode>('login');
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState(() => localStorage.getItem('lastUsername') || '');
   const [password, setPassword] = useState('');
+  const [serverRestart, setServerRestart] = useState(() => sessionStorage.getItem('authMsg') === 'server_restart');
   const [showPw, setShowPw] = useState(false);
 
   // Reset-specific
@@ -40,7 +41,15 @@ export default function Login() {
       else await register(username, password);
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Something went wrong. Check your connection.');
+      const msg: string = err.response?.data?.error || '';
+      // If login fails because user doesn't exist (DB wiped), guide them to register
+      if (mode === 'login' && (msg === 'Invalid credentials' || err.response?.status === 401)) {
+        setError('');
+        setServerRestart(true);
+        switchMode('register');
+      } else {
+        setError(msg || 'Something went wrong. Check your connection.');
+      }
     } finally {
       setLoading(false);
     }
@@ -89,6 +98,18 @@ export default function Login() {
             <p className="text-sm mt-0.5" style={{ color: '#71717a' }}>Track tasks, journal, streaks & more</p>
           </div>
         </div>
+
+        {/* Server restart banner */}
+        {serverRestart && (
+          <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl text-xs"
+            style={{ background: 'rgb(245 158 11 / 0.10)', color: '#fbbf24', border: '1px solid rgb(245 158 11 / 0.25)' }}>
+            <AlertCircle size={13} className="mt-0.5 shrink-0" />
+            <span>
+              <strong>Server was restarted</strong> — your account data was cleared.
+              Just re-register with your usual username &amp; password to continue.
+            </span>
+          </div>
+        )}
 
         {/* Mode tabs */}
         <div className="flex rounded-xl p-1 gap-1" style={{ background: 'var(--s2)', border: '1px solid var(--b)' }}>
