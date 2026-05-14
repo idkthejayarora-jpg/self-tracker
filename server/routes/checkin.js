@@ -8,7 +8,13 @@ const { updateStreak } = require('../utils/streakUtils');
 
 router.use(authMiddleware);
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// Lazy-init so a missing key gives a clear error at call-time, not at startup
+function getClient() {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    throw new Error('ANTHROPIC_API_KEY is not set. Add it to your Railway environment variables.');
+  }
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+}
 
 router.post('/', async (req, res) => {
   const uid = req.user.id;
@@ -67,7 +73,8 @@ Analyse the user's message and extract:
   // ── 3. Call Claude ─────────────────────────────────────────────────────────
   let parsed;
   try {
-    const message = await client.messages.create({
+    const anthropic = getClient();
+    const message = await anthropic.messages.create({
       model: 'claude-3-5-haiku-20241022',
       max_tokens: 1024,
       temperature: 0,
@@ -81,7 +88,12 @@ Analyse the user's message and extract:
     parsed = JSON.parse(clean);
   } catch (err) {
     console.error('[checkin] Claude/parse error:', err.message);
-    return res.status(502).json({ error: 'AI parsing failed. Try again.' });
+    const msg = err.message?.includes('ANTHROPIC_API_KEY')
+      ? 'ANTHROPIC_API_KEY is not configured. Add it in Railway → Variables.'
+      : err.message?.includes('401') || err.message?.includes('authentication')
+      ? 'Invalid ANTHROPIC_API_KEY. Check the key in Railway → Variables.'
+      : `AI parsing failed: ${err.message}`;
+    return res.status(502).json({ error: msg });
   }
 
   const actions_taken = [];
