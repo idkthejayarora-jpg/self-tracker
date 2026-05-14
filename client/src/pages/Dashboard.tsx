@@ -227,8 +227,9 @@ const PROMPTS = [
 ];
 const MOOD_EMOJI_MAP = ['', '😞', '😕', '😐', '🙂', '😄'];
 
-// Get the SpeechRecognition constructor cross-browser
-const SR: typeof SpeechRecognition | null =
+// Get the SpeechRecognition constructor cross-browser (typed as any — not in default TS DOM lib)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const SR: any =
   (typeof window !== 'undefined' &&
     ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)) || null;
 
@@ -281,7 +282,7 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
 
   const promptRef = useRef(PROMPTS[Math.floor(Math.random() * PROMPTS.length)]);
   const taRef = useRef<HTMLTextAreaElement>(null);
-  const srRef = useRef<SpeechRecognition | null>(null);
+  const srRef = useRef<any>(null);
   const baseTextRef = useRef(''); // text committed before current recording session
 
   // Focus textarea when opened
@@ -325,7 +326,7 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
 
     sr.onstart = () => setListening(true);
 
-    sr.onresult = (e: SpeechRecognitionEvent) => {
+    sr.onresult = (e: any) => {
       let interim = '';
       let final = baseTextRef.current;
       for (let i = e.resultIndex; i < e.results.length; i++) {
