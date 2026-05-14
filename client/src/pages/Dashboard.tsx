@@ -1,10 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Flame, CheckSquare, BookOpen, Zap, Clock, ArrowRight, Dumbbell, Moon } from 'lucide-react';
+import { Flame, CheckSquare, BookOpen, Zap, Clock, ArrowRight, Dumbbell, Moon, Sparkles, Send, X } from 'lucide-react';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
 import { useAuth } from '../contexts/AuthContext';
-import type { DashboardData, DashboardSnapshot, PointsSummary, Task } from '../types';
+import type { DashboardData, DashboardSnapshot, PointsSummary, Task, CheckinResult } from '../types';
 import { format } from 'date-fns';
 
 const PRIORITY_DOT: Record<string, string> = {
@@ -217,6 +217,166 @@ function Section({ icon: Icon, iconColor, title, action, count }: {
   );
 }
 
+/* ── Daily check-in ── */
+const PROMPTS = [
+  "How was your day? What did you get done?",
+  "Vent, reflect, or just list what happened.",
+  "Tell me about sleep, mood, tasks, habits…",
+  "How are you feeling? What's on your mind?",
+  "Summarise your day — I'll handle the rest.",
+];
+
+const MOOD_EMOJI_MAP = ['', '😞', '😕', '😐', '🙂', '😄'];
+
+function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const storageKey = `checkin_${today}`;
+
+  const [open, setOpen] = useState(() => localStorage.getItem(storageKey) !== 'done');
+  const [text, setText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<CheckinResult | null>(null);
+  const [error, setError] = useState('');
+  const promptRef = useRef(PROMPTS[Math.floor(Math.random() * PROMPTS.length)]);
+  const taRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (open && !result && taRef.current) taRef.current.focus();
+  }, [open, result]);
+
+  async function submit() {
+    if (!text.trim() || loading) return;
+    setLoading(true);
+    setError('');
+    try {
+      const res = await api.post<CheckinResult>('/checkin', { text });
+      setResult(res.data);
+      localStorage.setItem(storageKey, 'done');
+      onCheckinDone();
+    } catch (e: any) {
+      setError(e.response?.data?.error || 'Something went wrong. Try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function dismiss() {
+    setOpen(false);
+    localStorage.setItem(storageKey, 'done');
+  }
+
+  function reopen() {
+    setOpen(true);
+    setResult(null);
+    setText('');
+    setError('');
+  }
+
+  if (!open) {
+    return (
+      <button onClick={reopen}
+        className="w-full text-left card px-4 py-3 flex items-center gap-2"
+        style={{ color: 'rgb(var(--accent-rgb-light))' }}>
+        <Sparkles size={14} />
+        <span className="text-xs font-medium">Log your check-in for today</span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="card px-4 py-4 space-y-3">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Sparkles size={14} style={{ color: 'rgb(var(--accent-rgb-light))' }} />
+          <span className="text-sm font-semibold text-head">Daily Check-in</span>
+        </div>
+        <button onClick={dismiss} className="tap" style={{ color: '#52525b' }}>
+          <X size={14} />
+        </button>
+      </div>
+
+      {result ? (
+        /* ── Result panel ── */
+        <div className="space-y-3">
+          {/* Mood + friendly message */}
+          <div className="rounded-xl px-3 py-3 space-y-1.5"
+            style={{ background: 'rgb(var(--accent-rgb) / 0.07)', border: '1px solid rgb(var(--accent-rgb) / 0.15)' }}>
+            {result.mood && (
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xl leading-none">{MOOD_EMOJI_MAP[result.mood]}</span>
+                <span className="text-xs font-semibold" style={{ color: 'rgb(var(--accent-rgb-light))' }}>
+                  Mood detected
+                </span>
+              </div>
+            )}
+            <p className="text-sm leading-relaxed" style={{ color: '#a1a1aa' }}>
+              {result.friendly_response}
+            </p>
+          </div>
+
+          {/* Action chips */}
+          {result.actions_taken.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {result.actions_taken.map((a, i) => (
+                <span key={i}
+                  className="text-[11px] font-medium px-2 py-1 rounded-lg"
+                  style={{ background: 'var(--s2)', color: '#a1a1aa', border: '1px solid var(--b)' }}>
+                  {a}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Log again link */}
+          <button onClick={reopen}
+            className="text-[11px] underline tap"
+            style={{ color: '#52525b' }}>
+            Log again
+          </button>
+        </div>
+      ) : (
+        /* ── Input panel ── */
+        <>
+          <p className="text-xs" style={{ color: '#71717a' }}>{promptRef.current}</p>
+          <textarea
+            ref={taRef}
+            rows={4}
+            value={text}
+            onChange={e => setText(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit(); }}
+            placeholder="Slept at 11, woke at 7. Hit the gym, finished the project proposal. Feeling good but a bit tired…"
+            className="w-full rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none"
+            style={{
+              background: 'var(--s2)',
+              border: '1px solid var(--b)',
+              color: 'var(--text-body, #a1a1aa)',
+            }}
+          />
+          {error && (
+            <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>
+          )}
+          <div className="flex items-center justify-between">
+            <span className="text-[10px]" style={{ color: '#52525b' }}>⌘↵ to submit</span>
+            <button
+              onClick={submit}
+              disabled={loading || !text.trim()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-40 tap"
+              style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
+              {loading ? (
+                <span className="w-3 h-3 rounded-full border border-white/40 border-t-white animate-spin" />
+              ) : (
+                <Send size={11} />
+              )}
+              {loading ? 'Logging…' : 'Log it'}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 /* ── Dashboard ── */
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -263,6 +423,9 @@ export default function Dashboard() {
 
       {/* ── Score ── */}
       {data.points && <ScoreCard pts={data.points} />}
+
+      {/* ── Daily Check-in ── */}
+      <DailyCheckin onCheckinDone={load} />
 
       {/* ── Streaks ── */}
       <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">

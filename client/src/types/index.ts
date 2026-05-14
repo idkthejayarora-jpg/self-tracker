@@ -176,3 +176,13 @@ export interface FinanceGoal {
   deadline?: string | null;
   color: string;
 }
+
+export interface CheckinResult {
+  mood: number | null;
+  sleep_logged: boolean;
+  tasks_completed: number;
+  habits_completed: number;
+  journal_saved: boolean;
+  actions_taken: string[];
+  friendly_response: string;
+}
