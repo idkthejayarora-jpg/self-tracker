@@ -33,15 +33,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(data.user);
       })
       .catch((err) => {
+        const status = err.response?.status;
+
+        // ── Network error or server restarting (no HTTP response) ──
+        // Don't clear the session — the token is probably fine, server is just
+        // temporarily unavailable (Railway deploy, cold start, etc.)
+        if (!status) {
+          try {
+            setToken(stored);
+            setUser(JSON.parse(storedUser));
+          } catch (_) {}
+          return;
+        }
+
+        // ── True 401 — token is invalid or user no longer exists ──
         const errCode = err.response?.data?.error;
-        // Preserve username so login page can pre-fill it
         try {
           const u = JSON.parse(storedUser);
           if (u?.username) localStorage.setItem('lastUsername', u.username);
         } catch (_) {}
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        // Tag the error so Login page can show an appropriate message
         if (errCode === 'session_gone') {
           sessionStorage.setItem('authMsg', 'server_restart');
         }

@@ -27,7 +27,18 @@ app.use('/api/points', require('./routes/points'));
 app.use('/api/checkin', require('./routes/checkin'));
 app.use('/api/me',      require('./routes/me'));
 
-app.get('/api/health', (_, res) => res.json({ ok: true }));
+app.get('/api/health', (_, res) => {
+  const dbDir  = process.env.DATA_PATH || require('path').join(__dirname, 'data');
+  const dbPath = require('path').join(dbDir, 'tracker.db');
+  const exists = require('fs').existsSync(dbPath);
+  res.json({
+    ok: true,
+    db_path: dbPath,
+    db_exists: exists,
+    data_path_env: process.env.DATA_PATH || '(not set — using local fallback)',
+    node_env: process.env.NODE_ENV || 'development',
+  });
+});
 
 // Serve built frontend in production/standalone mode
 const distPath = path.join(__dirname, '..', 'client', 'dist');
