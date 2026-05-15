@@ -579,14 +579,44 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
             </div>
             <p className="text-sm leading-relaxed" style={{ color: '#a1a1aa' }}>{result.friendly_response}</p>
           </div>
-          {result.actions_taken.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {result.actions_taken.map((a, i) => (
-                <span key={i} className="text-[11px] font-medium px-2 py-1 rounded-lg"
-                  style={{ background: 'var(--s2)', color: '#a1a1aa', border: '1px solid var(--b)' }}>{a}</span>
-              ))}
-            </div>
+          {/* Skills boosted summary */}
+          {result.skills_upgraded != null && result.skills_upgraded > 0 && (
+            <p className="text-xs font-semibold" style={{ color: '#eab308' }}>
+              ⚡ {result.skills_upgraded} skill{result.skills_upgraded !== 1 ? 's' : ''} boosted
+            </p>
           )}
+          {result.actions_taken.length > 0 && (() => {
+            // Group by type based on leading emoji
+            const groups: Record<string, { color: string; bg: string; items: string[] }> = {
+              task:    { color: '#22c55e', bg: '#22c55e14', items: [] },
+              habit:   { color: '#f97316', bg: '#f9731614', items: [] },
+              sleep:   { color: '#60a5fa', bg: '#60a5fa14', items: [] },
+              journal: { color: '#a855f7', bg: '#a855f714', items: [] },
+              skill:   { color: '#eab308', bg: '#eab30814', items: [] },
+              other:   { color: '#a1a1aa', bg: 'var(--s2)',  items: [] },
+            };
+            for (const a of result.actions_taken) {
+              if (a.startsWith('✅'))      groups.task.items.push(a);
+              else if (a.startsWith('🔥')) groups.habit.items.push(a);
+              else if (a.startsWith('💤')) groups.sleep.items.push(a);
+              else if (a.startsWith('📓')) groups.journal.items.push(a);
+              else if (a.startsWith('⚡')) groups.skill.items.push(a);
+              else                          groups.other.items.push(a);
+            }
+            return (
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(groups).map(([, g]) =>
+                  g.items.map((a, i) => (
+                    <span key={`${a}-${i}`}
+                      className="text-[11px] font-medium px-2 py-1 rounded-lg"
+                      style={{ background: g.bg, color: g.color, border: `1px solid ${g.color}30` }}>
+                      {a}
+                    </span>
+                  ))
+                )}
+              </div>
+            );
+          })()}
           <button onClick={reopen} className="text-[11px] underline tap" style={{ color: '#52525b' }}>Log again</button>
         </div>
 

@@ -248,4 +248,5 @@ export interface CheckinResult {
   journal_saved: boolean;
   actions_taken: string[];
   friendly_response: string;
+  skills_upgraded?: number;
 }

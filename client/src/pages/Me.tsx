@@ -15,6 +15,17 @@ const RANK_GLOW: Record<string, string> = {
   SSS: 'rgba(226,201,126,0.5)',
 };
 
+const RANK_SOLID: Record<string, string> = {
+  E: '#6b7280',
+  D: '#3b82f6',
+  C: '#22c55e',
+  B: '#a855f7',
+  A: '#f97316',
+  S: '#ef4444',
+  SS: '#f59e0b',
+  SSS: '#e2c97e',
+};
+
 // ── Stat config ───────────────────────────────────────────────────────────────
 const STAT_CONFIG = [
   { key: 'strength',   label: 'STRENGTH',   icon: '⚔️', color: '#ef4444', hint: 'Workouts this month'   },
@@ -35,7 +46,8 @@ const CLAIM_TYPE_COLOR: Record<string, string> = {
 function SectionHeader({ title, sub }: { title: string; sub?: string }) {
   return (
     <div className="flex items-baseline gap-2 mb-3">
-      <h2 className="text-xs font-bold tracking-[0.1em]" style={{ color: 'var(--t-faint)' }}>{title}</h2>
+      <h2 className="text-xs font-bold tracking-[0.15em] uppercase"
+        style={{ color: 'var(--t-faint)', letterSpacing: '0.15em' }}>{title}</h2>
       {sub && <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>{sub}</span>}
     </div>
   );
@@ -47,6 +59,47 @@ function Chip({ label, color }: { label: string; color: string }) {
       style={{ background: `${color}18`, color, border: `1px solid ${color}30` }}>
       {label}
     </span>
+  );
+}
+
+// ── Warrior SVG silhouette ─────────────────────────────────────────────────────
+function WarriorSilhouette({ color }: { color: string }) {
+  return (
+    <svg
+      viewBox="0 0 120 220"
+      className="warrior-float"
+      style={{ color, fill: 'currentColor', stroke: 'currentColor' }}
+      aria-hidden="true"
+    >
+      {/* Cape */}
+      <path d="M38 52 Q12 120 18 210 L60 195 L102 210 Q108 120 82 52 Z" fill="currentColor" opacity="0.18" />
+      {/* Body */}
+      <path d="M34 50 L86 50 L79 115 L41 115 Z" fill="currentColor" />
+      {/* Head */}
+      <circle cx="60" cy="27" r="15" fill="currentColor" />
+      {/* Helmet crest */}
+      <polygon points="60,8 50,22 70,22" fill="currentColor" />
+      {/* Left arm raised: shoulder → elbow → hand */}
+      <line x1="35" y1="56" x2="18" y2="33" strokeWidth="8" strokeLinecap="round" fill="none" />
+      <line x1="18" y1="33" x2="11" y2="10" strokeWidth="8" strokeLinecap="round" fill="none" />
+      {/* Sword blade */}
+      <rect x="4" y="-4" width="5" height="30" rx="1.5" fill="currentColor" transform="rotate(-18 6 13)" />
+      {/* Sword guard */}
+      <rect x="-2" y="10" width="17" height="4" rx="1" fill="currentColor" transform="rotate(-18 6 13)" />
+      {/* Right arm */}
+      <line x1="85" y1="56" x2="104" y2="74" strokeWidth="8" strokeLinecap="round" fill="none" />
+      {/* Left leg */}
+      <polyline points="47,115 39,172 34,210" strokeWidth="10" strokeLinecap="round" fill="none" />
+      {/* Right leg */}
+      <polyline points="73,115 81,172 86,210" strokeWidth="10" strokeLinecap="round" fill="none" />
+      {/* Left boot */}
+      <ellipse cx="34" cy="212" rx="10" ry="5" fill="currentColor" />
+      {/* Right boot */}
+      <ellipse cx="86" cy="212" rx="10" ry="5" fill="currentColor" />
+      {/* Outer aura ring */}
+      <ellipse cx="60" cy="110" rx="56" ry="102" fill="none" stroke="currentColor" strokeWidth="0.8"
+        opacity="0.15" className="aura-breathe" />
+    </svg>
   );
 }
 
@@ -208,45 +261,80 @@ export default function Me() {
   const activeClaims = claims.filter(c => c.status === 'active');
   const claimedList  = claims.filter(c => c.status === 'claimed');
   const rankGlow     = RANK_GLOW[rank] ?? 'transparent';
+  const rankSolid    = RANK_SOLID[rank] ?? rankColor;
 
   // ── Form field style shorthand
   const ff = 'w-full rounded-xl px-3 py-2 text-sm focus:outline-none';
 
   return (
-    <div className="max-w-2xl space-y-5 anim-page pb-10">
+    <div className="max-w-2xl space-y-6 anim-page pb-10" style={{ background: '#030508' }}>
+
+      {/* Page-level animated scan line */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+        {/* Hex-dot grid overlay */}
+        <div className="absolute inset-0"
+          style={{
+            opacity: 0.03,
+            backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
+            backgroundSize: '28px 28px',
+          }} />
+        {/* Scan line */}
+        <div className="absolute left-0 right-0 h-[3px] pointer-events-none"
+          style={{
+            background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 40%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.18) 60%, transparent 100%)',
+            animation: 'scan-line 7s linear infinite',
+          }} />
+      </div>
 
       {/* ══════════════════════════════════════════════════════ CHARACTER CARD */}
-      <div className="card px-5 py-6 relative overflow-hidden"
+      <div className="relative overflow-hidden rounded-2xl"
         style={{
-          background: `radial-gradient(ellipse at 50% -10%, ${rankGlow} 0%, var(--s1) 65%)`,
-          boxShadow: `0 0 40px ${rankGlow}`,
-          border: `1px solid ${rankColor}30`,
+          minHeight: 420,
+          background: `radial-gradient(ellipse at 50% -5%, ${rankGlow} 0%, #090b10 55%, #030508 100%)`,
+          boxShadow: `0 0 60px ${rankGlow}, 0 0 120px ${rankGlow}40`,
+          border: `1px solid ${rankSolid}30`,
+          zIndex: 1,
         }}>
 
-        {/* Subtle grid texture */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-          style={{ backgroundImage: 'repeating-linear-gradient(0deg,#fff 0,#fff 1px,transparent 1px,transparent 32px),repeating-linear-gradient(90deg,#fff 0,#fff 1px,transparent 1px,transparent 32px)' }} />
+        {/* Warrior silhouette — behind everything */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          style={{ zIndex: 0 }}>
+          <div style={{ height: '85%', opacity: 0.55, color: rankSolid }}>
+            <WarriorSilhouette color={rankSolid} />
+          </div>
+        </div>
 
-        <div className="relative flex flex-col items-center gap-3">
+        {/* Card content overlay */}
+        <div className="relative flex flex-col items-center gap-4 px-5 py-8" style={{ zIndex: 1 }}>
           {/* Rank badge */}
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-black px-3 py-1 rounded-full tracking-widest"
-              style={{ background: `${rankColor}20`, color: rankColor, border: `1px solid ${rankColor}50`,
-                boxShadow: rank === 'SSS' ? `0 0 12px ${rankColor}60` : 'none' }}>
+          <div className="flex items-center gap-3">
+            <span
+              className="rank-glow-anim text-[12px] font-black px-4 py-1.5 rounded-full tracking-[0.2em] uppercase"
+              style={{
+                background: `${rankSolid}18`,
+                color: rankSolid,
+                border: `1px solid ${rankSolid}60`,
+                '--rg': rankSolid,
+              } as React.CSSProperties}>
               {rank} RANK
             </span>
-            <span className="text-[10px] font-medium" style={{ color: 'var(--t-faint)' }}>
-              {totalPoints.toLocaleString()} pts
+            <span className="font-mono text-[11px] font-bold tabular-nums"
+              style={{ color: rankSolid, textShadow: `0 0 10px ${rankSolid}80` }}>
+              {totalPoints.toLocaleString()} PTS
             </span>
           </div>
 
-          {/* Avatar emoji */}
-          <div className="cursor-pointer tap select-none" title="Click to change avatar">
-            <EditableField
-              value={profile.avatar_emoji} placeholder="⚔️"
-              onSave={v => saveProfile({ avatar_emoji: v || '⚔️' })}
-              large centered />
-            <div className="text-center" style={{ fontSize: 52, lineHeight: 1 }}>
+          {/* Avatar ring + emoji */}
+          <div className="relative flex items-center justify-center">
+            {/* Rotating ring */}
+            <div className="spin-slow absolute rounded-full"
+              style={{
+                width: 96, height: 96,
+                border: `2px solid ${rankSolid}`,
+                opacity: 0.4,
+                boxShadow: `0 0 14px ${rankSolid}60`,
+              }} />
+            <div className="relative z-10" style={{ fontSize: 52, lineHeight: 1, padding: 4 }}>
               {profile.avatar_emoji || '⚔️'}
             </div>
           </div>
@@ -259,11 +347,18 @@ export default function Me() {
 
           {/* Title · Class */}
           <div className="flex items-center gap-2 flex-wrap justify-center">
-            <EditableField value={profile.title} placeholder="Your title"
-              onSave={v => saveProfile({ title: v })} centered />
-            {profile.title && profile.class && <span style={{ color: 'var(--t-faint)' }}>·</span>}
-            <EditableField value={profile.class} placeholder="Your class"
-              onSave={v => saveProfile({ class: v })} centered />
+            <span className="text-[11px] font-semibold tracking-wider"
+              style={{ color: `${rankSolid}cc` }}>
+              <EditableField value={profile.title} placeholder="Your title"
+                onSave={v => saveProfile({ title: v })} centered />
+            </span>
+            {profile.title && profile.class && (
+              <span style={{ color: 'var(--t-faint)' }}>·</span>
+            )}
+            <span className="text-[11px]" style={{ color: 'var(--t-muted)' }}>
+              <EditableField value={profile.class} placeholder="Your class"
+                onSave={v => saveProfile({ class: v })} centered />
+            </span>
           </div>
 
           {/* Bio */}
@@ -275,9 +370,16 @@ export default function Me() {
       </div>
 
       {/* ══════════════════════════════════════════════════════ ADVENTURE */}
-      <div className="card px-5 py-4"
-        style={{ borderLeft: `3px solid rgb(var(--accent-rgb))` }}>
-        <p className="text-[10px] font-bold tracking-[0.12em] mb-2 flex items-center gap-1.5"
+      <div className="rounded-2xl px-5 py-4 relative"
+        style={{
+          background: '#0d0f14',
+          borderLeft: `3px solid rgb(var(--accent-rgb))`,
+          border: `1px solid rgba(255,255,255,0.05)`,
+          borderLeftWidth: 3,
+          borderLeftColor: 'rgb(var(--accent-rgb))',
+          zIndex: 1,
+        }}>
+        <p className="text-[10px] font-bold tracking-[0.15em] mb-2 flex items-center gap-1.5"
           style={{ color: 'var(--t-faint)' }}>
           <Sparkles size={11} /> MAIN QUEST
         </p>
@@ -289,23 +391,37 @@ export default function Me() {
       </div>
 
       {/* ══════════════════════════════════════════════════════ STATS */}
-      <div>
+      <div style={{ zIndex: 1, position: 'relative' }}>
         <SectionHeader title="CHARACTER STATS" sub="— live from your logs" />
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {STAT_CONFIG.map(s => {
+          {STAT_CONFIG.map((s, idx) => {
             const val = stats[s.key as keyof typeof stats];
             return (
-              <div key={s.key} className="card px-3 py-3 space-y-2" title={s.hint}>
+              <div key={s.key}
+                className="rounded-2xl px-3 py-3 space-y-2 stat-pop group transition-all duration-200"
+                title={s.hint}
+                style={{
+                  background: '#0d0f14',
+                  border: `1px solid rgba(255,255,255,0.05)`,
+                  borderLeft: `3px solid ${s.color}`,
+                  animationDelay: `${idx * 60}ms`,
+                }}>
                 <div className="flex items-center justify-between">
                   <span className="text-base leading-none">{s.icon}</span>
-                  <span className="text-lg font-black tabular-nums" style={{ color: s.color }}>{val}</span>
+                  <span className="text-3xl font-black tabular-nums font-mono"
+                    style={{ color: s.color, textShadow: `0 0 12px ${s.color}80` }}>{val}</span>
                 </div>
                 <div>
-                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#1a1c22' }}>
                     <div className="h-full rounded-full bar-fill"
-                      style={{ width: `${val}%`, background: s.color, boxShadow: `0 0 6px ${s.color}60` }} />
+                      style={{
+                        width: `${val}%`,
+                        background: s.color,
+                        boxShadow: `0 0 8px ${s.color}`,
+                      }} />
                   </div>
-                  <p className="text-[9px] mt-1 font-semibold tracking-wider" style={{ color: 'var(--t-faint)' }}>
+                  <p className="text-[9px] mt-1 font-semibold tracking-[0.15em] uppercase"
+                    style={{ color: 'var(--t-faint)' }}>
                     {s.label}
                   </p>
                 </div>
@@ -319,7 +435,7 @@ export default function Me() {
       </div>
 
       {/* ══════════════════════════════════════════════════════ SKILLS */}
-      <div>
+      <div style={{ zIndex: 1, position: 'relative' }}>
         <div className="flex items-center justify-between mb-3">
           <SectionHeader title="SKILLS & ABILITIES" />
           <button onClick={() => setShowSkillForm(s => !s)}
@@ -330,24 +446,31 @@ export default function Me() {
         </div>
 
         {showSkillForm && (
-          <form onSubmit={addSkill} className="card px-4 py-4 mb-3 space-y-2 scale-in">
+          <form onSubmit={addSkill} className="rounded-2xl px-4 py-4 mb-3 space-y-2 scale-in"
+            style={{ background: '#0d0f14', border: '1px solid rgba(255,255,255,0.07)' }}>
             <div className="grid grid-cols-2 gap-2">
-              <input name="name" required placeholder="Skill name" className={ff} />
-              <input name="icon" placeholder="Icon (emoji)" className={ff} />
+              <input name="name" required placeholder="Skill name" className={ff}
+                style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
+              <input name="icon" placeholder="Icon (emoji)" className={ff}
+                style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
             </div>
-            <input name="description" placeholder="Description (optional)" className={ff} />
+            <input name="description" placeholder="Description (optional)" className={ff}
+              style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
             <div className="grid grid-cols-3 gap-2">
               <div>
                 <p className="text-[10px] mb-1" style={{ color: 'var(--t-faint)' }}>LEVEL</p>
-                <input name="level" type="number" min={1} max={100} defaultValue={1} className={ff} />
+                <input name="level" type="number" min={1} max={100} defaultValue={1} className={ff}
+                  style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
               </div>
               <div>
                 <p className="text-[10px] mb-1" style={{ color: 'var(--t-faint)' }}>XP (0–100)</p>
-                <input name="xp" type="number" min={0} max={100} defaultValue={0} className={ff} />
+                <input name="xp" type="number" min={0} max={100} defaultValue={0} className={ff}
+                  style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
               </div>
               <div>
                 <p className="text-[10px] mb-1" style={{ color: 'var(--t-faint)' }}>CATEGORY</p>
-                <input name="category" placeholder="combat" className={ff} />
+                <input name="category" placeholder="combat" className={ff}
+                  style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
               </div>
             </div>
             <div className="flex gap-2 pt-1">
@@ -368,10 +491,16 @@ export default function Me() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {skills.map(skill => (
-            <div key={skill.id} className="card px-3 py-3 group">
+            <div key={skill.id}
+              className="rounded-2xl px-3 py-3 group transition-all duration-200"
+              style={{
+                background: '#0d0f14',
+                border: `1px solid rgba(255,255,255,0.05)`,
+                borderLeft: `3px solid rgb(var(--accent-rgb)/0.6)`,
+              }}>
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-xl leading-none shrink-0">{skill.icon}</span>
+                  <span className="text-[28px] leading-none shrink-0">{skill.icon}</span>
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-head truncate">{skill.name}</p>
                     {skill.description && (
@@ -380,31 +509,46 @@ export default function Me() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md"
-                    style={{ background: 'rgb(var(--accent-rgb)/0.12)', color: 'rgb(var(--accent-rgb-light))' }}>
+                  {/* LVL badge — neon gold */}
+                  <span className="text-[10px] font-black px-2 py-1 rounded-md"
+                    style={{
+                      background: '#39ff1412',
+                      color: '#39ff14',
+                      border: '1px solid #39ff1440',
+                      textShadow: '0 0 8px #39ff1480',
+                    }}>
                     LVL {skill.level}
                   </span>
                   <button onClick={() => levelUpSkill(skill.id)}
-                    className="w-5 h-5 rounded flex items-center justify-center tap opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ background: 'var(--s3)' }} title="Level up">
-                    <ChevronUp size={10} style={{ color: '#22c55e' }} />
+                    className="w-6 h-6 rounded flex items-center justify-center tap opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
+                    style={{ background: '#22c55e18', border: '1px solid #22c55e30' }}
+                    title="Level up">
+                    <ChevronUp size={11} style={{ color: '#22c55e' }} />
                   </button>
                   <button onClick={() => deleteSkill(skill.id)}
-                    className="w-5 h-5 rounded flex items-center justify-center tap opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="w-6 h-6 rounded flex items-center justify-center tap opacity-0 group-hover:opacity-100 transition-opacity"
                     style={{ background: 'var(--s3)' }}>
                     <X size={9} style={{ color: '#ef4444' }} />
                   </button>
                 </div>
               </div>
-              {/* XP bar */}
+              {/* XP bar with shimmer */}
               <div className="mt-2.5 space-y-1">
-                <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
+                <div className="relative h-1.5 rounded-full overflow-hidden" style={{ background: '#1a1c22' }}>
                   <div className="h-full rounded-full bar-fill"
-                    style={{ width: `${skill.xp}%`, background: 'rgb(var(--accent-rgb))' }} />
+                    style={{
+                      width: `${skill.xp}%`,
+                      background: `linear-gradient(90deg, rgb(var(--accent-rgb)/0.8), rgb(var(--accent-rgb)))`,
+                      boxShadow: `0 0 6px rgb(var(--accent-rgb)/0.6)`,
+                    }} />
+                  {/* Shimmer overlay */}
+                  {skill.xp > 0 && (
+                    <div className="xp-shimmer-bar absolute inset-0 rounded-full" style={{ mixBlendMode: 'screen' }} />
+                  )}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[9px]" style={{ color: 'var(--t-faint)' }}>{skill.category}</span>
-                  <span className="text-[9px]" style={{ color: 'var(--t-faint)' }}>{skill.xp}/100 XP</span>
+                  <span className="text-[9px] uppercase tracking-wider" style={{ color: 'var(--t-faint)' }}>{skill.category}</span>
+                  <span className="text-[9px] font-mono" style={{ color: 'var(--t-faint)' }}>{skill.xp}/100 XP</span>
                 </div>
               </div>
             </div>
@@ -413,18 +557,19 @@ export default function Me() {
       </div>
 
       {/* ══════════════════════════════════════════════════════ CLAIMS */}
-      <div>
+      <div style={{ zIndex: 1, position: 'relative' }}>
         <div className="flex items-center justify-between mb-3">
-          {/* Tabs */}
+          {/* Tabs — styled as quest log header */}
           <div className="flex items-center gap-1">
             {(['active', 'claimed'] as const).map(tab => (
               <button key={tab} onClick={() => setClaimsTab(tab)}
-                className="text-[11px] font-bold px-3 py-1 rounded-lg tap capitalize"
+                className="text-[11px] font-bold px-3 py-1 rounded-lg tap capitalize tracking-wider"
                 style={{
                   background: claimsTab === tab ? 'rgb(var(--accent-rgb)/0.12)' : 'transparent',
                   color: claimsTab === tab ? 'rgb(var(--accent-rgb-light))' : 'var(--t-faint)',
+                  borderBottom: claimsTab === tab ? `2px solid rgb(var(--accent-rgb)/0.6)` : '2px solid transparent',
                 }}>
-                {tab === 'active' ? `ACTIVE CLAIMS (${activeClaims.length})` : `CLAIMED (${claimedList.length})`}
+                {tab === 'active' ? `QUEST LOG — ACTIVE (${activeClaims.length})` : `CLAIMED (${claimedList.length})`}
               </button>
             ))}
           </div>
@@ -436,16 +581,21 @@ export default function Me() {
         </div>
 
         {showClaimForm && (
-          <form onSubmit={addClaim} className="card px-4 py-4 mb-3 space-y-2 scale-in">
+          <form onSubmit={addClaim} className="rounded-2xl px-4 py-4 mb-3 space-y-2 scale-in"
+            style={{ background: '#0d0f14', border: '1px solid rgba(255,255,255,0.07)' }}>
             <div className="grid grid-cols-2 gap-2">
-              <input name="title" required placeholder="Quest title" className={ff} />
-              <input name="icon" placeholder="Icon (emoji)" className={ff} />
+              <input name="title" required placeholder="Quest title" className={ff}
+                style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
+              <input name="icon" placeholder="Icon (emoji)" className={ff}
+                style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
             </div>
-            <input name="description" placeholder="Description" className={ff} />
+            <input name="description" placeholder="Description" className={ff}
+              style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <p className="text-[10px] mb-1" style={{ color: 'var(--t-faint)' }}>TYPE</p>
-                <select name="claim_type" className={ff}>
+                <select name="claim_type" className={ff}
+                  style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }}>
                   <option value="quest">Quest</option>
                   <option value="achievement">Achievement</option>
                   <option value="legacy">Legacy</option>
@@ -453,10 +603,12 @@ export default function Me() {
               </div>
               <div>
                 <p className="text-[10px] mb-1" style={{ color: 'var(--t-faint)' }}>DEADLINE</p>
-                <input name="deadline" type="date" className={ff} />
+                <input name="deadline" type="date" className={ff}
+                  style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
               </div>
             </div>
-            <input name="reward_text" placeholder="Reward / what you unlock" className={ff} />
+            <input name="reward_text" placeholder="Reward / what you unlock" className={ff}
+              style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
             <div className="flex gap-2 pt-1">
               <button type="submit"
                 className="px-3 py-1.5 rounded-xl text-xs font-semibold text-white tap"
@@ -478,17 +630,29 @@ export default function Me() {
             const tc = CLAIM_TYPE_COLOR[claim.claim_type] ?? '#6366f1';
             const isOverdue = claim.deadline && claim.deadline < new Date().toISOString().slice(0, 10);
             return (
-              <div key={claim.id} className="card px-4 py-3"
-                style={{ borderLeft: `3px solid ${tc}` }}>
+              <div key={claim.id}
+                className="rounded-2xl px-4 py-3 transition-all duration-200"
+                style={{
+                  background: '#0d0f14',
+                  border: `1px solid rgba(255,255,255,0.05)`,
+                  borderLeft: `4px solid ${tc}`,
+                  opacity: claim.status === 'claimed' ? 0.7 : 1,
+                }}>
                 <div className="flex items-start gap-3">
-                  <span className="text-2xl leading-none mt-0.5 shrink-0">{claim.icon}</span>
+                  {/* Large icon column */}
+                  <span className="text-[32px] leading-none mt-0.5 shrink-0">{claim.icon}</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-semibold text-head">{claim.title}</p>
                       <Chip label={claim.claim_type} color={tc} />
                       {claim.status === 'claimed' && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
-                          style={{ background: '#22c55e18', color: '#22c55e', border: '1px solid #22c55e30' }}>
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                          style={{
+                            background: '#f59e0b18',
+                            color: '#f59e0b',
+                            border: '1px solid #f59e0b50',
+                            textShadow: '0 0 8px #f59e0b80',
+                          }}>
                           ✓ CLAIMED
                         </span>
                       )}
@@ -512,8 +676,14 @@ export default function Me() {
                   <div className="flex items-center gap-1 shrink-0">
                     {claim.status === 'active' && (
                       <button onClick={() => claimIt(claim.id)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold tap"
-                        style={{ background: `${tc}18`, color: tc, border: `1px solid ${tc}40` }}>
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold tap claim-pulse-btn"
+                        style={{
+                          background: `${tc}18`,
+                          color: tc,
+                          border: `1px solid ${tc}40`,
+                          '--cp': tc,
+                          animation: 'claim-pulse 2.5s ease-in-out infinite',
+                        } as React.CSSProperties}>
                         <Check size={10} /> Claim it
                       </button>
                     )}
@@ -531,7 +701,7 @@ export default function Me() {
       </div>
 
       {/* ══════════════════════════════════════════════════════ MENTOR HALL */}
-      <div>
+      <div style={{ zIndex: 1, position: 'relative' }}>
         <div className="flex items-center justify-between mb-3">
           <SectionHeader title="MENTOR HALL" sub="— figures you embody" />
           <button onClick={() => setShowMentorForm(s => !s)}
@@ -542,22 +712,30 @@ export default function Me() {
         </div>
 
         {showMentorForm && (
-          <form onSubmit={addMentor} className="card px-4 py-4 mb-3 space-y-2 scale-in">
+          <form onSubmit={addMentor} className="rounded-2xl px-4 py-4 mb-3 space-y-2 scale-in"
+            style={{ background: '#0d0f14', border: '1px solid rgba(255,255,255,0.07)' }}>
             <div className="grid grid-cols-2 gap-2">
-              <input name="name" required placeholder="Name (e.g. Marcus Aurelius)" className={ff} />
-              <input name="icon" placeholder="Icon (emoji)" className={ff} />
+              <input name="name" required placeholder="Name (e.g. Marcus Aurelius)" className={ff}
+                style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
+              <input name="icon" placeholder="Icon (emoji)" className={ff}
+                style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <input name="era" placeholder="Era (Ancient / Modern / Fictional)" className={ff} />
-              <input name="domain" placeholder="Domain (Stoicism / Combat…)" className={ff} />
+              <input name="era" placeholder="Era (Ancient / Modern / Fictional)" className={ff}
+                style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
+              <input name="domain" placeholder="Domain (Stoicism / Combat…)" className={ff}
+                style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
             </div>
-            <input name="trait" placeholder="Trait you're embodying from them" className={ff} />
+            <input name="trait" placeholder="Trait you're embodying from them" className={ff}
+              style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
             <div>
               <p className="text-[10px] mb-1" style={{ color: 'var(--t-faint)' }}>EMBODIMENT PROGRESS (0–100)</p>
-              <input name="progress" type="number" min={0} max={100} defaultValue={0} className={ff} />
+              <input name="progress" type="number" min={0} max={100} defaultValue={0} className={ff}
+                style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
             </div>
             <textarea name="notes" placeholder="Notes / quotes from them…" rows={2}
-              className={`${ff} resize-none`} />
+              className={`${ff} resize-none`}
+              style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgba(255,255,255,0.1)' }} />
             <div className="flex gap-2 pt-1">
               <button type="submit"
                 className="px-3 py-1.5 rounded-xl text-xs font-semibold text-white tap"
@@ -576,10 +754,26 @@ export default function Me() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {mentors.map(mentor => (
-            <div key={mentor.id} className="card-raised px-4 py-4 group">
+            <div key={mentor.id}
+              className="rounded-2xl px-4 py-4 group relative overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, #0d0f14 0%, #111318 100%)',
+                border: `1px solid rgba(255,255,255,0.07)`,
+                boxShadow: 'inset 0 0 30px rgba(0,0,0,0.3)',
+              }}>
+              {/* Portrait frame corners */}
+              <div className="absolute top-2 left-2 w-4 h-4 pointer-events-none"
+                style={{ borderTop: '1px solid rgba(255,255,255,0.15)', borderLeft: '1px solid rgba(255,255,255,0.15)' }} />
+              <div className="absolute top-2 right-2 w-4 h-4 pointer-events-none"
+                style={{ borderTop: '1px solid rgba(255,255,255,0.15)', borderRight: '1px solid rgba(255,255,255,0.15)' }} />
+              <div className="absolute bottom-2 left-2 w-4 h-4 pointer-events-none"
+                style={{ borderBottom: '1px solid rgba(255,255,255,0.15)', borderLeft: '1px solid rgba(255,255,255,0.15)' }} />
+              <div className="absolute bottom-2 right-2 w-4 h-4 pointer-events-none"
+                style={{ borderBottom: '1px solid rgba(255,255,255,0.15)', borderRight: '1px solid rgba(255,255,255,0.15)' }} />
+
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl leading-none">{mentor.icon}</span>
+                  <span className="text-[32px] leading-none">{mentor.icon}</span>
                   <div>
                     <p className="text-sm font-bold text-head">{mentor.name}</p>
                     <div className="flex items-center gap-1 flex-wrap mt-0.5">
@@ -601,30 +795,41 @@ export default function Me() {
                 </p>
               )}
 
-              {/* Embodiment progress */}
+              {/* Embodiment progress — thicker 8px bar */}
               <div className="space-y-1 mb-2">
                 <div className="flex justify-between">
-                  <span className="text-[10px] font-semibold" style={{ color: 'var(--t-faint)' }}>EMBODIMENT</span>
-                  <span className="text-[10px] font-bold" style={{ color: 'rgb(var(--accent-rgb-light))' }}>
+                  <span className="text-[10px] font-semibold tracking-wider uppercase" style={{ color: 'var(--t-faint)' }}>EMBODIMENT</span>
+                  <span className="text-[10px] font-black font-mono"
+                    style={{
+                      color: 'rgb(var(--accent-rgb-light))',
+                      textShadow: mentor.progress > 0 ? '0 0 8px rgb(var(--accent-rgb)/0.6)' : 'none',
+                    }}>
                     {mentor.progress}%
                   </span>
                 </div>
-                <div className="h-1.5 rounded-full overflow-hidden cursor-pointer group/bar"
-                  style={{ background: 'var(--s3)' }}
+                <div className="h-2 rounded-full overflow-hidden cursor-pointer relative"
+                  style={{ background: '#1a1c22' }}
                   title="Click to update progress"
                   onClick={() => {
                     const v = prompt(`Embodiment progress for ${mentor.name} (0-100):`, String(mentor.progress));
                     if (v !== null && !isNaN(Number(v))) updateMentorProgress(mentor.id, Math.min(100, Math.max(0, Number(v))));
                   }}>
                   <div className="h-full rounded-full bar-fill"
-                    style={{ width: `${mentor.progress}%`, background: 'rgb(var(--accent-rgb))',
-                      boxShadow: '0 0 6px rgb(var(--accent-rgb)/0.5)' }} />
+                    style={{
+                      width: `${mentor.progress}%`,
+                      background: 'rgb(var(--accent-rgb))',
+                      boxShadow: '0 0 8px rgb(var(--accent-rgb)/0.7)',
+                    }} />
+                  {/* Shimmer on the bar */}
+                  {mentor.progress > 0 && (
+                    <div className="xp-shimmer-bar absolute inset-0 rounded-full" style={{ mixBlendMode: 'screen' }} />
+                  )}
                 </div>
               </div>
 
               {mentor.notes && (
                 <p className="text-[11px] mt-2 italic leading-relaxed" style={{ color: 'var(--t-muted)' }}>
-                  "{mentor.notes}"
+                  " {mentor.notes}"
                 </p>
               )}
             </div>
