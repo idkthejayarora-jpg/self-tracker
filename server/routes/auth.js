@@ -2,7 +2,7 @@ const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../db/database');
-const { JWT_SECRET } = require('../middleware/auth');
+const { JWT_SECRET, ensureUserExists } = require('../middleware/auth');
 
 // Wipe ALL users (and all their data via CASCADE): POST /api/auth/wipe-all { secret }
 // One-time use to give a clean slate. Requires RESET_SECRET.
@@ -60,16 +60,17 @@ router.post('/login', (req, res) => {
   res.json({ token, user: { id: user.id, username: user.username } });
 });
 
-// Token health-check — called on app startup to verify session is still valid
+// Token health-check — called on app startup to verify session is still valid.
+// Also auto-restores the user row if the DB was wiped (token stays valid).
 router.get('/me', (req, res) => {
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) return res.status(401).json({ error: 'No token' });
   try {
-    const { JWT_SECRET } = require('../middleware/auth');
-    const jwt = require('jsonwebtoken');
     const payload = jwt.verify(header.slice(7), JWT_SECRET);
+    if (!ensureUserExists(db, payload)) {
+      return res.status(401).json({ error: 'session_gone' });
+    }
     const user = db.prepare('SELECT id, username FROM users WHERE id = ?').get(payload.id);
-    if (!user) return res.status(401).json({ error: 'session_gone', message: 'Account no longer exists — server was restarted. Please register again.' });
     res.json({ user });
   } catch {
     res.status(401).json({ error: 'invalid_token' });

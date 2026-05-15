@@ -11,7 +11,10 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   r => r,
   err => {
-    if (err.response?.status === 401) {
+    // No HTTP response = network error / server restarting — don't touch the session
+    if (!err.response) return Promise.reject(err);
+
+    if (err.response.status === 401) {
       // Don't auto-redirect for the startup validation call — AuthContext handles that itself
       const url: string = err.config?.url || '';
       if (url.includes('/auth/me')) return Promise.reject(err);

@@ -26,37 +26,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return;
     }
-    // Validate token against server — catches DB-wiped-on-redeploy silently
+
+    // Validate token on startup. The server auto-restores the user row if the DB
+    // was wiped (as long as the JWT signature is still valid), so this call should
+    // almost always succeed for a legitimately logged-in user.
     api.get('/auth/me', { headers: { Authorization: `Bearer ${stored}` } })
       .then(({ data }) => {
         setToken(stored);
         setUser(data.user);
+        // Keep stored user in sync with server response
+        localStorage.setItem('user', JSON.stringify(data.user));
       })
       .catch((err) => {
-        const status = err.response?.status;
-
-        // ── Network error or server restarting (no HTTP response) ──
-        // Don't clear the session — the token is probably fine, server is just
-        // temporarily unavailable (Railway deploy, cold start, etc.)
-        if (!status) {
-          try {
-            setToken(stored);
-            setUser(JSON.parse(storedUser));
-          } catch (_) {}
+        if (!err.response) {
+          // Network error / server cold-start — trust localStorage and keep going
+          try { setToken(stored); setUser(JSON.parse(storedUser)); } catch (_) {}
           return;
         }
-
-        // ── True 401 — token is invalid or user no longer exists ──
-        const errCode = err.response?.data?.error;
+        // Genuine 401 (expired / invalid token) — clear and go to login
         try {
           const u = JSON.parse(storedUser);
           if (u?.username) localStorage.setItem('lastUsername', u.username);
         } catch (_) {}
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        if (errCode === 'session_gone') {
-          sessionStorage.setItem('authMsg', 'server_restart');
-        }
       })
       .finally(() => setLoading(false));
   }, []);
