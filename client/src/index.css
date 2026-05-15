@@ -12,23 +12,33 @@
   --accent-rgb-light: 129 140 248;
 
   /* Mobile left sidebar width */
-  --sidebar-w: 52px;
+  --sidebar-w: 56px;
 
-  /* Pure black surface stack */
-  --s0: #000000;
-  --s1: #0f0f0f;
-  --s2: #171717;
-  --s3: #222222;
-  --s4: #2a2a2a;
-  --b:  rgba(255,255,255,0.07);
-  --bh: rgba(255,255,255,0.12);
+  /* ── Hunter's Command Room — Deep Navy Surfaces ── */
+  --s0: #07090f;   /* void    — page background */
+  --s1: #0c1018;   /* obsidian — card base */
+  --s2: #111827;   /* deep navy — raised cards */
+  --s3: #172030;   /* navy — inputs, interactive panels */
+  --s4: #1e2a40;   /* slate — hover states */
 
-  /* Adaptive text tokens — flip in light mode */
-  --t-head:  #f4f4f5;
-  --t-body:  #e4e4e7;
-  --t-muted: #a1a1aa;
-  --t-dim:   #71717a;
-  --t-faint: #52525b;
+  /* Cyan-tinted borders for that system UI feel */
+  --b:  rgba(56,189,248,0.07);
+  --bh: rgba(56,189,248,0.18);
+
+  /* Gold — XP / rank / earned */
+  --gold:     #f59e0b;
+  --gold-rgb: 245 158 11;
+
+  /* Cyan — system labels / highlights */
+  --cyan:     #38bdf8;
+  --cyan-rgb: 56 189 248;
+
+  /* Adaptive text tokens */
+  --t-head:  #f1f5f9;
+  --t-body:  #e2e8f0;
+  --t-muted: #94a3b8;
+  --t-dim:   #64748b;
+  --t-faint: #475569;
 }
 
 @layer base {
@@ -43,26 +53,24 @@
     letter-spacing: -0.01em;
   }
   #root { min-height: 100vh; }
-  ::selection { background: rgb(var(--accent-rgb) / 0.3); }
-  ::-webkit-scrollbar { width: 3px; }
+  ::selection { background: rgb(var(--accent-rgb) / 0.35); }
+  ::-webkit-scrollbar { width: 3px; height: 3px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--s3); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb { background: var(--s4); border-radius: 99px; }
 }
 
-/* ── Map Tailwind gray → surface stack ── */
+/* ── Tailwind gray → surface overrides ── */
 .bg-gray-950  { background-color: var(--s0) !important; }
 .bg-gray-900  { background-color: var(--s1) !important; }
 .bg-gray-800  { background-color: var(--s2) !important; }
 .bg-gray-700  { background-color: var(--s3) !important; }
-.bg-gray-800\/40 { background-color: rgb(23 23 23 / 0.6) !important; }
-
+.bg-gray-800\/40 { background-color: rgb(17 24 39 / 0.6) !important; }
 .border-gray-800 { border-color: var(--b)  !important; }
 .border-gray-700 { border-color: var(--bh) !important; }
-
 .hover\:bg-gray-800:hover { background-color: var(--s2) !important; }
 .hover\:bg-gray-700:hover { background-color: var(--s3) !important; }
 
-/* ── Text utilities using adaptive tokens ── */
+/* ── Text utilities ── */
 .text-white    { color: var(--t-head)  !important; }
 .text-gray-100 { color: var(--t-head)  !important; }
 .text-gray-200 { color: var(--t-body)  !important; }
@@ -89,14 +97,120 @@ input:focus, textarea:focus, select:focus {
   .card {
     background-color: var(--s1);
     border: 1px solid var(--b);
-    border-radius: 12px;
+    border-radius: 14px;
+    transition: border-color 0.2s;
   }
+  .card:hover { border-color: var(--bh); }
+
   .card-raised {
     background-color: var(--s2);
     border: 1px solid var(--b);
-    border-radius: 12px;
+    border-radius: 14px;
   }
-  /* Adaptive text — controlled by CSS vars */
+
+  /* Command card — the new primary card style */
+  .cmd-card {
+    background-color: var(--s1);
+    border: 1px solid var(--b);
+    border-radius: 16px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .cmd-card:hover {
+    border-color: rgba(56,189,248,0.14);
+    box-shadow: 0 0 20px rgba(56,189,248,0.03), 0 4px 16px rgba(0,0,0,0.3);
+  }
+
+  /* System label — cyan uppercase tracking label */
+  .sys-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    opacity: 0.75;
+  }
+
+  /* Action tile — quick-action button */
+  .action-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 8px;
+    border-radius: 14px;
+    background: var(--s1);
+    border: 1px solid var(--b);
+    cursor: pointer;
+    transition: all 0.18s;
+    text-decoration: none;
+  }
+  .action-tile:hover {
+    background: var(--s2);
+    border-color: var(--bh);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  }
+  .action-tile:active { transform: scale(0.95); opacity: 0.8; }
+
+  /* Mission card — task as quest */
+  .mission-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
+    transition: background 0.15s;
+    border-bottom: 1px solid var(--b);
+  }
+  .mission-card:last-child { border-bottom: none; }
+  .mission-card:hover { background: rgba(56,189,248,0.03); }
+
+  /* Rank badge */
+  .rank-badge {
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 99px;
+  }
+
+  /* XP progress bar track */
+  .xp-track {
+    height: 6px;
+    border-radius: 99px;
+    background: var(--s3);
+    overflow: hidden;
+  }
+  .xp-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .xp-fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: xp-shimmer 2s linear infinite;
+  }
+
+  /* Streak node */
+  .streak-node {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: var(--s1);
+    border: 1px solid var(--b);
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+
+  /* Adaptive text */
   .text-dim   { color: var(--t-dim);   }
   .text-muted { color: var(--t-muted); }
   .text-body  { color: var(--t-body);  }
@@ -105,19 +219,22 @@ input:focus, textarea:focus, select:focus {
 
 /* ── Light mode ── */
 html.light {
-  --s0: #f5f5f5;
+  --s0: #f0f2f5;
   --s1: #ffffff;
-  --s2: #f4f4f5;
-  --s3: #e4e4e7;
-  --s4: #d4d4d8;
+  --s2: #f8fafc;
+  --s3: #f1f5f9;
+  --s4: #e2e8f0;
   --b:  rgba(0,0,0,0.07);
-  --bh: rgba(0,0,0,0.13);
+  --bh: rgba(0,0,0,0.14);
 
-  --t-head:  #18181b;
-  --t-body:  #3f3f46;
-  --t-muted: #52525b;
-  --t-dim:   #71717a;
-  --t-faint: #a1a1aa;
+  --t-head:  #0f172a;
+  --t-body:  #1e293b;
+  --t-muted: #475569;
+  --t-dim:   #64748b;
+  --t-faint: #94a3b8;
+
+  --gold: #d97706;
+  --cyan: #0284c7;
 }
 html.light body { color: var(--t-head); background: var(--s0); }
 html.light input, html.light textarea, html.light select {
@@ -131,6 +248,9 @@ html.light .border-gray-800 { border-color: var(--b)  !important; }
 html.light .border-gray-700 { border-color: var(--bh) !important; }
 html.light .text-green-400  { color: #16a34a !important; }
 html.light .text-red-400    { color: #dc2626 !important; }
+html.light .cmd-card { background: var(--s1); }
+html.light .action-tile { background: var(--s1); }
+html.light .streak-node { background: var(--s1); }
 
 /* ── Mic / voice animations ── */
 @keyframes mic-ring {
@@ -171,14 +291,14 @@ html.light .text-red-400    { color: #dc2626 !important; }
 }
 @keyframes min-flash {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
+  50%       { opacity: 0.3; }
 }
 .clock-seconds-tick { animation: sec-pop 0.18s ease-out; }
 .clock-colon        { animation: min-flash 1s step-start infinite; }
 
 /* ── Page entry ── */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(14px); }
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
@@ -186,14 +306,15 @@ html.light .text-red-400    { color: #dc2626 !important; }
 @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 @keyframes countUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-.anim-page > * { animation: fadeUp 0.28s ease-out both; }
+.anim-page > * { animation: fadeUp 0.3s ease-out both; }
 .anim-page > *:nth-child(1) { animation-delay: 0.00s; }
-.anim-page > *:nth-child(2) { animation-delay: 0.04s; }
-.anim-page > *:nth-child(3) { animation-delay: 0.08s; }
-.anim-page > *:nth-child(4) { animation-delay: 0.12s; }
-.anim-page > *:nth-child(5) { animation-delay: 0.16s; }
-.anim-page > *:nth-child(6) { animation-delay: 0.20s; }
-.anim-page > *:nth-child(7) { animation-delay: 0.24s; }
+.anim-page > *:nth-child(2) { animation-delay: 0.05s; }
+.anim-page > *:nth-child(3) { animation-delay: 0.10s; }
+.anim-page > *:nth-child(4) { animation-delay: 0.15s; }
+.anim-page > *:nth-child(5) { animation-delay: 0.20s; }
+.anim-page > *:nth-child(6) { animation-delay: 0.25s; }
+.anim-page > *:nth-child(7) { animation-delay: 0.30s; }
+.anim-page > *:nth-child(8) { animation-delay: 0.35s; }
 
 .slide-up { animation: slideUp 0.32s cubic-bezier(0.16,1,0.3,1) both; }
 .scale-in { animation: scaleIn 0.22s ease-out both; }
@@ -210,7 +331,7 @@ html.light .text-red-400    { color: #dc2626 !important; }
 
 /* Tap feedback */
 .tap { transition: transform 0.11s, opacity 0.11s; cursor: pointer; }
-.tap:active { transform: scale(0.95); opacity: 0.8; }
+.tap:active { transform: scale(0.96); opacity: 0.8; }
 
 /* Nav hover */
 .nav-item { transition: background 0.15s, color 0.15s; }
@@ -221,8 +342,41 @@ html.light .text-red-400    { color: #dc2626 !important; }
 
 /* Card lift on hover */
 .card-hover { transition: transform 0.18s, box-shadow 0.18s; }
-.card-hover:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,0,0,0.22); }
+.card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.3); }
 html.light .card-hover:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.09); }
+
+/* ── New: Glow pulse for rank elements ── */
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1;   }
+}
+@keyframes badge-pop {
+  0%   { transform: scale(0.7) rotate(-8deg); opacity: 0; }
+  60%  { transform: scale(1.1) rotate(2deg);  opacity: 1; }
+  100% { transform: scale(1)   rotate(0deg);  opacity: 1; }
+}
+@keyframes data-pulse {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.8; }
+}
+@keyframes node-in {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+@keyframes xp-charge {
+  from { transform: scaleX(0); transform-origin: left; }
+  to   { transform: scaleX(1); transform-origin: left; }
+}
+@keyframes float-up {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+
+.glow-pulse   { animation: glow-pulse   2s ease-in-out infinite; }
+.badge-pop    { animation: badge-pop    0.5s cubic-bezier(.34,1.56,.64,1) both; }
+.data-pulse   { animation: data-pulse   2.2s ease-in-out infinite; }
+.node-in      { animation: node-in      0.4s cubic-bezier(.34,1.56,.64,1) both; }
+.float-up     { animation: float-up     3s ease-in-out infinite; }
 
 /* ── Solo Leveling RPG animations ── */
 @keyframes warrior-float {
@@ -250,10 +404,10 @@ html.light .card-hover:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.09); }
   100% { background-position:  200% center; }
 }
 @keyframes scan-line {
-  0%   { top: -4%;   opacity: 0; }
-  5%   { opacity: 0.25; }
-  95%  { opacity: 0.25; }
-  100% { top: 104%;  opacity: 0; }
+  0%   { top: -4%;  opacity: 0; }
+  5%   { opacity: 0.2; }
+  95%  { opacity: 0.2; }
+  100% { top: 104%; opacity: 0; }
 }
 @keyframes claim-pulse {
   0%, 100% { box-shadow: 0 0 0 0 var(--cp, transparent); }
