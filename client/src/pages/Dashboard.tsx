@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Flame, CheckSquare, BookOpen, Zap, Clock, ArrowRight, Dumbbell, Moon,
-  Sparkles, Send, X, Mic, MicOff, Volume2, ChevronDown, Plus, Target,
+  Flame, CheckSquare, BookOpen, Zap, ArrowRight, Dumbbell, Moon,
+  Send, X, Mic, MicOff, Volume2, ChevronDown, Plus, Target,
   Wallet, AlertTriangle, ArrowUp, Minus, ChevronDown as ChevDown,
-  TrendingUp, Coffee, Activity, BarChart2, CheckCircle2, Circle, Calendar,
-  MessageSquare, Battery, Award, ChevronRight, Swords,
+  TrendingUp, Coffee, Activity, BarChart2, CheckCircle2, Circle,
+  MessageSquare, Award, ChevronRight, Swords,
 } from 'lucide-react';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
@@ -434,8 +434,6 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
       </button>
     );
   }
-
-  const voiceLabel = selectedVoice ? selectedVoice.name.replace(/\s*\(.*?\)/g, '').trim() : 'Voice';
 
   return (
     <div className="cmd-card overflow-hidden">
