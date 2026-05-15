@@ -67,8 +67,10 @@ function WarriorSilhouette({ color }: { color: string }) {
   return (
     <svg
       viewBox="0 0 120 220"
+      width="200"
+      height="367"
       className="warrior-float"
-      style={{ color, fill: 'currentColor', stroke: 'currentColor' }}
+      style={{ color, fill: 'currentColor', stroke: 'currentColor', filter: `drop-shadow(0 0 12px ${color}) drop-shadow(0 0 28px ${color}60)` }}
       aria-hidden="true"
     >
       {/* Cape */}
@@ -257,7 +259,7 @@ export default function Me() {
     </div>
   );
 
-  const { profile, rank, rankColor, totalPoints, stats, skills, claims, mentors } = data;
+  const { profile, rank, rankColor, rankLabel, rankDesc, meritScore, meritBreakdown, nextRank, totalPoints, stats, skills, claims, mentors } = data;
   const activeClaims = claims.filter(c => c.status === 'active');
   const claimedList  = claims.filter(c => c.status === 'claimed');
   const rankGlow     = RANK_GLOW[rank] ?? 'transparent';
@@ -267,10 +269,10 @@ export default function Me() {
   const ff = 'w-full rounded-xl px-3 py-2 text-sm focus:outline-none';
 
   return (
-    <div className="max-w-2xl space-y-6 anim-page pb-10" style={{ background: '#030508' }}>
+    <div className="max-w-2xl mx-auto space-y-6 anim-page pb-10 relative" style={{ background: '#030508' }}>
 
       {/* Page-level animated scan line */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-none" style={{ zIndex: 0 }}>
         {/* Hex-dot grid overlay */}
         <div className="absolute inset-0"
           style={{
@@ -299,29 +301,78 @@ export default function Me() {
         {/* Warrior silhouette — behind everything */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none"
           style={{ zIndex: 0 }}>
-          <div style={{ height: '85%', opacity: 0.55, color: rankSolid }}>
+          <div style={{ width: 200, height: 367, opacity: 0.65, flexShrink: 0 }}>
             <WarriorSilhouette color={rankSolid} />
           </div>
         </div>
 
         {/* Card content overlay */}
         <div className="relative flex flex-col items-center gap-4 px-5 py-8" style={{ zIndex: 1 }}>
-          {/* Rank badge */}
-          <div className="flex items-center gap-3">
-            <span
-              className="rank-glow-anim text-[12px] font-black px-4 py-1.5 rounded-full tracking-[0.2em] uppercase"
-              style={{
-                background: `${rankSolid}18`,
-                color: rankSolid,
-                border: `1px solid ${rankSolid}60`,
-                '--rg': rankSolid,
-              } as React.CSSProperties}>
-              {rank} RANK
-            </span>
-            <span className="font-mono text-[11px] font-bold tabular-nums"
-              style={{ color: rankSolid, textShadow: `0 0 10px ${rankSolid}80` }}>
-              {totalPoints.toLocaleString()} PTS
-            </span>
+          {/* Rank badge + label */}
+          <div className="flex flex-col items-center gap-1.5">
+            <div className="flex items-center gap-3">
+              <span
+                className="rank-glow-anim text-[12px] font-black px-4 py-1.5 rounded-full tracking-[0.2em] uppercase"
+                style={{
+                  background: `${rankSolid}18`,
+                  color: rankSolid,
+                  border: `1px solid ${rankSolid}60`,
+                  '--rg': rankSolid,
+                } as React.CSSProperties}>
+                {rank} RANK
+              </span>
+              <span className="font-mono text-[11px] font-bold tabular-nums"
+                style={{ color: rankSolid, textShadow: `0 0 10px ${rankSolid}80` }}>
+                {totalPoints.toLocaleString()} PTS
+              </span>
+            </div>
+            {/* Rank label + desc */}
+            <div className="text-center">
+              <p className="text-[13px] font-bold tracking-wide" style={{ color: rankSolid }}>{rankLabel}</p>
+              <p className="text-[10px] mt-0.5" style={{ color: 'var(--t-faint)' }}>{rankDesc}</p>
+            </div>
+          </div>
+
+          {/* Merit score panel */}
+          <div className="w-full max-w-sm rounded-xl px-4 py-3 space-y-2"
+            style={{ background: 'rgba(0,0,0,0.45)', border: `1px solid ${rankSolid}25` }}>
+            {/* Total merit bar */}
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--t-faint)' }}>MERIT SCORE</span>
+              <span className="font-black font-mono text-sm tabular-nums" style={{ color: rankSolid, textShadow: `0 0 8px ${rankSolid}80` }}>
+                {meritScore}<span className="text-[10px] font-normal opacity-50">/100</span>
+              </span>
+            </div>
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: '#1a1c22' }}>
+              <div className="h-full rounded-full transition-all duration-700 bar-fill"
+                style={{ width: `${meritScore}%`, background: rankSolid, boxShadow: `0 0 8px ${rankSolid}` }} />
+            </div>
+            {/* Breakdown */}
+            <div className="grid grid-cols-4 gap-1.5 pt-1">
+              {([
+                { label: 'STATS', val: meritBreakdown.statScore,  max: 60, color: '#ef4444' },
+                { label: 'SKILLS', val: meritBreakdown.skillScore, max: 20, color: '#39ff14' },
+                { label: 'CLAIMS', val: meritBreakdown.claimScore, max: 10, color: '#6366f1' },
+                { label: 'PTS',   val: meritBreakdown.ptsScore,   max: 10, color: '#f59e0b' },
+              ]).map(b => (
+                <div key={b.label} className="flex flex-col items-center gap-0.5">
+                  <span className="text-[9px] tracking-wider" style={{ color: 'var(--t-faint)' }}>{b.label}</span>
+                  <span className="text-xs font-black font-mono" style={{ color: b.color }}>
+                    {b.val}<span className="text-[9px] opacity-40">/{b.max}</span>
+                  </span>
+                  <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: '#1a1c22' }}>
+                    <div className="h-full rounded-full" style={{ width: `${(b.val / b.max) * 100}%`, background: b.color }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Next rank progress */}
+            {nextRank && (
+              <p className="text-[10px] text-center pt-0.5" style={{ color: 'var(--t-faint)' }}>
+                Next: <span style={{ color: nextRank.color, fontWeight: 700 }}>{nextRank.rank} — {nextRank.label}</span>
+                <span className="opacity-60"> ({nextRank.min - meritScore} pts to go)</span>
+              </p>
+            )}
           </div>
 
           {/* Avatar ring + emoji */}

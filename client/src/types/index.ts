@@ -233,6 +233,11 @@ export interface MeSummary {
   profile: MeProfile;
   rank: string;
   rankColor: string;
+  rankLabel: string;
+  rankDesc: string;
+  meritScore: number;
+  meritBreakdown: { statScore: number; skillScore: number; claimScore: number; ptsScore: number };
+  nextRank: { rank: string; min: number; color: string; label: string } | null;
   totalPoints: number;
   stats: MeStats;
   skills: MeSkill[];

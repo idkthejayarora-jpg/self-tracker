@@ -6,22 +6,55 @@ const { getTotalPoints } = require('../utils/pointsUtils');
 
 router.use(authMiddleware);
 
-// ── Rank helpers ──────────────────────────────────────────────────────────────
-const RANKS = [
-  { rank: 'E',   min: 0,      color: '#6b7280' },
-  { rank: 'D',   min: 500,    color: '#3b82f6' },
-  { rank: 'C',   min: 1500,   color: '#22c55e' },
-  { rank: 'B',   min: 3500,   color: '#a855f7' },
-  { rank: 'A',   min: 7000,   color: '#f97316' },
-  { rank: 'S',   min: 12000,  color: '#ef4444' },
-  { rank: 'SS',  min: 20000,  color: '#f59e0b' },
-  { rank: 'SSS', min: 35000,  color: '#e2c97e' },
+// ── Merit-based rank system ───────────────────────────────────────────────────
+// Rank is earned through ACTUAL performance, not just points:
+//   Stats score  (0–60): average of all 6 live stats
+//   Skills score (0–20): avg skill level × 2, capped at 20
+//   Claims score (0–10): completed claims × 2, capped at 10
+//   Points score (0–10): total points / 500, capped at 10
+//   Max merit score = 100
+
+const RANK_TIERS = [
+  { rank: 'SSS', min: 85, color: '#e2c97e', label: 'Shadow Monarch',  desc: 'Transcended human limits' },
+  { rank: 'SS',  min: 70, color: '#f59e0b', label: 'National-Level',  desc: 'Among the world\'s elite'  },
+  { rank: 'S',   min: 55, color: '#ef4444', label: 'S-Class Hunter',  desc: 'Exceptional across all areas' },
+  { rank: 'A',   min: 42, color: '#f97316', label: 'A-Class Hunter',  desc: 'Highly disciplined & consistent' },
+  { rank: 'B',   min: 30, color: '#a855f7', label: 'B-Class Hunter',  desc: 'Solid foundations built' },
+  { rank: 'C',   min: 18, color: '#22c55e', label: 'C-Class Hunter',  desc: 'Establishing the grind' },
+  { rank: 'D',   min: 8,  color: '#3b82f6', label: 'D-Class Hunter',  desc: 'The journey begins'     },
+  { rank: 'E',   min: 0,  color: '#6b7280', label: 'E-Class Hunter',  desc: 'Awakened but untested'  },
 ];
 
-function getRank(pts) {
-  let r = RANKS[0];
-  for (const rank of RANKS) { if (pts >= rank.min) r = rank; }
-  return r;
+function computeMeritScore(stats, skills, claims, totalPoints) {
+  const statKeys = ['strength', 'vitality', 'discipline', 'focus', 'endurance', 'wealth'];
+  const avgStat    = statKeys.reduce((s, k) => s + (stats[k] || 0), 0) / 6;
+  const statScore  = Math.round((avgStat / 100) * 60);
+
+  const avgSkillLvl = skills.length > 0
+    ? skills.reduce((s, sk) => s + (sk.level || 1), 0) / skills.length : 0;
+  const skillScore  = Math.min(20, Math.round(avgSkillLvl * 2));
+
+  const claimedCount = claims.filter(c => c.status === 'claimed').length;
+  const claimScore   = Math.min(10, claimedCount * 2);
+
+  const ptsScore = Math.min(10, Math.round(totalPoints / 500));
+
+  return {
+    total: statScore + skillScore + claimScore + ptsScore,
+    breakdown: { statScore, skillScore, claimScore, ptsScore },
+  };
+}
+
+function getRankFromMerit(meritTotal) {
+  for (const tier of RANK_TIERS) {
+    if (meritTotal >= tier.min) return tier;
+  }
+  return RANK_TIERS[RANK_TIERS.length - 1];
+}
+
+function getNextRank(currentRank) {
+  const idx = RANK_TIERS.findIndex(t => t.rank === currentRank);
+  return idx > 0 ? RANK_TIERS[idx - 1] : null;
 }
 
 // ── GET /summary ─ everything in one shot ─────────────────────────────────────
@@ -33,9 +66,8 @@ router.get('/summary', (req, res) => {
     character_name: '', title: '', class: '', bio: '', adventure: '', avatar_emoji: '⚔️',
   };
 
-  // Rank
+  // Total points (for points sub-score)
   const totalPoints = getTotalPoints(uid);
-  const rankInfo = getRank(totalPoints);
 
   // ── Stats ──
   // STRENGTH: workout sessions this month
@@ -89,10 +121,25 @@ router.get('/summary', (req, res) => {
   const claims  = db.prepare('SELECT * FROM me_claims  WHERE user_id=? ORDER BY sort_order, created_at').all(uid);
   const mentors = db.prepare('SELECT * FROM me_mentors WHERE user_id=? ORDER BY sort_order, created_at').all(uid);
 
+  // ── Merit-based rank ──
+  const merit     = computeMeritScore(stats, skills, claims, totalPoints);
+  const rankTier  = getRankFromMerit(merit.total);
+  const nextTier  = getNextRank(rankTier.rank);
+
   res.json({
     profile,
-    rank: rankInfo.rank,
-    rankColor: rankInfo.color,
+    rank:      rankTier.rank,
+    rankColor: rankTier.color,
+    rankLabel: rankTier.label,
+    rankDesc:  rankTier.desc,
+    meritScore:     merit.total,
+    meritBreakdown: merit.breakdown,
+    nextRank: nextTier ? {
+      rank:  nextTier.rank,
+      min:   nextTier.min,
+      color: nextTier.color,
+      label: nextTier.label,
+    } : null,
     totalPoints,
     stats,
     skills,
