@@ -218,14 +218,19 @@ function Section({ icon: Icon, iconColor, title, action, count }: {
 }
 
 /* ── Daily check-in ── */
-const PROMPTS = [
-  "How was your day? What did you get done?",
-  "Vent, reflect, or just list what happened.",
-  "Tell me about sleep, mood, tasks, habits…",
-  "How are you feeling? What's on your mind?",
-  "Summarise your day — I'll handle the rest.",
-];
 const MOOD_EMOJI_MAP = ['', '😞', '😕', '😐', '🙂', '😄'];
+
+// Guided conversation questions
+const CONVO_QUESTIONS = [
+  "Hey! How are you feeling today — mentally and physically?",
+  "How did you sleep last night? What time did you go to bed and wake up?",
+  "Did you work out or do any exercise today? What did you get into?",
+  "What tasks or goals did you knock out today?",
+  "Anything else on your mind — wins, struggles, or anything you want to note?",
+];
+const CONVO_TRANSITIONS = [
+  "Got it.", "Noted.", "Nice.", "Got that.", "Okay.",
+];
 
 // Get the SpeechRecognition constructor cross-browser (typed as any — not in default TS DOM lib)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -249,14 +254,31 @@ function useSpeechVoices() {
   return voices;
 }
 
-function speak(text: string, voice: SpeechSynthesisVoice | null) {
-  if (!window.speechSynthesis) return;
+// Pick the best available English voice — Google neural > Microsoft neural > Apple > fallback
+function pickBestVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
+  if (!voices.length) return null;
+  return (
+    voices.find(v => /google uk english female/i.test(v.name)) ||
+    voices.find(v => /google us english/i.test(v.name)) ||
+    voices.find(v => /microsoft.*aria.*online|microsoft.*jenny.*online|microsoft.*sonia.*online/i.test(v.name)) ||
+    voices.find(v => /microsoft (aria|jenny|zira|natasha|hazel|sonia)/i.test(v.name)) ||
+    voices.find(v => /samantha|karen|tessa|moira/i.test(v.name)) ||
+    voices.find(v => v.lang === 'en-GB') ||
+    voices.find(v => v.lang === 'en-US') ||
+    voices[0]
+  );
+}
+
+function speak(text: string, voice: SpeechSynthesisVoice | null, onEnd?: () => void) {
+  if (!window.speechSynthesis) { onEnd?.(); return; }
   window.speechSynthesis.cancel();
   const utt = new SpeechSynthesisUtterance(text);
   utt.lang = 'en-US';
-  utt.rate = 1.0;
-  utt.pitch = 1.0;
+  utt.rate = 0.93;   // slightly slower = more natural
+  utt.pitch = 1.06;  // slightly warmer tone
+  utt.volume = 1.0;
   if (voice) utt.voice = voice;
+  if (onEnd) utt.onend = onEnd;
   window.speechSynthesis.speak(utt);
 }
 
@@ -270,102 +292,189 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
     () => localStorage.getItem(voiceKey) ?? ''
   );
   const [showVoicePicker, setShowVoicePicker] = useState(false);
-  const selectedVoice = voices.find(v => v.name === selectedVoiceName) ?? voices[0] ?? null;
+  const selectedVoice = voices.find(v => v.name === selectedVoiceName) ?? pickBestVoice(voices);
 
   const [open, setOpen] = useState(() => localStorage.getItem(storageKey) !== 'done');
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CheckinResult | null>(null);
   const [error, setError] = useState('');
+
+  // Basic dictation state
   const [listening, setListening] = useState(false);
   const [interimText, setInterimText] = useState('');
 
-  const promptRef = useRef(PROMPTS[Math.floor(Math.random() * PROMPTS.length)]);
+  // Conversation mode state
+  const [convoActive, setConvoActive] = useState(false);
+  const [convoStep, setConvoStep] = useState(0);
+  const [speaking, setSpeaking] = useState(false);
+
   const taRef = useRef<HTMLTextAreaElement>(null);
   const srRef = useRef<any>(null);
-  const baseTextRef = useRef(''); // text committed before current recording session
+  const baseTextRef = useRef('');
+  const convoAnswersRef = useRef<string[]>([]);
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Focus textarea when opened
-  useEffect(() => {
-    if (open && !result && taRef.current) taRef.current.focus();
-  }, [open, result]);
-
-  // Pick a default voice once voices load (pick first US English female if available)
+  // Auto-pick best voice when voices load
   useEffect(() => {
     if (!voices.length || selectedVoiceName) return;
-    const preferred = voices.find(v => /samantha|karen|tessa|moira|zira|hazel/i.test(v.name))
-      ?? voices.find(v => v.lang === 'en-US')
-      ?? voices[0];
-    if (preferred) {
-      setSelectedVoiceName(preferred.name);
-      localStorage.setItem(voiceKey, preferred.name);
+    const best = pickBestVoice(voices);
+    if (best) {
+      setSelectedVoiceName(best.name);
+      localStorage.setItem(voiceKey, best.name);
     }
   }, [voices, selectedVoiceName]);
+
+  // Focus textarea when opened (type mode only)
+  useEffect(() => {
+    if (open && !result && !convoActive && taRef.current) taRef.current.focus();
+  }, [open, result, convoActive]);
 
   function pickVoice(v: SpeechSynthesisVoice) {
     setSelectedVoiceName(v.name);
     localStorage.setItem(voiceKey, v.name);
     setShowVoicePicker(false);
-    // Preview the voice
-    speak('Got it, I\'ll use this voice.', v);
+    speak("Got it, I'll use this voice.", v);
   }
 
-  function toggleListening() {
+  // ── Conversation mode ─────────────────────────────────────────────────────
+  function startListeningForAnswer(step: number) {
     if (!SR) return;
-    if (listening) {
-      srRef.current?.stop();
-      return;
-    }
     const sr = new SR();
     srRef.current = sr;
     sr.lang = 'en-US';
     sr.continuous = true;
     sr.interimResults = true;
 
-    baseTextRef.current = text; // save what's already typed
+    let currentAnswer = '';
 
     sr.onstart = () => setListening(true);
 
     sr.onresult = (e: any) => {
       let interim = '';
-      let final = baseTextRef.current;
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const t = e.results[i][0].transcript;
         if (e.results[i].isFinal) {
-          final += (final ? ' ' : '') + t.trim();
-          baseTextRef.current = final;
+          currentAnswer += (currentAnswer ? ' ' : '') + t.trim();
         } else {
           interim = t;
         }
       }
-      setText(final + (interim ? ' ' + interim : ''));
       setInterimText(interim);
+      // Reset silence timer on every speech event
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      if (currentAnswer) {
+        silenceTimerRef.current = setTimeout(() => sr.stop(), 1800);
+      }
     };
 
-    sr.onerror = () => { setListening(false); setInterimText(''); };
+    sr.onerror = () => { setListening(false); setInterimText(''); handleConvoAnswer(step, currentAnswer); };
     sr.onend = () => {
       setListening(false);
       setInterimText('');
-      // Trim any trailing interim ghost text
-      setText(baseTextRef.current);
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      handleConvoAnswer(step, currentAnswer);
     };
 
     sr.start();
   }
 
-  async function submit() {
-    if (listening) { srRef.current?.stop(); }
-    if (!text.trim() || loading) return;
+  function handleConvoAnswer(step: number, answer: string) {
+    if (answer.trim()) {
+      convoAnswersRef.current = [...convoAnswersRef.current, answer.trim()];
+      const combined = convoAnswersRef.current.join('. ');
+      setText(combined);
+      baseTextRef.current = combined;
+    }
+
+    const nextStep = step + 1;
+    if (nextStep < CONVO_QUESTIONS.length) {
+      setConvoStep(nextStep);
+      const transition = answer.trim() ? CONVO_TRANSITIONS[step % CONVO_TRANSITIONS.length] + ' ' : '';
+      setTimeout(() => {
+        setSpeaking(true);
+        speak(transition + CONVO_QUESTIONS[nextStep], selectedVoice ?? null, () => {
+          setSpeaking(false);
+          startListeningForAnswer(nextStep);
+        });
+      }, 350);
+    } else {
+      // All questions done → auto-submit
+      setConvoActive(false);
+      setSpeaking(true);
+      speak("Perfect. Let me log all of that for you now.", selectedVoice ?? null, () => {
+        setSpeaking(false);
+        const finalText = convoAnswersRef.current.join('. ');
+        if (finalText.trim()) submitText(finalText);
+      });
+    }
+  }
+
+  function startConversation() {
+    if (!SR) return;
+    convoAnswersRef.current = [];
+    setText('');
+    baseTextRef.current = '';
+    setConvoActive(true);
+    setConvoStep(0);
+    setError('');
+    setSpeaking(true);
+    speak(CONVO_QUESTIONS[0], selectedVoice ?? null, () => {
+      setSpeaking(false);
+      startListeningForAnswer(0);
+    });
+  }
+
+  function stopConversation() {
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    srRef.current?.stop();
+    window.speechSynthesis?.cancel();
+    setConvoActive(false);
+    setSpeaking(false);
+    setListening(false);
+    setInterimText('');
+  }
+
+  // ── Basic dictation (tap-to-talk, no guided questions) ────────────────────
+  function toggleDictation() {
+    if (!SR) return;
+    if (listening) { srRef.current?.stop(); return; }
+    const sr = new SR();
+    srRef.current = sr;
+    sr.lang = 'en-US';
+    sr.continuous = true;
+    sr.interimResults = true;
+    baseTextRef.current = text;
+
+    sr.onstart = () => setListening(true);
+    sr.onresult = (e: any) => {
+      let interim = '';
+      let final = baseTextRef.current;
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) { final += (final ? ' ' : '') + t.trim(); baseTextRef.current = final; }
+        else interim = t;
+      }
+      setText(final + (interim ? ' ' + interim : ''));
+      setInterimText(interim);
+    };
+    sr.onerror = () => { setListening(false); setInterimText(''); };
+    sr.onend = () => { setListening(false); setInterimText(''); setText(baseTextRef.current); };
+    sr.start();
+  }
+
+  // ── Submit helpers ────────────────────────────────────────────────────────
+  async function submitText(payload: string) {
+    if (!payload.trim() || loading) return;
     setLoading(true);
     setError('');
     try {
-      const res = await api.post<CheckinResult>('/checkin', { text });
+      const res = await api.post<CheckinResult>('/checkin', { text: payload });
       setResult(res.data);
       localStorage.setItem(storageKey, 'done');
       onCheckinDone();
-      // Read the response aloud
       if (res.data.friendly_response) {
-        setTimeout(() => speak(res.data.friendly_response, selectedVoice), 300);
+        setTimeout(() => speak(res.data.friendly_response, selectedVoice ?? null), 400);
       }
     } catch (e: any) {
       setError(e.response?.data?.error || 'Something went wrong. Try again.');
@@ -374,9 +483,13 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
     }
   }
 
+  async function submit() {
+    if (listening) srRef.current?.stop();
+    submitText(text);
+  }
+
   function dismiss() {
-    srRef.current?.stop();
-    window.speechSynthesis?.cancel();
+    stopConversation();
     setOpen(false);
     localStorage.setItem(storageKey, 'done');
   }
@@ -388,6 +501,7 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
     setError('');
     setListening(false);
     setInterimText('');
+    setConvoActive(false);
   }
 
   if (!open) {
@@ -401,10 +515,7 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
     );
   }
 
-  // Short display name for voice button
-  const voiceLabel = selectedVoice
-    ? selectedVoice.name.replace(/\s*\(.*?\)/g, '').trim()
-    : 'Voice';
+  const voiceLabel = selectedVoice ? selectedVoice.name.replace(/\s*\(.*?\)/g, '').trim() : 'Voice';
 
   return (
     <div className="card px-4 py-4 space-y-3">
@@ -415,23 +526,17 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
           <span className="text-sm font-semibold text-head">Daily Check-in</span>
         </div>
         <div className="flex items-center gap-2">
-          {/* Voice picker trigger */}
           {voices.length > 0 && (
             <div className="relative">
-              <button
-                onClick={() => setShowVoicePicker(v => !v)}
+              <button onClick={() => setShowVoicePicker(v => !v)}
                 className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium tap"
                 style={{ background: 'var(--s2)', color: '#71717a', border: '1px solid var(--b)' }}>
-                <Volume2 size={11} />
-                {voiceLabel}
-                <ChevronDown size={10} />
+                <Volume2 size={11} />{voiceLabel}<ChevronDown size={10} />
               </button>
               {showVoicePicker && (
                 <div className="absolute right-0 top-7 z-50 rounded-xl p-2 shadow-xl"
                   style={{ background: 'var(--s1)', border: '1px solid var(--b)', minWidth: 190, maxHeight: 220, overflowY: 'auto' }}>
-                  <p className="text-[10px] font-semibold px-2 pb-1.5" style={{ color: '#52525b', letterSpacing: '0.06em' }}>
-                    ENGLISH VOICES
-                  </p>
+                  <p className="text-[10px] font-semibold px-2 pb-1.5" style={{ color: '#52525b', letterSpacing: '0.06em' }}>ENGLISH VOICES</p>
                   {voices.map(v => (
                     <button key={v.name} onClick={() => pickVoice(v)}
                       className="w-full text-left px-2 py-1.5 rounded-lg text-xs tap"
@@ -441,23 +546,19 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
                         fontWeight: v.name === selectedVoiceName ? 600 : 400,
                       }}>
                       {v.name.replace(/\s*\(.*?\)/g, '')}
-                      <span className="ml-1 text-[9px]" style={{ color: '#52525b' }}>
-                        {v.lang}
-                      </span>
+                      <span className="ml-1 text-[9px]" style={{ color: '#52525b' }}>{v.lang}</span>
                     </button>
                   ))}
                 </div>
               )}
             </div>
           )}
-          <button onClick={dismiss} className="tap" style={{ color: '#52525b' }}>
-            <X size={14} />
-          </button>
+          <button onClick={dismiss} className="tap" style={{ color: '#52525b' }}><X size={14} /></button>
         </div>
       </div>
 
       {result ? (
-        /* ── Result panel ── */
+        /* ── Result ── */
         <div className="space-y-3">
           <div className="rounded-xl px-3 py-3 space-y-2"
             style={{ background: 'rgb(var(--accent-rgb) / 0.07)', border: '1px solid rgb(var(--accent-rgb) / 0.15)' }}>
@@ -465,53 +566,119 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
               {result.mood ? (
                 <div className="flex items-center gap-2">
                   <span className="text-xl leading-none">{MOOD_EMOJI_MAP[result.mood]}</span>
-                  <span className="text-xs font-semibold" style={{ color: 'rgb(var(--accent-rgb-light))' }}>
-                    Mood detected
-                  </span>
+                  <span className="text-xs font-semibold" style={{ color: 'rgb(var(--accent-rgb-light))' }}>Mood detected</span>
                 </div>
               ) : <span />}
-              {/* Replay response button */}
               {voices.length > 0 && (
-                <button
-                  onClick={() => speak(result.friendly_response, selectedVoice)}
+                <button onClick={() => speak(result.friendly_response, selectedVoice ?? null)}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] tap"
                   style={{ background: 'var(--s2)', color: '#71717a', border: '1px solid var(--b)' }}>
                   <Volume2 size={11} /> Replay
                 </button>
               )}
             </div>
-            <p className="text-sm leading-relaxed" style={{ color: '#a1a1aa' }}>
-              {result.friendly_response}
-            </p>
+            <p className="text-sm leading-relaxed" style={{ color: '#a1a1aa' }}>{result.friendly_response}</p>
           </div>
-
           {result.actions_taken.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {result.actions_taken.map((a, i) => (
-                <span key={i}
-                  className="text-[11px] font-medium px-2 py-1 rounded-lg"
-                  style={{ background: 'var(--s2)', color: '#a1a1aa', border: '1px solid var(--b)' }}>
-                  {a}
-                </span>
+                <span key={i} className="text-[11px] font-medium px-2 py-1 rounded-lg"
+                  style={{ background: 'var(--s2)', color: '#a1a1aa', border: '1px solid var(--b)' }}>{a}</span>
               ))}
             </div>
           )}
-
-          <button onClick={reopen} className="text-[11px] underline tap" style={{ color: '#52525b' }}>
-            Log again
-          </button>
+          <button onClick={reopen} className="text-[11px] underline tap" style={{ color: '#52525b' }}>Log again</button>
         </div>
-      ) : (
-        /* ── Input panel ── */
-        <>
-          <p className="text-xs" style={{ color: '#71717a' }}>{promptRef.current}</p>
 
-          {/* Textarea */}
+      ) : convoActive ? (
+        /* ── Conversation mode ── */
+        <div className="space-y-3">
+          {/* Progress dots */}
+          <div className="flex items-center gap-1.5">
+            {CONVO_QUESTIONS.map((_, i) => (
+              <span key={i} className="rounded-full transition-all duration-300"
+                style={{
+                  width: i === convoStep ? 18 : 6, height: 6,
+                  background: i < convoStep
+                    ? 'rgb(var(--accent-rgb) / 0.4)'
+                    : i === convoStep
+                    ? 'rgb(var(--accent-rgb))'
+                    : 'var(--s3)',
+                }} />
+            ))}
+            <span className="text-[10px] ml-1" style={{ color: 'var(--t-faint)' }}>
+              {convoStep + 1} / {CONVO_QUESTIONS.length}
+            </span>
+          </div>
+
+          {/* Current question bubble */}
+          <div className="rounded-xl px-3 py-3"
+            style={{ background: 'rgb(var(--accent-rgb) / 0.07)', border: '1px solid rgb(var(--accent-rgb) / 0.18)' }}>
+            <p className="text-sm font-medium" style={{ color: 'rgb(var(--accent-rgb-light))' }}>
+              {CONVO_QUESTIONS[convoStep]}
+            </p>
+          </div>
+
+          {/* Speaking / listening indicator */}
+          <div className="flex items-center gap-2 min-h-[24px]">
+            {speaking ? (
+              <>
+                {[0, 80, 160, 100, 200, 130, 60].map((delay, i) => (
+                  <span key={i} className="waveform-bar"
+                    style={{ height: 16, background: 'rgb(var(--accent-rgb-light))', animationDelay: `${delay}ms`, opacity: 0.7 }} />
+                ))}
+                <span className="text-[11px] ml-1" style={{ color: 'rgb(var(--accent-rgb-light))' }}>speaking…</span>
+              </>
+            ) : listening ? (
+              <>
+                <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#ef4444' }} />
+                {[0, 80, 160, 100, 200, 130, 60].map((delay, i) => (
+                  <span key={i} className="waveform-bar"
+                    style={{ height: 16, background: '#ef4444', animationDelay: `${delay}ms`, opacity: 0.7 }} />
+                ))}
+                <span className="text-[11px] ml-1" style={{ color: '#ef4444' }}>
+                  {interimText || 'listening…'}
+                </span>
+              </>
+            ) : (
+              <span className="text-[11px]" style={{ color: 'var(--t-faint)' }}>processing…</span>
+            )}
+          </div>
+
+          {/* Accumulated transcript preview */}
+          {text && (
+            <div className="rounded-lg px-3 py-2" style={{ background: 'var(--s2)', border: '1px solid var(--b)' }}>
+              <p className="text-[11px]" style={{ color: 'var(--t-muted)' }}>{text}</p>
+            </div>
+          )}
+
+          {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
+
+          <div className="flex items-center gap-2">
+            <button onClick={stopConversation}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium tap"
+              style={{ background: 'var(--s2)', color: '#71717a', border: '1px solid var(--b)' }}>
+              <X size={11} /> Stop
+            </button>
+            {text && (
+              <button onClick={() => { stopConversation(); submitText(text); }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold tap"
+                style={{ background: 'rgb(var(--accent-rgb))', color: '#fff' }}>
+                <Send size={11} /> Log what I have
+              </button>
+            )}
+          </div>
+        </div>
+
+      ) : (
+        /* ── Type / basic dictation mode ── */
+        <>
+          <p className="text-xs" style={{ color: '#71717a' }}>
+            {SR ? 'Tap 🎙 to talk through questions, or just type below.' : 'How was your day? Vent, reflect, log anything.'}
+          </p>
+
           <div className="relative">
-            <textarea
-              ref={taRef}
-              rows={4}
-              value={text}
+            <textarea ref={taRef} rows={4} value={text}
               onChange={e => { setText(e.target.value); baseTextRef.current = e.target.value; }}
               onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit(); }}
               placeholder="Slept at 11, woke at 7. Hit the gym, finished the project proposal. Feeling good but a bit tired…"
@@ -519,20 +686,14 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
               style={{
                 background: 'var(--s2)',
                 border: `1px solid ${listening ? 'rgb(var(--accent-rgb) / 0.5)' : 'var(--b)'}`,
-                color: '#a1a1aa',
-                transition: 'border-color 0.2s',
-              }}
-            />
-            {/* Interim ghost text overlay hint */}
+                color: '#a1a1aa', transition: 'border-color 0.2s',
+              }} />
             {listening && interimText && (
               <p className="absolute bottom-2.5 left-3 right-3 text-sm pointer-events-none truncate"
-                style={{ color: 'rgb(var(--accent-rgb-light))', opacity: 0.5 }}>
-                {interimText}…
-              </p>
+                style={{ color: 'rgb(var(--accent-rgb-light))', opacity: 0.5 }}>{interimText}…</p>
             )}
           </div>
 
-          {/* Live recording status */}
           {listening && (
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#ef4444' }} />
@@ -542,63 +703,57 @@ function DailyCheckin({ onCheckinDone }: { onCheckinDone: () => void }) {
 
           {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
 
-          {/* Bottom row: mic + waveform + hint + submit */}
           <div className="flex items-center gap-2">
             {SR ? (
-              <div className="relative shrink-0" style={{ width: 36, height: 36 }}>
-                {/* Expanding rings when listening */}
-                {listening && (
-                  <>
-                    <span className="mic-ring" />
-                    <span className="mic-ring mic-ring-2" />
-                    <span className="mic-ring mic-ring-3" />
-                  </>
-                )}
-                <button
-                  onClick={toggleListening}
-                  className={`flex items-center justify-center w-9 h-9 rounded-xl tap transition-all ${listening ? 'mic-listening' : ''}`}
-                  style={{
-                    background: listening ? '#ef4444' : 'var(--s2)',
-                    color: listening ? '#fff' : 'var(--t-dim)',
-                    border: listening ? 'none' : '1px solid var(--b)',
-                    position: 'relative', zIndex: 1,
-                  }}
-                  title={listening ? 'Stop recording' : 'Speak your check-in'}>
-                  {listening ? <MicOff size={14} /> : <Mic size={14} />}
+              <>
+                {/* Conversation mode button */}
+                <button onClick={startConversation}
+                  className="relative shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold tap transition-all"
+                  style={{ background: 'rgb(var(--accent-rgb) / 0.12)', color: 'rgb(var(--accent-rgb-light))', border: '1px solid rgb(var(--accent-rgb) / 0.25)' }}
+                  title="Start guided voice check-in">
+                  <Mic size={12} /> Talk to me
                 </button>
-              </div>
+                {/* Dictation-only button */}
+                <div className="relative shrink-0" style={{ width: 32, height: 32 }}>
+                  {listening && (
+                    <>
+                      <span className="mic-ring" />
+                      <span className="mic-ring mic-ring-2" />
+                      <span className="mic-ring mic-ring-3" />
+                    </>
+                  )}
+                  <button onClick={toggleDictation}
+                    className={`flex items-center justify-center w-8 h-8 rounded-xl tap transition-all ${listening ? 'mic-listening' : ''}`}
+                    style={{
+                      background: listening ? '#ef4444' : 'var(--s2)',
+                      color: listening ? '#fff' : 'var(--t-dim)',
+                      border: listening ? 'none' : '1px solid var(--b)',
+                      position: 'relative', zIndex: 1,
+                    }}
+                    title={listening ? 'Stop dictation' : 'Dictate freely'}>
+                    {listening ? <MicOff size={12} /> : <MicOff size={12} style={{ opacity: 0.5 }} />}
+                  </button>
+                </div>
+              </>
             ) : null}
 
-            {/* Animated waveform bars while listening */}
             {listening ? (
-              <div className="flex items-end gap-0.5 flex-1" style={{ height: 20 }}>
+              <div className="flex items-end gap-0.5 flex-1" style={{ height: 18 }}>
                 {[0, 80, 160, 100, 200, 130, 60].map((delay, i) => (
                   <span key={i} className="waveform-bar"
-                    style={{
-                      height: '100%',
-                      background: 'rgb(var(--accent-rgb-light))',
-                      animationDelay: `${delay}ms`,
-                      opacity: 0.8,
-                    }} />
+                    style={{ height: '100%', background: 'rgb(var(--accent-rgb-light))', animationDelay: `${delay}ms`, opacity: 0.8 }} />
                 ))}
-                <span className="text-[10px] ml-2 self-center" style={{ color: '#ef4444' }}>
-                  listening…
-                </span>
               </div>
             ) : (
               <span className="text-[10px] flex-1" style={{ color: 'var(--t-faint)' }}>
-                {SR ? 'Tap mic or type · ⌘↵ submit' : '⌘↵ to submit'}
+                {SR ? '⌘↵ to submit' : '⌘↵ to submit'}
               </span>
             )}
 
-            <button
-              onClick={submit}
-              disabled={loading || !text.trim()}
+            <button onClick={submit} disabled={loading || !text.trim()}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-40 tap"
               style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
-              {loading
-                ? <span className="w-3 h-3 rounded-full border border-white/40 border-t-white animate-spin" />
-                : <Send size={11} />}
+              {loading ? <span className="w-3 h-3 rounded-full border border-white/40 border-t-white animate-spin" /> : <Send size={11} />}
               {loading ? 'Logging…' : 'Log it'}
             </button>
           </div>
