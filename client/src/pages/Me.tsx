@@ -1,7 +1,27 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Plus, X, ChevronUp, Trash2, Pencil, Check, Sparkles, Trophy, Star } from 'lucide-react';
+import { Plus, X, ChevronUp, Trash2, Pencil, Check, Sparkles, Trophy, Star, Dumbbell, Heart, Target, Eye, Activity, Wallet } from 'lucide-react';
 import api from '../lib/api';
 import type { MeSummary, MeProfile, MeSkill, MeClaim, MeMentor } from '../types';
+
+// ── Count-up animation hook ───────────────────────────────────────────────────
+function useCountUp(target: number, duration = 900) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    setValue(0);
+    if (target === 0) return;
+    let frame = 0;
+    const totalFrames = Math.round(duration / 16);
+    const timer = setInterval(() => {
+      frame++;
+      const progress = frame / totalFrames;
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      setValue(Math.round(eased * target));
+      if (frame >= totalFrames) { setValue(target); clearInterval(timer); }
+    }, 16);
+    return () => clearInterval(timer);
+  }, [target, duration]);
+  return value;
+}
 
 // ── Rank glow config ──────────────────────────────────────────────────────────
 const RANK_GLOW: Record<string, string> = {
@@ -28,12 +48,12 @@ const RANK_SOLID: Record<string, string> = {
 
 // ── Stat config ───────────────────────────────────────────────────────────────
 const STAT_CONFIG = [
-  { key: 'strength',   label: 'STRENGTH',   icon: '⚔️', color: '#ef4444', hint: 'Workouts this month'   },
-  { key: 'vitality',   label: 'VITALITY',   icon: '🛡️', color: '#22c55e', hint: 'Sleep quality (7 days)' },
-  { key: 'discipline', label: 'DISCIPLINE', icon: '🔥', color: '#f97316', hint: 'Habit rate this week'   },
-  { key: 'focus',      label: 'FOCUS',      icon: '🧠', color: '#6366f1', hint: 'Tasks done this month'  },
-  { key: 'endurance',  label: 'ENDURANCE',  icon: '💎', color: '#a855f7', hint: 'Longest streak ever'    },
-  { key: 'wealth',     label: 'WEALTH',     icon: '💰', color: '#f59e0b', hint: 'Finance net this month' },
+  { key: 'strength',   label: 'STRENGTH',   Icon: Dumbbell,  color: '#ef4444', hint: 'Workouts this month'   },
+  { key: 'vitality',   label: 'VITALITY',   Icon: Heart,     color: '#22c55e', hint: 'Sleep quality (7 days)' },
+  { key: 'discipline', label: 'DISCIPLINE', Icon: Target,    color: '#f97316', hint: 'Habit rate this week'   },
+  { key: 'focus',      label: 'FOCUS',      Icon: Eye,       color: '#6366f1', hint: 'Tasks done this month'  },
+  { key: 'endurance',  label: 'ENDURANCE',  Icon: Activity,  color: '#a855f7', hint: 'Longest streak ever'    },
+  { key: 'wealth',     label: 'WEALTH',     Icon: Wallet,    color: '#f59e0b', hint: 'Finance net this month' },
 ];
 
 const CLAIM_TYPE_COLOR: Record<string, string> = {
@@ -43,11 +63,11 @@ const CLAIM_TYPE_COLOR: Record<string, string> = {
 };
 
 // ── Tiny helpers ──────────────────────────────────────────────────────────────
-function SectionHeader({ title, sub }: { title: string; sub?: string }) {
+function SectionHeader({ title, sub, color }: { title: string; sub?: string; color?: string }) {
   return (
     <div className="flex items-baseline gap-2 mb-3">
-      <h2 className="text-xs font-bold tracking-[0.15em] uppercase"
-        style={{ color: 'var(--t-faint)', letterSpacing: '0.15em' }}>{title}</h2>
+      <h2 className="text-[10px] font-black tracking-[0.14em] uppercase"
+        style={{ color: color ?? 'var(--cyan)', opacity: 0.8 }}>{title}</h2>
       {sub && <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>{sub}</span>}
     </div>
   );
@@ -62,45 +82,101 @@ function Chip({ label, color }: { label: string; color: string }) {
   );
 }
 
-// ── Warrior SVG silhouette ─────────────────────────────────────────────────────
+// ── Full-armor knight SVG ─────────────────────────────────────────────────────
 function WarriorSilhouette({ color }: { color: string }) {
   return (
-    <svg
-      viewBox="0 0 120 220"
-      width="200"
-      height="367"
+    <svg viewBox="0 0 160 280" width="210" height="368"
       className="warrior-float"
-      style={{ color, fill: 'currentColor', stroke: 'currentColor', filter: `drop-shadow(0 0 12px ${color}) drop-shadow(0 0 28px ${color}60)` }}
-      aria-hidden="true"
-    >
-      {/* Cape */}
-      <path d="M38 52 Q12 120 18 210 L60 195 L102 210 Q108 120 82 52 Z" fill="currentColor" opacity="0.18" />
-      {/* Body */}
-      <path d="M34 50 L86 50 L79 115 L41 115 Z" fill="currentColor" />
-      {/* Head */}
-      <circle cx="60" cy="27" r="15" fill="currentColor" />
-      {/* Helmet crest */}
-      <polygon points="60,8 50,22 70,22" fill="currentColor" />
-      {/* Left arm raised: shoulder → elbow → hand */}
-      <line x1="35" y1="56" x2="18" y2="33" strokeWidth="8" strokeLinecap="round" fill="none" />
-      <line x1="18" y1="33" x2="11" y2="10" strokeWidth="8" strokeLinecap="round" fill="none" />
-      {/* Sword blade */}
-      <rect x="4" y="-4" width="5" height="30" rx="1.5" fill="currentColor" transform="rotate(-18 6 13)" />
-      {/* Sword guard */}
-      <rect x="-2" y="10" width="17" height="4" rx="1" fill="currentColor" transform="rotate(-18 6 13)" />
-      {/* Right arm */}
-      <line x1="85" y1="56" x2="104" y2="74" strokeWidth="8" strokeLinecap="round" fill="none" />
-      {/* Left leg */}
-      <polyline points="47,115 39,172 34,210" strokeWidth="10" strokeLinecap="round" fill="none" />
-      {/* Right leg */}
-      <polyline points="73,115 81,172 86,210" strokeWidth="10" strokeLinecap="round" fill="none" />
-      {/* Left boot */}
-      <ellipse cx="34" cy="212" rx="10" ry="5" fill="currentColor" />
-      {/* Right boot */}
-      <ellipse cx="86" cy="212" rx="10" ry="5" fill="currentColor" />
-      {/* Outer aura ring */}
-      <ellipse cx="60" cy="110" rx="56" ry="102" fill="none" stroke="currentColor" strokeWidth="0.8"
-        opacity="0.15" className="aura-breathe" />
+      style={{
+        color, fill: 'currentColor', stroke: 'currentColor', overflow: 'visible',
+        filter: `drop-shadow(0 0 14px ${color}) drop-shadow(0 0 36px ${color}55)`,
+      }}
+      aria-hidden="true">
+
+      {/* Ground shadow */}
+      <ellipse cx="80" cy="274" rx="38" ry="8" fill="currentColor" opacity="0.18"/>
+
+      {/* Cape — widest layer, behind everything */}
+      <path d="M36 66 Q-2 158 4 272 L80 254 L156 272 Q162 158 124 66 Z"
+        fill="currentColor" opacity="0.13"/>
+      <path d="M50 72 Q22 158 26 262 L80 246 L134 262 Q138 158 110 72 Z"
+        fill="currentColor" opacity="0.06"/>
+
+      {/* ── BOOTS ── */}
+      <path d="M52 232 L44 258 Q40 268 28 266 L30 256 L46 254 L54 234 Z" fill="currentColor"/>
+      <path d="M46 264 Q34 270 28 266 L30 256 Q36 262 46 258 Z" fill="currentColor" opacity="0.82"/>
+      <path d="M98 232 L106 260 Q108 268 120 266 L118 256 L104 254 L96 234 Z" fill="currentColor"/>
+      <path d="M104 264 Q116 270 122 266 L118 256 Q112 262 104 258 Z" fill="currentColor" opacity="0.82"/>
+
+      {/* ── LEGS ── */}
+      <path d="M68 172 L54 208 L48 230 L60 232 L66 210 L72 174 Z" fill="currentColor"/>
+      <path d="M82 172 L96 208 L100 230 L88 234 L82 210 L76 174 Z" fill="currentColor"/>
+
+      {/* Thigh armor plates */}
+      <path d="M56 160 L68 160 L70 180 L52 180 Z" fill="currentColor" opacity="0.72"/>
+      <path d="M80 160 L94 160 L96 180 L78 180 Z" fill="currentColor" opacity="0.72"/>
+
+      {/* ── BELT ── */}
+      <path d="M36 150 L124 150 L120 168 L40 168 Z" fill="currentColor" opacity="0.92"/>
+      <rect x="70" y="154" width="20" height="10" rx="3" fill="currentColor" opacity="0.32"/>
+
+      {/* ── TORSO / CHEST ARMOR ── */}
+      <path d="M28 64 L132 64 L124 150 L36 150 Z" fill="currentColor"/>
+      {/* Center keel line */}
+      <path d="M78 68 L82 68 L80 144 Z" fill="currentColor" opacity="0.28"/>
+      {/* Left pec plate */}
+      <path d="M32 66 L76 66 L74 104 L30 104 Z" fill="currentColor" opacity="0.15"/>
+      {/* Right pec plate */}
+      <path d="M84 66 L128 66 L130 104 L86 104 Z" fill="currentColor" opacity="0.15"/>
+
+      {/* ── SHOULDER PAULDRONS ── */}
+      <path d="M14 60 Q2 46 14 34 Q26 24 44 38 L44 66 L18 64 Z" fill="currentColor"/>
+      <path d="M16 48 Q10 42 16 38" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.38"/>
+      <path d="M146 60 Q158 46 146 34 Q134 24 116 38 L116 66 L142 64 Z" fill="currentColor"/>
+      <path d="M144 48 Q150 42 144 38" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.38"/>
+
+      {/* ── LEFT ARM (off-hand, relaxed/hip) ── */}
+      <path d="M22 64 L6 98 L4 126 L18 128 L20 100 L32 66 Z" fill="currentColor"/>
+      <path d="M4 124 L-2 150 L8 158 L18 148 L12 126 Z" fill="currentColor"/>
+      <path d="M-2 154 Q-6 168 6 170 L18 168 L18 148 Z" fill="currentColor"/>
+
+      {/* ── RIGHT ARM (raised, sword grip) ── */}
+      <path d="M138 62 L152 36 L156 14 L144 10 L140 32 L128 60 Z" fill="currentColor"/>
+      <path d="M154 14 L160 -6 L150 -10 L144 10 Z" fill="currentColor"/>
+      <ellipse cx="156" cy="-8" rx="9" ry="10" fill="currentColor"/>
+
+      {/* ── SWORD ── */}
+      <ellipse cx="156" cy="-2" rx="6" ry="5" fill="currentColor" opacity="0.85"/>
+      <rect x="150" y="-26" width="12" height="28" rx="4" fill="currentColor"/>
+      <path d="M138 -26 L174 -20 L172 -14 L138 -20 Z" fill="currentColor"/>
+      <path d="M153 -26 L162 -78" stroke="currentColor" strokeWidth="7" strokeLinecap="round" fill="none"/>
+      <path d="M156 -28 L161 -78" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.42"/>
+      <circle cx="162" cy="-80" r="4.5" fill="currentColor" opacity="0.95"/>
+
+      {/* ── NECK + GORGET ── */}
+      <path d="M68 46 L92 46 L94 64 L66 64 Z" fill="currentColor"/>
+      <path d="M62 58 L98 58 L98 66 L62 66 Z" fill="currentColor" opacity="0.88"/>
+
+      {/* ── HEAD / HELMET ── */}
+      <path d="M52 28 Q52 4 80 2 Q108 4 108 28 L106 48 L80 52 L54 48 Z" fill="currentColor"/>
+      {/* Crest */}
+      <path d="M66 2 L80 -22 L94 2 Z" fill="currentColor" opacity="0.88"/>
+      <rect x="78" y="-10" width="4" height="12" rx="1.5" fill="currentColor" opacity="0.7"/>
+      {/* Visor */}
+      <path d="M56 26 L104 26 L102 40 Q80 46 58 40 Z" fill="currentColor" opacity="0.3"/>
+      {/* Eye glows */}
+      <rect x="60" y="27" width="16" height="4" rx="2" fill="currentColor" opacity="0.9"/>
+      <rect x="84" y="27" width="16" height="4" rx="2" fill="currentColor" opacity="0.9"/>
+      {/* Side helmet lines */}
+      <path d="M54 18 Q50 26 54 36" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.32"/>
+      <path d="M106 18 Q110 26 106 36" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.32"/>
+
+      {/* ── AURA RINGS ── */}
+      <ellipse cx="80" cy="140" rx="78" ry="130" fill="none" stroke="currentColor"
+        strokeWidth="1.5" opacity="0.11" className="aura-breathe"/>
+      <ellipse cx="80" cy="140" rx="62" ry="104" fill="none" stroke="currentColor"
+        strokeWidth="0.8" opacity="0.07" className="aura-breathe"
+        style={{ animationDelay: '0.8s' }}/>
     </svg>
   );
 }
@@ -265,11 +341,30 @@ export default function Me() {
   const rankGlow     = RANK_GLOW[rank] ?? 'transparent';
   const rankSolid    = RANK_SOLID[rank] ?? rankColor;
 
+  // ── Animated merit score
+  const animatedMerit = useCountUp(meritScore);
+
+  // ── Glass style constants
+  const glass = {
+    background: 'rgba(255,255,255,0.04)',
+    backdropFilter: 'blur(20px) saturate(160%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.28)',
+  };
+  const glassCard = {
+    background: 'rgba(255,255,255,0.03)',
+    backdropFilter: 'blur(16px) saturate(150%)',
+    WebkitBackdropFilter: 'blur(16px) saturate(150%)',
+    border: '1px solid rgba(255,255,255,0.07)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+  };
+
   // ── Form field style shorthand
   const ff = 'w-full rounded-xl px-3 py-2 text-sm focus:outline-none';
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 anim-page pb-10 relative" style={{ background: '#030508' }}>
+    <div className="max-w-2xl mx-auto space-y-5 anim-page pb-10 relative" style={{ background: 'var(--s0)' }}>
 
       {/* Page-level animated scan line */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-none" style={{ zIndex: 0 }}>
@@ -293,15 +388,16 @@ export default function Me() {
         style={{
           minHeight: 420,
           background: `radial-gradient(ellipse at 50% -5%, ${rankGlow} 0%, #090b10 55%, #030508 100%)`,
-          boxShadow: `0 0 60px ${rankGlow}, 0 0 120px ${rankGlow}40`,
-          border: `1px solid ${rankSolid}30`,
+          boxShadow: `0 0 80px ${rankGlow}, 0 0 160px ${rankGlow}40, inset 0 1px 0 rgba(255,255,255,0.10), 0 30px 80px rgba(0,0,0,0.6)`,
+          border: `1px solid rgba(255,255,255,0.10)`,
+          backdropFilter: 'blur(0px)',
           zIndex: 1,
         }}>
 
         {/* Warrior silhouette — behind everything */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none"
           style={{ zIndex: 0 }}>
-          <div style={{ width: 200, height: 367, opacity: 0.65, flexShrink: 0 }}>
+          <div style={{ width: 210, height: 368, opacity: 0.65, flexShrink: 0 }}>
             <WarriorSilhouette color={rankSolid} />
           </div>
         </div>
@@ -335,12 +431,12 @@ export default function Me() {
 
           {/* Merit score panel */}
           <div className="w-full max-w-sm rounded-xl px-4 py-3 space-y-2"
-            style={{ background: 'rgba(0,0,0,0.45)', border: `1px solid ${rankSolid}25` }}>
+            style={{ ...glass, border: `1px solid ${rankSolid}25` }}>
             {/* Total merit bar */}
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--t-faint)' }}>MERIT SCORE</span>
               <span className="font-black font-mono text-sm tabular-nums" style={{ color: rankSolid, textShadow: `0 0 8px ${rankSolid}80` }}>
-                {meritScore}<span className="text-[10px] font-normal opacity-50">/100</span>
+                {animatedMerit}<span className="text-[10px] font-normal opacity-50">/100</span>
               </span>
             </div>
             <div className="h-2 rounded-full overflow-hidden" style={{ background: '#1a1c22' }}>
@@ -423,9 +519,8 @@ export default function Me() {
       {/* ══════════════════════════════════════════════════════ ADVENTURE */}
       <div className="rounded-2xl px-5 py-4 relative"
         style={{
-          background: '#0d0f14',
+          ...glass,
           borderLeft: `3px solid rgb(var(--accent-rgb))`,
-          border: `1px solid rgba(255,255,255,0.05)`,
           borderLeftWidth: 3,
           borderLeftColor: 'rgb(var(--accent-rgb))',
           zIndex: 1,
@@ -452,13 +547,12 @@ export default function Me() {
                 className="rounded-2xl px-3 py-3 space-y-2 stat-pop group transition-all duration-200"
                 title={s.hint}
                 style={{
-                  background: '#0d0f14',
-                  border: `1px solid rgba(255,255,255,0.05)`,
+                  ...glassCard,
                   borderLeft: `3px solid ${s.color}`,
                   animationDelay: `${idx * 60}ms`,
                 }}>
                 <div className="flex items-center justify-between">
-                  <span className="text-base leading-none">{s.icon}</span>
+                  <s.Icon size={16} style={{ color: s.color }} />
                   <span className="text-3xl font-black tabular-nums font-mono"
                     style={{ color: s.color, textShadow: `0 0 12px ${s.color}80` }}>{val}</span>
                 </div>
@@ -487,7 +581,8 @@ export default function Me() {
 
       {/* ══════════════════════════════════════════════════════ SKILLS */}
       <div style={{ zIndex: 1, position: 'relative' }}>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3"
+          style={{ ...glass, borderRadius: '0.75rem', padding: '0.5rem 0.75rem' }}>
           <SectionHeader title="SKILLS & ABILITIES" />
           <button onClick={() => setShowSkillForm(s => !s)}
             className="flex items-center gap-1 text-[11px] font-semibold tap px-2 py-1 rounded-lg"
@@ -545,8 +640,7 @@ export default function Me() {
             <div key={skill.id}
               className="rounded-2xl px-3 py-3 group transition-all duration-200"
               style={{
-                background: '#0d0f14',
-                border: `1px solid rgba(255,255,255,0.05)`,
+                ...glassCard,
                 borderLeft: `3px solid rgb(var(--accent-rgb)/0.6)`,
               }}>
               <div className="flex items-start justify-between gap-2">
@@ -609,7 +703,8 @@ export default function Me() {
 
       {/* ══════════════════════════════════════════════════════ CLAIMS */}
       <div style={{ zIndex: 1, position: 'relative' }}>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3"
+          style={{ ...glass, borderRadius: '0.75rem', padding: '0.5rem 0.75rem' }}>
           {/* Tabs — styled as quest log header */}
           <div className="flex items-center gap-1">
             {(['active', 'claimed'] as const).map(tab => (
@@ -684,8 +779,7 @@ export default function Me() {
               <div key={claim.id}
                 className="rounded-2xl px-4 py-3 transition-all duration-200"
                 style={{
-                  background: '#0d0f14',
-                  border: `1px solid rgba(255,255,255,0.05)`,
+                  ...glassCard,
                   borderLeft: `4px solid ${tc}`,
                   opacity: claim.status === 'claimed' ? 0.7 : 1,
                 }}>
@@ -753,7 +847,8 @@ export default function Me() {
 
       {/* ══════════════════════════════════════════════════════ MENTOR HALL */}
       <div style={{ zIndex: 1, position: 'relative' }}>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3"
+          style={{ ...glass, borderRadius: '0.75rem', padding: '0.5rem 0.75rem' }}>
           <SectionHeader title="MENTOR HALL" sub="— figures you embody" />
           <button onClick={() => setShowMentorForm(s => !s)}
             className="flex items-center gap-1 text-[11px] font-semibold tap px-2 py-1 rounded-lg"
@@ -808,9 +903,8 @@ export default function Me() {
             <div key={mentor.id}
               className="rounded-2xl px-4 py-4 group relative overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, #0d0f14 0%, #111318 100%)',
-                border: `1px solid rgba(255,255,255,0.07)`,
-                boxShadow: 'inset 0 0 30px rgba(0,0,0,0.3)',
+                ...glassCard,
+                boxShadow: 'inset 0 0 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
               }}>
               {/* Portrait frame corners */}
               <div className="absolute top-2 left-2 w-4 h-4 pointer-events-none"

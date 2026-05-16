@@ -1,9 +1,9 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   LayoutDashboard, CheckSquare, BookOpen, Bell, BarChart2,
   Dumbbell, Sparkles, LogOut, Sun, Moon, Palette, X, Salad, KeyRound,
-  ShieldOff, Target, Activity, Wallet, Swords, Zap, Shield,
+  ShieldOff, Target, Activity, Wallet, Swords, Zap, Shield, ImagePlus,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, ACCENT_PRESETS } from '../contexts/ThemeContext';
@@ -176,6 +176,24 @@ export default function Layout() {
   const [showChangePw, setShowChangePw] = useState(false);
   const [me, setMe] = useState<MeSnap | null>(null);
 
+  // Logo customisation — stored in localStorage as base64 dataURL
+  const [customLogo, setCustomLogo] = useState<string | null>(() => localStorage.getItem('custom_logo'));
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  function handleLogoClick() { logoInputRef.current?.click(); }
+  function handleLogoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      localStorage.setItem('custom_logo', dataUrl);
+      setCustomLogo(dataUrl);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ''; // reset so re-selecting same file works
+  }
+
   useEffect(() => {
     api.get('/me/summary')
       .then(r => setMe(r.data))
@@ -191,11 +209,20 @@ export default function Layout() {
       <aside className="hidden md:flex flex-col py-4 px-2 shrink-0"
         style={{ width: 228, background: 'var(--s1)', borderRight: '1px solid var(--b)', position: 'sticky', top: 0, height: '100vh', overflowY: 'auto' }}>
 
-        {/* Logo */}
+        {/* Logo — click to upload custom image from gallery */}
+        <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoFile} />
         <div className="mb-3 px-2 flex items-center gap-2.5">
-          <div className="shrink-0 rounded-xl overflow-hidden"
+          <div
+            onClick={handleLogoClick}
+            title="Click to change app logo"
+            className="shrink-0 rounded-xl overflow-hidden relative group cursor-pointer"
             style={{ width: 34, height: 34, background: '#e3dfda', boxShadow: '0 0 0 1px rgba(0,0,0,0.1)', flexShrink: 0 }}>
-            <img src="/logo.png" alt="logo" className="w-full h-full object-cover" style={{ objectPosition: 'center top' }} />
+            <img src={customLogo ?? '/logo.png'} alt="logo" className="w-full h-full object-cover" style={{ objectPosition: 'center top' }} />
+            {/* Upload overlay — visible on hover */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+              style={{ background: 'rgba(0,0,0,0.55)' }}>
+              <ImagePlus size={13} style={{ color: '#fff' }} />
+            </div>
           </div>
           <div>
             <p className="text-[13px] font-black text-head">Self Tracker</p>
@@ -342,10 +369,16 @@ export default function Layout() {
       <aside className="md:hidden fixed left-0 top-0 bottom-0 z-50 flex flex-col items-center"
         style={{ width: 'var(--sidebar-w)', background: 'var(--s1)', borderRight: '1px solid var(--b)' }}>
 
-        {/* Logo */}
+        {/* Logo (mobile) — click to upload */}
         <div className="shrink-0 pt-3 pb-1">
-          <div className="rounded-xl overflow-hidden" style={{ width: 34, height: 34, background: '#e3dfda' }}>
-            <img src="/logo.png" alt="logo" className="w-full h-full object-cover" style={{ objectPosition: 'center top' }} />
+          <div onClick={handleLogoClick} title="Change logo"
+            className="rounded-xl overflow-hidden relative group cursor-pointer"
+            style={{ width: 34, height: 34, background: '#e3dfda' }}>
+            <img src={customLogo ?? '/logo.png'} alt="logo" className="w-full h-full object-cover" style={{ objectPosition: 'center top' }} />
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{ background: 'rgba(0,0,0,0.55)' }}>
+              <ImagePlus size={12} style={{ color: '#fff' }} />
+            </div>
           </div>
         </div>
 
