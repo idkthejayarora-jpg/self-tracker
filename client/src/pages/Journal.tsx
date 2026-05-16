@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Save, Mic, MicOff } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save, Mic, MicOff, BookOpen, Tag, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { format, addDays, subDays, parseISO } from 'date-fns';
 import api from '../lib/api';
 import type { JournalEntry } from '../types';
 
-// Web Speech API types
+// ── Web Speech API types ───────────────────────────────────────────────────────
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
 }
@@ -24,10 +24,12 @@ declare const webkitSpeechRecognition: new () => SpeechRecognitionInstance;
 function useSpeech(onTranscript: (text: string) => void) {
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const [listening, setListening] = useState(false);
-  const [supported] = useState(() => typeof SpeechRecognition !== 'undefined' || typeof webkitSpeechRecognition !== 'undefined');
+  const [supported] = useState(() =>
+    typeof SpeechRecognition !== 'undefined' || typeof webkitSpeechRecognition !== 'undefined'
+  );
 
   const start = useCallback(() => {
-    const Rec = (typeof SpeechRecognition !== 'undefined' ? SpeechRecognition : webkitSpeechRecognition);
+    const Rec = typeof SpeechRecognition !== 'undefined' ? SpeechRecognition : webkitSpeechRecognition;
     const rec = new Rec();
     rec.lang = 'en-US';
     rec.continuous = true;
@@ -39,8 +41,8 @@ function useSpeech(onTranscript: (text: string) => void) {
         .join('');
       onTranscript(transcript);
     };
-    rec.onerror = () => { setListening(false); };
-    rec.onend = () => { setListening(false); };
+    rec.onerror = () => setListening(false);
+    rec.onend   = () => setListening(false);
     rec.start();
     recognitionRef.current = rec;
     setListening(true);
@@ -54,22 +56,25 @@ function useSpeech(onTranscript: (text: string) => void) {
   return { listening, supported, start, stop };
 }
 
+// ── Mood config ────────────────────────────────────────────────────────────────
 const MOODS = [
-  { value: 1, emoji: '😞', label: 'Terrible' },
-  { value: 2, emoji: '😕', label: 'Bad' },
-  { value: 3, emoji: '😐', label: 'Okay' },
-  { value: 4, emoji: '🙂', label: 'Good' },
-  { value: 5, emoji: '😄', label: 'Great' },
+  { value: 1, emoji: '😞', label: 'Terrible', color: '#ef4444' },
+  { value: 2, emoji: '😕', label: 'Bad',      color: '#f97316' },
+  { value: 3, emoji: '😐', label: 'Okay',     color: '#f59e0b' },
+  { value: 4, emoji: '🙂', label: 'Good',     color: '#22c55e' },
+  { value: 5, emoji: '😄', label: 'Great',    color: '#6366f1' },
 ];
 
+// ── Main component ─────────────────────────────────────────────────────────────
 export default function Journal() {
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate]       = useState(new Date().toISOString().slice(0, 10));
   const [content, setContent] = useState('');
-  const [mood, setMood] = useState<number | null>(null);
-  const [tags, setTags] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [recent, setRecent] = useState<JournalEntry[]>([]);
+  const [mood, setMood]       = useState<number | null>(null);
+  const [tags, setTags]       = useState('');
+  const [saving, setSaving]   = useState(false);
+  const [saved, setSaved]     = useState(false);
+  const [saveErr, setSaveErr] = useState('');
+  const [recent, setRecent]   = useState<JournalEntry[]>([]);
 
   const appendTranscript = useCallback((text: string) => {
     setContent(prev => prev ? prev + ' ' + text : text);
@@ -77,12 +82,14 @@ export default function Journal() {
   }, []);
   const { listening, supported, start, stop } = useSpeech(appendTranscript);
 
+  // ── Load entry for a given date ──────────────────────────────────────────────
   const loadEntry = useCallback(async (d: string) => {
     setSaved(false);
+    setSaveErr('');
     try {
       const res = await api.get<JournalEntry>(`/journal/${d}`);
-      setContent(res.data.content);
-      setMood(res.data.mood);
+      setContent(res.data.content ?? '');
+      setMood(res.data.mood ?? null);
       const parsedTags: string[] = JSON.parse(res.data.tags || '[]');
       setTags(parsedTags.join(', '));
     } catch {
@@ -95,17 +102,23 @@ export default function Journal() {
   useEffect(() => { loadEntry(date); }, [date, loadEntry]);
 
   useEffect(() => {
-    api.get<JournalEntry[]>('/journal?limit=10').then(r => setRecent(r.data));
+    api.get<JournalEntry[]>('/journal?limit=10').then(r => setRecent(r.data)).catch(() => {});
   }, [saved]);
 
+  // ── Save ─────────────────────────────────────────────────────────────────────
   async function save() {
     if (!content.trim()) return;
     setSaving(true);
+    setSaveErr('');
     try {
       const parsedTags = tags.split(',').map(t => t.trim()).filter(Boolean);
       await api.put(`/journal/${date}`, { content, mood, tags: parsedTags });
       setSaved(true);
       loadEntry(date);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+        ?? 'Failed to save — please try again';
+      setSaveErr(msg);
     } finally {
       setSaving(false);
     }
@@ -116,111 +129,194 @@ export default function Journal() {
     setDate((delta > 0 ? addDays : subDays)(d, Math.abs(delta)).toISOString().slice(0, 10));
   };
 
-  const isToday = date === new Date().toISOString().slice(0, 10);
+  const isToday  = date === new Date().toISOString().slice(0, 10);
+  const moodData = MOODS.find(m => m.value === mood);
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold text-white">Journal</h1>
+    <div className="max-w-2xl mx-auto space-y-4 anim-page pb-10 px-1 sm:px-0">
 
-      {/* Date nav */}
-      <div className="flex items-center gap-3">
-        <button onClick={() => goDay(-1)} className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors">
+      {/* ── Page header ── */}
+      <div className="flex items-center gap-2">
+        <BookOpen size={20} style={{ color: 'rgb(var(--accent-rgb))' }} />
+        <h1 className="text-2xl font-bold text-head">Journal</h1>
+        {moodData && (
+          <span className="ml-auto text-2xl" title={moodData.label}>{moodData.emoji}</span>
+        )}
+      </div>
+
+      {/* ── Date navigation ── */}
+      <div className="glass rounded-2xl px-4 py-3 flex items-center gap-3">
+        <button onClick={() => goDay(-1)} className="tap p-2 rounded-xl transition-colors"
+          style={{ background: 'var(--s3)', color: 'var(--t-muted)' }}>
           <ChevronLeft size={18} />
         </button>
+
         <div className="flex-1 text-center">
-          <p className="text-white font-medium">{format(parseISO(date), 'EEEE, d MMMM yyyy')}</p>
-          {isToday && <span className="text-xs text-brand-400">Today</span>}
+          <p className="text-sm font-semibold text-head">{format(parseISO(date), 'EEEE, d MMMM yyyy')}</p>
+          {isToday && (
+            <span className="text-[11px] font-bold" style={{ color: 'rgb(var(--accent-rgb))' }}>Today</span>
+          )}
         </div>
+
         <button onClick={() => goDay(1)} disabled={isToday}
-          className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 disabled:opacity-30 text-gray-300 transition-colors">
+          className="tap p-2 rounded-xl transition-colors disabled:opacity-30"
+          style={{ background: 'var(--s3)', color: 'var(--t-muted)' }}>
           <ChevronRight size={18} />
         </button>
+
         {!isToday && (
           <button onClick={() => setDate(new Date().toISOString().slice(0, 10))}
-            className="text-xs text-brand-400 hover:text-brand-300 px-3 py-1.5 rounded-lg bg-gray-800 transition-colors">
+            className="tap text-[11px] font-bold px-3 py-1.5 rounded-xl"
+            style={{ background: 'rgb(var(--accent-rgb)/0.12)', color: 'rgb(var(--accent-rgb-light))' }}>
             Today
           </button>
         )}
       </div>
 
-      {/* Editor */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-4">
-        {/* Mood */}
+      {/* ── Editor card ── */}
+      <div className="glass rounded-2xl p-4 space-y-4" style={{ border: '1px solid var(--b)' }}>
+
+        {/* Mood selector */}
         <div>
-          <p className="text-xs text-gray-400 mb-2">How are you feeling?</p>
-          <div className="flex gap-3">
+          <p className="text-[11px] font-bold tracking-wider uppercase mb-2" style={{ color: 'var(--t-muted)' }}>
+            HOW ARE YOU FEELING?
+          </p>
+          <div className="flex gap-2 flex-wrap">
             {MOODS.map(m => (
-              <button key={m.value} onClick={() => setMood(mood === m.value ? null : m.value)}
+              <button key={m.value}
+                onClick={() => setMood(mood === m.value ? null : m.value)}
                 title={m.label}
-                className={`text-2xl p-1 rounded-lg transition-all ${mood === m.value ? 'bg-gray-700 scale-110 ring-2 ring-brand-500' : 'hover:bg-gray-800 opacity-60 hover:opacity-100'}`}>
+                className="tap text-2xl p-1.5 rounded-xl transition-all"
+                style={{
+                  background: mood === m.value ? `${m.color}20` : 'var(--s3)',
+                  border: mood === m.value ? `2px solid ${m.color}60` : '2px solid transparent',
+                  transform: mood === m.value ? 'scale(1.15)' : undefined,
+                  boxShadow: mood === m.value ? `0 0 12px ${m.color}50` : undefined,
+                }}>
                 {m.emoji}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Content + voice */}
+        {/* Textarea + mic button */}
         <div className="relative">
           <textarea
             value={content}
-            onChange={e => { setContent(e.target.value); setSaved(false); }}
+            onChange={e => { setContent(e.target.value); setSaved(false); setSaveErr(''); }}
             rows={10}
-            placeholder="Write about your day... or tap the mic to speak."
-            className={`w-full bg-gray-800 border rounded-lg px-3 py-3 pr-12 text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none leading-relaxed transition-colors ${listening ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-700'}`}
+            placeholder="Write about your day… or tap the mic to speak."
+            className="w-full rounded-xl px-3 py-3 text-sm resize-none leading-relaxed focus:outline-none transition-all"
+            style={{
+              background: 'var(--s2)',
+              color: 'var(--t-body)',
+              border: listening
+                ? '2px solid #ef444460'
+                : '2px solid var(--b)',
+              paddingRight: supported ? '2.5rem' : '0.75rem',
+            }}
           />
           {supported && (
             <button
               type="button"
               onClick={listening ? stop : start}
-              title={listening ? 'Stop recording' : 'Speak your entry (English)'}
-              className={`absolute top-2.5 right-2.5 p-1.5 rounded-lg transition-all ${listening ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}
-            >
-              {listening ? <MicOff size={16} /> : <Mic size={16} />}
+              title={listening ? 'Stop recording' : 'Speak your entry'}
+              className="tap absolute top-2.5 right-2.5 p-1.5 rounded-lg transition-all"
+              style={listening
+                ? { background: '#ef4444', color: '#fff', animation: 'pulse 1.5s ease-in-out infinite' }
+                : { background: 'var(--s3)', color: 'var(--t-muted)' }}>
+              {listening ? <MicOff size={15} /> : <Mic size={15} />}
             </button>
           )}
         </div>
+
         {listening && (
-          <p className="text-xs text-red-400 flex items-center gap-1.5">
-            <span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            Listening in English — speak clearly, tap the mic to stop
+          <p className="text-xs flex items-center gap-1.5" style={{ color: '#ef4444' }}>
+            <span className="inline-block w-2 h-2 rounded-full animate-pulse" style={{ background: '#ef4444' }} />
+            Listening — speak clearly, tap mic to stop
           </p>
         )}
 
         {/* Tags */}
-        <input
-          value={tags}
-          onChange={e => { setTags(e.target.value); setSaved(false); }}
-          placeholder="Tags (comma-separated): work, health, goals..."
-          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-        />
+        <div className="relative">
+          <Tag size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--t-faint)' }} />
+          <input
+            value={tags}
+            onChange={e => { setTags(e.target.value); setSaved(false); }}
+            placeholder="Tags (comma-separated): work, health, goals…"
+            className="w-full rounded-xl pl-8 pr-3 py-2 text-sm focus:outline-none"
+            style={{
+              background: 'var(--s2)',
+              color: 'var(--t-body)',
+              border: '2px solid var(--b)',
+            }}
+          />
+        </div>
 
-        <button onClick={save} disabled={saving || !content.trim()}
-          className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-          <Save size={15} />
-          {saving ? 'Saving...' : saved ? 'Saved ✓' : 'Save entry'}
-        </button>
+        {/* Error banner */}
+        {saveErr && (
+          <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm"
+            style={{ background: '#ef444415', border: '1px solid #ef444440', color: '#ef4444' }}>
+            <AlertCircle size={14} />
+            {saveErr}
+          </div>
+        )}
+
+        {/* Save button */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={save}
+            disabled={saving || !content.trim()}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold tap transition-all disabled:opacity-40"
+            style={{
+              background: saved
+                ? '#22c55e'
+                : 'rgb(var(--accent-rgb))',
+              color: '#fff',
+              boxShadow: saved
+                ? '0 0 16px #22c55e60'
+                : '0 0 16px rgb(var(--accent-rgb)/0.4)',
+            }}>
+            {saved
+              ? <><CheckCircle2 size={15} /> Saved</>
+              : saving
+                ? <><span className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" /> Saving…</>
+                : <><Save size={15} /> Save entry</>}
+          </button>
+          {!content.trim() && (
+            <span className="text-xs" style={{ color: 'var(--t-faint)' }}>Write something to save</span>
+          )}
+        </div>
       </div>
 
-      {/* Recent entries */}
-      {recent.length > 0 && (
+      {/* ── Recent entries ── */}
+      {recent.filter(e => e.date !== date).length > 0 && (
         <div>
-          <h2 className="text-sm font-semibold text-gray-300 mb-3">Recent entries</h2>
+          <p className="text-[11px] font-black tracking-[0.14em] uppercase mb-2"
+            style={{ color: 'var(--cyan)' }}>RECENT ENTRIES</p>
           <div className="space-y-2">
-            {recent.filter(e => e.date !== date).slice(0, 5).map(e => (
-              <button key={e.id} onClick={() => setDate(e.date)}
-                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-left hover:bg-gray-800 transition-colors">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-200">
-                    {format(parseISO(e.date), 'EEE, d MMM')}
-                  </span>
-                  {e.mood && <span className="text-lg">{MOODS.find(m => m.value === e.mood)?.emoji}</span>}
-                </div>
-                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{e.content}</p>
-              </button>
-            ))}
+            {recent.filter(e => e.date !== date).slice(0, 5).map(e => {
+              const em = MOODS.find(m => m.value === e.mood);
+              return (
+                <button key={e.id} onClick={() => setDate(e.date)}
+                  className="glass w-full rounded-2xl px-4 py-3 text-left tap transition-all hover:scale-[1.01]"
+                  style={{ border: '1px solid var(--b)' }}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-semibold text-head">
+                      {format(parseISO(e.date), 'EEE, d MMM')}
+                    </span>
+                    {em && (
+                      <span className="text-lg" title={em.label}>{em.emoji}</span>
+                    )}
+                  </div>
+                  <p className="text-xs line-clamp-2" style={{ color: 'var(--t-muted)' }}>{e.content}</p>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
+
     </div>
   );
 }
