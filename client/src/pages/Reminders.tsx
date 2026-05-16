@@ -95,7 +95,17 @@ export default function Reminders() {
   const upcoming = reminders.filter(r => new Date(r.remind_at) > now && (!r.snoozed_until || new Date(r.snoozed_until) > now));
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4"
+      style={{ '--accent-rgb': '251 191 36' } as React.CSSProperties}>
+
+      {/* Cyberpunk body overlay */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(251,191,36,0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+      </div>
 
       {/* ── INCOMING SIGNAL HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
@@ -137,10 +147,13 @@ export default function Reminders() {
           style={{ background: 'linear-gradient(90deg, transparent, #fbbf2430, transparent)' }} />
       </div>
 
+      <div style={{ position: 'relative', zIndex: 1 }}>
+
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Reminders</h1>
+        <h1 className="text-2xl font-bold" style={{ color: 'rgb(var(--accent-rgb))' }}>// Reminders</h1>
         <button type="button" onClick={() => { setShowForm(s => !s); setFormErr(''); }}
-          className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium tap"
+          style={{ background: 'rgb(var(--accent-rgb) / 0.12)', color: 'rgb(var(--accent-rgb))', border: '1px solid rgb(var(--accent-rgb) / 0.25)' }}>
           <Plus size={16} /> New reminder
         </button>
       </div>
@@ -195,7 +208,7 @@ export default function Reminders() {
       {/* Due / overdue */}
       {overdue.length > 0 && (
         <div>
-          <h2 className="text-sm font-semibold text-red-400 mb-2 flex items-center gap-2"><AlarmClock size={14} /> Due now ({overdue.length})</h2>
+          <h2 className="text-sm font-semibold mb-2 flex items-center gap-2" style={{ color: '#f87171' }}><AlarmClock size={14} /> // Due now ({overdue.length})</h2>
           <div className="space-y-2">
             {overdue.map(r => (
               <div key={r.id} className="bg-red-950/40 border border-red-800 rounded-xl p-4">
@@ -225,8 +238,8 @@ export default function Reminders() {
 
       {/* Upcoming */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
-          <Bell size={14} /> Upcoming ({upcoming.length})
+        <h2 className="text-sm font-semibold mb-2 flex items-center gap-2" style={{ color: 'rgb(var(--accent-rgb))' }}>
+          <Bell size={14} /> // Upcoming ({upcoming.length})
         </h2>
         {upcoming.length === 0 && <p className="text-gray-500 text-sm py-4 text-center">No upcoming reminders.</p>}
         <div className="space-y-2">
@@ -246,6 +259,8 @@ export default function Reminders() {
           ))}
         </div>
       </div>
+
+      </div>{/* end relative zIndex wrapper */}
     </div>
   );
 }

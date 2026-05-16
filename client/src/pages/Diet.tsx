@@ -366,21 +366,17 @@ export default function Diet() {
           style={{ background: 'linear-gradient(90deg, transparent, #34d39930, transparent)' }} />
       </div>
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-head tracking-tight">Diet</h1>
-        <div className="flex gap-2">
-          <button type="button" onClick={() => setShowSaveModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tap"
-            style={{ background: 'var(--s3)', color: '#71717a' }}>
-            <BookMarked size={13} /> Save meal
-          </button>
-          <button type="button" onClick={() => setActiveTab(t => t === 'log' ? 'meals' : 'log')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tap"
-            style={{ background: 'var(--s3)', color: '#71717a' }}>
-            {activeTab === 'log' ? '📚 Saved' : '📋 Log'}
-          </button>
-        </div>
+      <div className="flex justify-end gap-2">
+        <button type="button" onClick={() => setShowSaveModal(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tap"
+          style={{ background: 'var(--s3)', color: '#71717a' }}>
+          <BookMarked size={13} /> Save meal
+        </button>
+        <button type="button" onClick={() => setActiveTab(t => t === 'log' ? 'meals' : 'log')}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tap"
+          style={{ background: 'var(--s3)', color: '#71717a' }}>
+          {activeTab === 'log' ? '📚 Saved' : '📋 Log'}
+        </button>
       </div>
 
       {/* Date nav */}

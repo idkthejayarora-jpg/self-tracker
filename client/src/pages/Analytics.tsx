@@ -141,7 +141,17 @@ export default function Analytics() {
   const hasWorkout = weekly.some(w => (w.workout_sessions ?? 0) > 0);
 
   return (
-    <div className="max-w-xl space-y-4 anim-page">
+    <div className="max-w-xl space-y-4 anim-page"
+      style={{ '--accent-rgb': '96 165 250' } as React.CSSProperties}>
+
+      {/* Cyberpunk body overlay */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(96,165,250,0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+      </div>
 
       {/* ── ORACLE CORE HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
@@ -168,11 +178,6 @@ export default function Analytics() {
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
           style={{ background: 'linear-gradient(90deg, transparent, #60a5fa30, transparent)' }} />
-      </div>
-
-      <div>
-        <h1 className="text-2xl font-bold text-head tracking-tight">Analytics</h1>
-        <p className="text-sm mt-0.5" style={{ color: '#71717a' }}>Last 8 weeks across all modules</p>
       </div>
 
       {/* Summary cards */}

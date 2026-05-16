@@ -729,7 +729,8 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 anim-page pb-8">
+    <div className="max-w-2xl mx-auto space-y-5 anim-page pb-8"
+      style={{ '--accent-rgb': '57 255 20' } as React.CSSProperties}>
 
       {/* ── WAR ROOM HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-5"
@@ -787,6 +788,17 @@ export default function Dashboard() {
             style={{ background: 'linear-gradient(90deg, transparent, #39ff1450, transparent)' }} />
         </div>
       </div>
+
+      {/* Cyberpunk body overlay */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(57,255,20,0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+      </div>
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
 
       {/* ═══════════════════════════════════════ HEADER */}
       <div>
@@ -872,7 +884,7 @@ export default function Dashboard() {
 
       {/* ═══════════════════════════════════════ STREAK INTEL */}
       <div>
-        <SysLabel icon={TrendingUp} text="Streak Intel" color="#f97316" />
+        <SysLabel icon={TrendingUp} text="// Streak Intel" color="#f97316" />
         <div className="flex gap-2 overflow-x-auto pb-1 hide-scroll">
           {streakData.map((s, i) => (
             <div key={s.label} className="streak-node card-hover glow-card"
@@ -944,6 +956,8 @@ export default function Dashboard() {
           <p className="text-[11px]" style={{ color: 'var(--t-faint)' }}>Outstanding work, operative.</p>
         </div>
       )}
+
+      </div>{/* end relative zIndex wrapper */}
 
     </div>
   );

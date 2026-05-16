@@ -114,12 +114,7 @@ export default function SocialDetox() {
           style={{ background: 'linear-gradient(90deg, transparent, #f43f5e30, transparent)' }} />
       </div>
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-head">Social Detox</h1>
-          <p className="text-xs mt-0.5" style={{ color: '#71717a' }}>Track screen time · build clean streaks</p>
-        </div>
+      <div className="flex justify-end">
         <button onClick={() => setShowAdd(s => !s)}
           className="tap flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
           style={{ background: 'rgb(var(--accent-rgb) / 0.12)', color: 'rgb(var(--accent-rgb-light))' }}>

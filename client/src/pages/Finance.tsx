@@ -163,7 +163,17 @@ export default function Finance() {
   const monthLabel = format(new Date(`${month}-15`), 'MMMM yyyy');
 
   return (
-    <div className="max-w-xl space-y-4 anim-page">
+    <div className="max-w-xl space-y-4 anim-page"
+      style={{ '--accent-rgb': '0 255 159' } as React.CSSProperties}>
+
+      {/* Cyberpunk body overlay */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(0,255,159,0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+      </div>
 
       {/* ── ASSET NEXUS HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
@@ -215,14 +225,13 @@ export default function Finance() {
         </div>
       </div>
 
-      {/* Header + month selector */}
-      <div>
-        <h1 className="text-2xl font-bold text-head tracking-tight" style={{ marginBottom: loadErr ? 0 : undefined }}>Finance</h1>
-        <div className="flex items-center gap-2 mt-1">
-          <button onClick={() => shiftMonth(-1)} className="tap" style={{ color: '#71717a' }}><ChevronLeft size={16} /></button>
-          <span className="text-sm font-semibold text-head">{monthLabel}</span>
-          <button onClick={() => shiftMonth(1)} className="tap" style={{ color: '#71717a' }}><ChevronRight size={16} /></button>
-        </div>
+      <div style={{ position: 'relative', zIndex: 1 }}>
+
+      {/* Month selector */}
+      <div className="flex items-center gap-2">
+        <button onClick={() => shiftMonth(-1)} className="tap" style={{ color: '#71717a' }}><ChevronLeft size={16} /></button>
+        <span className="text-sm font-semibold text-head">{monthLabel}</span>
+        <button onClick={() => shiftMonth(1)} className="tap" style={{ color: '#71717a' }}><ChevronRight size={16} /></button>
       </div>
 
       {loadErr && (
@@ -322,7 +331,7 @@ export default function Finance() {
       {summary && (
         <div className="grid grid-cols-3 gap-2">
           <div className="card px-3 py-3">
-            <p className="text-[10px] font-medium mb-1" style={{ color: '#52525b' }}>Income</p>
+            <p className="text-[10px] font-medium mb-1" style={{ color: 'rgb(var(--accent-rgb))', opacity: 0.7 }}>Income</p>
             <p className="text-base font-bold" style={{ color: '#22c55e' }}>₹{fmt(summary.income)}</p>
           </div>
           <div className="card px-3 py-3">
@@ -498,6 +507,8 @@ export default function Finance() {
           <p className="text-sm font-medium" style={{ color: '#71717a' }}>No transactions for {monthLabel}</p>
         </div>
       )}
+
+      </div>{/* end relative zIndex wrapper */}
     </div>
   );
 }

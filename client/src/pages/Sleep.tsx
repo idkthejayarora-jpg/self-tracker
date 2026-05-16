@@ -135,7 +135,17 @@ export default function Sleep() {
   }));
 
   return (
-    <div className="max-w-xl space-y-4 anim-page">
+    <div className="max-w-xl space-y-4 anim-page"
+      style={{ '--accent-rgb': '167 139 250' } as React.CSSProperties}>
+
+      {/* Cyberpunk body overlay */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(167,139,250,0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+      </div>
 
       {/* ── DEEP SPACE HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
@@ -180,14 +190,12 @@ export default function Sleep() {
           style={{ background: 'linear-gradient(90deg, transparent, #a78bfa30, transparent)' }} />
       </div>
 
-      {/* Header */}
+      <div style={{ position: 'relative', zIndex: 1 }}>
+
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-head tracking-tight">Sleep</h1>
-          <p className="text-sm mt-0.5" style={{ color: '#71717a' }}>
-            {stats && stats.avgDuration ? `Avg ${fmtDuration(stats.avgDuration)} / night this week` : 'Track your sleep'}
-          </p>
-        </div>
+        <p className="text-sm" style={{ color: '#71717a' }}>
+          {stats && stats.avgDuration ? `Avg ${fmtDuration(stats.avgDuration)} / night this week` : 'Track your sleep'}
+        </p>
         <button type="button" onClick={() => { setShowForm(s => !s); setFormErr(''); }}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold tap"
           style={{ background: `rgb(var(--accent-rgb) / 0.12)`, color: `rgb(var(--accent-rgb-light))` }}>
@@ -291,7 +299,7 @@ export default function Sleep() {
       {/* Chart */}
       {chartData.length > 1 && (
         <div className="card px-4 py-4">
-          <p className="text-xs font-semibold mb-3" style={{ color: '#52525b', letterSpacing: '0.05em' }}>SLEEP DURATION (hrs)</p>
+          <p className="text-xs font-semibold mb-3" style={{ color: 'rgb(var(--accent-rgb))', letterSpacing: '0.05em' }}>// SLEEP DURATION (hrs)</p>
           <ResponsiveContainer width="100%" height={140}>
             <BarChart data={chartData} barSize={20}>
               <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#52525b' }} />
@@ -311,7 +319,7 @@ export default function Sleep() {
       {/* Log list */}
       {logs.length > 0 ? (
         <div className="card px-4 py-4">
-          <p className="text-xs font-semibold mb-3" style={{ color: '#52525b', letterSpacing: '0.05em' }}>HISTORY</p>
+          <p className="text-xs font-semibold mb-3" style={{ color: 'rgb(var(--accent-rgb))', letterSpacing: '0.05em' }}>// HISTORY</p>
           <div className="space-y-0">
             {logs.slice(0, 10).map(l => (
               <div key={l.id} className="flex items-center gap-3 py-2.5" style={{ borderBottom: '1px solid var(--b)' }}>
@@ -348,6 +356,8 @@ export default function Sleep() {
           <p className="text-xs mt-1" style={{ color: '#52525b' }}>Tap "Log" to add last night's sleep</p>
         </div>
       )}
+
+      </div>{/* end relative zIndex wrapper */}
     </div>
   );
 }

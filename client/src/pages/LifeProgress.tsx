@@ -206,7 +206,17 @@ export default function LifeProgress() {
   const overallColor = score >= 70 ? '#22c55e' : score >= 40 ? '#f59e0b' : '#ef4444';
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5"
+      style={{ '--accent-rgb': '226 201 126' } as React.CSSProperties}>
+
+      {/* Cyberpunk body overlay */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(226,201,126,0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+      </div>
 
       {/* ── SACRED NEXUS HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
@@ -245,7 +255,7 @@ export default function LifeProgress() {
           style={{ background: 'linear-gradient(90deg, transparent, #fbbf2430, transparent)' }} />
       </div>
 
-      <h1 className="text-2xl font-bold text-white">Life Progress</h1>
+      <div style={{ position: 'relative', zIndex: 1 }}>
 
       {/* Overall life score */}
       <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 flex items-center gap-5">
@@ -277,7 +287,7 @@ export default function LifeProgress() {
 
       {/* Add area form */}
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-gray-300">Life Areas</h2>
+        <h2 className="text-sm font-semibold" style={{ color: 'rgb(var(--accent-rgb))' }}>// Life Areas</h2>
         <button onClick={() => setShowAdd(s => !s)}
           className="flex items-center gap-1.5 text-xs bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors">
           <Plus size={13} /> Add area
@@ -321,6 +331,8 @@ export default function LifeProgress() {
           <AreaCard key={area.id} area={area} onUpdate={updateAreaLocal} onDelete={deleteArea} />
         ))}
       </div>
+
+      </div>{/* end relative zIndex wrapper */}
     </div>
   );
 }

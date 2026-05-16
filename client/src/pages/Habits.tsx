@@ -94,7 +94,17 @@ export default function Habits() {
   const doneCount = habits.filter(h => h.done).length;
 
   return (
-    <div className="max-w-xl space-y-4 anim-page">
+    <div className="max-w-xl space-y-4 anim-page"
+      style={{ '--accent-rgb': '167 139 250' } as React.CSSProperties}>
+
+      {/* Cyberpunk body overlay */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(167,139,250,0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+      </div>
 
       {/* ── BIORHYTHM HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
@@ -154,13 +164,14 @@ export default function Habits() {
           style={{ background: 'linear-gradient(90deg, transparent, #a78bfa40, transparent)' }} />
       </div>
 
+      <div style={{ position: 'relative', zIndex: 1 }}>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-medium mb-0.5" style={{ color: '#52525b', letterSpacing: '0.05em' }}>
             {format(new Date(), 'EEEE, d MMM').toUpperCase()}
           </p>
-          <h1 className="text-2xl font-bold text-head tracking-tight">Habits</h1>
           <p className="text-sm mt-0.5" style={{ color: '#71717a' }}>
             {doneCount}/{habits.length} completed today
           </p>
@@ -261,6 +272,8 @@ export default function Habits() {
           </button>
         ))}
       </div>
+
+      </div>{/* end relative zIndex wrapper */}
 
       {/* Habit list */}
       {filtered.length === 0 ? (

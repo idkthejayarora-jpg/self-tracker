@@ -106,7 +106,17 @@ export default function BodyStats() {
   }));
 
   return (
-    <div className="max-w-xl space-y-4 anim-page">
+    <div className="max-w-xl space-y-4 anim-page"
+      style={{ '--accent-rgb': '56 189 248' } as React.CSSProperties}>
+
+      {/* Cyberpunk body overlay */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(56,189,248,0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+      </div>
 
       {/* ── MEDICAL SCANNER HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
@@ -139,14 +149,12 @@ export default function BodyStats() {
           style={{ background: 'linear-gradient(90deg, transparent, #38bdf830, transparent)' }} />
       </div>
 
-      {/* Header */}
+      <div style={{ position: 'relative', zIndex: 1 }}>
+
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-head tracking-tight">Body Stats</h1>
-          <p className="text-sm mt-0.5" style={{ color: '#71717a' }}>
-            {latest ? `Last logged ${format(new Date(latest.date + 'T12:00:00'), 'd MMM yyyy')}` : 'No entries yet'}
-          </p>
-        </div>
+        <p className="text-sm" style={{ color: '#71717a' }}>
+          {latest ? `Last logged ${format(new Date(latest.date + 'T12:00:00'), 'd MMM yyyy')}` : 'No entries yet'}
+        </p>
         <button type="button" onClick={() => { setShowForm(s => !s); setFormErr(''); }}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold tap"
           style={{ background: `rgb(var(--accent-rgb) / 0.12)`, color: `rgb(var(--accent-rgb-light))` }}>
@@ -240,7 +248,7 @@ export default function BodyStats() {
       {/* Chart */}
       {chartData.filter(d => d.weight != null).length > 1 && (
         <div className="card px-4 py-4">
-          <p className="text-xs font-semibold mb-3" style={{ color: '#52525b', letterSpacing: '0.05em' }}>WEIGHT TREND</p>
+          <p className="text-xs font-semibold mb-3" style={{ color: 'rgb(var(--accent-rgb))', letterSpacing: '0.05em' }}>// WEIGHT TREND</p>
           <ResponsiveContainer width="100%" height={160}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--s3)" />
@@ -262,7 +270,7 @@ export default function BodyStats() {
       {/* History */}
       {stats.length > 0 && (
         <div className="card px-4 py-4">
-          <p className="text-xs font-semibold mb-3" style={{ color: '#52525b', letterSpacing: '0.05em' }}>HISTORY</p>
+          <p className="text-xs font-semibold mb-3" style={{ color: 'rgb(var(--accent-rgb))', letterSpacing: '0.05em' }}>// HISTORY</p>
           <div className="space-y-2">
             {stats.map(s => (
               <div key={s.id} className="flex items-center gap-3 py-2" style={{ borderBottom: '1px solid var(--b)' }}>
@@ -293,6 +301,8 @@ export default function BodyStats() {
           <p className="text-xs mt-1" style={{ color: '#52525b' }}>Tap "Log" to add your first entry</p>
         </div>
       )}
+
+      </div>{/* end relative zIndex wrapper */}
     </div>
   );
 }

@@ -147,7 +147,17 @@ export default function Tasks() {
   const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <div className="space-y-4 max-w-xl anim-page">
+    <div className="space-y-4 max-w-xl anim-page"
+      style={{ '--accent-rgb': '34 197 94' } as React.CSSProperties}>
+
+      {/* Cyberpunk body overlay */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(34,197,94,0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+      </div>
 
       {/* ── TERMINAL HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
@@ -188,9 +198,9 @@ export default function Tasks() {
         </div>
       </div>
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-head tracking-tight">Tasks</h1>
+      <div style={{ position: 'relative', zIndex: 1 }}>
+
+      <div className="flex justify-end">
         <button
           onClick={() => { setShowForm(s => !s); setForm(emptyForm()); setFormErr(''); }}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold tap"
@@ -325,7 +335,7 @@ export default function Tasks() {
       )}
 
       {/* Task list */}
-      <div className="space-y-2">
+      <div className="space-y-2" style={{ position: 'relative', zIndex: 1 }}>
         {!loadErr && tasks.length === 0 && (
           <div className="card py-12 text-center">
             <p className="text-sm font-medium" style={{ color: '#71717a' }}>No tasks found</p>
@@ -479,6 +489,8 @@ export default function Tasks() {
           );
         })}
       </div>
+
+      </div>{/* end relative zIndex wrapper */}
     </div>
   );
 }

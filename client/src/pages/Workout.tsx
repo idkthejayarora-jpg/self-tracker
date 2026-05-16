@@ -190,7 +190,18 @@ export default function Workout() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4"
+      style={{ '--accent-rgb': '255 69 0' } as React.CSSProperties}>
+
+      {/* Cyberpunk body overlay */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(255,69,0,0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+      </div>
+
       {/* ── FORGE HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
         style={{ background: 'linear-gradient(180deg, #1a0800 0%, #000 60%)', border: '1px solid #ff450030', minHeight: 120 }}>
@@ -242,8 +253,9 @@ export default function Workout() {
           style={{ background: 'linear-gradient(90deg, transparent, #ff450040, transparent)' }} />
       </div>
 
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2"><Dumbbell size={22} className="text-orange-400" /> Workout</h1>
+      <div style={{ position: 'relative', zIndex: 1 }}>
+
+      <div className="flex justify-end">
         {tab === 'log' && (
           <button type="button" onClick={() => { setShowNewSession(s => !s); setSessionErr(''); }}
             className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -465,7 +477,7 @@ export default function Workout() {
 
       {/* ── STATS TAB ── */}
       {tab === 'stats' && stats && (
-        <div className="space-y-5">
+        <div className="space-y-5" style={{ position: 'relative', zIndex: 1 }}>
           <WorkoutAvatar stats={{
             weekly_sessions: stats.weekly[stats.weekly.length - 1]?.sessions ?? 0,
             total_sets: sessions.reduce((s, sess) => s + (sess.set_count || 0), 0),
@@ -511,6 +523,8 @@ export default function Workout() {
       )}
 
       {progressEx && <ExerciseProgress exercise={progressEx} onClose={() => setProgressEx(null)} />}
+
+      </div>{/* end relative zIndex wrapper */}
     </div>
   );
 }
