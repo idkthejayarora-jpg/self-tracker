@@ -1,7 +1,11 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import api from '../lib/api';
+import axios from 'axios';
 import type { User } from '../types';
+
+// Use plain axios (not the api instance) for the startup check so we don't
+// trigger our own auth:logout interceptor during the initial validation.
+const rawAxios = axios.create({ baseURL: '/api' });
 
 interface AuthContextValue {
   user: User | null;
@@ -15,72 +19,75 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue>(null!);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
+  const [user, setUser]       = useState<User | null>(null);
+  const [token, setToken]     = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const stored = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    if (!stored || !storedUser) {
-      setLoading(false);
-      return;
-    }
-
-    // Validate the stored token with the server on every app start.
-    // If the server returns 401 (invalid/expired token, or session_gone after
-    // a DB reset) we clear localStorage so the login screen appears.
-    // On a network error (server cold-start, offline) we keep the cached user
-    // so the app doesn't flash the login screen unnecessarily.
-    api.get('/auth/me', { headers: { Authorization: `Bearer ${stored}` } })
-      .then(({ data }) => {
-        setToken(stored);
-        setUser(data.user);
-        // Keep cached user in sync with server
-        localStorage.setItem('user', JSON.stringify(data.user));
-      })
-      .catch((err) => {
-        if (!err.response) {
-          // Network / cold-start — keep going with cached user
-          try { setToken(stored); setUser(JSON.parse(storedUser)); } catch (_) {}
-          return;
-        }
-        // 401 — token is bad or session is gone. Clear everything → login screen.
-        try {
-          const u = JSON.parse(storedUser);
-          if (u?.username) localStorage.setItem('lastUsername', u.username);
-        } catch (_) {}
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function login(username: string, password: string) {
-    const { data } = await api.post('/auth/login', { username, password });
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    localStorage.setItem('lastUsername', data.user.username);
-    sessionStorage.removeItem('authMsg');
-    setToken(data.token);
-    setUser(data.user);
-  }
-
-  async function register(username: string, password: string) {
-    const { data } = await api.post('/auth/register', { username, password });
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    localStorage.setItem('lastUsername', data.user.username);
-    sessionStorage.removeItem('authMsg');
-    setToken(data.token);
-    setUser(data.user);
-  }
-
-  function logout() {
+  // ── Clear session helper ──────────────────────────────────────────────────
+  const clearSession = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
+  }, []);
+
+  // ── Startup: validate stored token once ──────────────────────────────────
+  useEffect(() => {
+    const stored = localStorage.getItem('token');
+    if (!stored) {
+      setLoading(false);
+      return;
+    }
+
+    rawAxios
+      .get('/auth/me', { headers: { Authorization: `Bearer ${stored}` } })
+      .then(({ data }) => {
+        // Token is valid — restore session
+        setToken(stored);
+        setUser(data.user);
+        localStorage.setItem('user', JSON.stringify(data.user));
+      })
+      .catch(() => {
+        // Token is invalid OR server error — always clear and go to login.
+        // We don't try to "keep going" with a cached user because that leads
+        // to a state where the app looks logged in but every API call fails.
+        clearSession();
+      })
+      .finally(() => setLoading(false));
+  }, [clearSession]);
+
+  // ── Listen for 401s from any API call ────────────────────────────────────
+  // The axios interceptor in lib/api.ts dispatches 'auth:logout' on any 401.
+  // We handle it here so React state stays in sync without a hard page reload.
+  useEffect(() => {
+    const handler = () => clearSession();
+    window.addEventListener('auth:logout', handler);
+    return () => window.removeEventListener('auth:logout', handler);
+  }, [clearSession]);
+
+  // ── Login ─────────────────────────────────────────────────────────────────
+  async function login(username: string, password: string) {
+    const { data } = await rawAxios.post('/auth/login', { username, password });
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    localStorage.setItem('lastUsername', data.user.username);
+    setToken(data.token);
+    setUser(data.user);
+  }
+
+  // ── Register ──────────────────────────────────────────────────────────────
+  async function register(username: string, password: string) {
+    const { data } = await rawAxios.post('/auth/register', { username, password });
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    localStorage.setItem('lastUsername', data.user.username);
+    setToken(data.token);
+    setUser(data.user);
+  }
+
+  // ── Logout ────────────────────────────────────────────────────────────────
+  function logout() {
+    clearSession();
   }
 
   return (
