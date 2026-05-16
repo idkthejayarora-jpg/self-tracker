@@ -733,3 +733,46 @@ input:focus, textarea:focus, select:focus {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
 }
+
+/* ── BodyStats (Medical Scanner) ── */
+@keyframes ekg-sweep {
+  0%   { stroke-dashoffset: 200; }
+  100% { stroke-dashoffset: -200; }
+}
+
+/* ── Reminders (Incoming Signal) ── */
+@keyframes signal-ring {
+  0%   { transform: scale(0.5); opacity: 0.8; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* ── LifeProgress (Sacred Nexus) ── */
+@keyframes sacred-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes sacred-spin-rev {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+
+/* ── Diet (Biolab) ── */
+@keyframes hex-drift {
+  0%, 100% { transform: translateY(0) rotate(0deg);    opacity: 0.08; }
+  50%       { transform: translateY(-6px) rotate(30deg); opacity: 0.15; }
+}
+
+/* ── SocialDetox (Firewall) ── */
+@keyframes glitch-block {
+  0%, 92%, 100% { transform: translateX(0); opacity: 1; }
+  93% { transform: translateX(-4px); opacity: 0.5; }
+  94% { transform: translateX(4px);  opacity: 0.8; }
+  95% { transform: translateX(-2px); opacity: 0.4; }
+  96% { transform: translateX(0);    opacity: 1; }
+}
+
+/* ── Login (Access Portal) ── */
+@keyframes portal-scan {
+  from { top: -4px; }
+  to   { top: 100%; }
+}

@@ -229,6 +229,25 @@ function SaveMealModal({ onSave, onClose }: { onSave: (m: Omit<SavedMeal, 'id'>)
   );
 }
 
+function MolecularBg() {
+  const hexPoints = '12,2 22,8 22,20 12,26 2,20 2,8';
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {[...Array(8)].map((_, i) => (
+        <div key={i} className="absolute"
+          style={{
+            left: `${10 + i * 12}%`, top: `${20 + (i % 3) * 20}%`,
+            animation: `hex-drift ${3 + (i % 3)}s ease-in-out ${i * 400}ms infinite`,
+          }}>
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <polygon points={hexPoints} stroke="#34d399" strokeWidth="1" fill="none" />
+          </svg>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Diet() {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [log, setLog] = useState<FoodLog[]>([]);
@@ -319,6 +338,33 @@ export default function Diet() {
 
   return (
     <div className="space-y-4 max-w-xl anim-page">
+
+      {/* ── BIOLAB HEADER ── */}
+      <div className="relative overflow-hidden rounded-2xl mb-4"
+        style={{ background: '#000', border: '1px solid #34d39925', minHeight: 110 }}>
+        <MolecularBg />
+        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #34d399', borderLeft: '1.5px solid #34d399', opacity: 0.7 }} />
+        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #34d399', borderRight: '1.5px solid #34d399', opacity: 0.7 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #34d399', borderLeft: '1.5px solid #34d399', opacity: 0.7 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #34d399', borderRight: '1.5px solid #34d399', opacity: 0.7 }} />
+        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent, #34d39980, transparent)', boxShadow: '0 0 8px #34d399' }} />
+        <div className="relative z-10 px-5 py-5">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#34d399', opacity: 0.6 }}>LAB://</span>
+            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">NUTRIENT_SYNTHESIS</span>
+            <span className="cursor-blink font-mono" style={{ color: '#34d399', fontSize: 11 }}>▌</span>
+          </div>
+          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: '0 0 30px #34d39940' }}>
+            BIOLAB
+          </h1>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#34d399', opacity: 0.5 }}>
+            // molecular nutrition analysis — fuel optimization protocol
+          </p>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent, #34d39930, transparent)' }} />
+      </div>
 
       {/* Header */}
       <div className="flex items-center justify-between">

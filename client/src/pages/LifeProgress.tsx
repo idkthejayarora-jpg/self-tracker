@@ -207,6 +207,44 @@ export default function LifeProgress() {
 
   return (
     <div className="space-y-5">
+
+      {/* ── SACRED NEXUS HEADER ── */}
+      <div className="relative overflow-hidden rounded-2xl mb-4"
+        style={{ background: '#000', border: '1px solid #fbbf2420', minHeight: 120 }}>
+        {/* Sacred geometry in corner */}
+        <div className="absolute pointer-events-none" style={{ top: '50%', right: 30, transform: 'translateY(-50%)', width: 90, height: 90 }}>
+          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid #fbbf2430', animation: 'sacred-spin 12s linear infinite' }}>
+            <div style={{ position: 'absolute', top: -4, left: '50%', transform: 'translateX(-50%)', width: 6, height: 6, borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }} />
+          </div>
+          <div style={{ position: 'absolute', inset: 15, borderRadius: '50%', border: '1px solid #a78bfa25', animation: 'sacred-spin-rev 8s linear infinite' }}>
+            <div style={{ position: 'absolute', top: -3, left: '50%', transform: 'translateX(-50%)', width: 5, height: 5, borderRadius: '50%', background: '#a78bfa', boxShadow: '0 0 6px #a78bfa' }} />
+          </div>
+          <div style={{ position: 'absolute', inset: 30, borderRadius: '50%', border: '1px solid #fbbf2418', animation: 'sacred-spin 6s linear infinite' }} />
+          <div style={{ position: 'absolute', inset: '50%', transform: 'translate(-50%,-50%)', width: 10, height: 10, borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 14px #fbbf24, 0 0 28px #a78bfa' }} />
+        </div>
+        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #fbbf24', borderLeft: '1.5px solid #fbbf24', opacity: 0.7 }} />
+        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #fbbf24', borderRight: '1.5px solid #fbbf24', opacity: 0.7 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #fbbf24', borderLeft: '1.5px solid #fbbf24', opacity: 0.7 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #fbbf24', borderRight: '1.5px solid #fbbf24', opacity: 0.7 }} />
+        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent, #fbbf2470, transparent)', boxShadow: '0 0 8px #fbbf24' }} />
+        <div className="relative z-10 px-5 py-5">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#fbbf24', opacity: 0.6 }}>NEXUS://</span>
+            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">LIFE_PATH.QUEST</span>
+            <span className="cursor-blink font-mono" style={{ color: '#fbbf24', fontSize: 11 }}>▌</span>
+          </div>
+          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: '0 0 30px #fbbf2450' }}>
+            SACRED NEXUS
+          </h1>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#a78bfa', opacity: 0.6 }}>
+            // life path initialized — domain mastery in progress
+          </p>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent, #fbbf2430, transparent)' }} />
+      </div>
+
       <h1 className="text-2xl font-bold text-white">Life Progress</h1>
 
       {/* Overall life score */}

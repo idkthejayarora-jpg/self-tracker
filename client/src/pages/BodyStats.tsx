@@ -30,6 +30,20 @@ const emptyForm = () => ({
   notes: '',
 });
 
+function EKGLine() {
+  return (
+    <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none overflow-hidden" style={{ opacity: 0.4 }}>
+      <svg viewBox="0 0 400 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
+        <polyline
+          points="0,20 40,20 55,20 65,5 75,28 85,15 95,20 140,20 155,20 165,2 175,28 185,14 195,20 240,20 255,20 265,4 275,28 285,15 295,20 340,20 355,20 365,3 375,28 385,15 400,20"
+          fill="none" stroke="#38bdf8" strokeWidth="1.5"
+          strokeDasharray="200" style={{ animation: 'ekg-sweep 2.5s linear infinite' }}
+        />
+      </svg>
+    </div>
+  );
+}
+
 export default function BodyStats() {
   const [stats, setStats] = useState<BodyStat[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -93,6 +107,37 @@ export default function BodyStats() {
 
   return (
     <div className="max-w-xl space-y-4 anim-page">
+
+      {/* ── MEDICAL SCANNER HEADER ── */}
+      <div className="relative overflow-hidden rounded-2xl mb-4"
+        style={{ background: '#000', border: '1px solid #38bdf825', minHeight: 110 }}>
+        <div className="absolute inset-0 pointer-events-none" style={{
+          backgroundImage: 'radial-gradient(circle, #38bdf806 1px, transparent 1px)',
+          backgroundSize: '18px 18px',
+        }} />
+        <EKGLine />
+        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #38bdf8', borderLeft: '1.5px solid #38bdf8', opacity: 0.7 }} />
+        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #38bdf8', borderRight: '1.5px solid #38bdf8', opacity: 0.7 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #38bdf8', borderLeft: '1.5px solid #38bdf8', opacity: 0.7 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #38bdf8', borderRight: '1.5px solid #38bdf8', opacity: 0.7 }} />
+        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent, #38bdf870, transparent)', boxShadow: '0 0 8px #38bdf8' }} />
+        <div className="relative z-10 px-5 py-5">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#38bdf8', opacity: 0.6 }}>MED://</span>
+            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">BIOMETRIC_SCAN</span>
+            <span className="cursor-blink font-mono" style={{ color: '#38bdf8', fontSize: 11 }}>▌</span>
+          </div>
+          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: '0 0 30px #38bdf840' }}>
+            BIOMETRIC SCAN
+          </h1>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#38bdf8', opacity: 0.5 }}>
+            // full body analysis — vitals monitoring active
+          </p>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent, #38bdf830, transparent)' }} />
+      </div>
 
       {/* Header */}
       <div className="flex items-center justify-between">

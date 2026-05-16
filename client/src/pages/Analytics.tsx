@@ -41,6 +41,22 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
   );
 }
 
+function DataParticles() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: 0.12 }}>
+      {[...Array(12)].map((_, i) => (
+        <div key={i} className="absolute w-px"
+          style={{
+            left: `${8 + i * 7.5}%`,
+            top: 0, bottom: 0,
+            background: `linear-gradient(to bottom, transparent, #60a5fa, transparent)`,
+            animation: `data-scroll ${2 + (i % 3) * 0.8}s linear ${i * 200}ms infinite`,
+          }} />
+      ))}
+    </div>
+  );
+}
+
 // 9×7 heatmap (63 days)
 function JournalHeatmap({ data }: { data: { date: string; mood: number | null }[] }) {
   const byDate: Record<string, number | null> = {};
@@ -126,6 +142,34 @@ export default function Analytics() {
 
   return (
     <div className="max-w-xl space-y-4 anim-page">
+
+      {/* ── ORACLE CORE HEADER ── */}
+      <div className="relative overflow-hidden rounded-2xl mb-4"
+        style={{ background: '#000', border: '1px solid #60a5fa25', minHeight: 110 }}>
+        <DataParticles />
+        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #60a5fa', borderLeft: '1.5px solid #60a5fa', opacity: 0.7 }} />
+        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #60a5fa', borderRight: '1.5px solid #60a5fa', opacity: 0.7 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #60a5fa', borderLeft: '1.5px solid #60a5fa', opacity: 0.7 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #60a5fa', borderRight: '1.5px solid #60a5fa', opacity: 0.7 }} />
+        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent, #60a5fa80, transparent)', boxShadow: '0 0 8px #60a5fa' }} />
+        <div className="relative z-10 px-5 py-5">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#60a5fa', opacity: 0.6 }}>ORACLE://</span>
+            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">DATA_CORE_v1.0</span>
+            <span className="cursor-blink font-mono" style={{ color: '#60a5fa', fontSize: 11 }}>▌</span>
+          </div>
+          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: '0 0 30px #60a5fa40' }}>
+            ORACLE CORE
+          </h1>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#60a5fa', opacity: 0.5 }}>
+            // pattern recognition engine — behavioral insights processing
+          </p>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent, #60a5fa30, transparent)' }} />
+      </div>
+
       <div>
         <h1 className="text-2xl font-bold text-head tracking-tight">Analytics</h1>
         <p className="text-sm mt-0.5" style={{ color: '#71717a' }}>Last 8 weeks across all modules</p>
