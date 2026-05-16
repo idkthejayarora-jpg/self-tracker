@@ -70,7 +70,17 @@ export default function SocialDetox() {
   const streakMap = Object.fromEntries(streaks.map(s => [s.app_id, s]));
 
   return (
-    <div className="max-w-xl space-y-4 anim-page">
+    <div className="max-w-xl space-y-4 anim-page"
+      style={{ '--accent-rgb': '244 63 94' } as React.CSSProperties}>
+
+      {/* Cyberpunk body overlay */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(244,63,94,0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+      </div>
 
       {/* ── FIREWALL HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
@@ -113,6 +123,8 @@ export default function SocialDetox() {
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
           style={{ background: 'linear-gradient(90deg, transparent, #f43f5e30, transparent)' }} />
       </div>
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
 
       <div className="flex justify-end">
         <button onClick={() => setShowAdd(s => !s)}
@@ -273,7 +285,7 @@ export default function SocialDetox() {
       {/* Streak board */}
       {streaks.some(s => s.streak > 0) && (
         <div className="card px-4 py-4">
-          <p className="text-xs font-semibold mb-3" style={{ color: '#71717a' }}>STREAK BOARD</p>
+          <p className="text-xs font-semibold mb-3" style={{ color: 'rgb(var(--accent-rgb))' }}>// STREAK BOARD</p>
           <div className="space-y-2.5">
             {streaks.filter(s => s.streak > 0).sort((a,b) => b.streak - a.streak).map(s => (
               <div key={s.app_id} className="flex items-center gap-3">
@@ -289,6 +301,8 @@ export default function SocialDetox() {
           </div>
         </div>
       )}
+
+      </div>{/* end relative zIndex wrapper */}
     </div>
   );
 }
