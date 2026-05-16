@@ -102,9 +102,9 @@ export default function Login() {
 
         {/* Logo + heading */}
         <div className="flex flex-col items-center gap-3">
-          <div className="rounded-2xl overflow-hidden shadow-lg"
-            style={{ width: 80, height: 80, background: '#e3dfda', boxShadow: '0 0 0 1px rgba(0,0,0,0.08)' }}>
-            <img src="/logo.png" alt="logo"
+          <div className="rounded-full overflow-hidden shadow-lg"
+            style={{ width: 80, height: 80, background: '#e3dfda', boxShadow: '0 0 0 3px rgba(255,255,255,0.12), 0 8px 32px rgba(0,0,0,0.3)' }}>
+            <img src={localStorage.getItem('custom_logo') ?? '/logo.png'} alt="logo"
               className="w-full h-full object-cover"
               style={{ objectPosition: 'center top' }} />
           </div>

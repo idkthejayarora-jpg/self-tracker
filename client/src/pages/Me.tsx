@@ -82,101 +82,77 @@ function Chip({ label, color }: { label: string; color: string }) {
   );
 }
 
-// ── Full-armor knight SVG ─────────────────────────────────────────────────────
-function WarriorSilhouette({ color }: { color: string }) {
+// ── Brand of Sacrifice (Berserk) ─────────────────────────────────────────────
+function BrandOfSacrifice({ color }: { color: string }) {
+  // All coordinates relative to center (cx=110, cy=160), viewBox 0 0 220 320
   return (
-    <svg viewBox="0 0 160 280" width="210" height="368"
-      className="warrior-float"
+    <svg viewBox="0 0 220 320" width="340" height="496"
+      className="brand-breathe"
       style={{
-        color, fill: 'currentColor', stroke: 'currentColor', overflow: 'visible',
-        filter: `drop-shadow(0 0 14px ${color}) drop-shadow(0 0 36px ${color}55)`,
+        color,
+        overflow: 'visible',
+        filter: `drop-shadow(0 0 22px ${color}) drop-shadow(0 0 60px ${color}55) drop-shadow(0 0 120px ${color}22)`,
       }}
       aria-hidden="true">
 
-      {/* Ground shadow */}
-      <ellipse cx="80" cy="274" rx="38" ry="8" fill="currentColor" opacity="0.18"/>
+      {/* ── Outermost aura ring (faintest) ── */}
+      <ellipse cx="110" cy="160" rx="112" ry="144"
+        fill="none" stroke="currentColor" strokeWidth="1" opacity="0.07" className="aura-breathe"/>
 
-      {/* Cape — widest layer, behind everything */}
-      <path d="M36 66 Q-2 158 4 272 L80 254 L156 272 Q162 158 124 66 Z"
-        fill="currentColor" opacity="0.13"/>
-      <path d="M50 72 Q22 158 26 262 L80 246 L134 262 Q138 158 110 72 Z"
-        fill="currentColor" opacity="0.06"/>
+      {/* ── Outer oval ring — the brand's main boundary ── */}
+      <ellipse cx="110" cy="160" rx="88" ry="112"
+        fill="none" stroke="currentColor" strokeWidth="2.8" opacity="0.72"/>
 
-      {/* ── BOOTS ── */}
-      <path d="M52 232 L44 258 Q40 268 28 266 L30 256 L46 254 L54 234 Z" fill="currentColor"/>
-      <path d="M46 264 Q34 270 28 266 L30 256 Q36 262 46 258 Z" fill="currentColor" opacity="0.82"/>
-      <path d="M98 232 L106 260 Q108 268 120 266 L118 256 L104 254 L96 234 Z" fill="currentColor"/>
-      <path d="M104 264 Q116 270 122 266 L118 256 Q112 262 104 258 Z" fill="currentColor" opacity="0.82"/>
+      {/* ── TOP SPIKE — tapered blade pointing up ── */}
+      <path d="M 97 48 L 110 -22 L 123 48 Z" fill="currentColor" opacity="0.90"/>
+      {/* top spike inner highlight line */}
+      <line x1="110" y1="-22" x2="110" y2="48"
+        stroke="currentColor" strokeWidth="1.5" opacity="0.22"/>
 
-      {/* ── LEGS ── */}
-      <path d="M68 172 L54 208 L48 230 L60 232 L66 210 L72 174 Z" fill="currentColor"/>
-      <path d="M82 172 L96 208 L100 230 L88 234 L82 210 L76 174 Z" fill="currentColor"/>
+      {/* ── BOTTOM SPIKE — longer, the "drip" of the brand ── */}
+      <path d="M 96 272 L 110 348 L 124 272 Z" fill="currentColor" opacity="0.90"/>
 
-      {/* Thigh armor plates */}
-      <path d="M56 160 L68 160 L70 180 L52 180 Z" fill="currentColor" opacity="0.72"/>
-      <path d="M80 160 L94 160 L96 180 L78 180 Z" fill="currentColor" opacity="0.72"/>
+      {/* ── LEFT SPIKE ── */}
+      <path d="M 22 147 L -32 160 L 22 173 Z" fill="currentColor" opacity="0.80"/>
 
-      {/* ── BELT ── */}
-      <path d="M36 150 L124 150 L120 168 L40 168 Z" fill="currentColor" opacity="0.92"/>
-      <rect x="70" y="154" width="20" height="10" rx="3" fill="currentColor" opacity="0.32"/>
+      {/* ── RIGHT SPIKE ── */}
+      <path d="M 198 147 L 252 160 L 198 173 Z" fill="currentColor" opacity="0.80"/>
 
-      {/* ── TORSO / CHEST ARMOR ── */}
-      <path d="M28 64 L132 64 L124 150 L36 150 Z" fill="currentColor"/>
-      {/* Center keel line */}
-      <path d="M78 68 L82 68 L80 144 Z" fill="currentColor" opacity="0.28"/>
-      {/* Left pec plate */}
-      <path d="M32 66 L76 66 L74 104 L30 104 Z" fill="currentColor" opacity="0.15"/>
-      {/* Right pec plate */}
-      <path d="M84 66 L128 66 L130 104 L86 104 Z" fill="currentColor" opacity="0.15"/>
+      {/* ── Mid oval ring — inner detail ring ── */}
+      <ellipse cx="110" cy="160" rx="56" ry="72"
+        fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.22"/>
 
-      {/* ── SHOULDER PAULDRONS ── */}
-      <path d="M14 60 Q2 46 14 34 Q26 24 44 38 L44 66 L18 64 Z" fill="currentColor"/>
-      <path d="M16 48 Q10 42 16 38" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.38"/>
-      <path d="M146 60 Q158 46 146 34 Q134 24 116 38 L116 66 L142 64 Z" fill="currentColor"/>
-      <path d="M144 48 Q150 42 144 38" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.38"/>
+      {/* ── Cross arms (faint, through the oval) ── */}
+      {/* Vertical */}
+      <line x1="110" y1="65" x2="110" y2="255"
+        stroke="currentColor" strokeWidth="2.5" opacity="0.18"/>
+      {/* Horizontal */}
+      <line x1="35" y1="160" x2="185" y2="160"
+        stroke="currentColor" strokeWidth="2.5" opacity="0.18"/>
 
-      {/* ── LEFT ARM (off-hand, relaxed/hip) ── */}
-      <path d="M22 64 L6 98 L4 126 L18 128 L20 100 L32 66 Z" fill="currentColor"/>
-      <path d="M4 124 L-2 150 L8 158 L18 148 L12 126 Z" fill="currentColor"/>
-      <path d="M-2 154 Q-6 168 6 170 L18 168 L18 148 Z" fill="currentColor"/>
+      {/* ── Inner EYE — the filled almond/eye of the brand ── */}
+      {/* Outer eye */}
+      <ellipse cx="110" cy="160" rx="26" ry="44" fill="currentColor" opacity="0.95"/>
+      {/* Eye shine / inner highlight */}
+      <ellipse cx="110" cy="148" rx="8" ry="10"
+        fill="currentColor" opacity="0.30" style={{ mixBlendMode: 'screen' }}/>
 
-      {/* ── RIGHT ARM (raised, sword grip) ── */}
-      <path d="M138 62 L152 36 L156 14 L144 10 L140 32 L128 60 Z" fill="currentColor"/>
-      <path d="M154 14 L160 -6 L150 -10 L144 10 Z" fill="currentColor"/>
-      <ellipse cx="156" cy="-8" rx="9" ry="10" fill="currentColor"/>
+      {/* ── Notch details on top/bottom of outer oval ── */}
+      {/* Top notch — small cut at the apex of the oval */}
+      <path d="M 104 48 L 110 56 L 116 48" fill="none"
+        stroke="currentColor" strokeWidth="2" opacity="0.45"/>
+      {/* Bottom notch */}
+      <path d="M 104 272 L 110 264 L 116 272" fill="none"
+        stroke="currentColor" strokeWidth="2" opacity="0.45"/>
 
-      {/* ── SWORD ── */}
-      <ellipse cx="156" cy="-2" rx="6" ry="5" fill="currentColor" opacity="0.85"/>
-      <rect x="150" y="-26" width="12" height="28" rx="4" fill="currentColor"/>
-      <path d="M138 -26 L174 -20 L172 -14 L138 -20 Z" fill="currentColor"/>
-      <path d="M153 -26 L162 -78" stroke="currentColor" strokeWidth="7" strokeLinecap="round" fill="none"/>
-      <path d="M156 -28 L161 -78" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.42"/>
-      <circle cx="162" cy="-80" r="4.5" fill="currentColor" opacity="0.95"/>
+      {/* ── Bleeding drip from the eye — trademark Berserk detail ── */}
+      <path d="M 108 204 Q 106 228 110 248 Q 114 228 112 204 Z"
+        fill="currentColor" opacity="0.55"/>
 
-      {/* ── NECK + GORGET ── */}
-      <path d="M68 46 L92 46 L94 64 L66 64 Z" fill="currentColor"/>
-      <path d="M62 58 L98 58 L98 66 L62 66 Z" fill="currentColor" opacity="0.88"/>
-
-      {/* ── HEAD / HELMET ── */}
-      <path d="M52 28 Q52 4 80 2 Q108 4 108 28 L106 48 L80 52 L54 48 Z" fill="currentColor"/>
-      {/* Crest */}
-      <path d="M66 2 L80 -22 L94 2 Z" fill="currentColor" opacity="0.88"/>
-      <rect x="78" y="-10" width="4" height="12" rx="1.5" fill="currentColor" opacity="0.7"/>
-      {/* Visor */}
-      <path d="M56 26 L104 26 L102 40 Q80 46 58 40 Z" fill="currentColor" opacity="0.3"/>
-      {/* Eye glows */}
-      <rect x="60" y="27" width="16" height="4" rx="2" fill="currentColor" opacity="0.9"/>
-      <rect x="84" y="27" width="16" height="4" rx="2" fill="currentColor" opacity="0.9"/>
-      {/* Side helmet lines */}
-      <path d="M54 18 Q50 26 54 36" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.32"/>
-      <path d="M106 18 Q110 26 106 36" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.32"/>
-
-      {/* ── AURA RINGS ── */}
-      <ellipse cx="80" cy="140" rx="78" ry="130" fill="none" stroke="currentColor"
-        strokeWidth="1.5" opacity="0.11" className="aura-breathe"/>
-      <ellipse cx="80" cy="140" rx="62" ry="104" fill="none" stroke="currentColor"
-        strokeWidth="0.8" opacity="0.07" className="aura-breathe"
-        style={{ animationDelay: '0.8s' }}/>
+      {/* ── Second aura ring (inner) ── */}
+      <ellipse cx="110" cy="160" rx="96" ry="122"
+        fill="none" stroke="currentColor" strokeWidth="0.8" opacity="0.10"
+        className="aura-breathe" style={{ animationDelay: '1.2s' }}/>
     </svg>
   );
 }
@@ -379,11 +355,11 @@ export default function Me() {
           zIndex: 1,
         }}>
 
-        {/* Warrior silhouette — behind everything */}
+        {/* Brand of Sacrifice — behind everything */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none"
           style={{ zIndex: 0 }}>
-          <div style={{ width: 210, height: 368, opacity: 0.65, flexShrink: 0 }}>
-            <WarriorSilhouette color={rankSolid} />
+          <div style={{ opacity: 0.60, flexShrink: 0 }}>
+            <BrandOfSacrifice color={rankSolid} />
           </div>
         </div>
 

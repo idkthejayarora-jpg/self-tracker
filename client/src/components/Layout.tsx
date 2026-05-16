@@ -214,14 +214,22 @@ export default function Layout() {
         <div className="mb-3 px-2 flex items-center gap-2.5">
           <div
             onClick={handleLogoClick}
-            title="Click to change app logo"
-            className="shrink-0 rounded-xl overflow-hidden relative group cursor-pointer"
-            style={{ width: 34, height: 34, background: '#e3dfda', boxShadow: '0 0 0 1px rgba(0,0,0,0.1)', flexShrink: 0 }}>
+            title="Click to swap logo"
+            className="shrink-0 rounded-full overflow-hidden relative group cursor-pointer"
+            style={{ width: 36, height: 36, background: '#e3dfda', boxShadow: '0 0 0 2px rgba(255,255,255,0.10)', flexShrink: 0 }}>
             <img src={customLogo ?? '/logo.png'} alt="logo" className="w-full h-full object-cover" style={{ objectPosition: 'center top' }} />
-            {/* Upload overlay — visible on hover */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-              style={{ background: 'rgba(0,0,0,0.55)' }}>
-              <ImagePlus size={13} style={{ color: '#fff' }} />
+            {/* Camera overlay — always faintly visible, bright on hover */}
+            <div className="absolute inset-0 flex items-center justify-center transition-all duration-200"
+              style={{ background: 'rgba(0,0,0,0)', opacity: 0.6 }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,0.55)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,0)'; }}>
+              <ImagePlus size={12} style={{ color: '#fff', opacity: 0 }}
+                className="group-hover:opacity-100 transition-opacity duration-150" />
+            </div>
+            {/* Permanent tiny camera pip at bottom-right */}
+            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full flex items-center justify-center"
+              style={{ background: 'var(--s1)', border: '1px solid rgba(255,255,255,0.15)' }}>
+              <ImagePlus size={7} style={{ color: 'var(--t-faint)' }} />
             </div>
           </div>
           <div>
@@ -372,12 +380,12 @@ export default function Layout() {
         {/* Logo (mobile) — click to upload */}
         <div className="shrink-0 pt-3 pb-1">
           <div onClick={handleLogoClick} title="Change logo"
-            className="rounded-xl overflow-hidden relative group cursor-pointer"
-            style={{ width: 34, height: 34, background: '#e3dfda' }}>
+            className="rounded-full overflow-hidden relative group cursor-pointer"
+            style={{ width: 34, height: 34, background: '#e3dfda', boxShadow: '0 0 0 2px rgba(255,255,255,0.08)' }}>
             <img src={customLogo ?? '/logo.png'} alt="logo" className="w-full h-full object-cover" style={{ objectPosition: 'center top' }} />
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
               style={{ background: 'rgba(0,0,0,0.55)' }}>
-              <ImagePlus size={12} style={{ color: '#fff' }} />
+              <ImagePlus size={11} style={{ color: '#fff' }} />
             </div>
           </div>
         </div>
