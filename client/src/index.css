@@ -14,24 +14,24 @@
   /* Mobile left sidebar width */
   --sidebar-w: 56px;
 
-  /* ── Hunter's Command Room — Deep Navy Surfaces ── */
-  --s0: #07090f;   /* void    — page background */
-  --s1: #0c1018;   /* obsidian — card base */
-  --s2: #111827;   /* deep navy — raised cards */
-  --s3: #172030;   /* navy — inputs, interactive panels */
-  --s4: #1e2a40;   /* slate — hover states */
+  /* ── Pure Black Void — Cyberpunk Surfaces ── */
+  --s0: #000000;   /* void    — page background */
+  --s1: #080808;   /* obsidian — card base */
+  --s2: #0f0f0f;   /* raised — elevated surfaces */
+  --s3: #161616;   /* deep — inputs, interactive panels */
+  --s4: #1f1f1f;   /* surface — hover states */
 
-  /* Cyan-tinted borders for that system UI feel */
-  --b:  rgba(56,189,248,0.07);
-  --bh: rgba(56,189,248,0.18);
+  /* Neutral white borders — no blue cast */
+  --b:  rgba(255,255,255,0.07);
+  --bh: rgba(255,255,255,0.14);
 
   /* Gold — XP / rank / earned */
   --gold:     #f59e0b;
   --gold-rgb: 245 158 11;
 
-  /* Cyan — system labels / highlights */
-  --cyan:     #38bdf8;
-  --cyan-rgb: 56 189 248;
+  /* Cyan — neon system labels */
+  --cyan:     #00f5ff;
+  --cyan-rgb: 0 245 255;
 
   /* Adaptive text tokens */
   --t-head:  #f1f5f9;
@@ -102,7 +102,7 @@ input:focus, textarea:focus, select:focus {
   }
   .card:hover {
     border-color: var(--bh);
-    box-shadow: 0 0 0 1px rgba(56,189,248,0.08), 0 6px 24px rgba(0,0,0,0.3);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 6px 24px rgba(0,0,0,0.5);
     transform: translateY(-1px);
   }
 
@@ -121,8 +121,8 @@ input:focus, textarea:focus, select:focus {
     transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
   }
   .cmd-card:hover {
-    border-color: rgba(56,189,248,0.18);
-    box-shadow: 0 0 0 1px rgba(56,189,248,0.06), 0 0 24px rgba(56,189,248,0.06), 0 8px 28px rgba(0,0,0,0.35);
+    border-color: rgba(255,255,255,0.12);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 8px 28px rgba(0,0,0,0.5);
     transform: translateY(-2px);
   }
 
@@ -157,16 +157,16 @@ input:focus, textarea:focus, select:focus {
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 50% 0%, rgba(56,189,248,0.08) 0%, transparent 70%);
+    background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.04) 0%, transparent 70%);
     opacity: 0;
     transition: opacity 0.25s;
   }
   .action-tile:hover::before { opacity: 1; }
   .action-tile:hover {
     background: var(--s2);
-    border-color: rgba(56,189,248,0.22);
+    border-color: rgba(255,255,255,0.14);
     transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 0 0 1px rgba(56,189,248,0.10), 0 8px 28px rgba(0,0,0,0.3), 0 0 20px rgba(56,189,248,0.06);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 8px 28px rgba(0,0,0,0.5);
   }
   .action-tile:active { transform: scale(0.96) translateY(0); opacity: 0.85; }
 
@@ -182,8 +182,8 @@ input:focus, textarea:focus, select:focus {
   }
   .mission-card:last-child { border-bottom: none; }
   .mission-card:hover {
-    background: rgba(56,189,248,0.04);
-    box-shadow: inset 3px 0 0 rgba(56,189,248,0.35);
+    background: rgba(255,255,255,0.02);
+    box-shadow: inset 3px 0 0 rgb(var(--accent-rgb) / 0.5);
   }
 
   /* Rank badge */
@@ -599,8 +599,8 @@ input:focus, textarea:focus, select:focus {
   50%       { opacity: 1;   box-shadow: 0 0 8px 2px currentColor; }
 }
 @keyframes border-glow {
-  0%, 100% { box-shadow: 0 0 0 1px rgba(56,189,248,0.15), 0 0 12px rgba(56,189,248,0.05); }
-  50%       { box-shadow: 0 0 0 1px rgba(56,189,248,0.35), 0 0 24px rgba(56,189,248,0.12); }
+  0%, 100% { box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 0 12px rgba(255,255,255,0.03); }
+  50%       { box-shadow: 0 0 0 1px rgba(255,255,255,0.18), 0 0 24px rgba(255,255,255,0.06); }
 }
 @keyframes icon-bounce {
   0%, 100% { transform: translateY(0)   scale(1);    }
