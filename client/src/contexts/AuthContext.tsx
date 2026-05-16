@@ -3,8 +3,6 @@ import type { ReactNode } from 'react';
 import axios from 'axios';
 import type { User } from '../types';
 
-// Use plain axios (not the api instance) for the startup check so we don't
-// trigger our own auth:logout interceptor during the initial validation.
 const rawAxios = axios.create({ baseURL: '/api' });
 
 interface AuthContextValue {
@@ -17,6 +15,27 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue>(null!);
+
+// ── Decode a JWT payload without verifying the signature ──────────────────────
+// We only use this to read the expiry — the server still verifies the signature
+// on every API call. This lets us avoid a startup network roundtrip.
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(b64));
+  } catch {
+    return null;
+  }
+}
+
+function isTokenExpired(token: string): boolean {
+  const payload = decodeJwtPayload(token);
+  if (!payload || typeof payload.exp !== 'number') return false;
+  // Add 30s buffer to avoid edge-case race conditions
+  return payload.exp * 1000 < Date.now() - 30_000;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser]       = useState<User | null>(null);
@@ -31,7 +50,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  // ── Startup: validate stored token once ──────────────────────────────────
+  // ── Startup: decode stored token client-side ──────────────────────────────
+  // Kaamkaro AI approach: trust the JWT without a server call.
+  // The server verifies the signature on every API call anyway.
+  // This means Railway redeploys / brief server errors do NOT log you out.
   useEffect(() => {
     const stored = localStorage.getItem('token');
     if (!stored) {
@@ -39,26 +61,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    rawAxios
-      .get('/auth/me', { headers: { Authorization: `Bearer ${stored}` } })
-      .then(({ data }) => {
-        // Token is valid — restore session
+    // If the token is expired, clear it immediately
+    if (isTokenExpired(stored)) {
+      clearSession();
+      setLoading(false);
+      return;
+    }
+
+    // Token looks valid — restore session from localStorage
+    const storedUser = localStorage.getItem('user');
+    try {
+      const parsed: User = storedUser ? JSON.parse(storedUser) : null;
+      if (parsed) {
         setToken(stored);
-        setUser(data.user);
-        localStorage.setItem('user', JSON.stringify(data.user));
-      })
-      .catch(() => {
-        // Token is invalid OR server error — always clear and go to login.
-        // We don't try to "keep going" with a cached user because that leads
-        // to a state where the app looks logged in but every API call fails.
-        clearSession();
-      })
-      .finally(() => setLoading(false));
+        setUser(parsed);
+      } else {
+        // User object missing but token present — try to get user from payload
+        const payload = decodeJwtPayload(stored);
+        if (payload && payload.id && payload.username) {
+          const u: User = { id: payload.id as number, username: payload.username as string };
+          setToken(stored);
+          setUser(u);
+          localStorage.setItem('user', JSON.stringify(u));
+        } else {
+          clearSession();
+        }
+      }
+    } catch {
+      clearSession();
+    }
+
+    setLoading(false);
   }, [clearSession]);
 
   // ── Listen for 401s from any API call ────────────────────────────────────
-  // The axios interceptor in lib/api.ts dispatches 'auth:logout' on any 401.
-  // We handle it here so React state stays in sync without a hard page reload.
+  // The axios interceptor in lib/api.ts dispatches 'auth:logout' on token errors.
   useEffect(() => {
     const handler = () => clearSession();
     window.addEventListener('auth:logout', handler);

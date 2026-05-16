@@ -363,8 +363,11 @@ export default function Me() {
           </div>
         </div>
 
+        {/* Shimmer sheen */}
+        <div className="shimmer-slide" style={{ zIndex: 2 }} />
+
         {/* Card content overlay */}
-        <div className="relative flex flex-col items-center gap-4 px-5 py-8" style={{ zIndex: 1 }}>
+        <div className="relative flex flex-col items-center gap-4 px-5 py-8" style={{ zIndex: 3 }}>
           {/* Rank badge + label */}
           <div className="flex flex-col items-center gap-1.5">
             <div className="flex items-center gap-3">
@@ -499,9 +502,9 @@ export default function Me() {
             const val = stats[s.key as keyof typeof stats];
             return (
               <div key={s.key}
-                className="glass rounded-2xl px-3 py-3 space-y-2 stat-pop group transition-all duration-200"
+                className="glass glow-card rounded-2xl px-3 py-3 space-y-2 stat-pop group transition-all duration-200"
                 title={s.hint}
-                style={{ borderLeft: `3px solid ${s.color}`, animationDelay: `${idx * 60}ms` }}>
+                style={{ borderLeft: `3px solid ${s.color}`, animationDelay: `${idx * 60}ms`, '--gc': `${s.color}55` } as React.CSSProperties}>
                 <div className="flex items-center justify-between">
                   <s.Icon size={16} style={{ color: s.color }} />
                   <span className="text-3xl font-black tabular-nums font-mono"
@@ -588,8 +591,8 @@ export default function Me() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {skills.map(skill => (
             <div key={skill.id}
-              className="glass rounded-2xl px-3 py-3 group transition-all duration-200"
-              style={{ borderLeft: `3px solid rgb(var(--accent-rgb)/0.6)` }}>
+              className="glass glow-card rounded-2xl px-3 py-3 group transition-all duration-200"
+              style={{ borderLeft: `3px solid rgb(var(--accent-rgb)/0.6)`, '--gc': 'rgba(99,102,241,0.45)' } as React.CSSProperties}>
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-[28px] leading-none shrink-0">{skill.icon}</span>
@@ -723,8 +726,8 @@ export default function Me() {
             const isOverdue = claim.deadline && claim.deadline < new Date().toISOString().slice(0, 10);
             return (
               <div key={claim.id}
-                className="glass rounded-2xl px-4 py-3 transition-all duration-200"
-                style={{ borderLeft: `4px solid ${tc}`, opacity: claim.status === 'claimed' ? 0.7 : 1 }}>
+                className="glass glow-card rounded-2xl px-4 py-3 transition-all duration-200"
+                style={{ borderLeft: `4px solid ${tc}`, opacity: claim.status === 'claimed' ? 0.7 : 1, '--gc': `${tc}55` } as React.CSSProperties}>
                 <div className="flex items-start gap-3">
                   {/* Large icon column */}
                   <span className="text-[32px] leading-none mt-0.5 shrink-0">{claim.icon}</span>
@@ -763,12 +766,13 @@ export default function Me() {
                   <div className="flex items-center gap-1 shrink-0">
                     {claim.status === 'active' && (
                       <button onClick={() => claimIt(claim.id)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold tap claim-pulse-btn"
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold tap btn-glow claim-pulse-btn"
                         style={{
                           background: `${tc}18`,
                           color: tc,
                           border: `1px solid ${tc}40`,
                           '--cp': tc,
+                          '--btn-glow': `${tc}60`,
                           animation: 'claim-pulse 2.5s ease-in-out infinite',
                         } as React.CSSProperties}>
                         <Check size={10} /> Claim it
@@ -842,8 +846,8 @@ export default function Me() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {mentors.map(mentor => (
             <div key={mentor.id}
-              className="glass rounded-2xl px-4 py-4 group relative overflow-hidden"
-              style={{ boxShadow: 'inset 0 0 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+              className="glass glow-card rounded-2xl px-4 py-4 group relative overflow-hidden"
+              style={{ boxShadow: 'inset 0 0 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)', '--gc': 'rgba(168,85,247,0.4)' } as React.CSSProperties}>
               {/* Portrait frame corners */}
               <div className="absolute top-2 left-2 w-4 h-4 pointer-events-none"
                 style={{ borderTop: '1px solid rgba(255,255,255,0.15)', borderLeft: '1px solid rgba(255,255,255,0.15)' }} />

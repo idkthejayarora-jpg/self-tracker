@@ -239,8 +239,8 @@ export default function Layout() {
         </div>
 
         {/* Character snapshot */}
-        <div className="mx-1 mb-2 px-3 py-2.5 rounded-xl"
-          style={{ background: 'var(--s2)', border: `1px solid ${rankColor}25` }}>
+        <div className="mx-1 mb-2 px-3 py-2.5 rounded-xl glow-card"
+          style={{ background: 'var(--s2)', border: `1px solid ${rankColor}25`, '--gc': `${rankColor}50` } as React.CSSProperties}>
           <div className="flex items-center gap-2 mb-2">
             {/* Avatar */}
             <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl shrink-0"
@@ -248,12 +248,16 @@ export default function Layout() {
               {me?.profile.avatar_emoji || '⚔️'}
             </div>
             <div className="min-w-0">
-              {/* Rank badge */}
+              {/* Rank badge with radar rings */}
               <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-[9px] font-black px-2 py-0.5 rounded-full tracking-widest"
-                  style={{ background: `${rankColor}22`, color: rankColor, border: `1px solid ${rankColor}40` }}>
-                  {me?.rank || 'E'} RANK
-                </span>
+                <div className="relative inline-flex" style={{ color: rankColor }}>
+                  <span className="ring-ping ring-ping-2" />
+                  <span className="ring-ping ring-ping-3" />
+                  <span className="text-[9px] font-black px-2 py-0.5 rounded-full tracking-widest relative z-10"
+                    style={{ background: `${rankColor}22`, color: rankColor, border: `1px solid ${rankColor}40` }}>
+                    {me?.rank || 'E'} RANK
+                  </span>
+                </div>
               </div>
               <p className="text-xs font-bold text-head truncate leading-tight">
                 {me?.profile.character_name || user?.username || 'Hunter'}
@@ -285,6 +289,7 @@ export default function Layout() {
         <nav className="flex-1 space-y-0.5 overflow-y-auto hide-scroll pb-2">
           {NAV.map(({ to, icon: Icon, label, color }) => (
             <NavLink key={to} to={to} end={to === '/'}
+              className={({ isActive }) => isActive ? 'nav-active-glow' : ''}
               style={({ isActive }) => ({
                 display: 'flex',
                 alignItems: 'center',
@@ -293,12 +298,12 @@ export default function Layout() {
                 borderRadius: 10,
                 fontSize: 13,
                 fontWeight: isActive ? 600 : 500,
-                color: isActive ? 'var(--t-head)' : 'var(--t-faint)',
+                color: isActive ? color : 'var(--t-faint)',
                 background: isActive ? `${color}14` : 'transparent',
                 borderLeft: isActive ? `2px solid ${color}` : '2px solid transparent',
                 textDecoration: 'none',
                 transition: 'all 0.15s',
-              })}
+              } as React.CSSProperties)}
               onMouseEnter={e => {
                 if (e.currentTarget.getAttribute('aria-current') !== 'page') {
                   e.currentTarget.style.color = 'var(--t-body)';
@@ -313,6 +318,9 @@ export default function Layout() {
               }}>
               {({ isActive }) => (
                 <>
+                  {isActive && (
+                    <span className="active-dot shrink-0" style={{ color, background: color }} />
+                  )}
                   <Icon size={14} style={{ color: isActive ? color : 'inherit', flexShrink: 0, transition: 'color 0.15s' }} />
                   <span className="truncate">{label}</span>
                 </>

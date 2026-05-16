@@ -150,8 +150,8 @@ function SnapshotSection({ snap }: { snap: DashboardSnapshot }) {
       <div className="flex gap-2 overflow-x-auto pb-1 hide-scroll">
         {cards.map(c => (
           <Link key={c.to} to={c.to}
-            className="streak-node card-hover flex flex-col gap-1 no-underline"
-            style={{ minWidth: 86, textDecoration: 'none' }}>
+            className="streak-node card-hover glow-card flex flex-col gap-1 no-underline"
+            style={{ minWidth: 86, textDecoration: 'none', '--gc': `${c.color}55` } as React.CSSProperties}>
             <c.icon size={13} style={{ color: c.color }} />
             <p className="text-sm font-black text-head tabular-nums font-mono leading-tight mt-1">{c.primary}</p>
             <p className="text-[10px] font-semibold" style={{ color: 'var(--t-faint)' }}>{c.label}</p>
@@ -167,7 +167,9 @@ function SnapshotSection({ snap }: { snap: DashboardSnapshot }) {
 function RankPanel({ pts }: { pts: PointsSummary }) {
   const color = LEVEL_COLORS[pts.level] ?? '#6366f1';
   return (
-    <div className="cmd-card px-5 py-4">
+    <div className="cmd-card border-glow-anim px-5 py-4 relative overflow-hidden">
+      {/* Shimmer sheen */}
+      <div className="shimmer-slide" />
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-2.5">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
@@ -200,7 +202,7 @@ function RankPanel({ pts }: { pts: PointsSummary }) {
       </div>
       {/* XP bar */}
       <div className="xp-track mb-1.5">
-        <div className="xp-fill" style={{ width: `${pts.progressPct}%`, background: color, boxShadow: `0 0 8px ${color}60` }} />
+        <div className="xp-fill bar-fill" style={{ width: `${pts.progressPct}%`, background: color, boxShadow: `0 0 8px ${color}60` }} />
       </div>
       <div className="flex justify-between">
         <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>{pts.progressPct}% to next level</span>
@@ -796,8 +798,9 @@ export default function Dashboard() {
           <SysLabel icon={Zap} text="Quick Actions" color="#f59e0b" />
           <div className="grid grid-cols-3 gap-2">
             {ACTIONS.map(a => (
-              <Link key={a.to} to={a.to} className="action-tile">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+              <Link key={a.to} to={a.to} className="action-tile icon-bounce-hover"
+                style={{ '--gc': `${a.color}55` } as React.CSSProperties}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center bounce-icon"
                   style={{ background: `${a.color}18`, border: `1px solid ${a.color}30` }}>
                   <a.icon size={15} style={{ color: a.color }} />
                 </div>
@@ -815,7 +818,8 @@ export default function Dashboard() {
         <SysLabel icon={TrendingUp} text="Streak Intel" color="#f97316" />
         <div className="flex gap-2 overflow-x-auto pb-1 hide-scroll">
           {streakData.map((s, i) => (
-            <div key={s.label} className="streak-node card-hover" style={{ animationDelay: `${i * 50}ms` }}>
+            <div key={s.label} className="streak-node card-hover glow-card"
+              style={{ animationDelay: `${i * 50}ms`, '--gc': `${s.color}55` } as React.CSSProperties}>
               <s.icon size={13} style={{ color: s.color, marginBottom: 4 }} />
               <p className="text-2xl font-black font-mono tabular-nums" style={{ color: s.color, textShadow: `0 0 10px ${s.color}60` }}>
                 {s.value}

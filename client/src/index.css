@@ -98,29 +98,35 @@ input:focus, textarea:focus, select:focus {
     background-color: var(--s1);
     border: 1px solid var(--b);
     border-radius: 14px;
-    transition: border-color 0.2s;
+    transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
   }
-  .card:hover { border-color: var(--bh); }
+  .card:hover {
+    border-color: var(--bh);
+    box-shadow: 0 0 0 1px rgba(56,189,248,0.08), 0 6px 24px rgba(0,0,0,0.3);
+    transform: translateY(-1px);
+  }
 
   .card-raised {
     background-color: var(--s2);
     border: 1px solid var(--b);
     border-radius: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
 
-  /* Command card — the new primary card style */
+  /* Command card */
   .cmd-card {
     background-color: var(--s1);
     border: 1px solid var(--b);
     border-radius: 16px;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
   }
   .cmd-card:hover {
-    border-color: rgba(56,189,248,0.14);
-    box-shadow: 0 0 20px rgba(56,189,248,0.03), 0 4px 16px rgba(0,0,0,0.3);
+    border-color: rgba(56,189,248,0.18);
+    box-shadow: 0 0 0 1px rgba(56,189,248,0.06), 0 0 24px rgba(56,189,248,0.06), 0 8px 28px rgba(0,0,0,0.35);
+    transform: translateY(-2px);
   }
 
-  /* System label — cyan uppercase tracking label */
+  /* System label */
   .sys-label {
     font-size: 10px;
     font-weight: 700;
@@ -130,7 +136,7 @@ input:focus, textarea:focus, select:focus {
     opacity: 0.75;
   }
 
-  /* Action tile — quick-action button */
+  /* Action tile */
   .action-tile {
     display: flex;
     flex-direction: column;
@@ -142,28 +148,43 @@ input:focus, textarea:focus, select:focus {
     background: var(--s1);
     border: 1px solid var(--b);
     cursor: pointer;
-    transition: all 0.18s;
+    transition: all 0.22s cubic-bezier(0.34,1.2,0.64,1);
     text-decoration: none;
+    position: relative;
+    overflow: hidden;
   }
+  .action-tile::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(56,189,248,0.08) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .action-tile:hover::before { opacity: 1; }
   .action-tile:hover {
     background: var(--s2);
-    border-color: var(--bh);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    border-color: rgba(56,189,248,0.22);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 0 0 1px rgba(56,189,248,0.10), 0 8px 28px rgba(0,0,0,0.3), 0 0 20px rgba(56,189,248,0.06);
   }
-  .action-tile:active { transform: scale(0.95); opacity: 0.8; }
+  .action-tile:active { transform: scale(0.96) translateY(0); opacity: 0.85; }
 
-  /* Mission card — task as quest */
+  /* Mission card */
   .mission-card {
     display: flex;
     align-items: flex-start;
     gap: 12px;
     padding: 10px 14px;
-    transition: background 0.15s;
+    transition: background 0.18s, box-shadow 0.18s;
     border-bottom: 1px solid var(--b);
+    position: relative;
   }
   .mission-card:last-child { border-bottom: none; }
-  .mission-card:hover { background: rgba(56,189,248,0.03); }
+  .mission-card:hover {
+    background: rgba(56,189,248,0.04);
+    box-shadow: inset 3px 0 0 rgba(56,189,248,0.35);
+  }
 
   /* Rank badge */
   .rank-badge {
@@ -180,22 +201,37 @@ input:focus, textarea:focus, select:focus {
     height: 6px;
     border-radius: 99px;
     background: var(--s3);
-    overflow: hidden;
+    overflow: visible;
+    position: relative;
   }
   .xp-fill {
     height: 100%;
     border-radius: 99px;
-    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    transition: width 1s cubic-bezier(0.34,1.2,0.64,1);
     position: relative;
     overflow: hidden;
   }
+  /* Shimmer sweep */
   .xp-fill::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%);
     background-size: 200% 100%;
     animation: xp-shimmer 2s linear infinite;
+  }
+  /* Glowing tip at the end of every filled bar */
+  .xp-fill::before {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: -3px;
+    bottom: -3px;
+    width: 6px;
+    border-radius: 99px;
+    background: white;
+    filter: blur(3px);
+    opacity: 0.75;
   }
 
   /* Streak node */
@@ -208,6 +244,12 @@ input:focus, textarea:focus, select:focus {
     border: 1px solid var(--b);
     min-width: 80px;
     flex-shrink: 0;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.18s;
+  }
+  .streak-node:hover {
+    border-color: var(--bh);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
   }
 
   /* Adaptive text */
@@ -216,6 +258,38 @@ input:focus, textarea:focus, select:focus {
   .text-body  { color: var(--t-body);  }
   .text-head  { color: var(--t-head);  }
 
+  /* ── Glow card — apply to any card with --gc custom property for color ── */
+  .glow-card {
+    transition: box-shadow 0.28s, border-color 0.28s, transform 0.22s cubic-bezier(0.34,1.2,0.64,1);
+  }
+  .glow-card:hover {
+    box-shadow: 0 0 0 1px var(--gc, rgba(99,102,241,0.25)),
+                0 0 20px var(--gc, rgba(99,102,241,0.12)),
+                0 10px 30px rgba(0,0,0,0.35);
+    border-color: var(--gc, rgba(99,102,241,0.35)) !important;
+    transform: translateY(-2px);
+  }
+
+  /* ── Radar ping — absolute child expanding ring ── */
+  .ring-ping {
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    border: 1px solid currentColor;
+    animation: ring-expand 2s ease-out infinite;
+    pointer-events: none;
+  }
+  .ring-ping-2 { animation-delay: 0.8s; }
+  .ring-ping-3 { animation-delay: 1.6s; }
+
+  /* ── Glowing active dot ── */
+  .active-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: dot-glow 2s ease-in-out infinite;
+  }
+
   /* ── Apple-style glassmorphism ── */
   .glass {
     background: rgba(255,255,255,0.04);
@@ -223,6 +297,11 @@ input:focus, textarea:focus, select:focus {
     -webkit-backdrop-filter: blur(20px) saturate(160%);
     border: 1px solid rgba(255,255,255,0.08);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.28);
+    transition: box-shadow 0.25s, border-color 0.25s;
+  }
+  .glass:hover {
+    border-color: rgba(255,255,255,0.12);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.35);
   }
   .glass-strong {
     background: rgba(255,255,255,0.07);
@@ -342,15 +421,19 @@ html.light .streak-node { background: var(--s1); }
   to   { opacity: 1; transform: translateX(0)      scale(1);   }
 }
 
-.anim-page > * { animation: fadeUp 0.3s ease-out both; }
-.anim-page > *:nth-child(1) { animation-delay: 0.00s; }
-.anim-page > *:nth-child(2) { animation-delay: 0.05s; }
-.anim-page > *:nth-child(3) { animation-delay: 0.10s; }
-.anim-page > *:nth-child(4) { animation-delay: 0.15s; }
-.anim-page > *:nth-child(5) { animation-delay: 0.20s; }
-.anim-page > *:nth-child(6) { animation-delay: 0.25s; }
-.anim-page > *:nth-child(7) { animation-delay: 0.30s; }
-.anim-page > *:nth-child(8) { animation-delay: 0.35s; }
+.anim-page > * { animation: fadeUp 0.35s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-page > *:nth-child(1)  { animation-delay: 0.00s; }
+.anim-page > *:nth-child(2)  { animation-delay: 0.04s; }
+.anim-page > *:nth-child(3)  { animation-delay: 0.08s; }
+.anim-page > *:nth-child(4)  { animation-delay: 0.12s; }
+.anim-page > *:nth-child(5)  { animation-delay: 0.16s; }
+.anim-page > *:nth-child(6)  { animation-delay: 0.20s; }
+.anim-page > *:nth-child(7)  { animation-delay: 0.24s; }
+.anim-page > *:nth-child(8)  { animation-delay: 0.28s; }
+.anim-page > *:nth-child(9)  { animation-delay: 0.32s; }
+.anim-page > *:nth-child(10) { animation-delay: 0.36s; }
+.anim-page > *:nth-child(11) { animation-delay: 0.40s; }
+.anim-page > *:nth-child(12) { animation-delay: 0.44s; }
 
 .slide-up      { animation: slideUp     0.38s cubic-bezier(0.16,1,0.3,1) both; }
 .scale-in      { animation: scaleIn     0.28s cubic-bezier(0.34,1.4,0.64,1) both; }
@@ -366,22 +449,51 @@ html.light .streak-node { background: var(--s1); }
 .hide-scroll { scrollbar-width: none; -ms-overflow-style: none; }
 .hide-scroll::-webkit-scrollbar { display: none; }
 
-/* Tap feedback — spring-y press with subtle opacity */
-.tap { transition: transform 0.12s cubic-bezier(0.34,1.6,0.64,1), opacity 0.1s; cursor: pointer; }
+/* Tap feedback — spring-y press */
+.tap { transition: transform 0.14s cubic-bezier(0.34,1.6,0.64,1), opacity 0.1s, box-shadow 0.15s; cursor: pointer; }
 .tap:hover  { transform: translateY(-1px); }
-.tap:active { transform: scale(0.94) translateY(0); opacity: 0.75; }
+.tap:active { transform: scale(0.93) translateY(0); opacity: 0.72; }
+
+/* Button glow on hover — add class + set --btn-glow CSS var */
+.btn-glow { transition: box-shadow 0.22s, transform 0.15s; }
+.btn-glow:hover {
+  box-shadow: 0 0 16px var(--btn-glow, rgba(99,102,241,0.45)), 0 4px 12px rgba(0,0,0,0.25);
+  transform: translateY(-1px);
+}
 
 /* Nav hover */
 .nav-item { transition: background 0.15s, color 0.15s; }
 .nav-item:hover { background: var(--s2) !important; color: var(--t-head) !important; }
 
+/* Nav active glow — colored glow ring behind active nav item */
+.nav-active-glow {
+  position: relative;
+}
+.nav-active-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px currentColor;
+  opacity: 0.2;
+  pointer-events: none;
+  animation: glow-pulse 2.5s ease-in-out infinite;
+}
+
 /* Progress bar */
-.bar-fill { transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+.bar-fill { transition: width 0.7s cubic-bezier(0.34,1.1,0.64,1); }
 
 /* Card lift on hover */
-.card-hover { transition: transform 0.18s, box-shadow 0.18s; }
-.card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.3); }
-html.light .card-hover:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.09); }
+.card-hover { transition: transform 0.22s cubic-bezier(0.34,1.2,0.64,1), box-shadow 0.22s; }
+.card-hover:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.35); }
+html.light .card-hover:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.10); }
+
+/* Input glow on focus */
+input:focus, textarea:focus, select:focus {
+  border-color: rgb(var(--accent-rgb) / 0.5) !important;
+  box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.10), 0 0 12px rgb(var(--accent-rgb) / 0.12) !important;
+  outline: none;
+}
 
 /* ── New: Glow pulse for rank elements ── */
 @keyframes glow-pulse {
@@ -470,4 +582,86 @@ html.light .card-hover:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.09); }
   background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%);
   background-size: 200% 100%;
   animation: xp-shimmer 2.5s linear infinite;
+}
+
+/* ── Glow rings & radar pings ────────────────────────────────────────────── */
+@keyframes ring-expand {
+  0%   { transform: scale(1);   opacity: 0.55; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+@keyframes ring-orbit {
+  0%   { transform: rotate(0deg) scale(1); }
+  50%  { transform: rotate(180deg) scale(1.03); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+@keyframes dot-glow {
+  0%, 100% { opacity: 0.6; box-shadow: 0 0 0 0 currentColor; }
+  50%       { opacity: 1;   box-shadow: 0 0 8px 2px currentColor; }
+}
+@keyframes border-glow {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(56,189,248,0.15), 0 0 12px rgba(56,189,248,0.05); }
+  50%       { box-shadow: 0 0 0 1px rgba(56,189,248,0.35), 0 0 24px rgba(56,189,248,0.12); }
+}
+@keyframes icon-bounce {
+  0%, 100% { transform: translateY(0)   scale(1);    }
+  40%       { transform: translateY(-4px) scale(1.12); }
+  60%       { transform: translateY(-2px) scale(1.05); }
+}
+@keyframes number-tick {
+  from { transform: translateY(8px) scale(0.85); opacity: 0; }
+  to   { transform: translateY(0)   scale(1);    opacity: 1; }
+}
+@keyframes shimmer-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+/* Utility classes */
+.ring-ping           { position: absolute; inset: -4px; border-radius: inherit; border: 1px solid currentColor; animation: ring-expand 2s ease-out infinite; pointer-events: none; }
+.ring-ping-2         { animation-delay: 0.75s; }
+.ring-ping-3         { animation-delay: 1.5s; }
+.active-dot          { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; animation: dot-glow 2s ease-in-out infinite; }
+.border-glow-anim    { animation: border-glow 3s ease-in-out infinite; }
+.icon-bounce-hover:hover .bounce-icon { animation: icon-bounce 0.55s cubic-bezier(0.34,1.56,0.64,1); }
+.number-tick         { animation: number-tick 0.3s cubic-bezier(0.34,1.4,0.64,1) both; }
+
+/* Shimmer overlay — place as absolute child over any card/bar */
+.shimmer-slide {
+  position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: inherit;
+}
+.shimmer-slide::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 25%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+  animation: shimmer-slide 3.5s ease-in-out infinite;
+}
+
+/* Glowing nav active state */
+.nav-active-glow::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 2px;
+  border-radius: 99px;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Stat bar glow tip */
+.bar-fill {
+  position: relative;
+}
+.bar-fill::after {
+  content: '';
+  position: absolute;
+  right: -1px; top: -2px; bottom: -2px;
+  width: 4px;
+  border-radius: 99px;
+  background: white;
+  filter: blur(2px);
+  opacity: 0.65;
+  pointer-events: none;
 }

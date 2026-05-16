@@ -9,29 +9,35 @@ api.interceptors.request.use(config => {
   return config;
 });
 
-// On 401 — clear the session and fire a DOM event.
-// AuthContext listens for this event and sets user→null, which lets
-// React's ProtectedRoute naturally navigate to /login.
-// We DO NOT do window.location.href here — that causes a hard reload
-// which re-mounts the app and creates redirect loops.
+// On 401 — only clear the session when the token itself is bad (expired or invalid).
+// We intentionally ignore 'session_gone' (user not in DB) and 'Unauthorized'
+// from routes like change-password — those are recoverable without a full logout.
+// Matching Kaamkaro AI: only a cryptographically bad token forces a re-login.
+const TOKEN_FATAL_ERRORS = new Set(['token_expired', 'invalid_token']);
+
 api.interceptors.response.use(
   res => res,
   err => {
     if (err.response?.status === 401) {
-      // Save username so the login form can pre-fill it
-      try {
-        const stored = localStorage.getItem('user');
-        if (stored) {
-          const u = JSON.parse(stored);
-          if (u?.username) localStorage.setItem('lastUsername', u.username);
-        }
-      } catch (_) {}
+      const errCode: string = err.response?.data?.error ?? '';
+      const isFatalTokenError = TOKEN_FATAL_ERRORS.has(errCode);
 
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      if (isFatalTokenError) {
+        // Save username so the login form can pre-fill it
+        try {
+          const stored = localStorage.getItem('user');
+          if (stored) {
+            const u = JSON.parse(stored);
+            if (u?.username) localStorage.setItem('lastUsername', u.username);
+          }
+        } catch (_) {}
 
-      // Signal React — AuthContext clears user state → ProtectedRoute redirects
-      window.dispatchEvent(new Event('auth:logout'));
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+
+        // Signal React — AuthContext clears user state → ProtectedRoute redirects
+        window.dispatchEvent(new Event('auth:logout'));
+      }
     }
     return Promise.reject(err);
   }
