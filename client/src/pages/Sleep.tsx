@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Moon, Plus, Trash2, Star, Clock, AlertCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import api from '../lib/api';
@@ -30,6 +30,41 @@ const emptyForm = () => ({
   date: new Date().toISOString().slice(0, 10),
   bedtime: '', wake_time: '', quality: 3, notes: '',
 });
+
+function StarField() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current; if (!c) return;
+    const ctx = c.getContext('2d'); if (!ctx) return;
+    const W = c.offsetWidth || 600; const H = 130;
+    c.width = W; c.height = H;
+    const stars = Array.from({ length: 80 }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      r: Math.random() * 1.5 + 0.3,
+      speed: Math.random() * 0.3 + 0.05,
+      phase: Math.random() * Math.PI * 2,
+    }));
+    let raf: number;
+    function draw() {
+      ctx!.clearRect(0, 0, W, H);
+      const t = Date.now() / 1000;
+      stars.forEach(s => {
+        const alpha = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
+        ctx!.beginPath();
+        ctx!.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        const color = Math.random() > 0.9 ? '#f0abfc' : (Math.random() > 0.7 ? '#a78bfa' : '#ffffff');
+        ctx!.fillStyle = color;
+        ctx!.globalAlpha = alpha;
+        ctx!.fill();
+      });
+      ctx!.globalAlpha = 1;
+      raf = requestAnimationFrame(draw);
+    }
+    draw();
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return <canvas ref={ref} style={{ width: '100%', height: 130, display: 'block' }} />;
+}
 
 export default function Sleep() {
   const [logs, setLogs] = useState<SleepLog[]>([]);
@@ -101,6 +136,49 @@ export default function Sleep() {
 
   return (
     <div className="max-w-xl space-y-4 anim-page">
+
+      {/* ── DEEP SPACE HEADER ── */}
+      <div className="relative overflow-hidden rounded-2xl mb-4"
+        style={{ background: '#000', border: '1px solid #a78bfa25', minHeight: 130 }}>
+        {/* Starfield */}
+        <div className="absolute inset-0 pointer-events-none">
+          <StarField />
+        </div>
+        {/* Dark bottom vignette */}
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%)' }} />
+        {/* Nebula glow spot */}
+        <div className="absolute pointer-events-none" style={{
+          right: -20, top: -20, width: 150, height: 150, borderRadius: '50%',
+          background: 'radial-gradient(circle, #a78bfa15 0%, transparent 70%)',
+          filter: 'blur(20px)',
+        }} />
+        {/* HUD corners */}
+        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #a78bfa', borderLeft: '1.5px solid #a78bfa', opacity: 0.7 }} />
+        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #a78bfa', borderRight: '1.5px solid #a78bfa', opacity: 0.7 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #a78bfa', borderLeft: '1.5px solid #a78bfa', opacity: 0.7 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #a78bfa', borderRight: '1.5px solid #a78bfa', opacity: 0.7 }} />
+        {/* Top violet edge */}
+        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent, #a78bfa80, transparent)', boxShadow: '0 0 10px #a78bfa' }} />
+        {/* Content */}
+        <div className="relative z-10 px-5 py-5">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#a78bfa', opacity: 0.6 }}>VOID://</span>
+            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">HYPERSLEEP_ARCHIVE</span>
+            <span className="cursor-blink font-mono" style={{ color: '#a78bfa', fontSize: 11 }}>▌</span>
+          </div>
+          <h1 className="text-3xl font-black tracking-tight leading-none text-white"
+            style={{ textShadow: '0 0 40px #a78bfa50' }}>
+            HYPERSLEEP ARCHIVE
+          </h1>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#a78bfa', opacity: 0.5 }}>
+            // rest cycle analysis — neural recovery metrics
+          </p>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent, #a78bfa30, transparent)' }} />
+      </div>
 
       {/* Header */}
       <div className="flex items-center justify-between">

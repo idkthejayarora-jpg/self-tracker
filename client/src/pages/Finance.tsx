@@ -28,6 +28,24 @@ const emptyEntry = (type: 'income' | 'expense') => ({
   note: '',
 });
 
+const TICKER_ITEMS = ['STRENGTH +12','HABITS 87%','SLEEP 7.2h','FOCUS 94%','NET +₹4.2k','XP +240','STREAK 14d','TASKS 8/10','WELLNESS 91%'];
+function TickerTape() {
+  const items = [...TICKER_ITEMS, ...TICKER_ITEMS];
+  return (
+    <div style={{ overflow: 'hidden', height: 20, display: 'flex', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 24, animation: 'ticker-scroll 18s linear infinite', whiteSpace: 'nowrap' }}>
+        {items.map((item, i) => (
+          <span key={i} className="text-[9px] font-black font-mono tracking-widest"
+            style={{ color: item.includes('+') ? '#00ff9f' : item.includes('%') ? '#00f5ff' : '#ff003c',
+              textShadow: `0 0 6px currentColor` }}>
+            ▶ {item}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Finance() {
   const now = new Date();
   const [month, setMonth] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
@@ -146,6 +164,56 @@ export default function Finance() {
 
   return (
     <div className="max-w-xl space-y-4 anim-page">
+
+      {/* ── ASSET NEXUS HEADER ── */}
+      <div className="relative overflow-hidden rounded-2xl mb-4"
+        style={{ background: '#000', border: '1px solid #00ff9f20' }}>
+        {/* Financial grid */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          backgroundImage: 'linear-gradient(rgba(0,255,159,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,159,0.03) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+        {/* HUD corners */}
+        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #00ff9f', borderLeft: '1.5px solid #00ff9f', opacity: 0.7 }} />
+        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #00ff9f', borderRight: '1.5px solid #00ff9f', opacity: 0.7 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #00ff9f', borderLeft: '1.5px solid #00ff9f', opacity: 0.7 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #00ff9f', borderRight: '1.5px solid #00ff9f', opacity: 0.7 }} />
+        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent, #00ff9f80, transparent)', boxShadow: '0 0 10px #00ff9f' }} />
+        {/* Main content */}
+        <div className="relative z-10 px-5 pt-5 pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#00ff9f', opacity: 0.6 }}>MKT://</span>
+                <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">ASSET_NEXUS</span>
+                <span className="cursor-blink font-mono" style={{ color: '#00ff9f', fontSize: 11 }}>▌</span>
+              </div>
+              <h1 className="text-3xl font-black tracking-tight leading-none text-white"
+                style={{ textShadow: '0 0 40px #00ff9f40' }}>
+                ASSET NEXUS
+              </h1>
+              <p className="font-mono text-[10px] mt-1" style={{ color: '#00ff9f', opacity: 0.5 }}>
+                // financial intelligence — wealth tracking protocol
+              </p>
+            </div>
+            {/* Live indicator */}
+            <div className="flex flex-col items-center gap-1 shrink-0">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full" style={{ background: '#00ff9f', boxShadow: '0 0 8px #00ff9f', animation: 'neon-pulse 1.5s ease-in-out infinite' }} />
+                <span className="text-[9px] font-black tracking-widest" style={{ color: '#00ff9f' }}>LIVE</span>
+              </div>
+              <span className="text-[8px] font-mono opacity-30 text-white">MARKET OPEN</span>
+            </div>
+          </div>
+        </div>
+        {/* Ticker tape */}
+        <div className="relative z-10 px-2 pb-2">
+          <div style={{ borderTop: '1px solid rgba(0,255,159,0.1)', paddingTop: 6 }}>
+            <TickerTape />
+          </div>
+        </div>
+      </div>
 
       {/* Header + month selector */}
       <div>
