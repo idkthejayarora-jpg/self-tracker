@@ -127,10 +127,12 @@ function SidebarClock() {
     }, 1000);
     return () => clearInterval(id);
   }, []);
-  const hh  = now.getHours().toString().padStart(2, '0');
-  const mm  = now.getMinutes().toString().padStart(2, '0');
-  const ss  = now.getSeconds().toString().padStart(2, '0');
-  const day = now.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  const raw  = now.getHours();
+  const hh   = ((raw % 12) || 12).toString().padStart(2, '0');
+  const mm   = now.getMinutes().toString().padStart(2, '0');
+  const ss   = now.getSeconds().toString().padStart(2, '0');
+  const ampm = raw < 12 ? 'AM' : 'PM';
+  const day  = now.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
   const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
   const secTick = now.getSeconds() !== prevSec;
   const minPct  = Math.round((now.getSeconds() / 60) * 100);
@@ -143,6 +145,7 @@ function SidebarClock() {
         <span className="tabular-nums font-black" style={{ fontSize: 26, color: 'rgb(var(--accent-rgb-light))', letterSpacing: '-0.03em' }}>{mm}</span>
         <span key={ss} className={`tabular-nums font-semibold ml-1 ${secTick ? 'clock-seconds-tick' : ''}`}
           style={{ fontSize: 11, color: 'var(--t-faint)', marginBottom: 2 }}>:{ss}</span>
+        <span className="font-black ml-1" style={{ fontSize: 11, color: 'rgb(var(--accent-rgb) / 0.6)', marginBottom: 2 }}>{ampm}</span>
       </div>
       <p className="text-[9px] font-black tracking-[0.14em]" style={{ color: 'var(--t-faint)' }}>{day} · {date}</p>
       <div className="mt-2 h-[2px] rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
@@ -157,13 +160,16 @@ function SidebarClock() {
 function MobileSidebarClock() {
   const [now, setNow] = useState(new Date());
   useEffect(() => { const id = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(id); }, []);
-  const hh = now.getHours().toString().padStart(2, '0');
-  const mm = now.getMinutes().toString().padStart(2, '0');
+  const raw  = now.getHours();
+  const hh   = ((raw % 12) || 12).toString().padStart(2, '0');
+  const mm   = now.getMinutes().toString().padStart(2, '0');
+  const ampm = raw < 12 ? 'AM' : 'PM';
   return (
     <div className="flex flex-col items-center py-1.5 w-full" style={{ borderBottom: '1px solid var(--b)' }}>
       <span className="tabular-nums font-black text-[10px]" style={{ color: 'rgb(var(--accent-rgb-light))' }}>{hh}</span>
       <span className="clock-colon font-black text-[10px]" style={{ color: 'rgb(var(--accent-rgb) / 0.35)' }}>:</span>
       <span className="tabular-nums font-black text-[10px]" style={{ color: 'rgb(var(--accent-rgb-light))' }}>{mm}</span>
+      <span className="font-black text-[8px]" style={{ color: 'rgb(var(--accent-rgb) / 0.5)' }}>{ampm}</span>
     </div>
   );
 }
