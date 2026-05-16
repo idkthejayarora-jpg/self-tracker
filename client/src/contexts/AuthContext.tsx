@@ -27,23 +27,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Validate token on startup. The server auto-restores the user row if the DB
-    // was wiped (as long as the JWT signature is still valid), so this call should
-    // almost always succeed for a legitimately logged-in user.
+    // Validate the stored token with the server on every app start.
+    // If the server returns 401 (invalid/expired token, or session_gone after
+    // a DB reset) we clear localStorage so the login screen appears.
+    // On a network error (server cold-start, offline) we keep the cached user
+    // so the app doesn't flash the login screen unnecessarily.
     api.get('/auth/me', { headers: { Authorization: `Bearer ${stored}` } })
       .then(({ data }) => {
         setToken(stored);
         setUser(data.user);
-        // Keep stored user in sync with server response
+        // Keep cached user in sync with server
         localStorage.setItem('user', JSON.stringify(data.user));
       })
       .catch((err) => {
         if (!err.response) {
-          // Network error / server cold-start — trust localStorage and keep going
+          // Network / cold-start — keep going with cached user
           try { setToken(stored); setUser(JSON.parse(storedUser)); } catch (_) {}
           return;
         }
-        // Genuine 401 (expired / invalid token) — clear and go to login
+        // 401 — token is bad or session is gone. Clear everything → login screen.
         try {
           const u = JSON.parse(storedUser);
           if (u?.username) localStorage.setItem('lastUsername', u.username);
