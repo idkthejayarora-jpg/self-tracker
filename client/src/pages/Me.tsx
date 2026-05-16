@@ -327,7 +327,7 @@ export default function Me() {
         {/* Brand of Sacrifice — behind everything */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none"
           style={{ zIndex: 0 }}>
-          <div style={{ opacity: isLight ? 0.20 : 0.60, flexShrink: 0 }}>
+          <div style={{ opacity: isLight ? 0.18 : 0.55, width: 'min(260px, 68%)', flexShrink: 0 }}>
             <BrandOfSacrifice color={rankSolid} />
           </div>
         </div>
