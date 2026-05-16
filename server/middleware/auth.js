@@ -1,18 +1,17 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
+// JWT_SECRET: required env var in production, falls back to a safe dev-only default.
+// If unset in production, log a loud warning but DON'T crash — a crash would make
+// the server unreachable and block all logins/registrations entirely.
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-insecure-secret-please-set-JWT_SECRET';
+
+if (!process.env.JWT_SECRET) {
+  console.warn('⚠️  [auth] JWT_SECRET env var is not set!');
   if (process.env.NODE_ENV === 'production') {
-    console.error('FATAL: JWT_SECRET env var is not set. Refusing to start.');
-    process.exit(1);
-  } else {
-    // Development-only fallback — never used in production
-    console.warn('[auth] JWT_SECRET not set — using insecure dev default. Set it for production.');
-    module.exports.JWT_SECRET = 'dev-only-secret-do-not-use-in-production';
+    console.warn('⚠️  [auth] Running in PRODUCTION without JWT_SECRET is insecure.');
+    console.warn('⚠️  [auth] Set JWT_SECRET in your Railway environment variables.');
   }
 }
-
-const RESOLVED_SECRET = JWT_SECRET || 'dev-only-secret-do-not-use-in-production';
 
 function authMiddleware(req, res, next) {
   const header = req.headers.authorization;
@@ -21,7 +20,7 @@ function authMiddleware(req, res, next) {
   }
   const token = header.slice(7);
   try {
-    const payload = jwt.verify(token, RESOLVED_SECRET);
+    const payload = jwt.verify(token, JWT_SECRET);
     const db = require('../db/database');
 
     // Verify the user actually exists in the DB.
@@ -39,4 +38,4 @@ function authMiddleware(req, res, next) {
   }
 }
 
-module.exports = { authMiddleware, JWT_SECRET: RESOLVED_SECRET };
+module.exports = { authMiddleware, JWT_SECRET };

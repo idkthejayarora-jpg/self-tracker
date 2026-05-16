@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
 
@@ -14,7 +14,6 @@ export default function Login() {
   const [mode, setMode] = useState<Mode>('login');
   const [username, setUsername] = useState(() => localStorage.getItem('lastUsername') || '');
   const [password, setPassword] = useState('');
-  const [serverRestart, setServerRestart] = useState(() => sessionStorage.getItem('authMsg') === 'server_restart');
   const [showPw, setShowPw] = useState(false);
 
   // Reset-specific
@@ -32,23 +31,39 @@ export default function Login() {
     setSuccess('');
   }
 
+  // Clear any stuck localStorage state (stale token, cached user, etc.)
+  function clearStuckSession() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    sessionStorage.clear();
+    setError('');
+    setSuccess('Session cleared — try logging in again.');
+  }
+
   async function handleLoginRegister(e: FormEvent) {
     e.preventDefault();
     setError('');
+    setSuccess('');
+    if (!username.trim()) { setError('Username is required'); return; }
+    if (!password)        { setError('Password is required'); return; }
     setLoading(true);
     try {
-      if (mode === 'login') await login(username, password);
-      else await register(username, password);
+      if (mode === 'login') await login(username.trim(), password);
+      else                  await register(username.trim(), password);
       navigate('/');
     } catch (err: any) {
+      // Show the server's error message directly — don't auto-switch modes or
+      // second-guess the server. Wrong password should say wrong password, not
+      // silently flip to register mode.
       const msg: string = err.response?.data?.error || '';
-      // If login fails because user doesn't exist (DB wiped), guide them to register
-      if (mode === 'login' && (msg === 'Invalid credentials' || err.response?.status === 401)) {
-        setError('');
-        setServerRestart(true);
-        switchMode('register');
+      if (!err.response) {
+        setError('Cannot reach the server. Check your connection and try again.');
+      } else if (err.response.status === 409) {
+        setError('That username is already taken — try a different one.');
+      } else if (err.response.status === 401) {
+        setError('Incorrect username or password.');
       } else {
-        setError(msg || 'Something went wrong. Check your connection.');
+        setError(msg || 'Something went wrong. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -65,14 +80,14 @@ export default function Login() {
     try {
       await api.post('/auth/reset', {
         secret: resetCode,
-        username,
+        username: username.trim(),
         new_password: newPw,
       });
-      setSuccess('Password reset! You can now sign in.');
+      setSuccess('Password reset! Signing you in…');
       setResetCode(''); setNewPw(''); setConfirmPw('');
       setTimeout(() => switchMode('login'), 1800);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Reset failed. Check your recovery code.');
+      setError(err.response?.data?.error || 'Reset failed. Check your recovery code and username.');
     } finally {
       setLoading(false);
     }
@@ -95,21 +110,9 @@ export default function Login() {
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold text-head tracking-tight">Self Tracker</h1>
-            <p className="text-sm mt-0.5" style={{ color: '#71717a' }}>Track tasks, journal, streaks & more</p>
+            <p className="text-sm mt-0.5" style={{ color: 'var(--t-faint)' }}>Your personal command room</p>
           </div>
         </div>
-
-        {/* Server restart banner */}
-        {serverRestart && (
-          <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl text-xs"
-            style={{ background: 'rgb(245 158 11 / 0.10)', color: '#fbbf24', border: '1px solid rgb(245 158 11 / 0.25)' }}>
-            <AlertCircle size={13} className="mt-0.5 shrink-0" />
-            <span>
-              <strong>Server was restarted</strong> — your account data was cleared.
-              Just re-register with your usual username &amp; password to continue.
-            </span>
-          </div>
-        )}
 
         {/* Mode tabs */}
         <div className="flex rounded-xl p-1 gap-1" style={{ background: 'var(--s2)', border: '1px solid var(--b)' }}>
@@ -118,9 +121,9 @@ export default function Login() {
               className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize"
               style={{
                 background: mode === m ? 'var(--s3)' : 'transparent',
-                color: mode === m ? 'rgb(var(--accent-rgb-light))' : '#71717a',
+                color: mode === m ? 'rgb(var(--accent-rgb-light))' : 'var(--t-faint)',
               }}>
-              {m === 'reset' ? 'Reset' : m === 'login' ? 'Sign in' : 'Register'}
+              {m === 'reset' ? 'Forgot password' : m === 'login' ? 'Sign in' : 'Register'}
             </button>
           ))}
         </div>
@@ -132,14 +135,14 @@ export default function Login() {
           {(mode === 'login' || mode === 'register') && (
             <form onSubmit={handleLoginRegister} className="space-y-3">
               <div>
-                <label className="text-[11px] font-semibold" style={{ color: '#71717a' }}>USERNAME</label>
+                <label className="text-[11px] font-semibold" style={{ color: 'var(--t-faint)' }}>USERNAME</label>
                 <input type="text" value={username} onChange={e => setUsername(e.target.value)}
-                  placeholder="your_username" required autoFocus autoCapitalize="none"
+                  placeholder="your_username" required autoFocus autoCapitalize="none" autoCorrect="off"
                   className={inputCls} style={{ marginTop: 4 }} />
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold" style={{ color: '#71717a' }}>PASSWORD</label>
+                <label className="text-[11px] font-semibold" style={{ color: 'var(--t-faint)' }}>PASSWORD</label>
                 <div className="relative mt-1">
                   <input type={showPw ? 'text' : 'password'} value={password}
                     onChange={e => setPassword(e.target.value)}
@@ -147,31 +150,45 @@ export default function Login() {
                     className={inputCls} style={{ paddingRight: 40 }} />
                   <button type="button" onClick={() => setShowPw(s => !s)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 tap"
-                    style={{ color: '#52525b' }}>
+                    style={{ color: 'var(--t-faint)' }}>
                     {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
+                {mode === 'register' && (
+                  <p className="text-[10px] mt-1" style={{ color: 'var(--t-faint)' }}>Minimum 4 characters</p>
+                )}
               </div>
 
               {error && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
                   style={{ background: 'rgb(239 68 68 / 0.08)', color: '#f87171', border: '1px solid rgb(239 68 68 / 0.2)' }}>
-                  <AlertCircle size={13} />{error}
+                  <AlertCircle size={13} className="shrink-0" />{error}
+                </div>
+              )}
+              {success && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
+                  style={{ background: 'rgb(34 197 94 / 0.08)', color: '#4ade80', border: '1px solid rgb(34 197 94 / 0.2)' }}>
+                  <CheckCircle2 size={13} className="shrink-0" />{success}
                 </div>
               )}
 
               <button type="submit" disabled={loading}
                 className="w-full py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 tap"
                 style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
-                {loading ? '...' : mode === 'login' ? 'Sign in' : 'Create account'}
+                {loading ? (mode === 'login' ? 'Signing in…' : 'Creating account…') : (mode === 'login' ? 'Sign in' : 'Create account')}
               </button>
 
               {mode === 'login' && (
-                <p className="text-center text-xs" style={{ color: '#52525b' }}>
-                  Forgot your password?{' '}
+                <p className="text-center text-xs" style={{ color: 'var(--t-faint)' }}>
+                  No account?{' '}
+                  <button type="button" onClick={() => switchMode('register')}
+                    className="underline tap" style={{ color: 'rgb(var(--accent-rgb-light))' }}>
+                    Register here
+                  </button>
+                  {' · '}
                   <button type="button" onClick={() => switchMode('reset')}
                     className="underline tap" style={{ color: 'rgb(var(--accent-rgb-light))' }}>
-                    Reset it
+                    Forgot password
                   </button>
                 </p>
               )}
@@ -181,35 +198,34 @@ export default function Login() {
           {/* ── Reset password ── */}
           {mode === 'reset' && (
             <form onSubmit={handleReset} className="space-y-3">
-              <p className="text-xs mb-1" style={{ color: '#71717a' }}>
-                Enter your username, the recovery code set in your server environment
-                (<code className="text-[11px]" style={{ color: 'rgb(var(--accent-rgb-light))' }}>RESET_SECRET</code>),
-                and your new password.
+              <p className="text-xs mb-1" style={{ color: 'var(--t-faint)' }}>
+                Enter your username, the <code className="text-[11px]" style={{ color: 'rgb(var(--accent-rgb-light))' }}>RESET_SECRET</code> from
+                your server environment, and a new password.
               </p>
 
               <div>
-                <label className="text-[11px] font-semibold" style={{ color: '#71717a' }}>USERNAME</label>
+                <label className="text-[11px] font-semibold" style={{ color: 'var(--t-faint)' }}>USERNAME</label>
                 <input type="text" value={username} onChange={e => setUsername(e.target.value)}
                   placeholder="your_username" required autoCapitalize="none"
                   className={inputCls} style={{ marginTop: 4 }} />
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold" style={{ color: '#71717a' }}>RECOVERY CODE</label>
+                <label className="text-[11px] font-semibold" style={{ color: 'var(--t-faint)' }}>RECOVERY CODE</label>
                 <input type="password" value={resetCode} onChange={e => setResetCode(e.target.value)}
                   placeholder="Server RESET_SECRET value" required
                   className={inputCls} style={{ marginTop: 4 }} />
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold" style={{ color: '#71717a' }}>NEW PASSWORD</label>
+                <label className="text-[11px] font-semibold" style={{ color: 'var(--t-faint)' }}>NEW PASSWORD</label>
                 <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)}
                   placeholder="••••••••" required minLength={4}
                   className={inputCls} style={{ marginTop: 4 }} />
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold" style={{ color: '#71717a' }}>CONFIRM PASSWORD</label>
+                <label className="text-[11px] font-semibold" style={{ color: 'var(--t-faint)' }}>CONFIRM PASSWORD</label>
                 <input type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)}
                   placeholder="••••••••" required
                   className={inputCls} style={{ marginTop: 4 }} />
@@ -218,23 +234,23 @@ export default function Login() {
               {error && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
                   style={{ background: 'rgb(239 68 68 / 0.08)', color: '#f87171', border: '1px solid rgb(239 68 68 / 0.2)' }}>
-                  <AlertCircle size={13} />{error}
+                  <AlertCircle size={13} className="shrink-0" />{error}
                 </div>
               )}
               {success && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
                   style={{ background: 'rgb(34 197 94 / 0.08)', color: '#4ade80', border: '1px solid rgb(34 197 94 / 0.2)' }}>
-                  <CheckCircle2 size={13} />{success}
+                  <CheckCircle2 size={13} className="shrink-0" />{success}
                 </div>
               )}
 
               <button type="submit" disabled={loading}
                 className="w-full py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 tap"
                 style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
-                {loading ? 'Resetting...' : 'Reset password'}
+                {loading ? 'Resetting…' : 'Reset password'}
               </button>
 
-              <p className="text-center text-xs" style={{ color: '#52525b' }}>
+              <p className="text-center text-xs" style={{ color: 'var(--t-faint)' }}>
                 Remember it?{' '}
                 <button type="button" onClick={() => switchMode('login')}
                   className="underline tap" style={{ color: 'rgb(var(--accent-rgb-light))' }}>
@@ -244,6 +260,16 @@ export default function Login() {
             </form>
           )}
         </div>
+
+        {/* Stuck? Clear session escape hatch */}
+        <div className="text-center">
+          <button type="button" onClick={clearStuckSession}
+            className="inline-flex items-center gap-1.5 text-[11px] tap"
+            style={{ color: 'var(--t-faint)' }}>
+            <RefreshCw size={11} /> Clear stuck session
+          </button>
+        </div>
+
       </div>
     </div>
   );
