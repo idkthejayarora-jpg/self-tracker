@@ -173,9 +173,14 @@ export default function Me() {
   const [claimsTab, setClaimsTab] = useState<'active' | 'claimed'>('active');
 
   // Add-form visibility
-  const [showSkillForm, setShowSkillForm] = useState(false);
-  const [showClaimForm, setShowClaimForm] = useState(false);
+  const [showSkillForm, setShowSkillForm]   = useState(false);
+  const [showClaimForm, setShowClaimForm]   = useState(false);
   const [showMentorForm, setShowMentorForm] = useState(false);
+
+  // Edit state — which card is open for editing
+  const [editingSkillId,  setEditingSkillId]  = useState<number | null>(null);
+  const [editingClaimId,  setEditingClaimId]  = useState<number | null>(null);
+  const [editingMentorId, setEditingMentorId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     const res = await api.get<MeSummary>('/me/summary');
@@ -218,6 +223,18 @@ export default function Me() {
     setData(d => d ? { ...d, skills: d.skills.filter(s => s.id !== id) } : d);
   }
 
+  async function saveSkillEdit(e: React.FormEvent<HTMLFormElement>, id: number) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const res = await api.patch<MeSkill>(`/me/skills/${id}`, {
+      name: fd.get('name'), icon: fd.get('icon') || '⚡',
+      level: Number(fd.get('level')) || 1, xp: Math.min(100, Math.max(0, Number(fd.get('xp')) || 0)),
+      description: fd.get('description'), category: fd.get('category') || 'general',
+    });
+    setData(d => d ? { ...d, skills: d.skills.map(s => s.id === id ? res.data : s) } : d);
+    setEditingSkillId(null);
+  }
+
   // ── Claims ──
   async function addClaim(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -243,6 +260,20 @@ export default function Me() {
     setData(d => d ? { ...d, claims: d.claims.filter(c => c.id !== id) } : d);
   }
 
+  async function saveClaimEdit(e: React.FormEvent<HTMLFormElement>, id: number) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const res = await api.patch<MeClaim>(`/me/claims/${id}`, {
+      title: fd.get('title'), icon: fd.get('icon') || '🎯',
+      description: fd.get('description'),
+      claim_type: fd.get('claim_type') || 'quest',
+      deadline: fd.get('deadline') || null,
+      reward_text: fd.get('reward_text'),
+    });
+    setData(d => d ? { ...d, claims: d.claims.map(c => c.id === id ? res.data : c) } : d);
+    setEditingClaimId(null);
+  }
+
   // ── Mentors ──
   async function addMentor(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -265,6 +296,20 @@ export default function Me() {
   async function deleteMentor(id: number) {
     await api.delete(`/me/mentors/${id}`);
     setData(d => d ? { ...d, mentors: d.mentors.filter(m => m.id !== id) } : d);
+  }
+
+  async function saveMentorEdit(e: React.FormEvent<HTMLFormElement>, id: number) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const res = await api.patch<MeMentor>(`/me/mentors/${id}`, {
+      name: fd.get('name'), icon: fd.get('icon') || '👤',
+      era: fd.get('era'), domain: fd.get('domain'),
+      trait: fd.get('trait'),
+      progress: Math.min(100, Math.max(0, Number(fd.get('progress')) || 0)),
+      notes: fd.get('notes'),
+    });
+    setData(d => d ? { ...d, mentors: d.mentors.map(m => m.id === id ? res.data : m) } : d);
+    setEditingMentorId(null);
   }
 
   // ── Hooks must all be called before any early return ──────────────────────
@@ -560,61 +605,114 @@ export default function Me() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {skills.map(skill => (
             <div key={skill.id}
-              className="glass glow-card rounded-2xl px-3 py-3 group transition-all duration-200"
+              className="glass glow-card rounded-2xl overflow-hidden group transition-all duration-200"
               style={{ borderLeft: `3px solid rgb(var(--accent-rgb)/0.6)`, '--gc': 'rgba(99,102,241,0.45)' } as React.CSSProperties}>
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-[28px] leading-none shrink-0">{skill.icon}</span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-head truncate">{skill.name}</p>
-                    {skill.description && (
-                      <p className="text-[11px] truncate" style={{ color: 'var(--t-faint)' }}>{skill.description}</p>
-                    )}
+
+              {/* ── Edit form (shown when editing) ── */}
+              {editingSkillId === skill.id ? (
+                <form onSubmit={e => saveSkillEdit(e, skill.id)} className="px-3 py-3 space-y-2 scale-in">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-black tracking-widest" style={{ color: 'rgb(var(--accent-rgb-light))' }}>EDITING SKILL</span>
+                    <div className="h-px flex-1" style={{ background: 'var(--b)' }} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input name="name" required defaultValue={skill.name} placeholder="Skill name" className={ff}
+                      style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                    <input name="icon" defaultValue={skill.icon} placeholder="Emoji" className={ff}
+                      style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                  </div>
+                  <input name="description" defaultValue={skill.description} placeholder="Description" className={ff}
+                    style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <p className="text-[9px] mb-1 font-bold tracking-wider" style={{ color: 'var(--t-faint)' }}>LEVEL</p>
+                      <input name="level" type="number" min={1} max={999} defaultValue={skill.level} className={ff}
+                        style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                    </div>
+                    <div>
+                      <p className="text-[9px] mb-1 font-bold tracking-wider" style={{ color: 'var(--t-faint)' }}>XP (0–100)</p>
+                      <input name="xp" type="number" min={0} max={100} defaultValue={skill.xp} className={ff}
+                        style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                    </div>
+                    <div>
+                      <p className="text-[9px] mb-1 font-bold tracking-wider" style={{ color: 'var(--t-faint)' }}>CATEGORY</p>
+                      <input name="category" defaultValue={skill.category} placeholder="general" className={ff}
+                        style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button type="submit" className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-white tap"
+                      style={{ background: 'rgb(var(--accent-rgb))' }}>
+                      <Check size={11} /> Save
+                    </button>
+                    <button type="button" onClick={() => setEditingSkillId(null)}
+                      className="px-3 py-1.5 rounded-xl text-xs tap" style={{ color: 'var(--t-faint)' }}>Cancel</button>
+                  </div>
+                </form>
+              ) : (
+                /* ── Normal view ── */
+                <div className="px-3 py-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-[28px] leading-none shrink-0">{skill.icon}</span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-head truncate">{skill.name}</p>
+                        {skill.description && (
+                          <p className="text-[11px] truncate" style={{ color: 'var(--t-faint)' }}>{skill.description}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className="text-[10px] font-black px-2 py-1 rounded-md"
+                        style={{ background: '#39ff1412', color: '#39ff14', border: '1px solid #39ff1440', textShadow: '0 0 8px #39ff1480' }}>
+                        LVL {skill.level}
+                      </span>
+                      <button onClick={() => levelUpSkill(skill.id)}
+                        className="w-6 h-6 rounded flex items-center justify-center tap opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
+                        style={{ background: '#22c55e18', border: '1px solid #22c55e30' }} title="Level up">
+                        <ChevronUp size={11} style={{ color: '#22c55e' }} />
+                      </button>
+                      <button onClick={() => { setEditingSkillId(skill.id); setShowSkillForm(false); }}
+                        className="w-6 h-6 rounded flex items-center justify-center tap opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: 'var(--s3)' }} title="Edit skill">
+                        <Pencil size={9} style={{ color: 'rgb(var(--accent-rgb-light))' }} />
+                      </button>
+                      <button onClick={() => deleteSkill(skill.id)}
+                        className="w-6 h-6 rounded flex items-center justify-center tap opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: 'var(--s3)' }}>
+                        <X size={9} style={{ color: '#ef4444' }} />
+                      </button>
+                    </div>
+                  </div>
+                  {/* XP bar — click to set XP directly */}
+                  <div className="mt-2.5 space-y-1">
+                    <div className="relative h-3 rounded-full overflow-hidden cursor-pointer"
+                      style={{ background: 'var(--s3)' }}
+                      title={`${skill.xp}/100 XP — click to set`}
+                      onClick={e => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const pct = Math.round(Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100)));
+                        api.patch<MeSkill>(`/me/skills/${skill.id}`, { xp: pct }).then(r =>
+                          setData(d => d ? { ...d, skills: d.skills.map(s => s.id === skill.id ? r.data : s) } : d)
+                        );
+                      }}>
+                      <div className="h-full rounded-full bar-fill"
+                        style={{
+                          width: `${skill.xp}%`,
+                          background: `linear-gradient(90deg, rgb(var(--accent-rgb)/0.8), rgb(var(--accent-rgb)))`,
+                          boxShadow: `0 0 6px rgb(var(--accent-rgb)/0.6)`,
+                        }} />
+                      {skill.xp > 0 && (
+                        <div className="xp-shimmer-bar absolute inset-0 rounded-full" style={{ mixBlendMode: 'screen' }} />
+                      )}
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'var(--t-muted)' }}>{skill.category}</span>
+                      <span className="text-[10px] font-mono font-semibold" style={{ color: 'var(--t-muted)' }}>{skill.xp}/100 XP</span>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  {/* LVL badge — neon gold */}
-                  <span className="text-[10px] font-black px-2 py-1 rounded-md"
-                    style={{
-                      background: '#39ff1412',
-                      color: '#39ff14',
-                      border: '1px solid #39ff1440',
-                      textShadow: '0 0 8px #39ff1480',
-                    }}>
-                    LVL {skill.level}
-                  </span>
-                  <button onClick={() => levelUpSkill(skill.id)}
-                    className="w-6 h-6 rounded flex items-center justify-center tap opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
-                    style={{ background: '#22c55e18', border: '1px solid #22c55e30' }}
-                    title="Level up">
-                    <ChevronUp size={11} style={{ color: '#22c55e' }} />
-                  </button>
-                  <button onClick={() => deleteSkill(skill.id)}
-                    className="w-6 h-6 rounded flex items-center justify-center tap opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ background: 'var(--s3)' }}>
-                    <X size={9} style={{ color: '#ef4444' }} />
-                  </button>
-                </div>
-              </div>
-              {/* XP bar with shimmer */}
-              <div className="mt-2.5 space-y-1">
-                <div className="relative h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
-                  <div className="h-full rounded-full bar-fill"
-                    style={{
-                      width: `${skill.xp}%`,
-                      background: `linear-gradient(90deg, rgb(var(--accent-rgb)/0.8), rgb(var(--accent-rgb)))`,
-                      boxShadow: `0 0 6px rgb(var(--accent-rgb)/0.6)`,
-                    }} />
-                  {/* Shimmer overlay */}
-                  {skill.xp > 0 && (
-                    <div className="xp-shimmer-bar absolute inset-0 rounded-full" style={{ mixBlendMode: 'screen' }} />
-                  )}
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'var(--t-muted)' }}>{skill.category}</span>
-                  <span className="text-[10px] font-mono font-semibold" style={{ color: 'var(--t-muted)' }}>{skill.xp}/100 XP</span>
-                </div>
-              </div>
+              )}
             </div>
           ))}
         </div>
@@ -695,65 +793,119 @@ export default function Me() {
             const isOverdue = claim.deadline && claim.deadline < new Date().toISOString().slice(0, 10);
             return (
               <div key={claim.id}
-                className="glass glow-card rounded-2xl px-4 py-3 transition-all duration-200"
+                className="glass glow-card rounded-2xl overflow-hidden transition-all duration-200 group"
                 style={{ borderLeft: `4px solid ${tc}`, opacity: claim.status === 'claimed' ? 0.7 : 1, '--gc': `${tc}55` } as React.CSSProperties}>
-                <div className="flex items-start gap-3">
-                  {/* Large icon column */}
-                  <span className="text-[32px] leading-none mt-0.5 shrink-0">{claim.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-semibold text-head">{claim.title}</p>
-                      <Chip label={claim.claim_type} color={tc} />
-                      {claim.status === 'claimed' && (
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full"
-                          style={{
-                            background: '#f59e0b18',
-                            color: '#f59e0b',
-                            border: '1px solid #f59e0b50',
-                            textShadow: '0 0 8px #f59e0b80',
-                          }}>
-                          ✓ CLAIMED
-                        </span>
-                      )}
+
+                {/* ── Edit form ── */}
+                {editingClaimId === claim.id ? (
+                  <form onSubmit={e => saveClaimEdit(e, claim.id)} className="px-4 py-3 space-y-2 scale-in">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-black tracking-widest" style={{ color: tc }}>EDITING CLAIM</span>
+                      <div className="h-px flex-1" style={{ background: 'var(--b)' }} />
                     </div>
-                    {claim.description && (
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--t-muted)' }}>{claim.description}</p>
-                    )}
-                    <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                      {claim.deadline && (
-                        <span className="text-[10px]" style={{ color: isOverdue ? '#ef4444' : 'var(--t-faint)' }}>
-                          {isOverdue ? '⚠ ' : ''}⏳ {claim.deadline}
-                        </span>
-                      )}
-                      {claim.reward_text && (
-                        <span className="text-[10px] flex items-center gap-1" style={{ color: '#f59e0b' }}>
-                          <Trophy size={9} /> {claim.reward_text}
-                        </span>
-                      )}
+                    <div className="grid grid-cols-2 gap-2">
+                      <input name="title" required defaultValue={claim.title} placeholder="Quest title" className={ff}
+                        style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                      <input name="icon" defaultValue={claim.icon} placeholder="Emoji" className={ff}
+                        style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {claim.status === 'active' && (
-                      <button onClick={() => claimIt(claim.id)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold tap btn-glow claim-pulse-btn"
-                        style={{
-                          background: `${tc}18`,
-                          color: tc,
-                          border: `1px solid ${tc}40`,
-                          '--cp': tc,
-                          '--btn-glow': `${tc}60`,
-                          animation: 'claim-pulse 2.5s ease-in-out infinite',
-                        } as React.CSSProperties}>
-                        <Check size={10} /> Claim it
+                    <input name="description" defaultValue={claim.description} placeholder="Description" className={ff}
+                      style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <p className="text-[9px] mb-1 font-bold tracking-wider" style={{ color: 'var(--t-faint)' }}>TYPE</p>
+                        <select name="claim_type" defaultValue={claim.claim_type} className={ff}
+                          style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }}>
+                          <option value="quest">Quest</option>
+                          <option value="achievement">Achievement</option>
+                          <option value="legacy">Legacy</option>
+                        </select>
+                      </div>
+                      <div>
+                        <p className="text-[9px] mb-1 font-bold tracking-wider" style={{ color: 'var(--t-faint)' }}>DEADLINE</p>
+                        <input name="deadline" type="date" defaultValue={claim.deadline ?? ''} className={ff}
+                          style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                      </div>
+                    </div>
+                    <input name="reward_text" defaultValue={claim.reward_text} placeholder="Reward / what you unlock" className={ff}
+                      style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                    <div className="flex gap-2 pt-1">
+                      <button type="submit" className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-white tap"
+                        style={{ background: 'rgb(var(--accent-rgb))' }}>
+                        <Check size={11} /> Save
                       </button>
-                    )}
-                    <button onClick={() => deleteClaim(claim.id)}
-                      className="w-6 h-6 flex items-center justify-center rounded tap"
-                      style={{ color: 'var(--t-faint)' }}>
-                      <Trash2 size={11} />
-                    </button>
+                      <button type="button" onClick={() => setEditingClaimId(null)}
+                        className="px-3 py-1.5 rounded-xl text-xs tap" style={{ color: 'var(--t-faint)' }}>Cancel</button>
+                    </div>
+                  </form>
+                ) : (
+                  /* ── Normal view ── */
+                  <div className="px-4 py-3">
+                    <div className="flex items-start gap-3">
+                      {/* Large icon column */}
+                      <span className="text-[32px] leading-none mt-0.5 shrink-0">{claim.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-semibold text-head">{claim.title}</p>
+                          <Chip label={claim.claim_type} color={tc} />
+                          {claim.status === 'claimed' && (
+                            <span className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                              style={{
+                                background: '#f59e0b18',
+                                color: '#f59e0b',
+                                border: '1px solid #f59e0b50',
+                                textShadow: '0 0 8px #f59e0b80',
+                              }}>
+                              ✓ CLAIMED
+                            </span>
+                          )}
+                        </div>
+                        {claim.description && (
+                          <p className="text-xs mt-0.5" style={{ color: 'var(--t-muted)' }}>{claim.description}</p>
+                        )}
+                        <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                          {claim.deadline && (
+                            <span className="text-[10px]" style={{ color: isOverdue ? '#ef4444' : 'var(--t-faint)' }}>
+                              {isOverdue ? '⚠ ' : ''}⏳ {claim.deadline}
+                            </span>
+                          )}
+                          {claim.reward_text && (
+                            <span className="text-[10px] flex items-center gap-1" style={{ color: '#f59e0b' }}>
+                              <Trophy size={9} /> {claim.reward_text}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {claim.status === 'active' && (
+                          <button onClick={() => claimIt(claim.id)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold tap btn-glow claim-pulse-btn"
+                            style={{
+                              background: `${tc}18`,
+                              color: tc,
+                              border: `1px solid ${tc}40`,
+                              '--cp': tc,
+                              '--btn-glow': `${tc}60`,
+                              animation: 'claim-pulse 2.5s ease-in-out infinite',
+                            } as React.CSSProperties}>
+                            <Check size={10} /> Claim it
+                          </button>
+                        )}
+                        <button
+                          onClick={() => { setEditingClaimId(claim.id); setShowClaimForm(false); }}
+                          className="w-6 h-6 flex items-center justify-center rounded tap opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{ background: 'var(--s3)' }} title="Edit claim">
+                          <Pencil size={9} style={{ color: tc }} />
+                        </button>
+                        <button onClick={() => deleteClaim(claim.id)}
+                          className="w-6 h-6 flex items-center justify-center rounded tap opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{ color: 'var(--t-faint)' }}>
+                          <Trash2 size={11} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             );
           })}
@@ -815,78 +967,130 @@ export default function Me() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {mentors.map(mentor => (
             <div key={mentor.id}
-              className="glass glow-card rounded-2xl px-4 py-4 group relative overflow-hidden"
+              className="glass glow-card rounded-2xl group relative overflow-hidden"
               style={{ '--gc': 'rgba(168,85,247,0.4)' } as React.CSSProperties}>
-              {/* Portrait frame corners */}
-              <div className="absolute top-2 left-2 w-4 h-4 pointer-events-none"
-                style={{ borderTop: '1px solid var(--b)', borderLeft: '1px solid var(--b)' }} />
-              <div className="absolute top-2 right-2 w-4 h-4 pointer-events-none"
-                style={{ borderTop: '1px solid var(--b)', borderRight: '1px solid var(--b)' }} />
-              <div className="absolute bottom-2 left-2 w-4 h-4 pointer-events-none"
-                style={{ borderBottom: '1px solid var(--b)', borderLeft: '1px solid var(--b)' }} />
-              <div className="absolute bottom-2 right-2 w-4 h-4 pointer-events-none"
-                style={{ borderBottom: '1px solid var(--b)', borderRight: '1px solid var(--b)' }} />
 
-              <div className="flex items-start justify-between gap-2 mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-[32px] leading-none">{mentor.icon}</span>
+              {/* ── Edit form ── */}
+              {editingMentorId === mentor.id ? (
+                <form onSubmit={e => saveMentorEdit(e, mentor.id)} className="px-4 py-4 space-y-2 scale-in">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-black tracking-widest" style={{ color: '#a855f7' }}>EDITING MENTOR</span>
+                    <div className="h-px flex-1" style={{ background: 'var(--b)' }} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input name="name" required defaultValue={mentor.name} placeholder="Name" className={ff}
+                      style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                    <input name="icon" defaultValue={mentor.icon} placeholder="Emoji" className={ff}
+                      style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input name="era" defaultValue={mentor.era} placeholder="Era (Ancient / Modern…)" className={ff}
+                      style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                    <input name="domain" defaultValue={mentor.domain} placeholder="Domain (Stoicism…)" className={ff}
+                      style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                  </div>
+                  <input name="trait" defaultValue={mentor.trait} placeholder="Trait you're embodying" className={ff}
+                    style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
                   <div>
-                    <p className="text-sm font-bold text-head">{mentor.name}</p>
-                    <div className="flex items-center gap-1 flex-wrap mt-0.5">
-                      {mentor.era && <Chip label={mentor.era} color="#6366f1" />}
-                      {mentor.domain && <Chip label={mentor.domain} color="#a855f7" />}
+                    <p className="text-[9px] mb-1 font-bold tracking-wider" style={{ color: 'var(--t-faint)' }}>EMBODIMENT PROGRESS (0–100)</p>
+                    <input name="progress" type="number" min={0} max={100} defaultValue={mentor.progress} className={ff}
+                      style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                  </div>
+                  <textarea name="notes" defaultValue={mentor.notes} placeholder="Notes / quotes…" rows={2}
+                    className={`${ff} resize-none`}
+                    style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                  <div className="flex gap-2 pt-1">
+                    <button type="submit" className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-white tap"
+                      style={{ background: 'rgb(var(--accent-rgb))' }}>
+                      <Check size={11} /> Save
+                    </button>
+                    <button type="button" onClick={() => setEditingMentorId(null)}
+                      className="px-3 py-1.5 rounded-xl text-xs tap" style={{ color: 'var(--t-faint)' }}>Cancel</button>
+                  </div>
+                </form>
+              ) : (
+                /* ── Normal view ── */
+                <div className="px-4 py-4">
+                  {/* Portrait frame corners */}
+                  <div className="absolute top-2 left-2 w-4 h-4 pointer-events-none"
+                    style={{ borderTop: '1px solid var(--b)', borderLeft: '1px solid var(--b)' }} />
+                  <div className="absolute top-2 right-2 w-4 h-4 pointer-events-none"
+                    style={{ borderTop: '1px solid var(--b)', borderRight: '1px solid var(--b)' }} />
+                  <div className="absolute bottom-2 left-2 w-4 h-4 pointer-events-none"
+                    style={{ borderBottom: '1px solid var(--b)', borderLeft: '1px solid var(--b)' }} />
+                  <div className="absolute bottom-2 right-2 w-4 h-4 pointer-events-none"
+                    style={{ borderBottom: '1px solid var(--b)', borderRight: '1px solid var(--b)' }} />
+
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[32px] leading-none">{mentor.icon}</span>
+                      <div>
+                        <p className="text-sm font-bold text-head">{mentor.name}</p>
+                        <div className="flex items-center gap-1 flex-wrap mt-0.5">
+                          {mentor.era && <Chip label={mentor.era} color="#6366f1" />}
+                          {mentor.domain && <Chip label={mentor.domain} color="#a855f7" />}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => { setEditingMentorId(mentor.id); setShowMentorForm(false); }}
+                        className="w-6 h-6 flex items-center justify-center rounded tap opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: 'var(--s3)' }} title="Edit mentor">
+                        <Pencil size={9} style={{ color: '#a855f7' }} />
+                      </button>
+                      <button onClick={() => deleteMentor(mentor.id)}
+                        className="w-6 h-6 flex items-center justify-center rounded tap opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ color: 'var(--t-faint)' }}>
+                        <Trash2 size={12} />
+                      </button>
                     </div>
                   </div>
-                </div>
-                <button onClick={() => deleteMentor(mentor.id)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity tap"
-                  style={{ color: 'var(--t-faint)' }}>
-                  <Trash2 size={12} />
-                </button>
-              </div>
 
-              {mentor.trait && (
-                <p className="text-xs mb-2 flex items-center gap-1" style={{ color: 'rgb(var(--accent-rgb-light))' }}>
-                  <Star size={10} /> Embodying: <span className="font-semibold">{mentor.trait}</span>
-                </p>
-              )}
+                  {mentor.trait && (
+                    <p className="text-xs mb-2 flex items-center gap-1" style={{ color: 'rgb(var(--accent-rgb-light))' }}>
+                      <Star size={10} /> Embodying: <span className="font-semibold">{mentor.trait}</span>
+                    </p>
+                  )}
 
-              {/* Embodiment progress — thicker 8px bar */}
-              <div className="space-y-1 mb-2">
-                <div className="flex justify-between">
-                  <span className="text-[10px] font-bold tracking-wider uppercase" style={{ color: 'var(--t-muted)' }}>EMBODIMENT</span>
-                  <span className="text-[10px] font-black font-mono"
-                    style={{
-                      color: 'rgb(var(--accent-rgb-light))',
-                      textShadow: mentor.progress > 0 ? '0 0 8px rgb(var(--accent-rgb)/0.6)' : 'none',
-                    }}>
-                    {mentor.progress}%
-                  </span>
-                </div>
-                <div className="h-2 rounded-full overflow-hidden cursor-pointer relative"
-                  style={{ background: 'var(--s3)' }}
-                  title="Click to update progress"
-                  onClick={() => {
-                    const v = prompt(`Embodiment progress for ${mentor.name} (0-100):`, String(mentor.progress));
-                    if (v !== null && !isNaN(Number(v))) updateMentorProgress(mentor.id, Math.min(100, Math.max(0, Number(v))));
-                  }}>
-                  <div className="h-full rounded-full bar-fill"
-                    style={{
-                      width: `${mentor.progress}%`,
-                      background: 'rgb(var(--accent-rgb))',
-                      boxShadow: '0 0 8px rgb(var(--accent-rgb)/0.7)',
-                    }} />
-                  {/* Shimmer on the bar */}
-                  {mentor.progress > 0 && (
-                    <div className="xp-shimmer-bar absolute inset-0 rounded-full" style={{ mixBlendMode: 'screen' }} />
+                  {/* Embodiment progress — clickable bar */}
+                  <div className="space-y-1 mb-2">
+                    <div className="flex justify-between">
+                      <span className="text-[10px] font-bold tracking-wider uppercase" style={{ color: 'var(--t-muted)' }}>EMBODIMENT</span>
+                      <span className="text-[10px] font-black font-mono"
+                        style={{
+                          color: 'rgb(var(--accent-rgb-light))',
+                          textShadow: mentor.progress > 0 ? '0 0 8px rgb(var(--accent-rgb)/0.6)' : 'none',
+                        }}>
+                        {mentor.progress}%
+                      </span>
+                    </div>
+                    <div className="h-2 rounded-full overflow-hidden cursor-pointer relative"
+                      style={{ background: 'var(--s3)' }}
+                      title="Click to set progress"
+                      onClick={e => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const pct = Math.round(Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100)));
+                        updateMentorProgress(mentor.id, pct);
+                      }}>
+                      <div className="h-full rounded-full bar-fill"
+                        style={{
+                          width: `${mentor.progress}%`,
+                          background: 'rgb(var(--accent-rgb))',
+                          boxShadow: '0 0 8px rgb(var(--accent-rgb)/0.7)',
+                        }} />
+                      {mentor.progress > 0 && (
+                        <div className="xp-shimmer-bar absolute inset-0 rounded-full" style={{ mixBlendMode: 'screen' }} />
+                      )}
+                    </div>
+                  </div>
+
+                  {mentor.notes && (
+                    <p className="text-[11px] mt-2 italic leading-relaxed" style={{ color: 'var(--t-muted)' }}>
+                      " {mentor.notes}"
+                    </p>
                   )}
                 </div>
-              </div>
-
-              {mentor.notes && (
-                <p className="text-[11px] mt-2 italic leading-relaxed" style={{ color: 'var(--t-muted)' }}>
-                  " {mentor.notes}"
-                </p>
               )}
             </div>
           ))}
