@@ -328,6 +328,10 @@ export default function Me() {
     setData(d => d ? { ...d, mentors: d.mentors.filter(m => m.id !== id) } : d);
   }
 
+  // ── Hooks must all be called before any early return ──────────────────────
+  // useCountUp is a hook — calling it after `if (!data) return` violates Rules of Hooks.
+  const animatedMerit = useCountUp(data?.meritScore ?? 0);
+
   if (!data) return (
     <div className="flex items-center justify-center min-h-[50vh]">
       <span className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
@@ -340,25 +344,6 @@ export default function Me() {
   const claimedList  = claims.filter(c => c.status === 'claimed');
   const rankGlow     = RANK_GLOW[rank] ?? 'transparent';
   const rankSolid    = RANK_SOLID[rank] ?? rankColor;
-
-  // ── Animated merit score
-  const animatedMerit = useCountUp(meritScore);
-
-  // ── Glass style constants
-  const glass = {
-    background: 'rgba(255,255,255,0.04)',
-    backdropFilter: 'blur(20px) saturate(160%)',
-    WebkitBackdropFilter: 'blur(20px) saturate(160%)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.28)',
-  };
-  const glassCard = {
-    background: 'rgba(255,255,255,0.03)',
-    backdropFilter: 'blur(16px) saturate(150%)',
-    WebkitBackdropFilter: 'blur(16px) saturate(150%)',
-    border: '1px solid rgba(255,255,255,0.07)',
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
-  };
 
   // ── Form field style shorthand
   const ff = 'w-full rounded-xl px-3 py-2 text-sm focus:outline-none';
@@ -430,8 +415,8 @@ export default function Me() {
           </div>
 
           {/* Merit score panel */}
-          <div className="w-full max-w-sm rounded-xl px-4 py-3 space-y-2"
-            style={{ ...glass, border: `1px solid ${rankSolid}25` }}>
+          <div className="glass w-full max-w-sm rounded-xl px-4 py-3 space-y-2"
+            style={{ border: `1px solid ${rankSolid}25` }}>
             {/* Total merit bar */}
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--t-faint)' }}>MERIT SCORE</span>
@@ -517,14 +502,8 @@ export default function Me() {
       </div>
 
       {/* ══════════════════════════════════════════════════════ ADVENTURE */}
-      <div className="rounded-2xl px-5 py-4 relative"
-        style={{
-          ...glass,
-          borderLeft: `3px solid rgb(var(--accent-rgb))`,
-          borderLeftWidth: 3,
-          borderLeftColor: 'rgb(var(--accent-rgb))',
-          zIndex: 1,
-        }}>
+      <div className="glass rounded-2xl px-5 py-4 relative"
+        style={{ borderLeft: `3px solid rgb(var(--accent-rgb))`, zIndex: 1 }}>
         <p className="text-[10px] font-bold tracking-[0.15em] mb-2 flex items-center gap-1.5"
           style={{ color: 'var(--t-faint)' }}>
           <Sparkles size={11} /> MAIN QUEST
@@ -544,13 +523,9 @@ export default function Me() {
             const val = stats[s.key as keyof typeof stats];
             return (
               <div key={s.key}
-                className="rounded-2xl px-3 py-3 space-y-2 stat-pop group transition-all duration-200"
+                className="glass rounded-2xl px-3 py-3 space-y-2 stat-pop group transition-all duration-200"
                 title={s.hint}
-                style={{
-                  ...glassCard,
-                  borderLeft: `3px solid ${s.color}`,
-                  animationDelay: `${idx * 60}ms`,
-                }}>
+                style={{ borderLeft: `3px solid ${s.color}`, animationDelay: `${idx * 60}ms` }}>
                 <div className="flex items-center justify-between">
                   <s.Icon size={16} style={{ color: s.color }} />
                   <span className="text-3xl font-black tabular-nums font-mono"
@@ -581,8 +556,7 @@ export default function Me() {
 
       {/* ══════════════════════════════════════════════════════ SKILLS */}
       <div style={{ zIndex: 1, position: 'relative' }}>
-        <div className="flex items-center justify-between mb-3"
-          style={{ ...glass, borderRadius: '0.75rem', padding: '0.5rem 0.75rem' }}>
+        <div className="glass flex items-center justify-between mb-3 rounded-xl px-3 py-2">
           <SectionHeader title="SKILLS & ABILITIES" />
           <button onClick={() => setShowSkillForm(s => !s)}
             className="flex items-center gap-1 text-[11px] font-semibold tap px-2 py-1 rounded-lg"
@@ -638,11 +612,8 @@ export default function Me() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {skills.map(skill => (
             <div key={skill.id}
-              className="rounded-2xl px-3 py-3 group transition-all duration-200"
-              style={{
-                ...glassCard,
-                borderLeft: `3px solid rgb(var(--accent-rgb)/0.6)`,
-              }}>
+              className="glass rounded-2xl px-3 py-3 group transition-all duration-200"
+              style={{ borderLeft: `3px solid rgb(var(--accent-rgb)/0.6)` }}>
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-[28px] leading-none shrink-0">{skill.icon}</span>
@@ -703,8 +674,7 @@ export default function Me() {
 
       {/* ══════════════════════════════════════════════════════ CLAIMS */}
       <div style={{ zIndex: 1, position: 'relative' }}>
-        <div className="flex items-center justify-between mb-3"
-          style={{ ...glass, borderRadius: '0.75rem', padding: '0.5rem 0.75rem' }}>
+        <div className="glass flex items-center justify-between mb-3 rounded-xl px-3 py-2">
           {/* Tabs — styled as quest log header */}
           <div className="flex items-center gap-1">
             {(['active', 'claimed'] as const).map(tab => (
@@ -777,12 +747,8 @@ export default function Me() {
             const isOverdue = claim.deadline && claim.deadline < new Date().toISOString().slice(0, 10);
             return (
               <div key={claim.id}
-                className="rounded-2xl px-4 py-3 transition-all duration-200"
-                style={{
-                  ...glassCard,
-                  borderLeft: `4px solid ${tc}`,
-                  opacity: claim.status === 'claimed' ? 0.7 : 1,
-                }}>
+                className="glass rounded-2xl px-4 py-3 transition-all duration-200"
+                style={{ borderLeft: `4px solid ${tc}`, opacity: claim.status === 'claimed' ? 0.7 : 1 }}>
                 <div className="flex items-start gap-3">
                   {/* Large icon column */}
                   <span className="text-[32px] leading-none mt-0.5 shrink-0">{claim.icon}</span>
@@ -847,8 +813,7 @@ export default function Me() {
 
       {/* ══════════════════════════════════════════════════════ MENTOR HALL */}
       <div style={{ zIndex: 1, position: 'relative' }}>
-        <div className="flex items-center justify-between mb-3"
-          style={{ ...glass, borderRadius: '0.75rem', padding: '0.5rem 0.75rem' }}>
+        <div className="glass flex items-center justify-between mb-3 rounded-xl px-3 py-2">
           <SectionHeader title="MENTOR HALL" sub="— figures you embody" />
           <button onClick={() => setShowMentorForm(s => !s)}
             className="flex items-center gap-1 text-[11px] font-semibold tap px-2 py-1 rounded-lg"
@@ -901,11 +866,8 @@ export default function Me() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {mentors.map(mentor => (
             <div key={mentor.id}
-              className="rounded-2xl px-4 py-4 group relative overflow-hidden"
-              style={{
-                ...glassCard,
-                boxShadow: 'inset 0 0 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
-              }}>
+              className="glass rounded-2xl px-4 py-4 group relative overflow-hidden"
+              style={{ boxShadow: 'inset 0 0 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
               {/* Portrait frame corners */}
               <div className="absolute top-2 left-2 w-4 h-4 pointer-events-none"
                 style={{ borderTop: '1px solid rgba(255,255,255,0.15)', borderLeft: '1px solid rgba(255,255,255,0.15)' }} />
