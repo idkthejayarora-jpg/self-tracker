@@ -731,6 +731,63 @@ export default function Dashboard() {
   return (
     <div className="max-w-2xl mx-auto space-y-5 anim-page pb-8">
 
+      {/* ── WAR ROOM HEADER ── */}
+      <div className="relative overflow-hidden rounded-2xl mb-5"
+        style={{ background: '#000', border: '1px solid #39ff1425', minHeight: 120 }}>
+        {/* Tactical grid */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          backgroundImage: 'radial-gradient(circle, #39ff1408 1px, transparent 1px)',
+          backgroundSize: '22px 22px',
+        }} />
+        {/* Radar arc */}
+        <div className="absolute top-3 right-3 pointer-events-none" style={{ width: 70, height: 70 }}>
+          <div style={{
+            position: 'absolute', inset: 0, borderRadius: '50%',
+            border: '1px solid #39ff1430',
+            boxShadow: '0 0 8px #39ff1420',
+          }} />
+          <div style={{
+            position: 'absolute', top: '50%', left: '50%',
+            width: 35, height: 1.5,
+            background: 'linear-gradient(90deg, #39ff14, transparent)',
+            transformOrigin: 'left center',
+            animation: 'radar-rotate 3s linear infinite',
+            boxShadow: '0 0 6px #39ff14',
+          }} />
+          <div style={{ position: 'absolute', inset: 10, borderRadius: '50%', border: '1px solid #39ff1418' }} />
+          <div style={{ position: 'absolute', inset: 20, borderRadius: '50%', border: '1px solid #39ff1410' }} />
+        </div>
+        {/* HUD corners */}
+        <div className="absolute top-0 left-0 pointer-events-none"
+          style={{ width: 14, height: 14, borderTop: '1.5px solid #39ff14', borderLeft: '1.5px solid #39ff14', opacity: 0.7 }} />
+        <div className="absolute top-0 right-0 pointer-events-none"
+          style={{ width: 14, height: 14, borderTop: '1.5px solid #39ff14', borderRight: '1.5px solid #39ff14', opacity: 0.7 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none"
+          style={{ width: 14, height: 14, borderBottom: '1.5px solid #39ff14', borderLeft: '1.5px solid #39ff14', opacity: 0.7 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none"
+          style={{ width: 14, height: 14, borderBottom: '1.5px solid #39ff14', borderRight: '1.5px solid #39ff14', opacity: 0.7 }} />
+        {/* Content */}
+        <div className="relative z-10 px-5 py-5">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] font-black tracking-[0.35em]" style={{ color: '#39ff14', opacity: 0.6, textShadow: '0 0 8px #39ff14' }}>SYS://</span>
+            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">COMMAND_CENTER</span>
+            <span className="cursor-blink font-mono" style={{ color: '#39ff14', fontSize: 11 }}>▌</span>
+          </div>
+          <h1 className="text-3xl font-black tracking-tight text-white leading-none"
+            style={{ textShadow: '0 0 30px #39ff1440' }}>
+            COMMAND CENTER
+          </h1>
+          <p className="font-mono text-[11px] mt-1" style={{ color: '#39ff14', opacity: 0.5 }}>
+            {'// MISSION CONTROL — GOOD '}
+            {new Date().getHours() < 12 ? 'MORNING' : new Date().getHours() < 17 ? 'AFTERNOON' : 'EVENING'}
+            {', OPERATOR'}
+          </p>
+          {/* Neon bottom edge */}
+          <div className="absolute bottom-0 left-0 right-0 h-px"
+            style={{ background: 'linear-gradient(90deg, transparent, #39ff1450, transparent)' }} />
+        </div>
+      </div>
+
       {/* ═══════════════════════════════════════ HEADER */}
       <div>
         <div className="flex items-start justify-between">
