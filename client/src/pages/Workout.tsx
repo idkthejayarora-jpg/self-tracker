@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X } from 'lucide-react';
 import WorkoutAvatar from '../components/WorkoutAvatar';
 import { format, parseISO } from 'date-fns';
 import {
@@ -19,6 +19,9 @@ const CAT_COLORS: Record<Category, string> = {
   core: 'text-yellow-400 bg-yellow-900/30',
   other: 'text-gray-400 bg-gray-800',
 };
+
+interface PlanExercise { id: number; day_id: number; name: string; sets: number; reps: string; weight: string; notes: string; }
+interface PlanDay { id: number; name: string; icon: string; color: string; exercises: PlanExercise[]; }
 
 interface Exercise { id: number; name: string; category: Category; }
 interface WorkoutSet { id: number; session_id: number; exercise_id: number; exercise_name: string; category: Category; reps: number | null; weight: number | null; duration_seconds: number | null; }
@@ -58,7 +61,7 @@ function ExerciseProgress({ exercise, onClose }: { exercise: Exercise; onClose: 
 }
 
 export default function Workout() {
-  const [tab, setTab] = useState<'log' | 'exercises' | 'stats'>('log');
+  const [tab, setTab] = useState<'log' | 'plan' | 'exercises' | 'stats'>('log');
   const [sessions, setSessions] = useState<Session[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [expandedSession, setExpandedSession] = useState<number | null>(null);
@@ -89,6 +92,14 @@ export default function Workout() {
 
   const [stats, setStats] = useState<{ weekly: { week: string; sessions: number }[]; pbs: { name: string; category: string; max_weight: number; max_reps: number }[] } | null>(null);
 
+  // Plan state
+  const [planDays, setPlanDays] = useState<PlanDay[]>([]);
+  const [editingDayId, setEditingDayId] = useState<number | null>(null);
+  const [showAddDay, setShowAddDay] = useState(false);
+  const [planLoading, setPlanLoading] = useState(false);
+  const [pdfText, setPdfText] = useState('');
+  const [showPdfImport, setShowPdfImport] = useState(false);
+
   const fetchSessions = useCallback(async () => {
     const r = await api.get<Session[]>('/workout/sessions');
     setSessions(r.data);
@@ -99,7 +110,12 @@ export default function Workout() {
     setExercises(r.data);
   }, []);
 
-  useEffect(() => { fetchSessions(); fetchExercises(); }, [fetchSessions, fetchExercises]);
+  const loadPlan = useCallback(async () => {
+    const r = await api.get<PlanDay[]>('/workout/plan/days');
+    setPlanDays(r.data);
+  }, []);
+
+  useEffect(() => { fetchSessions(); fetchExercises(); loadPlan(); }, [fetchSessions, fetchExercises, loadPlan]);
   useSync(fetchSessions, 60000);
 
   useEffect(() => {
@@ -271,11 +287,11 @@ export default function Workout() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2">
-        {(['log', 'exercises', 'stats'] as const).map(t => (
+      <div className="flex gap-2 flex-wrap">
+        {(['log', 'plan', 'exercises', 'stats'] as const).map(t => (
           <button key={t} type="button" onClick={() => setTab(t)}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors capitalize ${tab === t ? 'bg-brand-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
-            {t === 'log' ? 'Workout Log' : t === 'stats' ? 'Stats & PBs' : 'Exercises'}
+            {t === 'log' ? 'Workout Log' : t === 'stats' ? 'Stats & PBs' : t === 'plan' ? 'My Plan' : 'Exercises'}
           </button>
         ))}
       </div>
@@ -405,6 +421,211 @@ export default function Workout() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* ── PLAN TAB ── */}
+      {tab === 'plan' && (
+        <div className="space-y-3">
+          {/* Toolbar */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={() => setShowAddDay(s => !s)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tap"
+              style={{ background: 'rgb(var(--accent-rgb)/0.12)', color: 'rgb(var(--accent-rgb-light))' }}>
+              <Plus size={12} /> Add day
+            </button>
+            <button onClick={() => setShowPdfImport(s => !s)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tap"
+              style={{ background: 'var(--s3)', color: 'var(--t-muted)' }}>
+              📄 Import PDF
+            </button>
+          </div>
+
+          {/* PDF import panel */}
+          {showPdfImport && (
+            <div className="glass rounded-2xl px-4 py-4 space-y-3 scale-in">
+              <p className="text-xs font-bold tracking-wider" style={{ color: 'var(--t-muted)' }}>// UPLOAD WORKOUT PLAN PDF</p>
+              <input type="file" accept=".pdf"
+                onChange={async e => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setPlanLoading(true);
+                  const fd = new FormData();
+                  fd.append('pdf', file);
+                  try {
+                    const r = await api.post<{ text: string }>('/workout/plan/parse-pdf', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                    setPdfText(r.data.text);
+                  } catch { setPdfText('Failed to parse PDF. Paste your plan below manually.'); }
+                  setPlanLoading(false);
+                }}
+                className="w-full text-xs" style={{ color: 'var(--t-muted)' }} />
+              {planLoading && <p className="text-xs" style={{ color: 'var(--t-faint)' }}>Parsing PDF...</p>}
+              {pdfText && (
+                <div className="space-y-2">
+                  <p className="text-[11px]" style={{ color: 'var(--t-muted)' }}>
+                    Review extracted text below. Edit as needed, then use "Add day" above to build your plan manually from this.
+                  </p>
+                  <textarea value={pdfText} onChange={e => setPdfText(e.target.value)}
+                    rows={10} className="w-full rounded-xl px-3 py-2 text-xs font-mono resize-y"
+                    style={{ background: 'var(--s1)', border: '1px solid var(--b)', color: 'var(--t-body)' }} />
+                </div>
+              )}
+              <button onClick={() => setShowPdfImport(false)}
+                className="text-xs tap" style={{ color: 'var(--t-faint)' }}>Close</button>
+            </div>
+          )}
+
+          {/* Add day form */}
+          {showAddDay && (
+            <form onSubmit={async e => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              const r = await api.post<PlanDay>('/workout/plan/days', { name: fd.get('name'), icon: fd.get('icon') || '💪', color: fd.get('color') || '#ff4500' });
+              setPlanDays(d => [...d, r.data]);
+              (e.target as HTMLFormElement).reset();
+              setShowAddDay(false);
+            }} className="glass rounded-2xl px-4 py-3 space-y-2 scale-in">
+              <div className="grid grid-cols-3 gap-2">
+                <input name="name" required placeholder="Day name (e.g. Back Day)"
+                  className="col-span-2 rounded-xl px-3 py-2 text-sm focus:outline-none"
+                  style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                <input name="icon" placeholder="💪"
+                  className="rounded-xl px-3 py-2 text-sm focus:outline-none"
+                  style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-[10px]" style={{ color: 'var(--t-faint)' }}>Color:</label>
+                <input name="color" type="color" defaultValue="#ff4500" className="w-8 h-7 rounded cursor-pointer border-0" />
+                <button type="submit" className="ml-auto px-3 py-1.5 rounded-xl text-xs font-semibold tap text-white"
+                  style={{ background: 'rgb(var(--accent-rgb))' }}>Add</button>
+                <button type="button" onClick={() => setShowAddDay(false)}
+                  className="px-3 py-1.5 rounded-xl text-xs tap" style={{ color: 'var(--t-faint)' }}>Cancel</button>
+              </div>
+            </form>
+          )}
+
+          {planDays.length === 0 && !showAddDay && (
+            <p className="text-sm py-6 text-center" style={{ color: 'var(--t-faint)' }}>No plan yet — add your first training day</p>
+          )}
+
+          {/* Day cards */}
+          {planDays.map(day => (
+            <div key={day.id} className="glass glow-card rounded-2xl overflow-hidden group"
+              style={{ borderLeft: `3px solid ${day.color}`, '--gc': `${day.color}55` } as React.CSSProperties}>
+              <div className="px-4 py-3">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{day.icon}</span>
+                    <div>
+                      <p className="text-sm font-bold text-head">{day.name}</p>
+                      <p className="text-[11px]" style={{ color: 'var(--t-faint)' }}>{day.exercises.length} exercises</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {/* LOG THIS button */}
+                    <button onClick={async () => {
+                      try {
+                        await api.post(`/workout/plan/log/${day.id}`);
+                        alert(`${day.name} session started! Check the Log tab.`);
+                      } catch { alert('Failed to log session'); }
+                    }}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold tap"
+                      style={{ background: `${day.color}18`, color: day.color, border: `1px solid ${day.color}40` }}>
+                      ▶ LOG THIS
+                    </button>
+                    <button onClick={() => setEditingDayId(editingDayId === day.id ? null : day.id)}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center tap opacity-0 group-hover:opacity-100"
+                      style={{ background: 'var(--s3)' }}>
+                      <Pencil size={11} style={{ color: 'var(--t-muted)' }} />
+                    </button>
+                    <button onClick={async () => {
+                      await api.delete(`/workout/plan/days/${day.id}`);
+                      setPlanDays(d => d.filter(x => x.id !== day.id));
+                    }}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center tap opacity-0 group-hover:opacity-100"
+                      style={{ background: 'var(--s3)' }}>
+                      <Trash2 size={11} style={{ color: '#ef4444' }} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Exercise list */}
+                <div className="space-y-1.5">
+                  {day.exercises.map(ex => (
+                    <div key={ex.id} className="flex items-center gap-2 px-2 py-1.5 rounded-xl group/ex"
+                      style={{ background: 'var(--s3)' }}>
+                      {editingDayId === day.id ? (
+                        /* Edit row */
+                        <div className="flex-1 grid grid-cols-4 gap-1.5">
+                          <input defaultValue={ex.name} placeholder="Exercise"
+                            className="col-span-2 rounded-lg px-2 py-1 text-xs focus:outline-none"
+                            style={{ background: 'var(--s2)', color: 'var(--t-head)', border: '1px solid var(--b)' }}
+                            onBlur={async e => { await api.patch(`/workout/plan/exercises/${ex.id}`, { name: e.target.value }); loadPlan(); }} />
+                          <input defaultValue={String(ex.sets)} placeholder="Sets"
+                            className="rounded-lg px-2 py-1 text-xs focus:outline-none"
+                            style={{ background: 'var(--s2)', color: 'var(--t-head)', border: '1px solid var(--b)' }}
+                            onBlur={async e => { await api.patch(`/workout/plan/exercises/${ex.id}`, { sets: Number(e.target.value) }); loadPlan(); }} />
+                          <input defaultValue={ex.reps} placeholder="Reps"
+                            className="rounded-lg px-2 py-1 text-xs focus:outline-none"
+                            style={{ background: 'var(--s2)', color: 'var(--t-head)', border: '1px solid var(--b)' }}
+                            onBlur={async e => { await api.patch(`/workout/plan/exercises/${ex.id}`, { reps: e.target.value }); loadPlan(); }} />
+                        </div>
+                      ) : (
+                        <div className="flex-1 flex items-center gap-2">
+                          <span className="text-xs font-medium text-head flex-1">{ex.name}</span>
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                            style={{ background: `${day.color}15`, color: day.color }}>
+                            {ex.sets}×{ex.reps}
+                          </span>
+                          {ex.weight && <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>{ex.weight}</span>}
+                        </div>
+                      )}
+                      <button onClick={async () => {
+                        await api.delete(`/workout/plan/exercises/${ex.id}`);
+                        setPlanDays(d => d.map(dd => dd.id === day.id ? { ...dd, exercises: dd.exercises.filter(e => e.id !== ex.id) } : dd));
+                      }}
+                        className="opacity-0 group-hover/ex:opacity-100 tap"
+                        style={{ color: 'var(--t-faint)' }}>
+                        <X size={10} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Add exercise inline */}
+                {editingDayId === day.id && (
+                  <form className="mt-2" onSubmit={async e => {
+                    e.preventDefault();
+                    const fd = new FormData(e.currentTarget);
+                    const r = await api.post<PlanExercise>(`/workout/plan/days/${day.id}/exercises`, {
+                      name: fd.get('name'), sets: Number(fd.get('sets')) || 3, reps: fd.get('reps') || '8-12', weight: fd.get('weight') || '',
+                    });
+                    setPlanDays(d => d.map(dd => dd.id === day.id ? { ...dd, exercises: [...dd.exercises, r.data] } : dd));
+                    (e.target as HTMLFormElement).reset();
+                  }}>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      <input name="name" required placeholder="Exercise name"
+                        className="col-span-2 rounded-lg px-2 py-1.5 text-xs focus:outline-none"
+                        style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid rgb(var(--accent-rgb)/0.3)' }} />
+                      <input name="sets" type="number" min={1} defaultValue={3} placeholder="Sets"
+                        className="rounded-lg px-2 py-1.5 text-xs focus:outline-none"
+                        style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                      <input name="reps" defaultValue="8-12" placeholder="Reps"
+                        className="rounded-lg px-2 py-1.5 text-xs focus:outline-none"
+                        style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                    </div>
+                    <div className="flex gap-2 mt-1.5">
+                      <input name="weight" placeholder="Weight (optional, e.g. 60kg)"
+                        className="flex-1 rounded-lg px-2 py-1.5 text-xs focus:outline-none"
+                        style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
+                      <button type="submit" className="px-3 py-1.5 rounded-xl text-xs font-semibold tap text-white"
+                        style={{ background: 'rgb(var(--accent-rgb))' }}>+ Add</button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

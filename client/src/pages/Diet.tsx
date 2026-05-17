@@ -337,7 +337,17 @@ export default function Diet() {
   }, {} as Record<string, FoodLog[]>);
 
   return (
-    <div className="space-y-4 max-w-xl anim-page">
+    <div className="space-y-4 max-w-xl anim-page"
+      style={{ '--accent-rgb': '52 211 153' } as React.CSSProperties}>
+
+      {/* Cyberpunk body overlay */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(52,211,153,0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+      </div>
 
       {/* ── BIOLAB HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
@@ -366,7 +376,11 @@ export default function Diet() {
           style={{ background: 'linear-gradient(90deg, transparent, #34d39930, transparent)' }} />
       </div>
 
-      <div className="flex justify-end gap-2">
+      <div style={{ position: 'relative', zIndex: 1 }}>
+
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'rgb(var(--accent-rgb))' }}>// Diet</h1>
+        <div className="flex gap-2">
         <button type="button" onClick={() => setShowSaveModal(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tap"
           style={{ background: 'var(--s3)', color: '#71717a' }}>
@@ -377,6 +391,7 @@ export default function Diet() {
           style={{ background: 'var(--s3)', color: '#71717a' }}>
           {activeTab === 'log' ? '📚 Saved' : '📋 Log'}
         </button>
+        </div>
       </div>
 
       {/* Date nav */}
@@ -547,6 +562,8 @@ export default function Diet() {
       )}
 
       {showSaveModal && <SaveMealModal onSave={saveMeal} onClose={() => setShowSaveModal(false)} />}
+
+      </div>{/* end relative zIndex wrapper */}
     </div>
   );
 }

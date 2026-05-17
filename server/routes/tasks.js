@@ -37,7 +37,7 @@ router.get('/:id', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { title, description, due_date, due_time, priority, is_recurring, recur_interval, follow_up_date, tags } = req.body;
+  const { title, description, due_date, due_time, priority, is_recurring, recur_interval, follow_up_date, tags, life_area_id } = req.body;
   if (!title) return res.status(400).json({ error: 'Title required' });
 
   const uid = req.user.id;
@@ -52,13 +52,13 @@ router.post('/', (req, res) => {
 
   const params = [uid, title, description || null, due_date || null, due_time || null,
     priority || 'medium', is_recurring ? 1 : 0, recur_interval || null, follow_up_date || null,
-    JSON.stringify(tags || [])];
+    JSON.stringify(tags || []), life_area_id || null];
 
-  console.log('[tasks POST] uid=%s title=%s priority=%s', uid, title, priority || 'medium');
+  console.log('[tasks POST] uid=%s title=%s priority=%s life_area_id=%s', uid, title, priority || 'medium', life_area_id || null);
 
   const result = db.prepare(`
-    INSERT INTO tasks (user_id, title, description, due_date, due_time, priority, is_recurring, recur_interval, follow_up_date, tags)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO tasks (user_id, title, description, due_date, due_time, priority, is_recurring, recur_interval, follow_up_date, tags, life_area_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(...params);
 
   res.status(201).json(db.prepare('SELECT * FROM tasks WHERE id = ?').get(result.lastInsertRowid));
@@ -83,6 +83,7 @@ router.patch('/:id', (req, res) => {
   const recur_interval = has('recur_interval')  ? (body.recur_interval || null)     : task.recur_interval;
   const follow_up_date = has('follow_up_date')  ? (body.follow_up_date || null)     : task.follow_up_date;
   const tags           = has('tags')            ? JSON.stringify(body.tags || [])   : task.tags;
+  const life_area_id   = has('life_area_id')    ? (body.life_area_id || null)       : task.life_area_id;
 
   // Track deferred: pushing due_date forward on an overdue pending task
   let deferredCount = task.deferred_count;
@@ -119,10 +120,10 @@ router.patch('/:id', (req, res) => {
     UPDATE tasks SET
       title = ?, description = ?, due_date = ?, due_time = ?, priority = ?,
       status = ?, completed_at = ?, is_recurring = ?, recur_interval = ?,
-      follow_up_date = ?, deferred_count = ?, tags = ?
+      follow_up_date = ?, deferred_count = ?, tags = ?, life_area_id = ?
     WHERE id = ? AND user_id = ?
   `).run(title, description, due_date, due_time, priority, status, completedAt,
-    is_recurring, recur_interval, follow_up_date, deferredCount, tags,
+    is_recurring, recur_interval, follow_up_date, deferredCount, tags, life_area_id,
     req.params.id, req.user.id);
 
   if (justCompleted) {

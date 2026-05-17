@@ -152,4 +152,99 @@ router.get('/stats', (req, res) => {
   res.json({ weekly, pbs });
 });
 
+// ── Workout Plan ──────────────────────────────────────────────
+const multer = require('multer');
+const pdfParse = require('pdf-parse');
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+
+// Plan days CRUD
+router.get('/plan/days', (req, res) => {
+  const days = db.prepare('SELECT * FROM workout_plan_days WHERE user_id=? ORDER BY sort_order,id').all(req.user.id);
+  const exercises = db.prepare(`
+    SELECT wpe.* FROM workout_plan_exercises wpe
+    JOIN workout_plan_days wpd ON wpd.id = wpe.day_id
+    WHERE wpd.user_id = ? ORDER BY wpe.sort_order, wpe.id
+  `).all(req.user.id);
+  const result = days.map(d => ({ ...d, exercises: exercises.filter(e => e.day_id === d.id) }));
+  res.json(result);
+});
+
+router.post('/plan/days', (req, res) => {
+  const { name, icon='💪', color='#ff4500' } = req.body;
+  if (!name) return res.status(400).json({ error: 'Name required' });
+  const maxOrder = db.prepare('SELECT MAX(sort_order) as m FROM workout_plan_days WHERE user_id=?').get(req.user.id);
+  const r = db.prepare('INSERT INTO workout_plan_days (user_id,name,icon,color,sort_order) VALUES (?,?,?,?,?)').run(req.user.id, name, icon, color, (maxOrder?.m ?? -1) + 1);
+  const day = db.prepare('SELECT * FROM workout_plan_days WHERE id=?').get(r.lastInsertRowid);
+  res.status(201).json({ ...day, exercises: [] });
+});
+
+router.patch('/plan/days/:id', (req, res) => {
+  const { name, icon, color } = req.body;
+  const existing = db.prepare('SELECT * FROM workout_plan_days WHERE id=? AND user_id=?').get(req.params.id, req.user.id);
+  if (!existing) return res.status(404).json({ error: 'Not found' });
+  db.prepare('UPDATE workout_plan_days SET name=?,icon=?,color=? WHERE id=?').run(name??existing.name, icon??existing.icon, color??existing.color, req.params.id);
+  res.json(db.prepare('SELECT * FROM workout_plan_days WHERE id=?').get(req.params.id));
+});
+
+router.delete('/plan/days/:id', (req, res) => {
+  db.prepare('DELETE FROM workout_plan_days WHERE id=? AND user_id=?').run(req.params.id, req.user.id);
+  res.json({ ok: true });
+});
+
+// Exercises CRUD
+router.post('/plan/days/:dayId/exercises', (req, res) => {
+  const day = db.prepare('SELECT * FROM workout_plan_days WHERE id=? AND user_id=?').get(req.params.dayId, req.user.id);
+  if (!day) return res.status(404).json({ error: 'Day not found' });
+  const { name, sets=3, reps='8-12', weight='', notes='' } = req.body;
+  if (!name) return res.status(400).json({ error: 'Name required' });
+  const maxOrder = db.prepare('SELECT MAX(sort_order) as m FROM workout_plan_exercises WHERE day_id=?').get(req.params.dayId);
+  const r = db.prepare('INSERT INTO workout_plan_exercises (day_id,name,sets,reps,weight,notes,sort_order) VALUES (?,?,?,?,?,?,?)').run(req.params.dayId, name, sets, reps, weight, notes, (maxOrder?.m ?? -1) + 1);
+  res.status(201).json(db.prepare('SELECT * FROM workout_plan_exercises WHERE id=?').get(r.lastInsertRowid));
+});
+
+router.patch('/plan/exercises/:id', (req, res) => {
+  const ex = db.prepare(`SELECT wpe.* FROM workout_plan_exercises wpe JOIN workout_plan_days wpd ON wpd.id=wpe.day_id WHERE wpe.id=? AND wpd.user_id=?`).get(req.params.id, req.user.id);
+  if (!ex) return res.status(404).json({ error: 'Not found' });
+  const { name, sets, reps, weight, notes } = req.body;
+  db.prepare('UPDATE workout_plan_exercises SET name=?,sets=?,reps=?,weight=?,notes=? WHERE id=?').run(name??ex.name, sets??ex.sets, reps??ex.reps, weight??ex.weight, notes??ex.notes, req.params.id);
+  res.json(db.prepare('SELECT * FROM workout_plan_exercises WHERE id=?').get(req.params.id));
+});
+
+router.delete('/plan/exercises/:id', (req, res) => {
+  db.prepare('DELETE FROM workout_plan_exercises WHERE id=?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+// One-click log from plan day
+router.post('/plan/log/:dayId', (req, res) => {
+  const day = db.prepare('SELECT * FROM workout_plan_days WHERE id=? AND user_id=?').get(req.params.dayId, req.user.id);
+  if (!day) return res.status(404).json({ error: 'Day not found' });
+  const exercises = db.prepare('SELECT * FROM workout_plan_exercises WHERE day_id=? ORDER BY sort_order').all(req.params.dayId);
+  const today = new Date().toISOString().slice(0, 10);
+  const r = db.prepare('INSERT INTO workout_sessions (user_id, date, notes) VALUES (?,?,?)').run(req.user.id, today, `${day.name} — from plan`);
+  const sessionId = r.lastInsertRowid;
+  // Pre-populate sets (1 set per exercise as placeholder)
+  exercises.forEach(ex => {
+    // Try to find exercise by name in user's exercise list
+    let exercise = db.prepare('SELECT id FROM exercises WHERE user_id=? AND name=?').get(req.user.id, ex.name);
+    if (!exercise) {
+      const nr = db.prepare('INSERT INTO exercises (user_id,name) VALUES (?,?)').run(req.user.id, ex.name);
+      exercise = { id: nr.lastInsertRowid };
+    }
+    db.prepare('INSERT INTO workout_sets (session_id,exercise_id,reps,weight,notes) VALUES (?,?,?,?,?)').run(sessionId, exercise.id, parseInt(ex.reps)||0, parseFloat(ex.weight)||0, `${ex.sets} sets × ${ex.reps}`);
+  });
+  res.status(201).json({ sessionId, day: day.name, exercisesAdded: exercises.length });
+});
+
+// PDF parse — extract text
+router.post('/plan/parse-pdf', upload.single('pdf'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  try {
+    const data = await pdfParse(req.file.buffer);
+    res.json({ text: data.text, pages: data.numpages });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to parse PDF' });
+  }
+});
+
 module.exports = router;

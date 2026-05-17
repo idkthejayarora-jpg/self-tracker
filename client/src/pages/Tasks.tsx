@@ -18,6 +18,13 @@ const STATUS_LABELS: Record<TaskStatus, string> = {
   cancelled: 'Cancelled',
 };
 
+interface LifeAreaOption {
+  id: number;
+  name: string;
+  icon: string;
+  color: string;
+}
+
 interface TaskFormData {
   title: string;
   description: string;
@@ -27,11 +34,12 @@ interface TaskFormData {
   is_recurring: boolean;
   recur_interval: string;
   follow_up_date: string;
+  life_area_id: number | null;
 }
 
 function emptyForm(): TaskFormData {
   return { title: '', description: '', due_date: '', due_time: '',
-    priority: 'medium', is_recurring: false, recur_interval: 'daily', follow_up_date: '' };
+    priority: 'medium', is_recurring: false, recur_interval: 'daily', follow_up_date: '', life_area_id: null };
 }
 
 export default function Tasks() {
@@ -47,6 +55,7 @@ export default function Tasks() {
   const [editId, setEditId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<TaskFormData>>({});
   const [editErr, setEditErr] = useState('');
+  const [lifeAreas, setLifeAreas] = useState<LifeAreaOption[]>([]);
   const titleRef = useRef<HTMLInputElement>(null);
 
   const fetchTasks = useCallback(async () => {

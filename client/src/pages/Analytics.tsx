@@ -180,6 +180,13 @@ export default function Analytics() {
           style={{ background: 'linear-gradient(90deg, transparent, #60a5fa30, transparent)' }} />
       </div>
 
+      <div style={{ position: 'relative', zIndex: 1 }}>
+
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'rgb(var(--accent-rgb))' }}>// Analytics</h1>
+        <p className="text-sm mt-0.5" style={{ color: '#71717a' }}>Last 8 weeks across all modules</p>
+      </div>
+
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-2">
         <StatCard label="Task completion" value={`${completionRate}%`} sub={`${totalCompleted}/${totalCreated} tasks`} />
@@ -291,6 +298,8 @@ export default function Analytics() {
       )}
 
       <JournalHeatmap data={heatmap} />
+
+      </div>{/* end relative zIndex wrapper */}
     </div>
   );
 }

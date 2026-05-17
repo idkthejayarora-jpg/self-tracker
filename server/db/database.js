@@ -53,6 +53,7 @@ addColumnIfMissing('tasks', 'due_time',         'TEXT');
 addColumnIfMissing('tasks', 'is_recurring',     'INTEGER DEFAULT 0');
 addColumnIfMissing('tasks', 'recur_interval',   'TEXT');
 addColumnIfMissing('tasks', 'tags',             "TEXT DEFAULT '[]'");
+addColumnIfMissing('tasks', 'life_area_id',     'INTEGER REFERENCES life_areas(id)');
 
 // reminders
 addColumnIfMissing('reminders', 'snoozed_until', 'DATETIME');
@@ -70,6 +71,7 @@ addColumnIfMissing('exercises', 'category', "TEXT DEFAULT 'other'");
 
 // workout_sets
 addColumnIfMissing('workout_sets', 'sort_order', 'INTEGER DEFAULT 0');
+addColumnIfMissing('workout_sets', 'notes', 'TEXT DEFAULT NULL');
 
 // ── Streaks CHECK constraint migration ────────────────────────────────────────
 // The original schema only allowed ('tasks','journal','overall').

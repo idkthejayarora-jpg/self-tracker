@@ -27,21 +27,77 @@ function seedDefaultAreas(userId) {
 // ── Life Areas ────────────────────────────────────────────────
 router.get('/areas', (req, res) => {
   seedDefaultAreas(req.user.id);
-
   const areas = db.prepare('SELECT * FROM life_areas WHERE user_id = ? ORDER BY sort_order, id').all(req.user.id);
   const milestones = db.prepare(`
     SELECT lm.* FROM life_milestones lm
     JOIN life_areas la ON la.id = lm.area_id
     WHERE la.user_id = ?
-    ORDER BY lm.sort_order, lm.id
   `).all(req.user.id);
 
-  const result = areas.map(a => ({
-    ...a,
-    milestones: milestones.filter(m => m.area_id === a.id),
-  }));
+  // Auto-score: tasks per area
+  const taskStats = db.prepare(`
+    SELECT life_area_id,
+      COUNT(*) as total,
+      SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as done
+    FROM tasks WHERE user_id = ? AND life_area_id IS NOT NULL
+    GROUP BY life_area_id
+  `).all(req.user.id);
+  const taskMap = Object.fromEntries(taskStats.map(t => [t.life_area_id, t]));
+
+  // Journal mentions in last 30 days
+  const journals = db.prepare(`
+    SELECT content FROM journal_entries WHERE user_id = ? AND date >= date('now','-30 days')
+  `).all(req.user.id);
+  const allJournalText = journals.map(j => (j.content || '').toLowerCase()).join(' ');
+
+  const result = areas.map(a => {
+    const ts = taskMap[a.id];
+    const taskScore = ts && ts.total > 0 ? Math.round((ts.done / ts.total) * 100) : null;
+    // Count journal mentions (case-insensitive area name)
+    const keyword = a.name.toLowerCase();
+    const mentionCount = (allJournalText.match(new RegExp(keyword, 'g')) || []).length;
+    const journalScore = Math.min(100, mentionCount * 10); // 10 mentions = 100
+
+    // Auto score: weighted average if data exists
+    let autoScore = null;
+    if (taskScore !== null && mentionCount > 0) {
+      autoScore = Math.round(taskScore * 0.7 + journalScore * 0.3);
+    } else if (taskScore !== null) {
+      autoScore = taskScore;
+    } else if (mentionCount > 0) {
+      autoScore = journalScore;
+    }
+
+    // Milestone score
+    const areaMs = milestones.filter(m => m.area_id === a.id);
+    const msDone = areaMs.filter(m => m.completed).length;
+    const msScore = areaMs.length > 0 ? Math.round((msDone / areaMs.length) * 100) : null;
+
+    return {
+      ...a,
+      milestones: areaMs,
+      taskStats: ts ? { total: ts.total, done: ts.done } : { total: 0, done: 0 },
+      journalMentions: mentionCount,
+      autoScore,
+      msScore,
+      // Final display score: manual progress if set >0, else autoScore
+      displayScore: a.progress > 0 ? a.progress : (autoScore ?? 0),
+    };
+  });
 
   res.json(result);
+});
+
+router.get('/areas/:id/tasks', (req, res) => {
+  const area = db.prepare('SELECT id FROM life_areas WHERE id=? AND user_id=?').get(req.params.id, req.user.id);
+  if (!area) return res.status(404).json({ error: 'Not found' });
+  const tasks = db.prepare(`
+    SELECT id, title, status, due_date, priority FROM tasks
+    WHERE user_id=? AND life_area_id=?
+    ORDER BY CASE status WHEN 'completed' THEN 1 ELSE 0 END, created_at DESC
+    LIMIT 20
+  `).all(req.user.id, req.params.id);
+  res.json(tasks);
 });
 
 router.post('/areas', (req, res) => {

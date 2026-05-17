@@ -162,7 +162,17 @@ export default function Journal() {
   const accent   = moodData?.color ?? '#00f5ff';
 
   return (
-    <div className="max-w-2xl mx-auto space-y-3 anim-page pb-10 px-1 sm:px-0">
+    <div className="max-w-2xl mx-auto space-y-3 anim-page pb-10 px-1 sm:px-0"
+      style={{ '--accent-rgb': '0 245 255' } as React.CSSProperties}>
+
+      {/* Cyberpunk body overlay */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(0,245,255,0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+      </div>
 
       {/* ════════════════════════════════════ HERO HEADER */}
       <div className="relative overflow-hidden rounded-2xl"
@@ -231,6 +241,8 @@ export default function Journal() {
         <div className="absolute bottom-0 left-0 right-0 h-px"
           style={{ background: `linear-gradient(90deg, transparent, ${accent}50, transparent)` }} />
       </div>
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
 
       {/* ════════════════════════════════════ DATE NAV */}
       <div className="relative rounded-2xl px-4 py-2.5 flex items-center gap-3"
@@ -460,6 +472,8 @@ export default function Journal() {
           </div>
         </div>
       )}
+
+      </div>{/* end relative zIndex wrapper */}
     </div>
   );
 }

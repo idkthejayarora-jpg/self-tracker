@@ -302,3 +302,30 @@ CREATE TABLE IF NOT EXISTS me_mentors (
   sort_order INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ── Workout plan days ─────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS workout_plan_days (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  icon TEXT DEFAULT '💪',
+  color TEXT DEFAULT '#ff4500',
+  sort_order INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ── Workout plan exercises (per day) ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS workout_plan_exercises (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  day_id INTEGER NOT NULL REFERENCES workout_plan_days(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  sets INTEGER DEFAULT 3,
+  reps TEXT DEFAULT '8-12',
+  weight TEXT DEFAULT '',
+  notes TEXT DEFAULT '',
+  sort_order INTEGER DEFAULT 0
+);
+
+-- ── Life area tagging on tasks ────────────────────────────────────────────────
+-- Add life_area_id to tasks if it doesn't exist (SQLite migration workaround)
+-- Handled in server startup via db.prepare / try-catch
