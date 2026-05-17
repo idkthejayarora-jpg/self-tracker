@@ -647,3 +647,10 @@ export default function Tasks() {
             )}
           </div>
         )}
+
+      </div>{/* end task list */}
+
+      </div>{/* end zIndex wrapper */}
+    </div>
+  );
+}
