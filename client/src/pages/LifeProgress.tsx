@@ -330,16 +330,15 @@ export default function LifeProgress() {
   const [newColor, setNewColor] = useState('#6366f1');
 
   const fetchAll = useCallback(async () => {
-    try {
-      const [areasRes, meRes, lvlRes] = await Promise.all([
-        api.get<LifeArea[]>('/life/areas'),
-        api.get<MeSummary>('/me/summary'),
-        api.get<LevelData>('/points'),
-      ]);
-      setAreas(areasRes.data);
-      setMe(meRes.data);
-      setLvl(lvlRes.data);
-    } catch { /**/ }
+    // Use allSettled so one failing endpoint never blocks the others
+    const [areasRes, meRes, lvlRes] = await Promise.allSettled([
+      api.get<LifeArea[]>('/life/areas'),
+      api.get<MeSummary>('/me/summary'),
+      api.get<LevelData>('/points'),
+    ]);
+    if (areasRes.status === 'fulfilled') setAreas(areasRes.value.data);
+    if (meRes.status   === 'fulfilled') setMe(meRes.value.data);
+    if (lvlRes.status  === 'fulfilled') setLvl(lvlRes.value.data);
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);

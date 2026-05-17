@@ -26,61 +26,116 @@ function seedDefaultAreas(userId) {
 
 // ── Life Areas ────────────────────────────────────────────────
 router.get('/areas', (req, res) => {
-  seedDefaultAreas(req.user.id);
-  const areas = db.prepare('SELECT * FROM life_areas WHERE user_id = ? ORDER BY sort_order, id').all(req.user.id);
+  const uid = req.user.id;
+  seedDefaultAreas(uid);
+  const areas = db.prepare('SELECT * FROM life_areas WHERE user_id = ? ORDER BY sort_order, id').all(uid);
   const milestones = db.prepare(`
     SELECT lm.* FROM life_milestones lm
     JOIN life_areas la ON la.id = lm.area_id
     WHERE la.user_id = ?
-  `).all(req.user.id);
+  `).all(uid);
 
-  // Auto-score: tasks per area
-  const taskStats = db.prepare(`
+  // ── Global signals (same for all areas — real activity baseline) ──
+
+  // Habit completion rate this week → 0-100
+  const habitTotal  = (db.prepare('SELECT COUNT(*) as n FROM habits WHERE user_id=?').get(uid)||{}).n || 0;
+  const habitDone   = (db.prepare("SELECT COUNT(*) as n FROM habit_logs WHERE user_id=? AND done=1 AND date >= date('now','-7 days')").get(uid)||{}).n || 0;
+  const habitBaseline = habitTotal > 0 ? Math.min(100, Math.round((habitDone / (habitTotal * 7)) * 100)) : null;
+
+  // Overall task completion this month → 0-100
+  const allTaskTotal = (db.prepare("SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND created_at >= date('now','start of month')").get(uid)||{}).n || 0;
+  const allTaskDone  = (db.prepare("SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND status='completed' AND completed_at >= date('now','start of month')").get(uid)||{}).n || 0;
+  const taskBaseline = allTaskTotal > 0 ? Math.min(100, Math.round((allTaskDone / allTaskTotal) * 100)) : null;
+
+  // All task titles this month (for keyword matching against area names)
+  const allTasks = db.prepare(`
+    SELECT title, status FROM tasks
+    WHERE user_id = ? AND created_at >= date('now','-60 days')
+  `).all(uid);
+
+  // Tasks explicitly tagged per area
+  const taggedStats = db.prepare(`
     SELECT life_area_id,
       COUNT(*) as total,
       SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as done
     FROM tasks WHERE user_id = ? AND life_area_id IS NOT NULL
     GROUP BY life_area_id
-  `).all(req.user.id);
-  const taskMap = Object.fromEntries(taskStats.map(t => [t.life_area_id, t]));
+  `).all(uid);
+  const taggedMap = Object.fromEntries(taggedStats.map(t => [t.life_area_id, t]));
 
-  // Journal mentions in last 30 days
+  // Journal text last 30 days
   const journals = db.prepare(`
     SELECT content FROM journal_entries WHERE user_id = ? AND date >= date('now','-30 days')
-  `).all(req.user.id);
+  `).all(uid);
   const allJournalText = journals.map(j => (j.content || '').toLowerCase()).join(' ');
 
   const result = areas.map(a => {
-    const ts = taskMap[a.id];
-    const taskScore = ts && ts.total > 0 ? Math.round((ts.done / ts.total) * 100) : null;
-    // Count journal mentions (case-insensitive area name)
-    const keyword = a.name.toLowerCase();
-    const mentionCount = (allJournalText.match(new RegExp(keyword, 'g')) || []).length;
-    const journalScore = Math.min(100, mentionCount * 10); // 10 mentions = 100
+    // 1. TAGGED TASKS: explicitly linked tasks for this area
+    const ts = taggedMap[a.id];
+    const taggedScore = ts && ts.total > 0 ? Math.round((ts.done / ts.total) * 100) : null;
 
-    // Auto score: weighted average if data exists
+    // 2. KEYWORD TASKS: tasks whose titles mention this area's keywords (last 60 days)
+    //    Split area name into meaningful words (skip short words like "and", "&", "the")
+    const keywords = a.name.toLowerCase()
+      .split(/[\s&,\/+]+/)
+      .filter(w => w.length >= 4);
+    let kwTotal = 0, kwDone = 0;
+    if (keywords.length > 0) {
+      for (const t of allTasks) {
+        const titleLower = (t.title || '').toLowerCase();
+        if (keywords.some(kw => titleLower.includes(kw))) {
+          kwTotal++;
+          if (t.status === 'completed') kwDone++;
+        }
+      }
+    }
+    const kwScore = kwTotal > 0 ? Math.min(100, Math.round((kwDone / kwTotal) * 100)) : null;
+
+    // 3. JOURNAL MENTIONS
+    const mentionRegex = keywords.length > 0
+      ? new RegExp(keywords.join('|'), 'gi')
+      : new RegExp(a.name.toLowerCase(), 'g');
+    const mentionCount = (allJournalText.match(mentionRegex) || []).length;
+    const journalScore = Math.min(100, mentionCount * 8); // 12 mentions = 100
+
+    // 4. MILESTONE completion
+    const areaMs = milestones.filter(m => m.area_id === a.id);
+    const msDone  = areaMs.filter(m => m.completed).length;
+    const msScore = areaMs.length > 0 ? Math.round((msDone / areaMs.length) * 100) : null;
+
+    // ── Composite auto-score ──────────────────────────────────
+    // Priority: tagged tasks > keyword tasks > journal > milestones
+    // Habit completion & overall task rate always contribute as a floor signal
+    const signals = [];
+    const weights = [];
+
+    if (taggedScore !== null)   { signals.push(taggedScore);  weights.push(40); }
+    if (kwScore !== null)        { signals.push(kwScore);      weights.push(25); }
+    if (journalScore > 0)        { signals.push(journalScore); weights.push(15); }
+    if (msScore !== null)        { signals.push(msScore);      weights.push(10); }
+    if (habitBaseline !== null)  { signals.push(habitBaseline); weights.push(20); }
+    if (taskBaseline !== null)   { signals.push(taskBaseline);  weights.push(15); }
+
     let autoScore = null;
-    if (taskScore !== null && mentionCount > 0) {
-      autoScore = Math.round(taskScore * 0.7 + journalScore * 0.3);
-    } else if (taskScore !== null) {
-      autoScore = taskScore;
-    } else if (mentionCount > 0) {
-      autoScore = journalScore;
+    if (signals.length > 0) {
+      const totalWeight = weights.reduce((s, w) => s + w, 0);
+      autoScore = Math.round(
+        signals.reduce((s, v, i) => s + v * weights[i], 0) / totalWeight
+      );
     }
 
-    // Milestone score
-    const areaMs = milestones.filter(m => m.area_id === a.id);
-    const msDone = areaMs.filter(m => m.completed).length;
-    const msScore = areaMs.length > 0 ? Math.round((msDone / areaMs.length) * 100) : null;
+    // Combined task stats for display (tagged + keyword)
+    const displayTaskTotal = (ts?.total || 0) + kwTotal;
+    const displayTaskDone  = (ts?.done  || 0) + kwDone;
 
     return {
       ...a,
       milestones: areaMs,
-      taskStats: ts ? { total: ts.total, done: ts.done } : { total: 0, done: 0 },
+      taskStats: { total: displayTaskTotal, done: displayTaskDone },
       journalMentions: mentionCount,
       autoScore,
       msScore,
-      // Final display score: manual progress if set >0, else autoScore
+      // Final display score: manual override if set >0, else computed
       displayScore: a.progress > 0 ? a.progress : (autoScore ?? 0),
     };
   });
