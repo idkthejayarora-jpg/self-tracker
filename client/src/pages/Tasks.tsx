@@ -56,6 +56,7 @@ export default function Tasks() {
   const [editForm, setEditForm] = useState<Partial<TaskFormData>>({});
   const [editErr, setEditErr] = useState('');
   const [lifeAreas, setLifeAreas] = useState<LifeAreaOption[]>([]);
+  const [showDone, setShowDone] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 
   const fetchTasks = useCallback(async () => {
@@ -159,6 +160,11 @@ export default function Tasks() {
   }
 
   const today = new Date().toISOString().slice(0, 10);
+
+  // Split active vs done when in 'all' view (not queue)
+  const showSplit = filter === 'all' && !queueView;
+  const activeTasks = showSplit ? tasks.filter(t => t.status !== 'completed') : tasks;
+  const doneTasks   = showSplit ? tasks.filter(t => t.status === 'completed')  : [];
 
   return (
     <div className="space-y-4 max-w-xl anim-page"
@@ -377,7 +383,15 @@ export default function Tasks() {
             <p className="text-xs mt-1" style={{ color: '#52525b' }}>Tap "New task" to get started</p>
           </div>
         )}
-        {tasks.map(task => {
+
+        {/* ── Active missions ── */}
+        {showSplit && activeTasks.length === 0 && tasks.length > 0 && (
+          <div className="rounded-xl py-8 text-center" style={{ border: '1px dashed var(--b)' }}>
+            <p className="text-sm font-semibold" style={{ color: 'var(--t-muted)' }}>All missions complete 🎯</p>
+          </div>
+        )}
+
+        {activeTasks.map(task => {
           const isExpanded = expanded === task.id;
           const isEditing = editId === task.id;
           const isOverdue = task.due_date && task.due_date < today && task.status !== 'completed' && task.status !== 'cancelled';
@@ -523,9 +537,113 @@ export default function Tasks() {
             </div>
           );
         })}
-      </div>
+        {/* ── Completed section ── */}
+        {showSplit && doneTasks.length > 0 && (
+          <div className="mt-1">
+            <button
+              onClick={() => setShowDone(s => !s)}
+              className="flex items-center gap-2 w-full py-2 px-1 tap"
+            >
+              <div className="flex-1 h-px" style={{ background: 'var(--b)' }} />
+              <span className="text-[10px] font-black tracking-widest shrink-0"
+                style={{ color: 'var(--t-faint)' }}>
+                ✓ COMPLETED ({doneTasks.length})
+              </span>
+              <div className="flex-1 h-px" style={{ background: 'var(--b)' }} />
+              <span style={{ color: 'var(--t-faint)', fontSize: 12 }}>{showDone ? '▲' : '▼'}</span>
+            </button>
 
-      </div>{/* end relative zIndex wrapper */}
-    </div>
-  );
-}
+            {showDone && (
+              <div className="space-y-2 mt-2">
+                {doneTasks.map(task => {
+                  const isExpanded = expanded === task.id;
+                  const isEditing  = editId === task.id;
+                  const pc = PRIORITY_COLOR[task.priority] ?? PRIORITY_COLOR.medium;
+                  return (
+                    <div key={task.id} className="card overflow-hidden" style={{ opacity: 0.75 }}>
+                      <div className="flex items-center gap-3 px-4 py-3">
+                        <button onClick={() => toggleStatus(task)}
+                          className="flex items-center justify-center rounded-full border-2 tap transition-all"
+                          style={{ width: 22, height: 22, flexShrink: 0,
+                            background: `rgb(var(--accent-rgb))`, borderColor: `rgb(var(--accent-rgb))` }}>
+                          <Check size={12} color="#fff" strokeWidth={3} />
+                        </button>
+                        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setExpanded(isExpanded ? null : task.id)}>
+                          <p className="text-sm font-medium text-head truncate"
+                            style={{ textDecoration: 'line-through', opacity: 0.6 }}>{task.title}</p>
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                              style={{ background: pc.bg, color: pc.text, border: `1px solid ${pc.border}` }}>
+                              {task.priority}
+                            </span>
+                            {task.completed_at && (
+                              <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>
+                                Done {task.completed_at.slice(0, 10)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1" style={{ flexShrink: 0 }}>
+                          <button onClick={() => setExpanded(isExpanded ? null : task.id)}
+                            className="p-1 tap" style={{ color: 'var(--t-faint)' }}>
+                            {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                          </button>
+                          <button onClick={() => deleteTask(task.id)}
+                            className="p-1 tap" style={{ color: 'var(--t-faint)' }}>
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                      {isExpanded && (
+                        <div className="px-4 pb-3 pt-3 space-y-2" style={{ borderTop: '1px solid var(--b)' }}>
+                          {isEditing ? (
+                            <div className="space-y-2">
+                              {editErr && (
+                                <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs"
+                                  style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+                                  <AlertCircle size={12} />{editErr}
+                                </div>
+                              )}
+                              <input value={editForm.title ?? ''}
+                                onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
+                                onKeyDown={e => e.key === 'Enter' && saveEdit(task.id)}
+                                className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none" placeholder="Title" />
+                              <div className="flex gap-2">
+                                <button onClick={() => { setEditId(null); setEditErr(''); }}
+                                  className="flex-1 py-1.5 rounded-lg text-xs font-medium tap"
+                                  style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>Cancel</button>
+                                <button onClick={() => saveEdit(task.id)}
+                                  className="flex-1 py-1.5 rounded-lg text-xs font-semibold tap flex items-center justify-center gap-1"
+                                  style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
+                                  <Save size={12} /> Save
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              {task.description && (
+                                <p className="text-xs" style={{ color: 'var(--t-muted)' }}>{task.description}</p>
+                              )}
+                              <div className="flex gap-2 flex-wrap">
+                                <button onClick={async () => { await api.patch(`/tasks/${task.id}`, { status: 'pending' }); fetchTasks(); }}
+                                  className="text-xs px-2.5 py-1 rounded-full tap font-semibold"
+                                  style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>
+                                  Reopen
+                                </button>
+                                <button onClick={() => startEdit(task)}
+                                  className="flex items-center gap-1 text-xs tap font-semibold"
+                                  style={{ color: 'var(--t-dim)' }}>
+                                  <Pencil size={11} /> Edit
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
