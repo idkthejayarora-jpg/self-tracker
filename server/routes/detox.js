@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
+const { localDate, SQL_NOW } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
 
@@ -26,7 +27,7 @@ router.delete('/apps/:id', (req, res) => {
 // ── Daily logs ────────────────────────────────────────────────────────────────
 
 router.get('/today', (req, res) => {
-  const date = req.query.date || new Date().toISOString().slice(0,10);
+  const date = req.query.date || localDate();
   const apps = db.prepare(`SELECT * FROM detox_apps WHERE user_id=? ORDER BY sort_order,created_at`).all(req.user.id);
   const logs = db.prepare(`SELECT * FROM detox_logs WHERE user_id=? AND date=?`).all(req.user.id, date);
   const logMap = Object.fromEntries(logs.map(l => [l.app_id, l]));
@@ -34,7 +35,7 @@ router.get('/today', (req, res) => {
 });
 
 router.put('/log/:appId', (req, res) => {
-  const date = req.body.date || new Date().toISOString().slice(0,10);
+  const date = req.body.date || localDate();
   const { status='clean', minutes_used=0, note='' } = req.body;
   // verify app belongs to user
   const app = db.prepare('SELECT id FROM detox_apps WHERE id=? AND user_id=?').get(req.params.appId, req.user.id);
@@ -55,7 +56,7 @@ router.get('/streaks', (req, res) => {
     // Count consecutive clean days backwards from today
     const logs = db.prepare(`
       SELECT date, status FROM detox_logs
-      WHERE user_id=? AND app_id=? AND date <= date('now')
+      WHERE user_id=? AND app_id=? AND date <= ${SQL_NOW}
       ORDER BY date DESC
     `).all(req.user.id, app.id);
 

@@ -2,6 +2,7 @@ const router = require('express').Router();
 const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
 const { getLevelInfo } = require('../utils/pointsUtils');
+const { SQL_NOW, sqlDateOf, SQL_OFF } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
 
@@ -9,9 +10,9 @@ router.get('/', (req, res) => {
   const uid = req.user.id;
   try {
     const totalRow = db.prepare('SELECT SUM(points) as total FROM points_log WHERE user_id = ?').get(uid);
-    const todayRow = db.prepare("SELECT SUM(points) as total FROM points_log WHERE user_id = ? AND DATE(created_at) = date('now')").get(uid);
-    const weekRow  = db.prepare("SELECT SUM(points) as total FROM points_log WHERE user_id = ? AND created_at >= date('now', '-7 days')").get(uid);
-    const monthRow = db.prepare("SELECT SUM(points) as total FROM points_log WHERE user_id = ? AND created_at >= date('now', 'start of month')").get(uid);
+    const todayRow = db.prepare(`SELECT SUM(points) as total FROM points_log WHERE user_id = ? AND ${sqlDateOf('created_at')} = ${SQL_NOW}`).get(uid);
+    const weekRow  = db.prepare(`SELECT SUM(points) as total FROM points_log WHERE user_id = ? AND created_at >= date('now', ${SQL_OFF}, '-7 days')`).get(uid);
+    const monthRow = db.prepare(`SELECT SUM(points) as total FROM points_log WHERE user_id = ? AND created_at >= date('now', ${SQL_OFF}, 'start of month')`).get(uid);
 
     const total     = totalRow?.total ?? 0;
     const today     = todayRow?.total ?? 0;

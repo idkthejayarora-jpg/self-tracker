@@ -5,6 +5,7 @@ const { authMiddleware } = require('../middleware/auth');
 const db = require('../db/database');
 const { awardPoints } = require('../utils/pointsUtils');
 const { updateStreak } = require('../utils/streakUtils');
+const { localDate, localDatetime, SQL_NOW, sqlDateOf } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
 
@@ -13,7 +14,7 @@ router.post('/', async (req, res) => {
   const { text } = req.body;
   if (!text || !text.trim()) return res.status(400).json({ error: 'No text provided' });
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDate();
 
   // ── 1. Gather tasks & habits context ──────────────────────────────────────
   const tasks = db.prepare(
@@ -49,7 +50,7 @@ router.post('/', async (req, res) => {
 
     db.prepare(`
       UPDATE tasks SET status='completed', completed_at=? WHERE id = ? AND user_id = ?
-    `).run(new Date().toISOString(), tid, uid);
+    `).run(localDatetime(), tid, uid);
 
     const pts = { urgent: 50, high: 30, medium: 20, low: 10 }[task.priority] || 20;
     try { awardPoints(uid, 'task', 'complete', pts, tid, task.title); } catch (_) {}
@@ -70,8 +71,8 @@ router.post('/', async (req, res) => {
     `).run(uid, hid, today);
 
     const alreadyAwarded = db.prepare(
-      "SELECT 1 FROM points_log WHERE user_id=? AND source='habit' AND source_id=? AND DATE(created_at)=?"
-    ).get(uid, hid, today);
+      `SELECT 1 FROM points_log WHERE user_id=? AND source='habit' AND source_id=? AND ${sqlDateOf('created_at')}=${SQL_NOW}`
+    ).get(uid, hid);
     if (!alreadyAwarded) {
       try { awardPoints(uid, 'habit', 'complete', 10, hid, habit.name); } catch (_) {}
     }
@@ -101,8 +102,8 @@ router.post('/', async (req, res) => {
     `).run(uid, today, s.bedtime || null, s.wake_time || null, duration_minutes, s.quality || null, s.notes || null);
 
     const alreadyAwardedSleep = db.prepare(
-      "SELECT 1 FROM points_log WHERE user_id=? AND source='sleep' AND DATE(created_at)=?"
-    ).get(uid, today);
+      `SELECT 1 FROM points_log WHERE user_id=? AND source='sleep' AND ${sqlDateOf('created_at')}=${SQL_NOW}`
+    ).get(uid);
     if (!alreadyAwardedSleep) {
       try { awardPoints(uid, 'sleep', 'log', 15, null, 'Sleep logged'); } catch (_) {}
       try { updateStreak(uid, 'sleep'); } catch (_) {}
@@ -128,8 +129,8 @@ router.post('/', async (req, res) => {
     `).run(uid, today, journalContent, mood);
 
     const alreadyAwardedJournal = db.prepare(
-      "SELECT 1 FROM points_log WHERE user_id=? AND source='journal' AND DATE(created_at)=?"
-    ).get(uid, today);
+      `SELECT 1 FROM points_log WHERE user_id=? AND source='journal' AND ${sqlDateOf('created_at')}=${SQL_NOW}`
+    ).get(uid);
     if (!alreadyAwardedJournal) {
       try { awardPoints(uid, 'journal', 'write', 20, null, 'Journal entry'); } catch (_) {}
       try { updateStreak(uid, 'journal'); } catch (_) {}

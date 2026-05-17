@@ -3,6 +3,7 @@ const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
 const { updateStreak } = require('../utils/streakUtils');
 const { awardPoints } = require('../utils/pointsUtils');
+const { localDate, SQL_OFF } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
 
@@ -131,7 +132,7 @@ router.get('/stats', (req, res) => {
       COUNT(*) as sessions,
       COUNT(DISTINCT date) as days
     FROM workout_sessions
-    WHERE user_id = ? AND date >= date('now', '-56 days')
+    WHERE user_id = ? AND date >= date('now', ${SQL_OFF}, '-56 days')
     GROUP BY week
     ORDER BY week ASC
   `).all(uid);
@@ -220,7 +221,7 @@ router.post('/plan/log/:dayId', (req, res) => {
   const day = db.prepare('SELECT * FROM workout_plan_days WHERE id=? AND user_id=?').get(req.params.dayId, req.user.id);
   if (!day) return res.status(404).json({ error: 'Day not found' });
   const exercises = db.prepare('SELECT * FROM workout_plan_exercises WHERE day_id=? ORDER BY sort_order').all(req.params.dayId);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDate();
   const r = db.prepare('INSERT INTO workout_sessions (user_id, date, notes) VALUES (?,?,?)').run(req.user.id, today, `${day.name} — from plan`);
   const sessionId = r.lastInsertRowid;
   // Pre-populate sets (1 set per exercise as placeholder)

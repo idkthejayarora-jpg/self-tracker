@@ -3,6 +3,7 @@ const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
 const db = require('../db/database');
 const { awardPoints } = require('../utils/pointsUtils');
+const { localDate, SQL_NOW, sqlDateOf } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
 
@@ -33,7 +34,7 @@ router.delete('/:id', (req, res) => {
 
 // GET /logs?date=YYYY-MM-DD — habits with done status for a date
 router.get('/logs', (req, res) => {
-  const date = req.query.date || new Date().toISOString().slice(0, 10);
+  const date = req.query.date || localDate();
   const habits = db.prepare('SELECT * FROM habits WHERE user_id = ? ORDER BY sort_order, created_at').all(req.user.id);
   const logs = db.prepare('SELECT * FROM habit_logs WHERE user_id = ? AND date = ?').all(req.user.id, date);
   const logMap = {};
@@ -49,7 +50,7 @@ router.get('/logs', (req, res) => {
 // PUT /log/:habitId — upsert log for today (toggle done)
 router.put('/log/:habitId', (req, res) => {
   const { date, done, note } = req.body;
-  const logDate = date || new Date().toISOString().slice(0, 10);
+  const logDate = date || localDate();
   const habit = db.prepare('SELECT * FROM habits WHERE id = ? AND user_id = ?').get(req.params.habitId, req.user.id);
   if (!habit) return res.status(404).json({ error: 'Habit not found' });
 
@@ -65,8 +66,8 @@ router.put('/log/:habitId', (req, res) => {
   // Award 10 pts when marking done — once per habit per day
   if (done) {
     const alreadyAwarded = db.prepare(
-      "SELECT 1 FROM points_log WHERE user_id=? AND source='habit' AND source_id=? AND DATE(created_at)=?"
-    ).get(req.user.id, req.params.habitId, logDate);
+      `SELECT 1 FROM points_log WHERE user_id=? AND source='habit' AND source_id=? AND ${sqlDateOf('created_at')}=${SQL_NOW}`
+    ).get(req.user.id, req.params.habitId);
     if (!alreadyAwarded) {
       awardPoints(req.user.id, 'habit', 'complete', 10, parseInt(req.params.habitId), habit.name);
     }
@@ -78,7 +79,7 @@ router.put('/log/:habitId', (req, res) => {
 // GET /streaks — per-habit current streak
 router.get('/streaks', (req, res) => {
   const habits = db.prepare('SELECT * FROM habits WHERE user_id = ?').all(req.user.id);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDate();
 
   const streaks = habits.map(h => {
     const logs = db.prepare(
@@ -105,7 +106,7 @@ router.get('/streaks', (req, res) => {
 
 // GET /week?date=YYYY-MM-DD — 7-day dot grid (last 7 days ending on date)
 router.get('/week', (req, res) => {
-  const endDate = req.query.date || new Date().toISOString().slice(0, 10);
+  const endDate = req.query.date || localDate();
   const dates = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(endDate);

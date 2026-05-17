@@ -4,6 +4,7 @@ const { authMiddleware } = require('../middleware/auth');
 const db = require('../db/database');
 const { updateStreak } = require('../utils/streakUtils');
 const { awardPoints } = require('../utils/pointsUtils');
+const { localDate, SQL_NOW, sqlDateOf, SQL_OFF } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
 
@@ -17,8 +18,10 @@ router.get('/', (req, res) => {
 
 // GET /stats — avg last 7d, sleep debt
 router.get('/stats', (req, res) => {
-  const today = new Date().toISOString().slice(0, 10);
-  const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+  const today = localDate();
+  const weekAgoDate = new Date(today);
+  weekAgoDate.setDate(weekAgoDate.getDate() - 7);
+  const weekAgo = weekAgoDate.toISOString().slice(0, 10);
 
   const rows = db.prepare(
     'SELECT duration_minutes, quality FROM sleep_logs WHERE user_id = ? AND date >= ? AND date <= ?'
@@ -41,7 +44,7 @@ router.get('/stats', (req, res) => {
 // POST / — upsert for date
 router.post('/', (req, res) => {
   const { date, bedtime, wake_time, duration_minutes, quality, notes } = req.body;
-  const logDate = date || new Date().toISOString().slice(0, 10);
+  const logDate = date || localDate();
 
   db.prepare(`
     INSERT INTO sleep_logs (user_id, date, bedtime, wake_time, duration_minutes, quality, notes)
@@ -60,7 +63,7 @@ router.post('/', (req, res) => {
 
   // Award 15 pts once per day for logging sleep
   const alreadyAwarded = db.prepare(
-    "SELECT 1 FROM points_log WHERE user_id=? AND source='sleep' AND DATE(created_at)=date('now')"
+    `SELECT 1 FROM points_log WHERE user_id=? AND source='sleep' AND ${sqlDateOf('created_at')}=${SQL_NOW}`
   ).get(req.user.id);
   if (!alreadyAwarded) {
     awardPoints(req.user.id, 'sleep', 'log', 15, null, logDate);

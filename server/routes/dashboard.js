@@ -3,12 +3,13 @@ const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
 const { computePriorityScore } = require('../utils/priorityScore');
 const { getTotalPoints, getLevelInfo } = require('../utils/pointsUtils');
+const { localDate, SQL_NOW, sqlDateOf } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
 
 router.get('/', (req, res) => {
   const uid = req.user.id;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDate();
 
   // Pending tasks due today or overdue
   const pendingToday = db.prepare(`
@@ -98,7 +99,7 @@ router.get('/', (req, res) => {
   let points = { total: 0, today: 0, level: 1, levelLabel: 'Beginner', nextLevel: 500, progressPct: 0 };
   try {
     const totalPts  = getTotalPoints(uid);
-    const todayPts  = (db.prepare("SELECT SUM(points) as s FROM points_log WHERE user_id = ? AND DATE(created_at) = date('now')").get(uid) || {}).s || 0;
+    const todayPts  = (db.prepare(`SELECT SUM(points) as s FROM points_log WHERE user_id = ? AND ${sqlDateOf('created_at')} = ${SQL_NOW}`).get(uid) || {}).s || 0;
     points = { total: totalPts, today: todayPts, ...getLevelInfo(totalPts) };
   } catch (_) {}
 

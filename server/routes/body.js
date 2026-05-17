@@ -3,6 +3,7 @@ const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
 const db = require('../db/database');
 const { awardPoints } = require('../utils/pointsUtils');
+const { localDate, SQL_NOW, sqlDateOf } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
 
@@ -25,7 +26,7 @@ router.get('/latest', (req, res) => {
 // POST / — upsert for date
 router.post('/', (req, res) => {
   const { date, weight_kg, body_fat_pct, chest_cm, waist_cm, hips_cm, neck_cm, bicep_cm, notes } = req.body;
-  const logDate = date || new Date().toISOString().slice(0, 10);
+  const logDate = date || localDate();
 
   db.prepare(`
     INSERT INTO body_stats (user_id, date, weight_kg, body_fat_pct, chest_cm, waist_cm, hips_cm, neck_cm, bicep_cm, notes)
@@ -46,7 +47,7 @@ router.post('/', (req, res) => {
 
   // Award 10 pts once per day for logging body stats
   const alreadyAwarded = db.prepare(
-    "SELECT 1 FROM points_log WHERE user_id=? AND source='body' AND DATE(created_at)=date('now')"
+    `SELECT 1 FROM points_log WHERE user_id=? AND source='body' AND ${sqlDateOf('created_at')}=${SQL_NOW}`
   ).get(req.user.id);
   if (!alreadyAwarded) {
     awardPoints(req.user.id, 'body', 'log_stats', 10, null, logDate);

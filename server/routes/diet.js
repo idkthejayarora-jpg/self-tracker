@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
 const { awardPoints } = require('../utils/pointsUtils');
+const { localDate } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
 
@@ -46,7 +47,7 @@ router.delete('/meals/:id', (req, res) => {
 // ── Daily food log ───────────────────────────────────────────────────────────
 
 router.get('/log', (req, res) => {
-  const date = req.query.date || new Date().toISOString().slice(0, 10);
+  const date = req.query.date || localDate();
   const entries = db.prepare(`
     SELECT f.*, s.name AS saved_meal_name
     FROM food_logs f
@@ -61,7 +62,7 @@ router.post('/log', (req, res) => {
   const { date, meal_type = 'snack', name, calories = 0, protein_g = 0,
           carbs_g = 0, fat_g = 0, saved_meal_id = null } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Name required' });
-  const logDate = date || new Date().toISOString().slice(0, 10);
+  const logDate = date || localDate();
 
   // Validate saved_meal_id belongs to this user — nullify if invalid to avoid FK error
   let validMealId = null;

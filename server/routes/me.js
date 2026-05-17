@@ -3,6 +3,7 @@ const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
 const db = require('../db/database');
 const { getTotalPoints } = require('../utils/pointsUtils');
+const { SQL_OFF } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
 
@@ -72,30 +73,30 @@ router.get('/summary', (req, res) => {
   // ── Stats ──
   // STRENGTH: workout sessions this month
   const workoutSessions = (db.prepare(
-    "SELECT COUNT(*) as n FROM workout_sessions WHERE user_id=? AND strftime('%Y-%m',date)=strftime('%Y-%m','now')"
+    `SELECT COUNT(*) as n FROM workout_sessions WHERE user_id=? AND strftime('%Y-%m',date)=strftime('%Y-%m', date('now', ${SQL_OFF}))`
   ).get(uid) || {}).n || 0;
   const strength = Math.min(100, Math.round((workoutSessions / 20) * 100));
 
   // VITALITY: avg sleep quality last 7 nights
   const sleepRow = db.prepare(
-    "SELECT AVG(quality) as q FROM sleep_logs WHERE user_id=? AND date >= date('now','-7 days')"
+    `SELECT AVG(quality) as q FROM sleep_logs WHERE user_id=? AND date >= date('now', ${SQL_OFF}, '-7 days')`
   ).get(uid);
   const vitality = sleepRow?.q ? Math.round(sleepRow.q * 20) : 0;
 
   // DISCIPLINE: habit completion rate this week
   const habitTotal = (db.prepare('SELECT COUNT(*) as n FROM habits WHERE user_id=?').get(uid) || {}).n || 0;
   const habitDone = (db.prepare(
-    "SELECT COUNT(*) as n FROM habit_logs WHERE user_id=? AND done=1 AND date >= date('now','-7 days')"
+    `SELECT COUNT(*) as n FROM habit_logs WHERE user_id=? AND done=1 AND date >= date('now', ${SQL_OFF}, '-7 days')`
   ).get(uid) || {}).n || 0;
   const maxHabitDays = habitTotal * 7;
   const discipline = maxHabitDays > 0 ? Math.min(100, Math.round((habitDone / maxHabitDays) * 100)) : 0;
 
   // FOCUS: task completion rate this month
   const taskTotal = (db.prepare(
-    "SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND created_at >= date('now','start of month')"
+    `SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND created_at >= date('now', ${SQL_OFF}, 'start of month')`
   ).get(uid) || {}).n || 0;
   const taskDone = (db.prepare(
-    "SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND status='completed' AND completed_at >= date('now','start of month')"
+    `SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND status='completed' AND completed_at >= date('now', ${SQL_OFF}, 'start of month')`
   ).get(uid) || {}).n || 0;
   const focus = taskTotal > 0 ? Math.min(100, Math.round((taskDone / taskTotal) * 100)) : 0;
 
@@ -107,7 +108,7 @@ router.get('/summary', (req, res) => {
 
   // WEALTH: finance net this month → 0-100 (50 = break-even)
   const finRow = db.prepare(
-    "SELECT SUM(CASE WHEN type='income' THEN amount ELSE -amount END) as net FROM finance_entries WHERE user_id=? AND strftime('%Y-%m',date)=strftime('%Y-%m','now')"
+    `SELECT SUM(CASE WHEN type='income' THEN amount ELSE -amount END) as net FROM finance_entries WHERE user_id=? AND strftime('%Y-%m',date)=strftime('%Y-%m', date('now', ${SQL_OFF}))`
   ).get(uid);
   const net = finRow?.net || 0;
   const wealth = net >= 0

@@ -3,6 +3,7 @@ const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
 const { updateStreak, maybeUpdateOverallStreak } = require('../utils/streakUtils');
 const { awardPoints } = require('../utils/pointsUtils');
+const { SQL_NOW, sqlDateOf } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
 
@@ -43,7 +44,7 @@ router.put('/:date', (req, res) => {
 
   // Award 20 pts once per day for journaling
   const alreadyAwarded = db.prepare(
-    "SELECT 1 FROM points_log WHERE user_id=? AND source='journal' AND DATE(created_at)=date('now')"
+    `SELECT 1 FROM points_log WHERE user_id=? AND source='journal' AND ${sqlDateOf('created_at')}=${SQL_NOW}`
   ).get(req.user.id);
   if (!alreadyAwarded) {
     awardPoints(req.user.id, 'journal', 'write', 20, null, req.params.date);

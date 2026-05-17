@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
+const { SQL_OFF } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
 
@@ -39,18 +40,18 @@ router.get('/areas', (req, res) => {
 
   // Habit completion rate this week → 0-100
   const habitTotal  = (db.prepare('SELECT COUNT(*) as n FROM habits WHERE user_id=?').get(uid)||{}).n || 0;
-  const habitDone   = (db.prepare("SELECT COUNT(*) as n FROM habit_logs WHERE user_id=? AND done=1 AND date >= date('now','-7 days')").get(uid)||{}).n || 0;
+  const habitDone   = (db.prepare(`SELECT COUNT(*) as n FROM habit_logs WHERE user_id=? AND done=1 AND date >= date('now', ${SQL_OFF}, '-7 days')`).get(uid)||{}).n || 0;
   const habitBaseline = habitTotal > 0 ? Math.min(100, Math.round((habitDone / (habitTotal * 7)) * 100)) : null;
 
   // Overall task completion this month → 0-100
-  const allTaskTotal = (db.prepare("SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND created_at >= date('now','start of month')").get(uid)||{}).n || 0;
-  const allTaskDone  = (db.prepare("SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND status='completed' AND completed_at >= date('now','start of month')").get(uid)||{}).n || 0;
+  const allTaskTotal = (db.prepare(`SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND created_at >= date('now', ${SQL_OFF}, 'start of month')`).get(uid)||{}).n || 0;
+  const allTaskDone  = (db.prepare(`SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND status='completed' AND completed_at >= date('now', ${SQL_OFF}, 'start of month')`).get(uid)||{}).n || 0;
   const taskBaseline = allTaskTotal > 0 ? Math.min(100, Math.round((allTaskDone / allTaskTotal) * 100)) : null;
 
   // All task titles this month (for keyword matching against area names)
   const allTasks = db.prepare(`
     SELECT title, status FROM tasks
-    WHERE user_id = ? AND created_at >= date('now','-60 days')
+    WHERE user_id = ? AND created_at >= date('now', ${SQL_OFF}, '-60 days')
   `).all(uid);
 
   // Tasks explicitly tagged per area
@@ -65,7 +66,7 @@ router.get('/areas', (req, res) => {
 
   // Journal text last 30 days
   const journals = db.prepare(`
-    SELECT content FROM journal_entries WHERE user_id = ? AND date >= date('now','-30 days')
+    SELECT content FROM journal_entries WHERE user_id = ? AND date >= date('now', ${SQL_OFF}, '-30 days')
   `).all(uid);
   const allJournalText = journals.map(j => (j.content || '').toLowerCase()).join(' ');
 
