@@ -167,7 +167,7 @@ export default function Tasks() {
   const doneTasks   = showSplit ? tasks.filter(t => t.status === 'completed')  : [];
 
   return (
-    <div className="space-y-4 max-w-xl anim-page"
+    <div className="max-w-2xl mx-auto space-y-5 anim-page"
       style={{ '--accent-rgb': '34 197 94' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}

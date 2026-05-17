@@ -337,7 +337,7 @@ export default function Diet() {
   }, {} as Record<string, FoodLog[]>);
 
   return (
-    <div className="space-y-4 max-w-xl anim-page"
+    <div className="max-w-2xl mx-auto space-y-5 anim-page"
       style={{ '--accent-rgb': '52 211 153' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}

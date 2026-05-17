@@ -70,7 +70,7 @@ export default function SocialDetox() {
   const streakMap = Object.fromEntries(streaks.map(s => [s.app_id, s]));
 
   return (
-    <div className="max-w-xl space-y-4 anim-page"
+    <div className="max-w-2xl mx-auto space-y-5 anim-page"
       style={{ '--accent-rgb': '244 63 94' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}

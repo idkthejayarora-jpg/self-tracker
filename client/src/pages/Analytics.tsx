@@ -141,7 +141,7 @@ export default function Analytics() {
   const hasWorkout = weekly.some(w => (w.workout_sessions ?? 0) > 0);
 
   return (
-    <div className="max-w-xl space-y-4 anim-page"
+    <div className="max-w-2xl mx-auto space-y-5 anim-page"
       style={{ '--accent-rgb': '96 165 250' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}

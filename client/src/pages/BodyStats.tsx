@@ -106,7 +106,7 @@ export default function BodyStats() {
   }));
 
   return (
-    <div className="max-w-xl space-y-4 anim-page"
+    <div className="max-w-2xl mx-auto space-y-5 anim-page"
       style={{ '--accent-rgb': '56 189 248' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}

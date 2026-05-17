@@ -94,7 +94,7 @@ export default function Habits() {
   const doneCount = habits.filter(h => h.done).length;
 
   return (
-    <div className="max-w-xl space-y-4 anim-page"
+    <div className="max-w-2xl mx-auto space-y-5 anim-page"
       style={{ '--accent-rgb': '167 139 250' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}

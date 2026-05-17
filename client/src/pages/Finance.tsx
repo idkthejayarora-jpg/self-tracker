@@ -163,7 +163,7 @@ export default function Finance() {
   const monthLabel = format(new Date(`${month}-15`), 'MMMM yyyy');
 
   return (
-    <div className="max-w-xl space-y-4 anim-page"
+    <div className="max-w-2xl mx-auto space-y-5 anim-page"
       style={{ '--accent-rgb': '0 255 159' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}

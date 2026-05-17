@@ -162,7 +162,7 @@ export default function Journal() {
   const accent   = moodData?.color ?? '#00f5ff';
 
   return (
-    <div className="max-w-2xl mx-auto space-y-3 anim-page pb-10 px-1 sm:px-0"
+    <div className="max-w-2xl mx-auto space-y-5 anim-page pb-10 px-1 sm:px-0"
       style={{ '--accent-rgb': '0 245 255' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}

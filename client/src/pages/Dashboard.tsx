@@ -729,7 +729,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 anim-page pb-8"
+    <div className="max-w-2xl mx-auto space-y-6 anim-page pb-8"
       style={{ '--accent-rgb': '57 255 20' } as React.CSSProperties}>
 
       {/* ── WAR ROOM HEADER ── */}
