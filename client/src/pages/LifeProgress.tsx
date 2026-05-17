@@ -64,11 +64,10 @@ function ProgressRing({ value, color, size = 56 }: { value: number; color: strin
   );
 }
 
-function AreaCard({ area, onUpdate, onDelete, lifeAreas }: {
+function AreaCard({ area, onUpdate, onDelete }: {
   area: LifeArea;
   onUpdate: (id: number, updates: Partial<LifeArea>) => void;
   onDelete: (id: number) => void;
-  lifeAreas: LifeArea[];
 }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -565,7 +564,7 @@ export default function LifeProgress() {
       {/* ── Area cards (2-col on desktop) ── */}
       <div className="grid gap-3 sm:grid-cols-2">
         {areas.map(area => (
-          <AreaCard key={area.id} area={area} onUpdate={updateAreaLocal} onDelete={deleteArea} lifeAreas={areas} />
+          <AreaCard key={area.id} area={area} onUpdate={updateAreaLocal} onDelete={deleteArea} />
         ))}
       </div>
 
