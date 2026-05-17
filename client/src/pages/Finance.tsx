@@ -177,7 +177,7 @@ export default function Finance() {
 
       {/* ── ASSET NEXUS HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: '#000', border: '1px solid #00ff9f20' }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #00ff9f20' }}>
         {/* Financial grid */}
         <div className="absolute inset-0 pointer-events-none" style={{
           backgroundImage: 'linear-gradient(rgba(0,255,159,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,159,0.03) 1px, transparent 1px)',
@@ -229,9 +229,9 @@ export default function Finance() {
 
       {/* Month selector */}
       <div className="flex items-center gap-2">
-        <button onClick={() => shiftMonth(-1)} className="tap" style={{ color: '#71717a' }}><ChevronLeft size={16} /></button>
+        <button onClick={() => shiftMonth(-1)} className="tap" style={{ color: 'var(--t-dim)' }}><ChevronLeft size={16} /></button>
         <span className="text-sm font-semibold text-head">{monthLabel}</span>
-        <button onClick={() => shiftMonth(1)} className="tap" style={{ color: '#71717a' }}><ChevronRight size={16} /></button>
+        <button onClick={() => shiftMonth(1)} className="tap" style={{ color: 'var(--t-dim)' }}><ChevronRight size={16} /></button>
       </div>
 
       {loadErr && (
@@ -274,20 +274,20 @@ export default function Finance() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>AMOUNT</label>
+              <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>AMOUNT</label>
               <input type="number" step="0.01" min="0" required
                 value={entryForm.amount} onChange={e => setEntryForm(f => ({ ...f, amount: e.target.value }))}
                 placeholder="0.00"
                 className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
             </div>
             <div>
-              <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>DATE</label>
+              <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>DATE</label>
               <input type="date" value={entryForm.date} onChange={e => setEntryForm(f => ({ ...f, date: e.target.value }))}
                 className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
             </div>
           </div>
           <div>
-            <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>CATEGORY</label>
+            <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>CATEGORY</label>
             <div className="flex flex-wrap gap-1.5 mt-1">
               {(entryForm.type === 'income' ? INCOME_CATS : EXPENSE_CATS).map(cat => (
                 <button key={cat} type="button"
@@ -303,7 +303,7 @@ export default function Finance() {
             </div>
           </div>
           <div>
-            <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>NOTE</label>
+            <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>NOTE</label>
             <input value={entryForm.note} onChange={e => setEntryForm(f => ({ ...f, note: e.target.value }))}
               placeholder="e.g. Groceries"
               className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
@@ -317,7 +317,7 @@ export default function Finance() {
           <div className="flex gap-2">
             <button type="button" onClick={() => { setShowEntry(false); setEntryErr(''); }}
               className="flex-1 py-2 rounded-lg text-sm font-medium tap"
-              style={{ background: 'var(--s3)', color: '#71717a' }}>Cancel</button>
+              style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>Cancel</button>
             <button type="submit" disabled={savingEntry}
               className="flex-1 py-2 rounded-lg text-sm font-semibold tap disabled:opacity-50"
               style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
@@ -387,7 +387,7 @@ export default function Finance() {
                       {e.type}
                     </span>
                   </div>
-                  <p className="text-[11px] mt-0.5" style={{ color: '#71717a' }}>
+                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--t-dim)' }}>
                     {format(new Date(e.date + 'T12:00:00'), 'd MMM')}{e.note ? ` · ${e.note}` : ''}
                   </p>
                 </div>
@@ -421,20 +421,20 @@ export default function Finance() {
               className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none" />
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>TARGET (₹)</label>
+                <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>TARGET (₹)</label>
                 <input type="number" min="0" required
                   value={goalForm.target_amount} onChange={e => setGoalForm(f => ({ ...f, target_amount: e.target.value }))}
                   className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
               </div>
               <div>
-                <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>SAVED SO FAR (₹)</label>
+                <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>SAVED SO FAR (₹)</label>
                 <input type="number" min="0"
                   value={goalForm.saved_amount} onChange={e => setGoalForm(f => ({ ...f, saved_amount: e.target.value }))}
                   className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
               </div>
             </div>
             <div>
-              <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>DEADLINE (optional)</label>
+              <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>DEADLINE (optional)</label>
               <input type="date" value={goalForm.deadline} onChange={e => setGoalForm(f => ({ ...f, deadline: e.target.value }))}
                 className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
             </div>
@@ -447,7 +447,7 @@ export default function Finance() {
             <div className="flex gap-2">
               <button type="button" onClick={() => { setShowGoal(false); setGoalErr(''); }}
                 className="flex-1 py-2 rounded-lg text-sm font-medium tap"
-                style={{ background: 'var(--s3)', color: '#71717a' }}>Cancel</button>
+                style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>Cancel</button>
               <button type="submit" disabled={savingGoal}
                 className="flex-1 py-2 rounded-lg text-sm font-semibold tap disabled:opacity-50"
                 style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
@@ -471,7 +471,7 @@ export default function Finance() {
                     <Target size={13} style={{ color: g.color }} />
                     <p className="text-sm font-semibold text-head">{g.name}</p>
                     {g.deadline && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: 'var(--s3)', color: '#71717a' }}>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>
                         {format(new Date(g.deadline + 'T12:00:00'), 'MMM yyyy')}
                       </span>
                     )}
@@ -489,11 +489,11 @@ export default function Finance() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <button onClick={() => updateGoalSaved(g, -1000)}
-                      className="text-[11px] px-2 py-0.5 rounded tap" style={{ background: 'var(--s3)', color: '#71717a' }}>−₹1k</button>
+                      className="text-[11px] px-2 py-0.5 rounded tap" style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>−₹1k</button>
                     <button onClick={() => updateGoalSaved(g, 1000)}
                       className="text-[11px] px-2 py-0.5 rounded tap" style={{ background: 'var(--s3)', color: `rgb(var(--accent-rgb-light))` }}>+₹1k</button>
                   </div>
-                  <p className="text-[11px]" style={{ color: '#71717a' }}>₹{fmt(g.saved_amount)} / ₹{fmt(g.target_amount)}</p>
+                  <p className="text-[11px]" style={{ color: 'var(--t-dim)' }}>₹{fmt(g.saved_amount)} / ₹{fmt(g.target_amount)}</p>
                 </div>
               </div>
             );
@@ -504,7 +504,7 @@ export default function Finance() {
       {entries.length === 0 && !showEntry && summary?.income === 0 && summary?.expenses === 0 && (
         <div className="card py-12 text-center">
           <Wallet size={28} style={{ color: '#52525b', margin: '0 auto 8px' }} />
-          <p className="text-sm font-medium" style={{ color: '#71717a' }}>No transactions for {monthLabel}</p>
+          <p className="text-sm font-medium" style={{ color: 'var(--t-dim)' }}>No transactions for {monthLabel}</p>
         </div>
       )}
 

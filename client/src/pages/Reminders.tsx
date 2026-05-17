@@ -109,7 +109,7 @@ export default function Reminders() {
 
       {/* ── INCOMING SIGNAL HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: '#000', border: '1px solid #fbbf2425', minHeight: 110 }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #fbbf2425', minHeight: 110 }}>
         {/* Signal rings on right */}
         <div className="absolute pointer-events-none" style={{ top: '50%', right: 40, transform: 'translateY(-50%)' }}>
           {[0, 700, 1400].map(d => (

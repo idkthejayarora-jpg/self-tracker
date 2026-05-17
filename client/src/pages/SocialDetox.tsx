@@ -84,7 +84,7 @@ export default function SocialDetox() {
 
       {/* ── FIREWALL HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: '#000', border: '1px solid #f43f5e25', minHeight: 110 }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #f43f5e25', minHeight: 110 }}>
         {/* Corrupted pixel noise */}
         <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.06 }}>
           {[...Array(6)].map((_,i) => (
@@ -165,7 +165,7 @@ export default function SocialDetox() {
           </div>
           {/* Presets */}
           <div>
-            <p className="text-[11px] mb-2" style={{ color: '#71717a' }}>Quick add</p>
+            <p className="text-[11px] mb-2" style={{ color: 'var(--t-dim)' }}>Quick add</p>
             <div className="flex flex-wrap gap-2">
               {APP_PRESETS.map(p => (
                 <button key={p.name} onClick={() => fillPreset(p)}
@@ -181,13 +181,13 @@ export default function SocialDetox() {
             style={{ background: 'var(--s2)', border: '1px solid var(--b)', focusRingColor: 'rgb(var(--accent-rgb))' } as React.CSSProperties} />
           <div className="flex gap-3 items-end">
             <div className="flex-1">
-              <p className="text-[11px] mb-1.5" style={{ color: '#71717a' }}>Daily limit (min, 0 = full detox)</p>
+              <p className="text-[11px] mb-1.5" style={{ color: 'var(--t-dim)' }}>Daily limit (min, 0 = full detox)</p>
               <input type="number" min={0} value={newLimit} onChange={e => setNewLimit(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg text-sm text-head focus:outline-none"
                 style={{ background: 'var(--s2)', border: '1px solid var(--b)' }} />
             </div>
             <div>
-              <p className="text-[11px] mb-1.5" style={{ color: '#71717a' }}>Color</p>
+              <p className="text-[11px] mb-1.5" style={{ color: 'var(--t-dim)' }}>Color</p>
               <div className="flex flex-wrap gap-1.5">
                 {COLORS.map(c => (
                   <button key={c} onClick={() => setNewColor(c)} className="w-5 h-5 rounded-full tap"
@@ -209,7 +209,7 @@ export default function SocialDetox() {
         <div className="card px-4 py-12 text-center space-y-3">
           <p className="text-3xl">📵</p>
           <p className="text-sm font-semibold text-head">No apps tracked yet</p>
-          <p className="text-xs" style={{ color: '#71717a' }}>Add apps you want to limit or avoid</p>
+          <p className="text-xs" style={{ color: 'var(--t-dim)' }}>Add apps you want to limit or avoid</p>
         </div>
       )}
 

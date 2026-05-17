@@ -41,7 +41,7 @@ function MacroPill({ label, value, unit, color }: { label: string; value: number
   return (
     <div className="flex flex-col items-center">
       <span className="text-lg font-bold" style={{ color }}>{Math.round(value)}</span>
-      <span className="text-xs" style={{ color: '#71717a' }}>{unit} {label}</span>
+      <span className="text-xs" style={{ color: 'var(--t-dim)' }}>{unit} {label}</span>
     </div>
   );
 }
@@ -98,7 +98,7 @@ function AddEntryForm({
     <form onSubmit={handleSubmit} className="card px-4 py-4 space-y-3 scale-in">
       <div className="flex items-center justify-between">
         <span className="text-sm font-semibold text-head">Add food</span>
-        <button type="button" onClick={onClose} className="tap" style={{ color: '#71717a' }}><X size={15} /></button>
+        <button type="button" onClick={onClose} className="tap" style={{ color: 'var(--t-dim)' }}><X size={15} /></button>
       </div>
 
       {addError && (
@@ -111,7 +111,7 @@ function AddEntryForm({
       {/* Quick-fill from saved meals */}
       {savedMeals.length > 0 && (
         <div>
-          <p className="text-[11px] font-medium mb-1.5" style={{ color: '#71717a' }}>QUICK-ADD FROM SAVED</p>
+          <p className="text-[11px] font-medium mb-1.5" style={{ color: 'var(--t-dim)' }}>QUICK-ADD FROM SAVED</p>
           <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
             {savedMeals.map(m => (
               <button key={m.id} type="button" onClick={() => fillFromSaved(m)}
@@ -159,7 +159,7 @@ function AddEntryForm({
           { val: fat,      set: setFat,      label: 'fat g' },
         ].map(({ val, set, label }) => (
           <div key={label}>
-            <p className="text-[11px] font-medium mb-1" style={{ color: '#71717a' }}>{label}</p>
+            <p className="text-[11px] font-medium mb-1" style={{ color: 'var(--t-dim)' }}>{label}</p>
             <input type="number" min={0} value={val} onChange={e => set(e.target.value)}
               className="w-full rounded-lg px-2 py-1.5 text-sm border focus:outline-none" />
           </div>
@@ -194,7 +194,7 @@ function SaveMealModal({ onSave, onClose }: { onSave: (m: Omit<SavedMeal, 'id'>)
       <form onSubmit={handleSubmit} className="card px-5 py-5 w-full max-w-sm space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-head">Save meal template</h3>
-          <button type="button" onClick={onClose} className="tap" style={{ color: '#71717a' }}><X size={16} /></button>
+          <button type="button" onClick={onClose} className="tap" style={{ color: 'var(--t-dim)' }}><X size={16} /></button>
         </div>
         <input required value={name} onChange={e => setName(e.target.value)} placeholder="Meal name (e.g. Protein shake)"
           className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none" />
@@ -206,7 +206,7 @@ function SaveMealModal({ onSave, onClose }: { onSave: (m: Omit<SavedMeal, 'id'>)
             { val: fat,      set: setFat,      label: 'fat g' },
           ].map(({ val, set, label }) => (
             <div key={label}>
-              <p className="text-[11px] font-medium mb-1" style={{ color: '#71717a' }}>{label}</p>
+              <p className="text-[11px] font-medium mb-1" style={{ color: 'var(--t-dim)' }}>{label}</p>
               <input type="number" min={0} value={val} onChange={e => set(e.target.value)}
                 className="w-full rounded-lg px-2 py-1.5 text-sm border focus:outline-none" />
             </div>
@@ -217,7 +217,7 @@ function SaveMealModal({ onSave, onClose }: { onSave: (m: Omit<SavedMeal, 'id'>)
         <div className="flex gap-2">
           <button type="button" onClick={onClose}
             className="flex-1 py-2 rounded-lg text-sm font-medium tap"
-            style={{ background: 'var(--s3)', color: '#71717a' }}>Cancel</button>
+            style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>Cancel</button>
           <button type="submit" disabled={!name.trim()}
             className="flex-1 py-2 rounded-lg text-sm font-semibold tap disabled:opacity-50 flex items-center justify-center gap-2"
             style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
@@ -351,7 +351,7 @@ export default function Diet() {
 
       {/* ── BIOLAB HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: '#000', border: '1px solid #34d39925', minHeight: 110 }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #34d39925', minHeight: 110 }}>
         <MolecularBg />
         <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #34d399', borderLeft: '1.5px solid #34d399', opacity: 0.7 }} />
         <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #34d399', borderRight: '1.5px solid #34d399', opacity: 0.7 }} />
@@ -383,12 +383,12 @@ export default function Diet() {
         <div className="flex gap-2">
         <button type="button" onClick={() => setShowSaveModal(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tap"
-          style={{ background: 'var(--s3)', color: '#71717a' }}>
+          style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>
           <BookMarked size={13} /> Save meal
         </button>
         <button type="button" onClick={() => setActiveTab(t => t === 'log' ? 'meals' : 'log')}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tap"
-          style={{ background: 'var(--s3)', color: '#71717a' }}>
+          style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>
           {activeTab === 'log' ? '📚 Saved' : '📋 Log'}
         </button>
         </div>
@@ -398,7 +398,7 @@ export default function Diet() {
       <div className="flex items-center gap-3">
         <button type="button" onClick={() => goDay(-1)}
           className="p-2 rounded-lg tap"
-          style={{ background: 'var(--s3)', color: '#71717a' }}>
+          style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>
           <ChevronLeft size={16} />
         </button>
         <div className="flex-1 text-center">
@@ -407,7 +407,7 @@ export default function Diet() {
         </div>
         <button type="button" onClick={() => goDay(1)} disabled={isToday}
           className="p-2 rounded-lg tap disabled:opacity-30"
-          style={{ background: 'var(--s3)', color: '#71717a' }}>
+          style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>
           <ChevronRight size={16} />
         </button>
         {!isToday && (
@@ -429,7 +429,7 @@ export default function Diet() {
                 <div className="flex items-center gap-1.5 mt-0.5">
                   {editingGoal ? (
                     <>
-                      <span className="text-xs" style={{ color: '#71717a' }}>/ </span>
+                      <span className="text-xs" style={{ color: 'var(--t-dim)' }}>/ </span>
                       <input
                         type="number"
                         value={goalInput}
@@ -438,17 +438,17 @@ export default function Diet() {
                         className="w-20 rounded px-1.5 py-0.5 text-xs border focus:outline-none"
                         autoFocus
                       />
-                      <span className="text-xs" style={{ color: '#71717a' }}>kcal</span>
+                      <span className="text-xs" style={{ color: 'var(--t-dim)' }}>kcal</span>
                       <button type="button" onClick={saveGoal} className="tap" style={{ color: '#22c55e' }}>
                         <Check size={13} />
                       </button>
-                      <button type="button" onClick={() => setEditingGoal(false)} className="tap" style={{ color: '#71717a' }}>
+                      <button type="button" onClick={() => setEditingGoal(false)} className="tap" style={{ color: 'var(--t-dim)' }}>
                         <X size={13} />
                       </button>
                     </>
                   ) : (
                     <>
-                      <span className="text-xs" style={{ color: '#71717a' }}>/ {calorieGoal} kcal goal</span>
+                      <span className="text-xs" style={{ color: 'var(--t-dim)' }}>/ {calorieGoal} kcal goal</span>
                       <button type="button" onClick={startEditGoal} className="tap" style={{ color: '#52525b' }}>
                         <Pencil size={11} />
                       </button>
@@ -495,13 +495,13 @@ export default function Diet() {
                 <div className="flex items-center gap-2">
                   <span className="text-base">{MEAL_EMOJI[mt]}</span>
                   <span className="text-sm font-semibold text-head capitalize">{mt}</span>
-                  <span className="text-xs ml-auto" style={{ color: '#71717a' }}>{Math.round(subtotal)} kcal</span>
+                  <span className="text-xs ml-auto" style={{ color: 'var(--t-dim)' }}>{Math.round(subtotal)} kcal</span>
                 </div>
                 {entries.map(e => (
                   <div key={e.id} className="card flex items-center gap-3 px-3 py-2.5">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-head truncate">{e.name}</p>
-                      <p className="text-xs mt-0.5" style={{ color: '#71717a' }}>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--t-dim)' }}>
                         {e.calories} kcal
                         {e.protein_g > 0 && ` · ${e.protein_g}g P`}
                         {e.carbs_g > 0 && ` · ${e.carbs_g}g C`}
@@ -520,7 +520,7 @@ export default function Diet() {
           {log.length === 0 && !showAdd && (
             <div className="card py-12 text-center">
               <p className="text-3xl mb-2">🥗</p>
-              <p className="text-sm font-medium" style={{ color: '#71717a' }}>Nothing logged yet for this day</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--t-dim)' }}>Nothing logged yet for this day</p>
               <button type="button" onClick={() => setShowAdd(true)}
                 className="mt-3 text-xs font-semibold tap"
                 style={{ color: `rgb(var(--accent-rgb-light))` }}>
@@ -532,20 +532,20 @@ export default function Diet() {
       ) : (
         /* Saved meals library */
         <div className="space-y-3">
-          <p className="text-sm" style={{ color: '#71717a' }}>
+          <p className="text-sm" style={{ color: 'var(--t-dim)' }}>
             Saved meals let you quickly add common foods. Tap <span style={{ color: `rgb(var(--accent-rgb-light))` }}>Save meal</span> to add new ones.
           </p>
           {savedMeals.length === 0 && (
             <div className="card py-10 text-center">
               <p className="text-3xl mb-2">📚</p>
-              <p className="text-sm" style={{ color: '#71717a' }}>No saved meals yet</p>
+              <p className="text-sm" style={{ color: 'var(--t-dim)' }}>No saved meals yet</p>
             </div>
           )}
           {savedMeals.map(m => (
             <div key={m.id} className="card flex items-start gap-3 px-4 py-3">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-head">{m.name}</p>
-                <p className="text-xs mt-0.5" style={{ color: '#71717a' }}>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--t-dim)' }}>
                   {m.calories} kcal
                   {m.protein_g > 0 && ` · ${m.protein_g}g protein`}
                   {m.carbs_g > 0 && ` · ${m.carbs_g}g carbs`}

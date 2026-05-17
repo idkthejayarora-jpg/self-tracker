@@ -176,7 +176,7 @@ export default function Journal() {
 
       {/* ════════════════════════════════════ HERO HEADER */}
       <div className="relative overflow-hidden rounded-2xl"
-        style={{ border: `1px solid ${accent}25`, background: '#000' }}>
+        style={{ border: `1px solid ${accent}25`, background: 'var(--hero-bg)' }}>
 
         {/* Matrix rain */}
         <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.55 }}>

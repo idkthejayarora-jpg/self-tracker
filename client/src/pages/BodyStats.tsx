@@ -120,7 +120,7 @@ export default function BodyStats() {
 
       {/* ── MEDICAL SCANNER HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: '#000', border: '1px solid #38bdf825', minHeight: 110 }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #38bdf825', minHeight: 110 }}>
         <div className="absolute inset-0 pointer-events-none" style={{
           backgroundImage: 'radial-gradient(circle, #38bdf806 1px, transparent 1px)',
           backgroundSize: '18px 18px',
@@ -152,7 +152,7 @@ export default function BodyStats() {
       <div style={{ position: 'relative', zIndex: 1 }}>
 
       <div className="flex items-center justify-between">
-        <p className="text-sm" style={{ color: '#71717a' }}>
+        <p className="text-sm" style={{ color: 'var(--t-dim)' }}>
           {latest ? `Last logged ${format(new Date(latest.date + 'T12:00:00'), 'd MMM yyyy')}` : 'No entries yet'}
         </p>
         <button type="button" onClick={() => { setShowForm(s => !s); setFormErr(''); }}
@@ -186,13 +186,13 @@ export default function BodyStats() {
                     <Trend curr={val} prev={prev?.[key] as number | null} />
                     <span className="text-[11px]" style={{ color: '#52525b' }}>{label}</span>
                   </div>
-                  <p className="text-lg font-bold text-head">{val}<span className="text-xs font-normal ml-0.5" style={{ color: '#71717a' }}>{unit}</span></p>
+                  <p className="text-lg font-bold text-head">{val}<span className="text-xs font-normal ml-0.5" style={{ color: 'var(--t-dim)' }}>{unit}</span></p>
                 </div>
               );
             })}
           </div>
           {latest.notes && (
-            <p className="text-xs mt-3 pt-3 italic" style={{ color: '#71717a', borderTop: '1px solid var(--b)' }}>{latest.notes}</p>
+            <p className="text-xs mt-3 pt-3 italic" style={{ color: 'var(--t-dim)', borderTop: '1px solid var(--b)' }}>{latest.notes}</p>
           )}
         </div>
       )}
@@ -202,14 +202,14 @@ export default function BodyStats() {
         <form onSubmit={save} className="card px-4 py-4 space-y-3 scale-in">
           <p className="text-sm font-semibold text-head">Log measurements</p>
           <div>
-            <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>DATE</label>
+            <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>DATE</label>
             <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
               className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             {FIELDS.map(({ key, label, unit }) => (
               <div key={key}>
-                <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>{label.toUpperCase()} ({unit})</label>
+                <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>{label.toUpperCase()} ({unit})</label>
                 <input
                   type="number" step="0.1" min="0"
                   value={(form as any)[key]}
@@ -220,7 +220,7 @@ export default function BodyStats() {
             ))}
           </div>
           <div>
-            <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>NOTES</label>
+            <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>NOTES</label>
             <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               placeholder="Any notes..."
               rows={2}
@@ -235,7 +235,7 @@ export default function BodyStats() {
             )}
             <button type="button" onClick={() => { setShowForm(false); setFormErr(''); }}
               className="flex-1 py-2 rounded-lg text-sm font-medium tap"
-              style={{ background: 'var(--s3)', color: '#71717a' }}>Cancel</button>
+              style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>Cancel</button>
             <button type="submit" disabled={saving}
               className="flex-1 py-2 rounded-lg text-sm font-semibold tap disabled:opacity-50"
               style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
@@ -277,7 +277,7 @@ export default function BodyStats() {
                 <Activity size={13} style={{ color: '#52525b', flexShrink: 0 }} />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-head">{format(new Date(s.date + 'T12:00:00'), 'd MMM yyyy')}</p>
-                  <p className="text-[11px] mt-0.5" style={{ color: '#71717a' }}>
+                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--t-dim)' }}>
                     {[
                       s.weight_kg != null && `${s.weight_kg}kg`,
                       s.body_fat_pct != null && `${s.body_fat_pct}% fat`,
@@ -297,7 +297,7 @@ export default function BodyStats() {
       {stats.length === 0 && !showForm && (
         <div className="card py-12 text-center">
           <Activity size={28} style={{ color: '#52525b', margin: '0 auto 8px' }} />
-          <p className="text-sm font-medium" style={{ color: '#71717a' }}>No measurements yet</p>
+          <p className="text-sm font-medium" style={{ color: 'var(--t-dim)' }}>No measurements yet</p>
           <p className="text-xs mt-1" style={{ color: '#52525b' }}>Tap "Log" to add your first entry</p>
         </div>
       )}

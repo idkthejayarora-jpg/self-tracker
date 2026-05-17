@@ -175,7 +175,7 @@ export default function Tasks() {
 
       {/* ── TERMINAL HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: '#000', border: '1px solid #39ff1420' }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #39ff1420' }}>
         {/* Scanlines */}
         <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{
           backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, #39ff1403 3px, #39ff1403 4px)',
@@ -274,13 +274,13 @@ export default function Tasks() {
           )}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>DUE DATE</label>
+              <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>DUE DATE</label>
               <input type="date" value={form.due_date}
                 onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))}
                 className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
             </div>
             <div>
-              <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>PRIORITY</label>
+              <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>PRIORITY</label>
               <select value={form.priority}
                 onChange={e => setForm(f => ({ ...f, priority: e.target.value as TaskPriority }))}
                 className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1">
@@ -292,13 +292,13 @@ export default function Tasks() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>DUE TIME</label>
+              <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>DUE TIME</label>
               <input type="time" value={form.due_time}
                 onChange={e => setForm(f => ({ ...f, due_time: e.target.value }))}
                 className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
             </div>
             <div>
-              <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>FOLLOW-UP</label>
+              <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>FOLLOW-UP</label>
               <input type="date" value={form.follow_up_date}
                 onChange={e => setForm(f => ({ ...f, follow_up_date: e.target.value }))}
                 className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
@@ -309,7 +309,7 @@ export default function Tasks() {
               <input type="checkbox" checked={form.is_recurring}
                 onChange={e => setForm(f => ({ ...f, is_recurring: e.target.checked }))}
                 className="rounded" />
-              <span className="text-xs font-medium" style={{ color: '#71717a' }}>Recurring</span>
+              <span className="text-xs font-medium" style={{ color: 'var(--t-dim)' }}>Recurring</span>
             </label>
             {form.is_recurring && (
               <select value={form.recur_interval}
@@ -324,7 +324,7 @@ export default function Tasks() {
           <div className="flex gap-2">
             <button onClick={() => { setShowForm(false); setFormErr(''); }}
               className="flex-1 py-2 rounded-lg text-sm font-medium tap"
-              style={{ background: 'var(--s3)', color: '#71717a' }}>Cancel</button>
+              style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>Cancel</button>
             <button onClick={createTask} disabled={submitting || !form.title.trim()}
               className="flex-1 py-2 rounded-lg text-sm font-semibold tap disabled:opacity-50"
               style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
@@ -373,7 +373,7 @@ export default function Tasks() {
       <div className="space-y-2" style={{ position: 'relative', zIndex: 1 }}>
         {!loadErr && tasks.length === 0 && (
           <div className="card py-12 text-center">
-            <p className="text-sm font-medium" style={{ color: '#71717a' }}>No tasks found</p>
+            <p className="text-sm font-medium" style={{ color: 'var(--t-dim)' }}>No tasks found</p>
             <p className="text-xs mt-1" style={{ color: '#52525b' }}>Tap "New task" to get started</p>
           </div>
         )}
@@ -459,13 +459,13 @@ export default function Tasks() {
                         placeholder="Description" />
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[10px] font-medium" style={{ color: '#71717a' }}>DUE DATE</label>
+                          <label className="text-[10px] font-medium" style={{ color: 'var(--t-dim)' }}>DUE DATE</label>
                           <input type="date" value={editForm.due_date ?? ''}
                             onChange={e => setEditForm(f => ({ ...f, due_date: e.target.value }))}
                             className="w-full rounded-lg px-3 py-1.5 text-sm border focus:outline-none mt-0.5" />
                         </div>
                         <div>
-                          <label className="text-[10px] font-medium" style={{ color: '#71717a' }}>PRIORITY</label>
+                          <label className="text-[10px] font-medium" style={{ color: 'var(--t-dim)' }}>PRIORITY</label>
                           <select value={editForm.priority ?? 'medium'}
                             onChange={e => setEditForm(f => ({ ...f, priority: e.target.value as TaskPriority }))}
                             className="w-full rounded-lg px-3 py-1.5 text-sm border focus:outline-none mt-0.5">
@@ -478,7 +478,7 @@ export default function Tasks() {
                       <div className="flex gap-2">
                         <button onClick={() => { setEditId(null); setEditErr(''); }}
                           className="flex-1 py-1.5 rounded-lg text-xs font-medium tap"
-                          style={{ background: 'var(--s3)', color: '#71717a' }}>Cancel</button>
+                          style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>Cancel</button>
                         <button onClick={() => saveEdit(task.id)}
                           className="flex-1 py-1.5 rounded-lg text-xs font-semibold tap flex items-center justify-center gap-1"
                           style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
@@ -513,7 +513,7 @@ export default function Tasks() {
                       </div>
                       <button onClick={() => startEdit(task)}
                         className="flex items-center gap-1.5 text-xs tap font-semibold"
-                        style={{ color: '#71717a' }}>
+                        style={{ color: 'var(--t-dim)' }}>
                         <Pencil size={12} /> Edit task
                       </button>
                     </>

@@ -149,7 +149,7 @@ export default function Sleep() {
 
       {/* ── DEEP SPACE HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: '#000', border: '1px solid #a78bfa25', minHeight: 130 }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #a78bfa25', minHeight: 130 }}>
         {/* Starfield */}
         <div className="absolute inset-0 pointer-events-none">
           <StarField />
@@ -193,7 +193,7 @@ export default function Sleep() {
       <div style={{ position: 'relative', zIndex: 1 }}>
 
       <div className="flex items-center justify-between">
-        <p className="text-sm" style={{ color: '#71717a' }}>
+        <p className="text-sm" style={{ color: 'var(--t-dim)' }}>
           {stats && stats.avgDuration ? `Avg ${fmtDuration(stats.avgDuration)} / night this week` : 'Track your sleep'}
         </p>
         <button type="button" onClick={() => { setShowForm(s => !s); setFormErr(''); }}
@@ -232,30 +232,30 @@ export default function Sleep() {
         <form onSubmit={save} className="card px-4 py-4 space-y-3 scale-in">
           <p className="text-sm font-semibold text-head">Log sleep</p>
           <div>
-            <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>DATE (morning)</label>
+            <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>DATE (morning)</label>
             <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
               className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>BEDTIME</label>
+              <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>BEDTIME</label>
               <input type="time" value={form.bedtime} onChange={e => setForm(f => ({ ...f, bedtime: e.target.value }))}
                 className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
             </div>
             <div>
-              <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>WAKE TIME</label>
+              <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>WAKE TIME</label>
               <input type="time" value={form.wake_time} onChange={e => setForm(f => ({ ...f, wake_time: e.target.value }))}
                 className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
             </div>
           </div>
           {autoDuration !== null && (
             <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg" style={{ background: 'var(--s3)' }}>
-              <Clock size={13} style={{ color: '#71717a' }} />
+              <Clock size={13} style={{ color: 'var(--t-dim)' }} />
               <span className="text-xs" style={{ color: '#a1a1aa' }}>Duration: <strong style={{ color: '#f4f4f5' }}>{fmtDuration(autoDuration)}</strong></span>
             </div>
           )}
           <div>
-            <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>QUALITY</label>
+            <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>QUALITY</label>
             <div className="flex gap-1.5 mt-1">
               {[1, 2, 3, 4, 5].map(q => (
                 <button key={q} type="button"
@@ -272,7 +272,7 @@ export default function Sleep() {
             </div>
           </div>
           <div>
-            <label className="text-[11px] font-medium" style={{ color: '#71717a' }}>NOTES</label>
+            <label className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>NOTES</label>
             <input value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               placeholder="Dreamt well, woke up refreshed..."
               className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none mt-1" />
@@ -286,7 +286,7 @@ export default function Sleep() {
           <div className="flex gap-2">
             <button type="button" onClick={() => { setShowForm(false); setFormErr(''); }}
               className="flex-1 py-2 rounded-lg text-sm font-medium tap"
-              style={{ background: 'var(--s3)', color: '#71717a' }}>Cancel</button>
+              style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>Cancel</button>
             <button type="submit" disabled={saving}
               className="flex-1 py-2 rounded-lg text-sm font-semibold tap disabled:opacity-50"
               style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
@@ -328,7 +328,7 @@ export default function Sleep() {
                   <div className="flex items-center gap-2">
                     <p className="text-xs font-semibold text-head">{format(new Date(l.date + 'T12:00:00'), 'd MMM')}</p>
                     {l.bedtime && l.wake_time && (
-                      <span className="text-[11px]" style={{ color: '#71717a' }}>{l.bedtime} → {l.wake_time}</span>
+                      <span className="text-[11px]" style={{ color: 'var(--t-dim)' }}>{l.bedtime} → {l.wake_time}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
@@ -352,7 +352,7 @@ export default function Sleep() {
       ) : !showForm && (
         <div className="card py-12 text-center">
           <Moon size={28} style={{ color: '#52525b', margin: '0 auto 8px' }} />
-          <p className="text-sm font-medium" style={{ color: '#71717a' }}>No sleep logs yet</p>
+          <p className="text-sm font-medium" style={{ color: 'var(--t-dim)' }}>No sleep logs yet</p>
           <p className="text-xs mt-1" style={{ color: '#52525b' }}>Tap "Log" to add last night's sleep</p>
         </div>
       )}

@@ -23,7 +23,7 @@ function moodLabel(val: number) {
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
     <div className="card px-4 py-4">
-      <p className="text-xs mb-1" style={{ color: '#71717a' }}>{label}</p>
+      <p className="text-xs mb-1" style={{ color: 'var(--t-dim)' }}>{label}</p>
       <p className="text-2xl font-bold text-head">{value}</p>
       {sub && <p className="text-xs mt-1" style={{ color: '#52525b' }}>{sub}</p>}
     </div>
@@ -155,7 +155,7 @@ export default function Analytics() {
 
       {/* ── ORACLE CORE HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: '#000', border: '1px solid #60a5fa25', minHeight: 110 }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #60a5fa25', minHeight: 110 }}>
         <DataParticles />
         <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #60a5fa', borderLeft: '1.5px solid #60a5fa', opacity: 0.7 }} />
         <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #60a5fa', borderRight: '1.5px solid #60a5fa', opacity: 0.7 }} />
@@ -184,7 +184,7 @@ export default function Analytics() {
 
       <div>
         <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'rgb(var(--accent-rgb))' }}>// Analytics</h1>
-        <p className="text-sm mt-0.5" style={{ color: '#71717a' }}>Last 8 weeks across all modules</p>
+        <p className="text-sm mt-0.5" style={{ color: 'var(--t-dim)' }}>Last 8 weeks across all modules</p>
       </div>
 
       {/* Summary cards */}
@@ -207,7 +207,7 @@ export default function Analytics() {
               <XAxis dataKey="week" tick={TICK} />
               <YAxis domain={[0, 100]} tick={TICK} />
               <Tooltip contentStyle={TT} labelStyle={{ color: '#f4f4f5' }} />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#71717a' }} />
+              <Legend wrapperStyle={{ fontSize: 11, color: 'var(--t-dim)' }} />
               <Area type="monotone" dataKey="task_score"    name="Tasks %"   stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.12} strokeWidth={2} connectNulls />
               <Area type="monotone" dataKey="journal_score" name="Journal %"  stroke="#a855f7" fill="#a855f7" fillOpacity={0.12} strokeWidth={2} />
               {hasHabits && (
@@ -227,7 +227,7 @@ export default function Analytics() {
               <XAxis dataKey="week" tick={TICK} />
               <YAxis tick={TICK} />
               <Tooltip contentStyle={TT} />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#71717a' }} />
+              <Legend wrapperStyle={{ fontSize: 11, color: 'var(--t-dim)' }} />
               <Bar dataKey="tasks_created"   name="Created"   fill="#3f3f46" radius={[4, 4, 0, 0]} />
               <Bar dataKey="tasks_completed" name="Completed" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
             </BarChart>

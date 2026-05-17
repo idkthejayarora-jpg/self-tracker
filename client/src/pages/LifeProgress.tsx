@@ -406,7 +406,7 @@ export default function LifeProgress() {
 
       {/* ── SACRED NEXUS HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: '#000', border: '1px solid #fbbf2420', minHeight: 120 }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #fbbf2420', minHeight: 120 }}>
         {/* Sacred geometry in corner */}
         <div className="absolute pointer-events-none" style={{ top: '50%', right: 30, transform: 'translateY(-50%)', width: 90, height: 90 }}>
           <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid #fbbf2430', animation: 'sacred-spin 12s linear infinite' }}>

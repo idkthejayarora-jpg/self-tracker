@@ -39,6 +39,9 @@
   --t-muted: #94a3b8;
   --t-dim:   #64748b;
   --t-faint: #475569;
+
+  /* Hero plate background — dark void in dark mode, deep navy in light */
+  --hero-bg: #000000;
 }
 
 @layer base {
@@ -345,12 +348,15 @@ html.light {
 
   --t-head:  #0f172a;
   --t-body:  #1e293b;
-  --t-muted: #475569;
-  --t-dim:   #64748b;
-  --t-faint: #94a3b8;
+  --t-muted: #334155;
+  --t-dim:   #475569;
+  --t-faint: #64748b;
 
   --gold: #d97706;
   --cyan: #0284c7;
+
+  /* Hero plate becomes deep navy in light mode instead of pure black */
+  --hero-bg: #0f172a;
 }
 html.light body { color: var(--t-head); background: var(--s0); }
 html.light input, html.light textarea, html.light select {

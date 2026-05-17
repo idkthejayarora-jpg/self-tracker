@@ -220,7 +220,7 @@ export default function Workout() {
 
       {/* ── FORGE HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'linear-gradient(180deg, #1a0800 0%, #000 60%)', border: '1px solid #ff450030', minHeight: 120 }}>
+        style={{ background: 'linear-gradient(180deg, #1a0800 0%, var(--hero-bg) 60%)', border: '1px solid #ff450030', minHeight: 120 }}>
         {/* Heat shimmer columns */}
         <div className="absolute inset-0 pointer-events-none flex gap-8 px-8" style={{ opacity: 0.15 }}>
           {[0,200,400,600,800,1000,1200,1400].map(d => (

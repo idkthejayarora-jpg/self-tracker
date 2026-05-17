@@ -734,7 +734,7 @@ export default function Dashboard() {
 
       {/* ── WAR ROOM HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-5"
-        style={{ background: '#000', border: '1px solid #39ff1425', minHeight: 120 }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #39ff1425', minHeight: 120 }}>
         {/* Tactical grid */}
         <div className="absolute inset-0 pointer-events-none" style={{
           backgroundImage: 'radial-gradient(circle, #39ff1408 1px, transparent 1px)',
