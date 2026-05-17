@@ -36,19 +36,7 @@ router.get('/areas', (req, res) => {
     WHERE la.user_id = ?
   `).all(uid);
 
-  // ── Global signals (same for all areas — real activity baseline) ──
-
-  // Habit completion rate this week → 0-100
-  const habitTotal  = (db.prepare('SELECT COUNT(*) as n FROM habits WHERE user_id=?').get(uid)||{}).n || 0;
-  const habitDone   = (db.prepare(`SELECT COUNT(*) as n FROM habit_logs WHERE user_id=? AND done=1 AND date >= date('now', ${SQL_OFF}, '-7 days')`).get(uid)||{}).n || 0;
-  const habitBaseline = habitTotal > 0 ? Math.min(100, Math.round((habitDone / (habitTotal * 7)) * 100)) : null;
-
-  // Overall task completion this month → 0-100
-  const allTaskTotal = (db.prepare(`SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND created_at >= date('now', ${SQL_OFF}, 'start of month')`).get(uid)||{}).n || 0;
-  const allTaskDone  = (db.prepare(`SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND status='completed' AND completed_at >= date('now', ${SQL_OFF}, 'start of month')`).get(uid)||{}).n || 0;
-  const taskBaseline = allTaskTotal > 0 ? Math.min(100, Math.round((allTaskDone / allTaskTotal) * 100)) : null;
-
-  // All task titles this month (for keyword matching against area names)
+  // All task titles last 60 days (for keyword matching against area names)
   const allTasks = db.prepare(`
     SELECT title, status FROM tasks
     WHERE user_id = ? AND created_at >= date('now', ${SQL_OFF}, '-60 days')
@@ -105,17 +93,16 @@ router.get('/areas', (req, res) => {
     const msScore = areaMs.length > 0 ? Math.round((msDone / areaMs.length) * 100) : null;
 
     // ── Composite auto-score ──────────────────────────────────
-    // Priority: tagged tasks > keyword tasks > journal > milestones
-    // Habit completion & overall task rate always contribute as a floor signal
+    // Only area-specific signals drive the score so each area is independent.
+    // Global baselines (habits, overall tasks) are NOT included here —
+    // they were making every area show the same number.
     const signals = [];
     const weights = [];
 
-    if (taggedScore !== null)   { signals.push(taggedScore);  weights.push(40); }
-    if (kwScore !== null)        { signals.push(kwScore);      weights.push(25); }
-    if (journalScore > 0)        { signals.push(journalScore); weights.push(15); }
-    if (msScore !== null)        { signals.push(msScore);      weights.push(10); }
-    if (habitBaseline !== null)  { signals.push(habitBaseline); weights.push(20); }
-    if (taskBaseline !== null)   { signals.push(taskBaseline);  weights.push(15); }
+    if (taggedScore !== null) { signals.push(taggedScore);  weights.push(40); }
+    if (kwScore !== null)      { signals.push(kwScore);      weights.push(30); }
+    if (journalScore > 0)      { signals.push(journalScore); weights.push(20); }
+    if (msScore !== null)      { signals.push(msScore);      weights.push(10); }
 
     let autoScore = null;
     if (signals.length > 0) {
