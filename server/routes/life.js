@@ -3,7 +3,7 @@ const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
 const { SQL_OFF } = require('../utils/dateUtils');
 const { parseAmbitions, generateSummary } = require('../utils/ambitionsParser');
-const { detectSectors } = require('../utils/sectorDetector');
+const { extractSectors } = require('../utils/sectorDetector');
 
 // Ensure life_ambitions table exists
 try {
@@ -286,7 +286,7 @@ router.post('/detect-sectors', (req, res) => {
   const { text } = req.body;
   if (!text?.trim()) return res.status(400).json({ error: 'No text provided' });
 
-  const detected = detectSectors(text);
+  const detected = extractSectors(text);
 
   // Persist the raw text in life_ambitions
   db.prepare(`
