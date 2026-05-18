@@ -65,8 +65,8 @@ function extractTopic(clause) {
   // 4. Strip intent verb phrases (includes planning to)
   s = s.replace(/^(want\s+to|need\s+to|plan\s+to|planning\s+to|hope\s+to|would\s+love\s+to|aspire\s+to|dream\s+of|always\s+wanted\s+to|always\s+want\s+to|trying\s+to|going\s+to)\s+/i, '');
 
-  // 5. Strip action modifiers: "improve my", "work on my", "get better at", "sort out my"
-  s = s.replace(/^(get\s+better\s+at|work\s+on\s+(?:my\s+)?|focus\s+on\s+(?:my\s+)?|improve\s+(?:my\s+)?|develop\s+(?:my\s+)?|build\s+(?:my\s+)?|get\s+into|sort\s+out\s+(?:my\s+)?)\s*/i, '');
+  // 5. Strip action modifiers: "improve my", "work on my", "get better at", "become a/an", "sort out my"
+  s = s.replace(/^(get\s+better\s+at|work\s+on\s+(?:my\s+)?|focus\s+on\s+(?:my\s+)?|improve\s+(?:my\s+)?|develop\s+(?:my\s+)?|build\s+(?:my\s+)?|get\s+into|sort\s+out\s+(?:my\s+)?|become\s+(?:a\s+|an\s+)?|start\s+(?:a\s+|an\s+)?)\s*/i, '');
 
   // 6. Strip leading articles/possessives
   s = s.replace(/^(my\s+|a\s+|an\s+|the\s+|his\s+|her\s+|our\s+|your\s+)/i, '');
@@ -90,10 +90,10 @@ function extractTopic(clause) {
     // Preposition stop — stop after 2+ words
     if (PREP_STOP_RE.test(clean) && kept.length >= 2) break;
 
-    // "to" after >= 2 words: stop (avoids "Move to Berlin" becoming "Move to Berlin Eventually")
-    // but keep "to" as part of "Move to" if we only have 1 word
-    const isTo = /^to$/i.test(clean);
-    if (isTo && kept.length >= 2) break;
+    // "to" / "a" / "an" after >= 2 words: stop
+    // keeps "Move to Berlin" (1 word before "to") but stops "Build a Startup a Thing"
+    const isArticle = /^(to|a|an|as|like|with)$/i.test(clean);
+    if (isArticle && kept.length >= 2) break;
 
     kept.push(clean);
     if (kept.length >= 5) break;

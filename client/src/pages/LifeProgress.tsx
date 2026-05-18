@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Send, Plus, X, Pencil, Check } from 'lucide-react';
+import { Send, Plus, X, Check, Settings2 } from 'lucide-react';
 import api from '../lib/api';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -453,7 +453,7 @@ export default function LifeProgress() {
 
                   return (
                     <div key={sector.id}
-                      className="relative overflow-hidden rounded-2xl flex flex-col group/card"
+                      className="relative overflow-hidden rounded-2xl flex flex-col"
                       style={{
                         background: 'var(--s1)',
                         border: `1px solid ${isGhost ? `${sector.color}20` : `${sector.color}45`}`,
@@ -501,25 +501,28 @@ export default function LifeProgress() {
                               }}>
                               {fill}%
                             </span>
+                            {/* Always-visible controls — no hover required (works on mobile) */}
                             {!isEdit && !isAdding && (
                               <>
                                 <button onClick={() => startEdit(sector)}
-                                  className="w-5 h-5 rounded-md flex items-center justify-center tap opacity-0 group-hover/card:opacity-100 transition-opacity"
-                                  style={{ background: 'var(--s3)', color: 'var(--t-faint)' }}>
-                                  <Pencil size={9} />
+                                  className="w-6 h-6 rounded-md flex items-center justify-center tap"
+                                  style={{ background: 'var(--s3)', color: 'var(--t-faint)' }}
+                                  title="Edit sector">
+                                  <Settings2 size={10} />
                                 </button>
                                 <button onClick={() => deleteSector(sector.id)}
-                                  className="w-5 h-5 rounded-md flex items-center justify-center tap opacity-0 group-hover/card:opacity-100 transition-opacity"
-                                  style={{ background: 'var(--s3)', color: '#f87171' }}>
-                                  <X size={9} />
+                                  className="w-6 h-6 rounded-md flex items-center justify-center tap"
+                                  style={{ background: 'var(--s3)', color: '#f87171' }}
+                                  title="Delete sector">
+                                  <X size={10} />
                                 </button>
                               </>
                             )}
                             {isEdit && (
                               <button onClick={() => setEditingId(null)}
-                                className="w-5 h-5 rounded-md flex items-center justify-center tap"
-                                style={{ background: 'var(--s3)', color: 'var(--t-faint)' }}>
-                                <X size={9} />
+                                className="w-6 h-6 rounded-md flex items-center justify-center tap"
+                                style={{ background: `${sector.color}25`, color: sector.color }}>
+                                <X size={10} />
                               </button>
                             )}
                           </div>

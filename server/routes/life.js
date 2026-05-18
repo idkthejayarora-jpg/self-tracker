@@ -372,7 +372,10 @@ function getSectorFills(uid) {
 
     const total   = (tagged?.total || 0) + (kwStats.total || 0);
     const done    = (tagged?.done  || 0) + (kwStats.done  || 0);
-    const fillPct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
+    const autoFill = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
+    // Manual override: only when progress > 0 (default DB value is 0 = "not set / use auto")
+    // User sets slider to 0 = same as auto. Slider 1-100 = manual override.
+    const fillPct = (area.progress > 0) ? area.progress : autoFill;
 
     return { id: area.id, name: area.name, icon: area.icon, color: area.color, fillPct, total, done };
   });
