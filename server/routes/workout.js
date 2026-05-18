@@ -155,7 +155,7 @@ router.get('/stats', (req, res) => {
 
 // ── Workout Plan ──────────────────────────────────────────────
 const multer = require('multer');
-const pdfParse = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 // Plan days CRUD
@@ -237,12 +237,85 @@ router.post('/plan/log/:dayId', (req, res) => {
   res.status(201).json({ sessionId, day: day.name, exercisesAdded: exercises.length });
 });
 
-// PDF parse — extract text
+// ── PDF plan parser ───────────────────────────────────────────
+function dayMeta(name) {
+  const n = name.toLowerCase();
+  if (/back|pull|row|deadlift/.test(n))           return { icon: '🔙', color: '#3b82f6' };
+  if (/chest|push|bench|press/.test(n))           return { icon: '🏋️', color: '#f97316' };
+  if (/leg|squat|lunge|hamstring|quad/.test(n))   return { icon: '🦵', color: '#22c55e' };
+  if (/shoulder|delt|overhead/.test(n))           return { icon: '💪', color: '#a855f7' };
+  if (/arm|bicep|tricep|curl/.test(n))            return { icon: '💪', color: '#ec4899' };
+  if (/cardio|run|hiit|cycle/.test(n))            return { icon: '🏃', color: '#ef4444' };
+  if (/core|abs|plank/.test(n))                   return { icon: '🎯', color: '#f59e0b' };
+  if (/full.?body|total/.test(n))                 return { icon: '⚡', color: '#06b6d4' };
+  return { icon: '💪', color: '#ff4500' };
+}
+
+function parsePlanText(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const days = [];
+  let current = null;
+
+  // Patterns that signal a new training day
+  const DAY_RE = [
+    /^(day\s*\d+|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i,
+    /^(push|pull|legs?|chest|back|shoulder|arm|bicep|tricep|core|cardio|upper|lower|full.?body)/i,
+    /^[A-Z][A-Z &]+$/, // ALL CAPS line ≤ 40 chars
+  ];
+
+  // Sets × reps patterns: "3x10", "3×10", "3 sets of 10", "3 sets × 10 reps", "4 × 8-12"
+  const SR_RE = /(\d+)\s*(?:sets?\s*(?:of|[x×*])?\s*)?[x×*]\s*([\d][\d\-]*)/i;
+  const SR2_RE = /(\d+)\s*sets?\s+(?:of\s+)?(\d[\d\-]*)/i;
+
+  for (const line of lines) {
+    // Skip very short / purely numeric lines
+    if (line.length < 2 || /^\d+$/.test(line)) continue;
+
+    const isHeader = line.length <= 50 && DAY_RE.some(r => r.test(line));
+
+    if (isHeader) {
+      // Clean up common suffixes like ": Day 1"
+      const cleanName = line.replace(/^\d+\.\s*/, '').replace(/:$/, '').trim();
+      current = { name: cleanName, ...dayMeta(cleanName), exercises: [] };
+      days.push(current);
+      continue;
+    }
+
+    if (!current) continue;
+
+    // Try to extract sets × reps
+    let sets = 3, reps = '8-12';
+    let name = line;
+
+    const m = line.match(SR_RE) || line.match(SR2_RE);
+    if (m) {
+      sets = Math.min(10, parseInt(m[1]) || 3);
+      reps = m[2] || '8-12';
+      name = line.replace(m[0], '').replace(/^\s*[-–—:,•·]\s*/, '').replace(/[-–—:,]+$/, '').trim();
+    }
+
+    // Extract weight like "@ 80kg" or "80 kg"
+    let weight = '';
+    const wm = name.match(/@\s*([\d.]+\s*kg)/i) || name.match(/([\d.]+\s*kg)/i);
+    if (wm) { weight = wm[1].trim(); name = name.replace(wm[0], '').trim(); }
+
+    name = name.replace(/^\s*[-–—•·\d.]+\s*/, '').trim(); // strip leading bullets/numbers
+    if (name.length >= 2 && name.length <= 80) {
+      current.exercises.push({ name, sets, reps, weight });
+    }
+  }
+
+  return days.filter(d => d.exercises.length > 0);
+}
+
+// PDF parse — extract text AND return structured plan
 router.post('/plan/parse-pdf', upload.single('pdf'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   try {
-    const data = await pdfParse(req.file.buffer);
-    res.json({ text: data.text, pages: data.numpages });
+    const parser = new PDFParse({ data: req.file.buffer });
+    const data = await parser.getText();
+    const plan = parsePlanText(data.text);
+    res.json({ text: data.text, pages: data.total, plan });
   } catch (e) {
     res.status(500).json({ error: 'Failed to parse PDF' });
   }
