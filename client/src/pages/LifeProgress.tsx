@@ -88,6 +88,7 @@ export default function LifeProgress() {
   const [editingId, setEditingId]   = useState<number | null>(null);
   const [editName, setEditName]     = useState('');
   const [editIcon, setEditIcon]     = useState('');
+  const [editProgress, setEditProgress] = useState<number | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
 
   // Delete
@@ -179,14 +180,30 @@ export default function LifeProgress() {
 
   // ── Edit / delete sector ───────────────────────────────────────────────────
 
-  function startEdit(s: Sector) { setEditingId(s.id); setEditName(s.name); setEditIcon(s.icon); }
+  function startEdit(s: Sector) {
+    setEditingId(s.id);
+    setEditName(s.name);
+    setEditIcon(s.icon);
+    setEditProgress(null); // null = use auto-computed
+  }
 
   async function saveEdit(id: number) {
     if (!editName.trim()) return;
     setSavingEdit(true);
     try {
-      await api.patch(`/life/areas/${id}`, { name: editName.trim(), icon: editIcon.trim() || undefined });
-      setSectors(prev => prev.map(s => s.id === id ? { ...s, name: editName.trim(), icon: editIcon.trim() || s.icon } : s));
+      // progress: null clears manual override (auto mode); 0 also resets
+      const progressVal = editProgress !== null ? editProgress : null;
+      await api.patch(`/life/areas/${id}`, {
+        name: editName.trim(),
+        icon: editIcon.trim() || undefined,
+        progress: progressVal,
+      });
+      setSectors(prev => prev.map(s =>
+        s.id === id
+          ? { ...s, name: editName.trim(), icon: editIcon.trim() || s.icon,
+              fillPct: progressVal !== null ? progressVal : s.fillPct }
+          : s
+      ));
       setEditingId(null);
     } catch (_) {}
     setSavingEdit(false);
@@ -520,6 +537,31 @@ export default function LifeProgress() {
                                 onKeyDown={e => { if (e.key === 'Enter') saveEdit(sector.id); if (e.key === 'Escape') setEditingId(null); }}
                                 className="flex-1 rounded-lg px-2 py-1 text-xs focus:outline-none"
                                 style={{ background: 'var(--s3)', color: 'var(--t-head)', border: `1px solid ${sector.color}40` }} />
+                            </div>
+                            {/* Manual fill % override */}
+                            <div>
+                              <div className="flex items-center justify-between mb-0.5">
+                                <span className="text-[9px]" style={{ color: 'var(--t-faint)' }}>
+                                  fill %
+                                </span>
+                                <span className="text-[9px] font-bold" style={{ color: sector.color }}>
+                                  {editProgress !== null ? editProgress : sector.fillPct}%
+                                  {editProgress === null && <span style={{ color: 'var(--t-faint)' }}> (auto)</span>}
+                                </span>
+                              </div>
+                              <input
+                                type="range" min={0} max={100} step={1}
+                                value={editProgress !== null ? editProgress : sector.fillPct}
+                                onChange={e => setEditProgress(Number(e.target.value))}
+                                className="w-full h-1 rounded-full appearance-none cursor-pointer"
+                                style={{ accentColor: sector.color }}
+                              />
+                              {editProgress !== null && (
+                                <button onClick={() => setEditProgress(null)}
+                                  className="text-[9px] tap mt-0.5" style={{ color: 'var(--t-faint)' }}>
+                                  reset to auto
+                                </button>
+                              )}
                             </div>
                             <button onClick={() => saveEdit(sector.id)} disabled={!editName.trim() || savingEdit}
                               className="flex items-center gap-1 text-[10px] font-bold tap px-2 py-1 rounded-lg disabled:opacity-40 text-white"

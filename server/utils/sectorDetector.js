@@ -131,11 +131,36 @@ function extractTopic(clause) {
  * Extracts sectors from free-form text.
  * Returns array of { name, icon, color } — names are the user's own words.
  */
+// Intent verbs used in both the comma-split and the AND-split
+const SPLIT_VERBS = 'also|and\\s+I|start|learn|build|make|create|get|travel|write|read|invest|save|improve|work|develop|plan|want|need|hope|sort|launch|produce|move|become|study|code|draw|run|grow|fix|design|record|practice|open|join|find|try|go';
+const SPLIT_VERBS_RE = new RegExp(`(?:${SPLIT_VERBS})\\b`, 'i');
+
 function extractSectors(text) {
-  const clauses = text
-    .split(/[.!?\n;—–]+|,\s*(?=(?:also|and\s+I|start|learn|build|make|create|get|travel|write|read|invest|save|improve|work|develop|plan|want|need|hope|sort)\b)/i)
+  // Primary split: sentence boundaries + comma-before-intent-verb
+  const primary = text
+    .split(new RegExp(`[.!?\\n;—–]+|,\\s*(?=(?:${SPLIT_VERBS})\\b)`, 'i'))
     .map(s => s.trim())
     .filter(s => s.length >= 6);
+
+  // Secondary split: within each clause, split on " and " before an intent verb
+  // e.g. "build my kamal brand and get fit" → ["build my kamal brand", "get fit"]
+  const clauses = [];
+  for (const clause of primary) {
+    const parts = clause.split(/\s+and\s+(?=[a-zA-Z])/i);
+    // Only split if the next part has an intent verb — otherwise keep together
+    const expanded = [];
+    let acc = parts[0];
+    for (let i = 1; i < parts.length; i++) {
+      if (SPLIT_VERBS_RE.test(parts[i]) || INTENT_RE.test(parts[i])) {
+        expanded.push(acc);
+        acc = parts[i];
+      } else {
+        acc += ' and ' + parts[i];
+      }
+    }
+    expanded.push(acc);
+    clauses.push(...expanded.map(s => s.trim()).filter(s => s.length >= 4));
+  }
 
   const results = [];
   const seenLower = new Set();

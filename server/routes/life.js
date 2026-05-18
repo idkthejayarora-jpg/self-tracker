@@ -450,4 +450,56 @@ router.get('/chat/history', (req, res) => {
   res.json({ history, sectors });
 });
 
+// ── Missed Logs ────────────────────────────────────────────────
+// Returns logs that haven't been updated in more than 2 days
+router.get('/missed-logs', (req, res) => {
+  const uid = req.user.id;
+  const missed = [];
+
+  const daysSince = (dateStr) => {
+    if (!dateStr) return 999;
+    const diff = Date.now() - new Date(dateStr).getTime();
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  };
+
+  // Diet / food logs
+  const lastFood = db.prepare(
+    `SELECT MAX(date) as d FROM food_logs WHERE user_id = ?`
+  ).get(uid);
+  const foodDays = daysSince(lastFood?.d);
+  if (foodDays > 2) missed.push({ type: 'diet', label: 'Diet', icon: '🍽️', route: '/diet', daysSince: foodDays });
+
+  // Sleep logs
+  const lastSleep = db.prepare(
+    `SELECT MAX(date) as d FROM sleep_logs WHERE user_id = ?`
+  ).get(uid);
+  const sleepDays = daysSince(lastSleep?.d);
+  if (sleepDays > 2) missed.push({ type: 'sleep', label: 'Sleep', icon: '😴', route: '/sleep', daysSince: sleepDays });
+
+  // Journal
+  const lastJournal = db.prepare(
+    `SELECT MAX(date) as d FROM journal_entries WHERE user_id = ?`
+  ).get(uid);
+  const journalDays = daysSince(lastJournal?.d);
+  if (journalDays > 2) missed.push({ type: 'journal', label: 'Journal', icon: '📓', route: '/journal', daysSince: journalDays });
+
+  // Workout
+  const lastWorkout = db.prepare(
+    `SELECT MAX(date) as d FROM workout_sessions WHERE user_id = ?`
+  ).get(uid);
+  const workoutDays = daysSince(lastWorkout?.d);
+  if (workoutDays > 2) missed.push({ type: 'workout', label: 'Workout', icon: '💪', route: '/workout', daysSince: workoutDays });
+
+  res.json({ missed });
+});
+
+// ── Overall life score (sector fills avg) ─────────────────────
+router.get('/life-score', (req, res) => {
+  const uid = req.user.id;
+  const sectors = getSectorFills(uid);
+  if (!sectors.length) return res.json({ score: 0, sectors: 0 });
+  const avg = Math.round(sectors.reduce((s, a) => s + a.fillPct, 0) / sectors.length);
+  res.json({ score: avg, sectors: sectors.length });
+});
+
 module.exports = router;

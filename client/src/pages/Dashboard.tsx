@@ -166,6 +166,26 @@ function SnapshotSection({ snap }: { snap: DashboardSnapshot }) {
 /* ── Rank/XP panel ── */
 function RankPanel({ pts }: { pts: PointsSummary }) {
   const color = LEVEL_COLORS[pts.level] ?? '#6366f1';
+  const [lifeScore, setLifeScore] = useState<number | null>(null);
+
+  useEffect(() => {
+    api.get<{ score: number; sectors: number }>('/life/life-score')
+      .then(r => setLifeScore(r.data.score))
+      .catch(() => {});
+    // Refresh every 30s so it tracks sector completions
+    const id = setInterval(() => {
+      api.get<{ score: number; sectors: number }>('/life/life-score')
+        .then(r => setLifeScore(r.data.score))
+        .catch(() => {});
+    }, 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  const lifeColor = lifeScore === null ? '#6366f1'
+    : lifeScore >= 70 ? '#22c55e'
+    : lifeScore >= 40 ? '#f59e0b'
+    : '#a855f7';
+
   return (
     <div className="cmd-card border-glow-anim px-5 py-4 relative overflow-hidden">
       {/* Shimmer sheen */}
@@ -200,16 +220,42 @@ function RankPanel({ pts }: { pts: PointsSummary }) {
           <p className="text-[10px]" style={{ color: 'var(--t-faint)' }}>total XP</p>
         </div>
       </div>
-      {/* XP bar */}
+      {/* XP progress bar */}
       <div className="xp-track mb-1.5">
         <div className="xp-fill bar-fill" style={{ width: `${pts.progressPct}%`, background: color, boxShadow: `0 0 8px ${color}60` }} />
       </div>
-      <div className="flex justify-between">
+      <div className="flex justify-between mb-3">
         <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>{pts.progressPct}% to next level</span>
         <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>
           {pts.nextLevel != null ? `${pts.nextLevel.toLocaleString()} XP needed` : '⚡ Max level'}
         </span>
       </div>
+      {/* Life score bar */}
+      {lifeScore !== null && (
+        <div className="pt-3" style={{ borderTop: '1px solid var(--b)' }}>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--t-faint)' }}>
+              ✦ Life Score
+            </span>
+            <span className="text-sm font-black tabular-nums font-mono" style={{ color: lifeColor }}>
+              {lifeScore}<span className="text-[10px] opacity-50">/100</span>
+            </span>
+          </div>
+          <div className="h-[3px] rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
+            <div style={{
+              height: '100%',
+              width: `${lifeScore}%`,
+              background: lifeColor,
+              boxShadow: `0 0 6px ${lifeColor}80`,
+              borderRadius: 99,
+              transition: 'width 0.8s ease',
+            }} />
+          </div>
+          <p className="text-[9px] mt-1" style={{ color: 'var(--t-faint)' }}>
+            avg of your life sectors — complete tasks to raise it
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -687,7 +733,7 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
-  useSync(load, 60000);
+  useSync(load, 30000);
 
   // Local state for optimistic task completion
   const [completedIds, setCompletedIds] = useState<Set<number>>(new Set());
