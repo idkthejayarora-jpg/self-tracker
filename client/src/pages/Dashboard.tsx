@@ -798,7 +798,7 @@ export default function Dashboard() {
         }} />
       </div>
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      <div className="space-y-8" style={{ position: 'relative', zIndex: 1 }}>
 
       {/* ═══════════════════════════════════════ HEADER */}
       <div>
