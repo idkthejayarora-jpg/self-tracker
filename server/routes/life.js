@@ -4,6 +4,7 @@ const { authMiddleware } = require('../middleware/auth');
 const { SQL_OFF } = require('../utils/dateUtils');
 const { parseAmbitions, generateSummary } = require('../utils/ambitionsParser');
 const { extractSectors } = require('../utils/sectorDetector');
+const { analyzeUserData, getRecommendations, generateReply } = require('../utils/lifeManager');
 
 // Ensure life_ambitions table exists
 try {
@@ -16,6 +17,11 @@ try {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `).run();
+} catch (_) {}
+
+// Add conversation_json column if not already present
+try {
+  db.prepare(`ALTER TABLE life_ambitions ADD COLUMN conversation_json TEXT DEFAULT '[]'`).run();
 } catch (_) {}
 
 router.use(authMiddleware);
@@ -340,6 +346,108 @@ router.post('/ambitions/parse', (req, res) => {
   `).run(uid, text, JSON.stringify(goals));
 
   res.json({ goals, summary });
+});
+
+// ── AXIS Chat ─────────────────────────────────────────────────
+// Helper: compute sector fills for a user (same logic as GET /sectors)
+function getSectorFills(uid) {
+  const areas = db.prepare('SELECT * FROM life_areas WHERE user_id=? ORDER BY sort_order, id').all(uid);
+  return areas.map(area => {
+    const tagged = db.prepare(`
+      SELECT COUNT(*) as total, SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as done
+      FROM tasks WHERE user_id=? AND life_area_id=?
+    `).get(uid, area.id);
+
+    const keywords = area.name.toLowerCase().split(/[\s&,\/]+/).filter(w => w.length >= 4);
+    let kwStats = { total: 0, done: 0 };
+    if (keywords.length) {
+      const where = keywords.map(() => 'LOWER(title) LIKE ?').join(' OR ');
+      kwStats = db.prepare(`
+        SELECT COUNT(*) as total, SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as done
+        FROM tasks WHERE user_id=? AND (${where})
+        AND life_area_id IS NULL
+        AND datetime(created_at) >= datetime('now', ${SQL_OFF}, '-60 days')
+      `).get(uid, ...keywords.map(k => `%${k}%`)) || { total: 0, done: 0 };
+    }
+
+    const total   = (tagged?.total || 0) + (kwStats.total || 0);
+    const done    = (tagged?.done  || 0) + (kwStats.done  || 0);
+    const fillPct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
+
+    return { id: area.id, name: area.name, icon: area.icon, color: area.color, fillPct, total, done };
+  });
+}
+
+router.post('/chat', (req, res) => {
+  const uid = req.user.id;
+  const { message } = req.body;
+  if (!message?.trim()) return res.status(400).json({ error: 'Message required' });
+
+  // 1. Load existing conversation
+  const row = db.prepare('SELECT conversation_json, raw_text FROM life_ambitions WHERE user_id=?').get(uid);
+  let history = [];
+  try { history = JSON.parse(row?.conversation_json || '[]'); } catch (_) {}
+
+  // 2. Append user message
+  const now = new Date().toISOString();
+  history.push({ role: 'user', content: message.trim(), ts: now });
+
+  // 3. Extract + upsert sectors from this message
+  const detected = extractSectors(message);
+  const newSectorNames = [];
+  for (let i = 0; i < detected.length; i++) {
+    const s = detected[i];
+    const existing = db.prepare('SELECT id FROM life_areas WHERE user_id=? AND name=?').get(uid, s.name);
+    if (!existing) {
+      const maxOrder = db.prepare('SELECT MAX(sort_order) as m FROM life_areas WHERE user_id=?').get(uid);
+      db.prepare(
+        'INSERT INTO life_areas (user_id, name, icon, color, sort_order) VALUES (?, ?, ?, ?, ?)'
+      ).run(uid, s.name, s.icon, s.color, (maxOrder?.m ?? -1) + 1);
+      newSectorNames.push(s.name);
+    }
+  }
+
+  // 4. Analyze user data
+  const snapshot = analyzeUserData(uid);
+
+  // 5. Get fresh sector fills (post-upsert)
+  const sectors = getSectorFills(uid);
+
+  // 6. Recommendations
+  const recs = getRecommendations(message, sectors, snapshot);
+
+  // 7. Generate reply
+  const reply = generateReply(message, snapshot, recs, newSectorNames);
+
+  // 8. Append manager message (with recs embedded)
+  const managerMsg = { role: 'manager', content: reply, ts: new Date().toISOString(), recommendations: recs };
+  history.push(managerMsg);
+
+  // 9. Keep last 30 messages
+  if (history.length > 30) history = history.slice(-30);
+
+  // 10. Save back
+  const rawText = row?.raw_text || message.trim();
+  db.prepare(`
+    INSERT INTO life_ambitions (user_id, raw_text, conversation_json, updated_at)
+    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(user_id) DO UPDATE SET
+      raw_text          = excluded.raw_text,
+      conversation_json = excluded.conversation_json,
+      updated_at        = CURRENT_TIMESTAMP
+  `).run(uid, rawText, JSON.stringify(history));
+
+  res.json({ reply, recommendations: recs, sectors, history });
+});
+
+// GET conversation history + sectors (for page load)
+router.get('/chat/history', (req, res) => {
+  const uid = req.user.id;
+  const row = db.prepare('SELECT conversation_json FROM life_ambitions WHERE user_id=?').get(uid);
+  let history = [];
+  try { history = JSON.parse(row?.conversation_json || '[]'); } catch (_) {}
+  const sectors = getSectorFills(uid);
+  res.json({ history, sectors });
 });
 
 module.exports = router;

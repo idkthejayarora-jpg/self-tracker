@@ -48,8 +48,10 @@ const PREP_STOP_RE = /^(for|from|into|onto|over|out)$/i;
 function extractTopic(clause) {
   let s = clause.trim();
 
-  // 1. Strip leading connectors/adverbs
-  s = s.replace(/^(also|really|just|maybe|perhaps|eventually|someday|honestly|definitely|seriously|actually|basically|anyway|still|yet|plus|even|oh\s+and|and\s+also|and\s+I\s+also)\s+/i, '');
+  // 1. Strip leading connectors/adverbs — loop until stable (handles "Also really", "And also just", etc.)
+  const CONNECTOR_RE = /^(also|really|just|maybe|perhaps|eventually|someday|honestly|definitely|seriously|actually|basically|anyway|still|yet|plus|even|oh\s+and|and\s+also)\s+/i;
+  let prev = '';
+  while (s !== prev) { prev = s; s = s.replace(CONNECTOR_RE, ''); }
 
   // 2. Strip subject "I" or "we" with optional filler words
   s = s.replace(/^(I|we)\s+(really\s+)?(also\s+)?(still\s+)?(just\s+)?(always\s+)?(honestly\s+)?(definitely\s+)?/i, '');
