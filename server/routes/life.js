@@ -2,6 +2,20 @@ const router = require('express').Router();
 const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
 const { SQL_OFF } = require('../utils/dateUtils');
+const { parseAmbitions, generateSummary } = require('../utils/ambitionsParser');
+
+// Ensure life_ambitions table exists
+try {
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS life_ambitions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+      raw_text TEXT DEFAULT '',
+      goals_json TEXT DEFAULT '[]',
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
+} catch (_) {}
 
 router.use(authMiddleware);
 
@@ -218,6 +232,37 @@ router.get('/score', (req, res) => {
     ? Math.round(areas.reduce((s, a) => s + a.progress, 0) / areas.length)
     : 0;
   res.json({ score, areas: areas.length });
+});
+
+// ── Ambitions ─────────────────────────────────────────────────
+
+// GET saved ambitions
+router.get('/ambitions', (req, res) => {
+  const uid = req.user.id;
+  const row = db.prepare('SELECT * FROM life_ambitions WHERE user_id = ?').get(uid);
+  if (!row) return res.json({ raw_text: '', goals: [] });
+  res.json({ raw_text: row.raw_text, goals: JSON.parse(row.goals_json || '[]') });
+});
+
+// POST — parse text + save
+router.post('/ambitions/parse', (req, res) => {
+  const uid = req.user.id;
+  const { text } = req.body;
+  if (!text?.trim()) return res.status(400).json({ error: 'No text provided' });
+
+  const goals   = parseAmbitions(text);
+  const summary = generateSummary(goals);
+
+  db.prepare(`
+    INSERT INTO life_ambitions (user_id, raw_text, goals_json, updated_at)
+    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(user_id) DO UPDATE SET
+      raw_text   = excluded.raw_text,
+      goals_json = excluded.goals_json,
+      updated_at = CURRENT_TIMESTAMP
+  `).run(uid, text, JSON.stringify(goals));
+
+  res.json({ goals, summary });
 });
 
 module.exports = router;

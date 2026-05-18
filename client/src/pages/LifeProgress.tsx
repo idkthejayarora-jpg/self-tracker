@@ -1,395 +1,292 @@
-import { useEffect, useState, useCallback } from 'react';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell, RadarChart, Radar,
-  PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-} from 'recharts';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { Plus, RefreshCw, CheckCircle2, Clock, ChevronRight, Zap } from 'lucide-react';
 import api from '../lib/api';
 
-/* ── Types ─────────────────────────────────────────────────────── */
-interface LifeArea {
-  id: number; name: string; icon: string; color: string;
-  displayScore: number; autoScore: number | null;
-  taskStats: { total: number; done: number };
-  journalMentions: number;
-  milestones: { completed: number }[];
-}
-interface MeStats {
-  strength: number; vitality: number; discipline: number;
-  focus: number; endurance: number; wealth: number;
-}
-interface MeSummary {
-  rank: string; rankColor: string; rankLabel: string;
-  meritScore: number; totalPoints: number; stats: MeStats;
-}
-interface LevelData {
-  total: number; level: number; levelLabel: string;
-  progressPct: number; nextLevel: number | null;
-  today: number; thisWeek: number;
+interface ParsedGoal {
+  title:  string;
+  icon:   string;
+  bucket: 'hours' | 'days' | 'weeks' | 'months' | 'years';
+  note:   string | null;
+  label:  string;   // e.g. "Quick Win"
+  color:  string;
+  bg:     string;
+  desc:   string;
 }
 
-/* ── Custom Tooltip ─────────────────────────────────────────────── */
-function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-xl px-3 py-2 text-xs shadow-xl"
-      style={{ background: 'var(--s2)', border: '1px solid var(--b)', color: 'var(--t-head)', minWidth: 120 }}>
-      <p className="font-bold mb-1">{label}</p>
-      {payload.map((p: any, i: number) => (
-        <p key={i} style={{ color: p.color || p.fill }}>
-          {p.name}: <span className="font-black">{p.value}{typeof p.value === 'number' && p.value <= 100 ? '%' : ''}</span>
-        </p>
-      ))}
-    </div>
-  );
-}
+const PLACEHOLDERS = [
+  `I want to learn German because I plan to move to Berlin someday. I also want to get in shape — ideally lose 10kg and be able to run a 5K without dying. I've always wanted to write a book, even just a short one. I want to build a startup around a product I've been sketching out. Also want to get better at drawing and maybe learn guitar. Investing is something I keep putting off — need to just start. And I want to read at least 20 books this year.`,
+  `I want to become fluent in Japanese. I want to start my own agency and go freelance. Build a morning routine, fix my sleep, and start meditating. I want to eventually own a flat and move to a bigger city. Also learn Python and maybe build a small SaaS on the side.`,
+];
 
-/* ── Stat tile ──────────────────────────────────────────────────── */
-function StatTile({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color: string }) {
-  return (
-    <div className="rounded-xl px-4 py-3 flex flex-col justify-center"
-      style={{ background: 'var(--s1)', border: `1px solid ${color}25` }}>
-      <div className="text-[9px] font-black tracking-widest mb-1" style={{ color: 'var(--t-faint)' }}>{label}</div>
-      <div className="text-2xl font-black font-mono tabular-nums leading-none" style={{ color }}>{value}</div>
-      {sub && <div className="text-[9px] mt-1 font-mono" style={{ color: 'var(--t-faint)' }}>{sub}</div>}
-    </div>
-  );
-}
-
-/* ── Section header ─────────────────────────────────────────────── */
-function SectionHead({ title, sub }: { title: string; sub?: string }) {
-  return (
-    <div className="mb-3">
-      <p className="text-[9px] font-black tracking-[0.25em]" style={{ color: 'var(--accent, #e2c97e)', opacity: 0.7 }}>
-        // {title}
-      </p>
-      {sub && <p className="text-[10px] mt-0.5" style={{ color: 'var(--t-faint)' }}>{sub}</p>}
-    </div>
-  );
-}
-
-/* ── Main Page ──────────────────────────────────────────────────── */
 export default function LifeProgress() {
-  const [areas, setAreas]   = useState<LifeArea[]>([]);
-  const [me, setMe]         = useState<MeSummary | null>(null);
-  const [lvl, setLvl]       = useState<LevelData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [rawText, setRawText] = useState('');
+  const [goals, setGoals] = useState<ParsedGoal[]>([]);
+  const [summary, setSummary] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [addingGoal, setAddingGoal] = useState<string | null>(null);
+  const [addedGoals, setAddedGoals] = useState<Set<string>>(new Set());
+  const taRef = useRef<HTMLTextAreaElement>(null);
 
-  const gold = '#e2c97e';
-
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    const [areasRes, meRes, lvlRes] = await Promise.allSettled([
-      api.get<LifeArea[]>('/life/areas'),
-      api.get<MeSummary>('/me/summary'),
-      api.get<LevelData>('/points'),
-    ]);
-    if (areasRes.status === 'fulfilled') setAreas(areasRes.value.data);
-    if (meRes.status   === 'fulfilled') setMe(meRes.value.data);
-    if (lvlRes.status  === 'fulfilled') setLvl(lvlRes.value.data);
-    setLoading(false);
+  // Load saved ambitions on mount
+  const loadSaved = useCallback(async () => {
+    try {
+      const r = await api.get<{ raw_text: string; goals: ParsedGoal[] }>('/life/ambitions');
+      if (r.data.raw_text) setRawText(r.data.raw_text);
+      if (r.data.goals?.length) setGoals(r.data.goals);
+    } catch (_) {}
+    setLoaded(true);
   }, []);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => { loadSaved(); }, [loadSaved]);
 
-  /* ── Derived chart data ── */
-  const avgScore = areas.length
-    ? Math.round(areas.reduce((s, a) => s + a.displayScore, 0) / areas.length) : 0;
+  async function parse() {
+    if (!rawText.trim() || loading) return;
+    setLoading(true);
+    try {
+      const r = await api.post<{ goals: ParsedGoal[]; summary: string }>('/life/ambitions/parse', { text: rawText });
+      setGoals(r.data.goals);
+      setSummary(r.data.summary || '');
+    } catch (_) {
+      setSummary('Something went wrong. Try again.');
+    }
+    setLoading(false);
+  }
 
-  // Sector scores chart
-  const sectorData = areas.map(a => ({
-    name: `${a.icon} ${a.name.split(' ')[0]}`,
-    fullName: a.name,
-    score: a.displayScore,
-    tasks: a.taskStats.total > 0 ? Math.round((a.taskStats.done / a.taskStats.total) * 100) : 0,
-    journal: Math.min(100, a.journalMentions * 8),
-    color: a.color,
-  }));
+  async function addToMissions(goal: ParsedGoal) {
+    setAddingGoal(goal.title);
+    try {
+      await api.post('/tasks', {
+        title: goal.title,
+        priority: goal.bucket === 'hours' || goal.bucket === 'days' ? 'medium'
+                : goal.bucket === 'weeks' ? 'medium'
+                : goal.bucket === 'months' ? 'high'
+                : 'high',
+        notes: goal.note ?? goal.desc,
+      });
+      setAddedGoals(s => new Set([...s, goal.title]));
+    } catch (_) {}
+    setAddingGoal(null);
+  }
 
-  // Task completion per sector (only areas with tasks)
-  const taskData = areas
-    .filter(a => a.taskStats.total > 0)
-    .map(a => ({
-      name: `${a.icon} ${a.name.split(' ')[0]}`,
-      done: a.taskStats.done,
-      total: a.taskStats.total,
-      pct: Math.round((a.taskStats.done / a.taskStats.total) * 100),
-      color: a.color,
-    }));
+  const byBucket = goals.reduce((acc, g) => {
+    if (!acc[g.bucket]) acc[g.bucket] = [];
+    acc[g.bucket].push(g);
+    return acc;
+  }, {} as Record<string, ParsedGoal[]>);
 
-  // Global stats chart
-  const statsData = me ? [
-    { name: 'Strength',   value: me.stats.strength,   color: '#ef4444' },
-    { name: 'Vitality',   value: me.stats.vitality,   color: '#22c55e' },
-    { name: 'Discipline', value: me.stats.discipline, color: '#f97316' },
-    { name: 'Focus',      value: me.stats.focus,      color: '#a855f7' },
-    { name: 'Endurance',  value: me.stats.endurance,  color: '#0ea5e9' },
-    { name: 'Wealth',     value: me.stats.wealth,     color: '#f59e0b' },
-  ] : [];
+  const bucketOrder = (['hours','days','weeks','months','years'] as const).filter(b => byBucket[b]?.length);
 
-  // Radar data for sectors (if enough areas)
-  const radarData = areas.map(a => ({
-    subject: `${a.icon} ${a.name.split(/[\s&]/)[0]}`,
-    score: a.displayScore,
-    fullMark: 100,
-  }));
-
-  if (loading) return (
-    <div className="flex items-center justify-center py-24">
-      <div className="text-center space-y-2">
-        <div className="text-2xl animate-pulse">⚡</div>
-        <p className="text-xs font-mono" style={{ color: 'var(--t-faint)' }}>loading life data...</p>
-      </div>
-    </div>
-  );
+  const BUCKET_ICONS: Record<string, string> = {
+    hours: '⚡', days: '📅', weeks: '📆', months: '🗓️', years: '🏔️',
+  };
 
   return (
-    <div className="space-y-5"
-      style={{ '--accent-rgb': '226 201 126' } as React.CSSProperties}>
+    <div className="max-w-2xl mx-auto space-y-8 anim-page pb-10"
+      style={{ '--accent-rgb': '168 85 247' } as React.CSSProperties}>
 
-      {/* Dot grid */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(226,201,126,0.05) 1px, transparent 1px)',
+      {/* ── HEADER ── */}
+      <div className="relative overflow-hidden rounded-2xl"
+        style={{ background: 'linear-gradient(180deg, #1a0a2e 0%, var(--hero-bg) 65%)', border: '1px solid #a855f730', minHeight: 110 }}>
+        <div className="absolute inset-0 pointer-events-none" style={{
+          backgroundImage: 'radial-gradient(circle, #a855f710 1px, transparent 1px)',
           backgroundSize: '22px 22px',
         }} />
+        {/* Corner brackets */}
+        {[['top-0 left-0','borderTop borderLeft'],['top-0 right-0','borderTop borderRight'],['bottom-0 left-0','borderBottom borderLeft'],['bottom-0 right-0','borderBottom borderRight']].map(([pos, borders]) => (
+          <div key={pos} className={`absolute ${pos} pointer-events-none`}
+            style={{ width: 14, height: 14, ...Object.fromEntries(borders.split(' ').map(b => [b, '1.5px solid #a855f7'])), opacity: 0.6 }} />
+        ))}
+        <div className="absolute top-0 left-0 right-0 h-px"
+          style={{ background: 'linear-gradient(90deg, transparent, #a855f780, transparent)', boxShadow: '0 0 12px #a855f7' }} />
+        <div className="relative z-10 px-5 py-5">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#a855f7', opacity: 0.7 }}>PATH://</span>
+            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">LIFE_TRAJECTORY</span>
+            <span className="cursor-blink font-mono" style={{ color: '#a855f7', fontSize: 11 }}>▌</span>
+          </div>
+          <h1 className="text-3xl font-black tracking-tight leading-none text-white"
+            style={{ textShadow: '0 0 40px #a855f760' }}>
+            LIFE PATH
+          </h1>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#a855f7', opacity: 0.5 }}>
+            // WHERE YOU'RE HEADED — WRITE IT DOWN, MAKE IT REAL
+          </p>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-px"
+          style={{ background: 'linear-gradient(90deg, transparent, #a855f740, transparent)' }} />
       </div>
 
-      <div className="relative space-y-5" style={{ zIndex: 1 }}>
+      {/* ── INPUT SECTION ── */}
+      <div className="space-y-4" style={{ position: 'relative', zIndex: 1 }}>
+        <div>
+          <p className="text-xs font-bold tracking-widest uppercase mb-1.5" style={{ color: 'var(--t-faint)' }}>
+            // Write about where you're headed
+          </p>
+          <p className="text-sm mb-3" style={{ color: 'var(--t-muted)' }}>
+            Tell it everything — languages you want to learn, habits to build, things to create, places to go, who you want to become. Write like you're talking to yourself.
+          </p>
+        </div>
 
-        {/* ── HERO ── */}
-        <div className="relative overflow-hidden rounded-2xl"
-          style={{ background: 'var(--hero-bg)', border: `1px solid ${gold}20`, minHeight: 110 }}>
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div style={{ position: 'absolute', top: -20, right: 60, width: 2, height: 200,
-              background: `linear-gradient(180deg, transparent, ${gold}40, transparent)`, transform: 'rotate(20deg)' }} />
-            <div style={{ position: 'absolute', top: -20, right: 90, width: 1, height: 200,
-              background: `linear-gradient(180deg, transparent, ${gold}20, transparent)`, transform: 'rotate(20deg)' }} />
-          </div>
-          {(['tl','tr','bl','br'] as const).map(c => (
-            <div key={c} className="absolute pointer-events-none" style={{
-              top: c[0]==='t' ? 0 : 'auto', bottom: c[0]==='b' ? 0 : 'auto',
-              left: c[1]==='l' ? 0 : 'auto', right: c[1]==='r' ? 0 : 'auto',
-              width: 12, height: 12, opacity: 0.6,
-              borderTop: c[0]==='t' ? `1.5px solid ${gold}` : 'none',
-              borderBottom: c[0]==='b' ? `1.5px solid ${gold}` : 'none',
-              borderLeft: c[1]==='l' ? `1.5px solid ${gold}` : 'none',
-              borderRight: c[1]==='r' ? `1.5px solid ${gold}` : 'none',
-            }} />
-          ))}
-          <div className="absolute top-0 inset-x-0 h-px"
-            style={{ background: `linear-gradient(90deg, transparent, ${gold}60, transparent)` }} />
-          <div className="relative z-10 px-5 py-5">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: gold, opacity: 0.6 }}>SYS://</span>
-              <span className="text-[9px] font-mono tracking-widest" style={{ color: 'var(--t-faint)' }}>LIFE_OVERVIEW.ANALYSIS</span>
-              <span className="font-mono animate-pulse" style={{ color: gold, fontSize: 11 }}>▌</span>
-            </div>
-            <h1 className="text-3xl font-black tracking-tight leading-none"
-              style={{ color: '#fff', textShadow: `0 0 30px ${gold}50` }}>LIFE PATH</h1>
-            <p className="font-mono text-[10px] mt-1" style={{ color: '#a78bfa', opacity: 0.7 }}>
-              // sector analysis — tasks · habits · activity · journal
-            </p>
+        <div className="relative">
+          <textarea
+            ref={taRef}
+            value={rawText}
+            onChange={e => setRawText(e.target.value)}
+            rows={8}
+            placeholder={PLACEHOLDERS[0]}
+            className="w-full rounded-2xl px-4 py-4 text-sm resize-none focus:outline-none leading-relaxed"
+            style={{
+              background: 'var(--s1)',
+              border: '1px solid var(--b)',
+              color: 'var(--t-body)',
+              fontFamily: 'inherit',
+              transition: 'border-color 0.2s',
+            }}
+            onFocus={e => { e.currentTarget.style.borderColor = '#a855f760'; }}
+            onBlur={e => { e.currentTarget.style.borderColor = 'var(--b)'; }}
+          />
+          <div className="absolute bottom-3 right-3 text-[10px]" style={{ color: 'var(--t-faint)' }}>
+            {rawText.length > 0 ? `${rawText.split(/\s+/).filter(Boolean).length} words` : 'write freely'}
           </div>
         </div>
 
-        {/* ── TOP STAT ROW ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatTile label="OVERALL SCORE" value={`${avgScore}%`} sub={`across ${areas.length} sectors`} color={gold} />
-          {me && <StatTile label="HUNTER RANK" value={me.rank} sub={me.rankLabel} color={me.rankColor} />}
-          {lvl && <StatTile label="LEVEL" value={lvl.level} sub={`${lvl.levelLabel} · ${lvl.progressPct}% to next`} color={gold} />}
-          {lvl && <StatTile label="TOTAL XP" value={lvl.total.toLocaleString()} sub={`+${lvl.today} today · +${lvl.thisWeek} this week`} color="#22c55e" />}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={parse}
+            disabled={!rawText.trim() || loading}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white tap disabled:opacity-40 transition-all"
+            style={{ background: 'rgb(var(--accent-rgb))' }}>
+            {loading
+              ? <><span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Analysing...</>
+              : <><Zap size={14} /> Parse my path</>
+            }
+          </button>
+
+          {goals.length > 0 && (
+            <button onClick={parse} disabled={loading}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold tap"
+              style={{ background: 'var(--s2)', color: 'var(--t-faint)', border: '1px solid var(--b)' }}>
+              <RefreshCw size={11} /> Re-analyse
+            </button>
+          )}
+
+          {!rawText && loaded && (
+            <button
+              onClick={() => { setRawText(PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]); taRef.current?.focus(); }}
+              className="text-xs tap" style={{ color: 'var(--t-faint)' }}>
+              See example
+            </button>
+          )}
         </div>
+      </div>
 
-        {/* ── SECTOR SCORES ── */}
-        {sectorData.length > 0 && (
-          <div className="rounded-xl p-4" style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
-            <SectionHead title="SECTOR SCORES" sub="auto-computed from tasks · keywords · habits · journal" />
-            <ResponsiveContainer width="100%" height={Math.max(180, sectorData.length * 42)}>
-              <BarChart data={sectorData} layout="vertical" margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
-                <XAxis type="number" domain={[0, 100]} tick={{ fill: 'var(--t-faint)', fontSize: 9 }}
-                  tickFormatter={v => `${v}%`} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="name" width={80} tick={{ fill: 'var(--t-muted)', fontSize: 11 }}
-                  axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                <Bar dataKey="score" name="Score" radius={[0, 4, 4, 0]} maxBarSize={20}>
-                  {sectorData.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} opacity={0.85} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+      {/* ── RESULTS ── */}
+      {goals.length > 0 && (
+        <div className="space-y-7" style={{ position: 'relative', zIndex: 1 }}>
 
-        {/* ── TASK COMPLETION PER SECTOR + RADAR side by side on desktop ── */}
-        <div className="grid gap-4 md:grid-cols-2">
-
-          {/* Task completion bars */}
-          {taskData.length > 0 && (
-            <div className="rounded-xl p-4" style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
-              <SectionHead title="TASK COMPLETION" sub="done / total per sector" />
-              <ResponsiveContainer width="100%" height={Math.max(160, taskData.length * 44)}>
-                <BarChart data={taskData} layout="vertical" margin={{ top: 0, right: 48, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
-                  <XAxis type="number" domain={[0, 100]} tick={{ fill: 'var(--t-faint)', fontSize: 9 }}
-                    tickFormatter={v => `${v}%`} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="name" width={76} tick={{ fill: 'var(--t-muted)', fontSize: 11 }}
-                    axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-                    formatter={(v: any, _: any, props: any) => [`${props.payload.done}/${props.payload.total} tasks (${v}%)`, 'Completion']} />
-                  <Bar dataKey="pct" name="Done" radius={[0, 4, 4, 0]} maxBarSize={18}>
-                    {taskData.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} opacity={0.8} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-              {taskData.length === 0 && (
-                <p className="text-xs text-center py-6" style={{ color: 'var(--t-faint)' }}>
-                  Tag tasks to life areas to see breakdown
-                </p>
-              )}
+          {/* Summary line */}
+          {summary && (
+            <div className="rounded-xl px-4 py-3 flex items-start gap-3"
+              style={{ background: 'rgb(var(--accent-rgb) / 0.07)', border: '1px solid rgb(var(--accent-rgb) / 0.18)' }}>
+              <Zap size={14} className="shrink-0 mt-0.5" style={{ color: 'rgb(var(--accent-rgb-light))' }} />
+              <p className="text-sm" style={{ color: 'var(--t-muted)' }}>{summary}</p>
             </div>
           )}
 
-          {/* Radar chart — sectors */}
-          {radarData.length >= 3 && (
-            <div className="rounded-xl p-4" style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
-              <SectionHead title="SECTOR RADAR" sub="balance across life domains" />
-              <ResponsiveContainer width="100%" height={220}>
-                <RadarChart data={radarData} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
-                  <PolarGrid stroke="rgba(255,255,255,0.08)" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--t-muted)', fontSize: 9 }} />
-                  <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
-                  <Radar dataKey="score" stroke={gold} fill={gold} fillOpacity={0.15} strokeWidth={1.5} />
-                  <Tooltip content={<CustomTooltip />} />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </div>
+          {/* Goals grouped by bucket */}
+          {bucketOrder.map(bucket => {
+            const groupGoals = byBucket[bucket];
+            const meta = groupGoals[0]; // grab color/label from first item (same bucket)
+            return (
+              <div key={bucket}>
+                {/* Bucket header */}
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-base">{BUCKET_ICONS[bucket]}</span>
+                  <span className="text-xs font-black tracking-widest uppercase"
+                    style={{ color: meta.color }}>{meta.label}</span>
+                  <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>— {meta.desc}</span>
+                  <div className="flex-1 h-px ml-1" style={{ background: `${meta.color}25` }} />
+                  <span className="text-[10px] font-bold font-mono" style={{ color: meta.color }}>
+                    {groupGoals.length}
+                  </span>
+                </div>
 
-        {/* ── GLOBAL STATS ── */}
-        {statsData.length > 0 && (
-          <div className="rounded-xl p-4" style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
-            <SectionHead title="LIVE STATS" sub="strength · vitality · discipline · focus · endurance · wealth" />
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={statsData} margin={{ top: 0, right: 10, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: 'var(--t-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 100]} tick={{ fill: 'var(--t-faint)', fontSize: 9 }}
-                  tickFormatter={v => `${v}`} axisLine={false} tickLine={false} width={24} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                <Bar dataKey="value" name="Score" radius={[4, 4, 0, 0]} maxBarSize={40}>
-                  {statsData.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} opacity={0.85} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-            <p className="text-[8px] font-mono text-center mt-1" style={{ color: 'var(--t-faint)' }}>
-              workouts · sleep quality · habit rate · task rate · streak · finance net
-            </p>
-          </div>
-        )}
-
-        {/* ── JOURNAL ACTIVITY ── */}
-        {areas.some(a => a.journalMentions > 0) && (
-          <div className="rounded-xl p-4" style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
-            <SectionHead title="JOURNAL SIGNAL" sub="keyword mentions in last 30 days per sector" />
-            <ResponsiveContainer width="100%" height={Math.max(140, areas.filter(a => a.journalMentions > 0).length * 40)}>
-              <BarChart
-                data={areas.filter(a => a.journalMentions > 0).sort((a, b) => b.journalMentions - a.journalMentions).map(a => ({
-                  name: `${a.icon} ${a.name.split(' ')[0]}`,
-                  mentions: a.journalMentions,
-                  color: a.color,
-                }))}
-                layout="vertical"
-                margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
-                <XAxis type="number" tick={{ fill: 'var(--t-faint)', fontSize: 9 }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="name" width={76} tick={{ fill: 'var(--t-muted)', fontSize: 11 }}
-                  axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-                  formatter={(v: any) => [`${v} mentions`, 'Journal']} />
-                <Bar dataKey="mentions" name="Mentions" radius={[0, 4, 4, 0]} maxBarSize={18}>
-                  {areas.filter(a => a.journalMentions > 0).map((a, i) => (
-                    <Cell key={i} fill={a.color} opacity={0.75} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        {/* ── SECTOR TABLE (raw numbers) ── */}
-        {areas.length > 0 && (
-          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
-            <div className="px-4 pt-4 pb-2">
-              <SectionHead title="SECTOR BREAKDOWN" sub="all signals at a glance" />
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--b)' }}>
-                    {['Sector', 'Score', 'Tasks', 'Journal', 'Milestones'].map(h => (
-                      <th key={h} className="px-4 py-2 text-left font-black tracking-wider text-[9px]"
-                        style={{ color: 'var(--t-faint)' }}>{h.toUpperCase()}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...areas].sort((a, b) => b.displayScore - a.displayScore).map((a, i) => {
-                    const msDone = a.milestones.filter(m => m.completed).length;
-                    const taskPct = a.taskStats.total > 0
-                      ? Math.round((a.taskStats.done / a.taskStats.total) * 100) : null;
+                {/* Goal cards */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {groupGoals.map(goal => {
+                    const added = addedGoals.has(goal.title);
+                    const adding = addingGoal === goal.title;
                     return (
-                      <tr key={a.id} style={{ borderBottom: i < areas.length - 1 ? '1px solid var(--b)' : 'none' }}>
-                        <td className="px-4 py-2.5">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full shrink-0" style={{ background: a.color }} />
-                            <span style={{ color: 'var(--t-head)' }}>{a.icon} {a.name}</span>
+                      <div key={goal.title}
+                        className="rounded-2xl px-4 py-4 flex flex-col gap-2.5 group"
+                        style={{
+                          background: 'var(--s1)',
+                          border: `1px solid ${goal.color}25`,
+                          borderLeft: `3px solid ${goal.color}`,
+                        }}>
+                        {/* Top row */}
+                        <div className="flex items-start gap-3">
+                          <span className="text-2xl shrink-0 leading-none mt-0.5">{goal.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold leading-snug" style={{ color: 'var(--t-head)' }}>
+                              {goal.title}
+                            </p>
+                            {/* Bucket badge */}
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full mt-1"
+                              style={{ background: goal.bg, color: goal.color }}>
+                              {goal.label}
+                            </span>
                           </div>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <span className="font-black font-mono" style={{ color: a.color }}>{a.displayScore}%</span>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          {taskPct !== null
-                            ? <span className="font-mono" style={{ color: 'var(--t-muted)' }}>{a.taskStats.done}/{a.taskStats.total} ({taskPct}%)</span>
-                            : <span style={{ color: 'var(--t-faint)' }}>—</span>}
-                        </td>
-                        <td className="px-4 py-2.5">
-                          {a.journalMentions > 0
-                            ? <span style={{ color: '#a855f7' }}>×{a.journalMentions}</span>
-                            : <span style={{ color: 'var(--t-faint)' }}>—</span>}
-                        </td>
-                        <td className="px-4 py-2.5">
-                          {a.milestones.length > 0
-                            ? <span className="font-mono" style={{ color: 'var(--t-muted)' }}>{msDone}/{a.milestones.length}</span>
-                            : <span style={{ color: 'var(--t-faint)' }}>—</span>}
-                        </td>
-                      </tr>
+                        </div>
+
+                        {/* Note */}
+                        {goal.note && (
+                          <p className="text-[11px] leading-relaxed flex items-start gap-1.5"
+                            style={{ color: 'var(--t-faint)' }}>
+                            <Clock size={10} className="shrink-0 mt-0.5" />
+                            {goal.note}
+                          </p>
+                        )}
+
+                        {/* Add to missions */}
+                        <button
+                          onClick={() => !added && addToMissions(goal)}
+                          disabled={adding || added}
+                          className="flex items-center gap-1.5 text-[11px] font-bold tap self-start px-2.5 py-1.5 rounded-lg transition-all disabled:opacity-60"
+                          style={{
+                            background: added ? '#22c55e15' : `${goal.color}12`,
+                            color: added ? '#22c55e' : goal.color,
+                            border: `1px solid ${added ? '#22c55e30' : `${goal.color}30`}`,
+                          }}>
+                          {adding
+                            ? <span className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin" />
+                            : added
+                            ? <CheckCircle2 size={11} />
+                            : <Plus size={11} />
+                          }
+                          {adding ? 'Adding...' : added ? 'Added to Missions' : 'Add to Missions'}
+                          {!adding && !added && <ChevronRight size={10} />}
+                        </button>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-        {areas.length === 0 && !loading && (
-          <div className="rounded-xl py-16 text-center" style={{ border: '1px dashed var(--b)' }}>
-            <div className="text-4xl mb-3">📊</div>
-            <p className="font-semibold" style={{ color: 'var(--t-muted)' }}>No sectors yet</p>
-            <p className="text-xs mt-1" style={{ color: 'var(--t-faint)' }}>Add life areas to see your analysis</p>
-          </div>
-        )}
+      {/* ── Empty state ── */}
+      {loaded && goals.length === 0 && !loading && rawText.trim() === '' && (
+        <div className="text-center py-12 space-y-2">
+          <p className="text-4xl">🗺️</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--t-muted)' }}>Your path starts here</p>
+          <p className="text-xs" style={{ color: 'var(--t-faint)' }}>Write about your ambitions above and hit Parse</p>
+        </div>
+      )}
 
-      </div>
     </div>
   );
 }
