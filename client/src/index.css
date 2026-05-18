@@ -151,8 +151,8 @@ input:focus, textarea:focus, select:focus {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 14px 8px;
+    gap: 8px;
+    padding: 16px 10px;
     border-radius: 14px;
     background: var(--s1);
     border: 1px solid rgb(var(--accent-rgb) / 0.1);
@@ -186,7 +186,7 @@ input:focus, textarea:focus, select:focus {
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    padding: 10px 14px;
+    padding: 12px 16px;
     transition: background 0.18s, box-shadow 0.18s;
     border-bottom: 1px solid var(--b);
     position: relative;
@@ -249,11 +249,11 @@ input:focus, textarea:focus, select:focus {
   .streak-node {
     display: flex;
     flex-direction: column;
-    padding: 12px 14px;
+    padding: 14px 16px;
     border-radius: 14px;
     background: var(--s1);
     border: 1px solid rgb(var(--accent-rgb) / 0.1);
-    min-width: 80px;
+    min-width: 90px;
     flex-shrink: 0;
     transition: border-color 0.2s, box-shadow 0.2s, transform 0.18s;
   }

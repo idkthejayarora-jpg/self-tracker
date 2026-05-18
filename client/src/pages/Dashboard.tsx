@@ -147,11 +147,11 @@ function SnapshotSection({ snap }: { snap: DashboardSnapshot }) {
   return (
     <div>
       <SysLabel icon={BarChart2} text="System Status" />
-      <div className="flex gap-2 overflow-x-auto pb-1 hide-scroll">
+      <div className="flex gap-3 overflow-x-auto pb-1 hide-scroll">
         {cards.map(c => (
           <Link key={c.to} to={c.to}
             className="streak-node card-hover glow-card flex flex-col gap-1 no-underline"
-            style={{ minWidth: 86, textDecoration: 'none', '--gc': `${c.color}55` } as React.CSSProperties}>
+            style={{ minWidth: 96, textDecoration: 'none', '--gc': `${c.color}55` } as React.CSSProperties}>
             <c.icon size={13} style={{ color: c.color }} />
             <p className="text-sm font-black text-head tabular-nums font-mono leading-tight mt-1">{c.primary}</p>
             <p className="text-[10px] font-semibold" style={{ color: 'var(--t-faint)' }}>{c.label}</p>
@@ -729,7 +729,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 anim-page pb-8"
+    <div className="max-w-2xl mx-auto space-y-8 anim-page pb-10"
       style={{ '--accent-rgb': '57 255 20' } as React.CSSProperties}>
 
       {/* ── WAR ROOM HEADER ── */}
@@ -833,11 +833,11 @@ export default function Dashboard() {
       {data.points && <RankPanel pts={data.points} />}
 
       {/* ═══════════════════════════════════════ MISSIONS + QUICK ACTIONS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
         {/* Mission board */}
         <div className="cmd-card overflow-hidden">
-          <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+          <div className="px-5 pt-5 pb-2 flex items-center justify-between">
             <SysLabel icon={Target} text={`Active Missions (${activeMissions.length})`} />
             <Link to="/tasks"
               className="flex items-center gap-1 text-[11px] font-bold tap"
@@ -865,7 +865,7 @@ export default function Dashboard() {
         {/* Quick actions */}
         <div>
           <SysLabel icon={Zap} text="Quick Actions" color="#f59e0b" />
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-3">
             {ACTIONS.map(a => (
               <Link key={a.to} to={a.to} className="action-tile icon-bounce-hover"
                 style={{ '--gc': `${a.color}55` } as React.CSSProperties}>
@@ -885,7 +885,7 @@ export default function Dashboard() {
       {/* ═══════════════════════════════════════ STREAK INTEL */}
       <div>
         <SysLabel icon={TrendingUp} text="// Streak Intel" color="#f97316" />
-        <div className="flex gap-2 overflow-x-auto pb-1 hide-scroll">
+        <div className="flex gap-3 overflow-x-auto pb-1 hide-scroll">
           {streakData.map((s, i) => (
             <div key={s.label} className="streak-node card-hover glow-card"
               style={{ animationDelay: `${i * 50}ms`, '--gc': `${s.color}55` } as React.CSSProperties}>

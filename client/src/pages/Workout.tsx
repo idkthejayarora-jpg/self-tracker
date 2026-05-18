@@ -23,6 +23,9 @@ const CAT_COLORS: Record<Category, string> = {
 interface PlanExercise { id: number; day_id: number; name: string; sets: number; reps: string; weight: string; notes: string; }
 interface PlanDay { id: number; name: string; icon: string; color: string; exercises: PlanExercise[]; }
 
+interface ParsedExercise { name: string; sets: number; reps: string; weight: string; }
+interface ParsedDay { name: string; icon: string; color: string; exercises: ParsedExercise[]; }
+
 interface Exercise { id: number; name: string; category: Category; }
 interface WorkoutSet { id: number; session_id: number; exercise_id: number; exercise_name: string; category: Category; reps: number | null; weight: number | null; duration_seconds: number | null; }
 interface Session { id: number; date: string; name: string | null; notes: string | null; exercise_count: number; set_count: number; }
@@ -98,7 +101,11 @@ export default function Workout() {
   const [showAddDay, setShowAddDay] = useState(false);
   const [planLoading, setPlanLoading] = useState(false);
   const [pdfText, setPdfText] = useState('');
+  const [parsedPlan, setParsedPlan] = useState<ParsedDay[]>([]);
   const [showPdfImport, setShowPdfImport] = useState(false);
+  const [showRawText, setShowRawText] = useState(false);
+  const [creatingPlan, setCreatingPlan] = useState(false);
+  const [planCreateMsg, setPlanCreateMsg] = useState('');
 
   const fetchSessions = useCallback(async () => {
     const r = await api.get<Session[]>('/workout/sessions');
@@ -445,32 +452,143 @@ export default function Workout() {
           {showPdfImport && (
             <div className="glass rounded-2xl px-4 py-4 space-y-3 scale-in">
               <p className="text-xs font-bold tracking-wider" style={{ color: 'var(--t-muted)' }}>// UPLOAD WORKOUT PLAN PDF</p>
+
               <input type="file" accept=".pdf"
                 onChange={async e => {
                   const file = e.target.files?.[0];
                   if (!file) return;
                   setPlanLoading(true);
+                  setParsedPlan([]);
+                  setPdfText('');
+                  setPlanCreateMsg('');
+                  setShowRawText(false);
                   const fd = new FormData();
                   fd.append('pdf', file);
                   try {
-                    const r = await api.post<{ text: string }>('/workout/plan/parse-pdf', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-                    setPdfText(r.data.text);
-                  } catch { setPdfText('Failed to parse PDF. Paste your plan below manually.'); }
+                    const r = await api.post<{ text: string; plan: ParsedDay[] }>(
+                      '/workout/plan/parse-pdf', fd,
+                      { headers: { 'Content-Type': 'multipart/form-data' } }
+                    );
+                    setPdfText(r.data.text || '');
+                    setParsedPlan(r.data.plan || []);
+                  } catch {
+                    setPdfText('Failed to parse PDF.');
+                  }
                   setPlanLoading(false);
                 }}
                 className="w-full text-xs" style={{ color: 'var(--t-muted)' }} />
-              {planLoading && <p className="text-xs" style={{ color: 'var(--t-faint)' }}>Parsing PDF...</p>}
-              {pdfText && (
+
+              {planLoading && (
+                <p className="text-xs animate-pulse" style={{ color: 'var(--t-faint)' }}>⚙ Parsing PDF...</p>
+              )}
+
+              {/* Parsed plan preview */}
+              {parsedPlan.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold" style={{ color: 'var(--t-muted)' }}>
+                      ✓ Found {parsedPlan.length} training day{parsedPlan.length !== 1 ? 's' : ''}
+                    </p>
+                    {planCreateMsg && (
+                      <span className="text-[11px] font-semibold" style={{ color: '#22c55e' }}>{planCreateMsg}</span>
+                    )}
+                  </div>
+
+                  {/* Day preview cards */}
+                  <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                    {parsedPlan.map((day, i) => (
+                      <div key={i} className="rounded-xl px-3 py-2.5"
+                        style={{ background: 'var(--s3)', borderLeft: `3px solid ${day.color}` }}>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span>{day.icon}</span>
+                          <span className="text-sm font-bold" style={{ color: 'var(--t-head)' }}>{day.name}</span>
+                          <span className="text-[10px] ml-auto" style={{ color: 'var(--t-faint)' }}>
+                            {day.exercises.length} exercises
+                          </span>
+                        </div>
+                        <div className="space-y-0.5 pl-1">
+                          {day.exercises.map((ex, j) => (
+                            <div key={j} className="flex items-center gap-2 text-[11px]" style={{ color: 'var(--t-muted)' }}>
+                              <span className="flex-1">{ex.name}</span>
+                              <span className="font-mono px-1 rounded"
+                                style={{ background: `${day.color}18`, color: day.color }}>
+                                {ex.sets}×{ex.reps}
+                              </span>
+                              {ex.weight && <span style={{ color: 'var(--t-faint)' }}>{ex.weight}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Create plan button */}
+                  <button
+                    onClick={async () => {
+                      setCreatingPlan(true);
+                      setPlanCreateMsg('');
+                      try {
+                        for (const day of parsedPlan) {
+                          const dr = await api.post<PlanDay>('/workout/plan/days', {
+                            name: day.name, icon: day.icon, color: day.color,
+                          });
+                          const dayId = dr.data.id;
+                          for (const ex of day.exercises) {
+                            await api.post(`/workout/plan/days/${dayId}/exercises`, {
+                              name: ex.name,
+                              sets: ex.sets,
+                              reps: ex.reps,
+                              weight: ex.weight || '',
+                            });
+                          }
+                        }
+                        setPlanCreateMsg(`✓ Plan created (${parsedPlan.length} days)`);
+                        await loadPlan();
+                        setTimeout(() => {
+                          setShowPdfImport(false);
+                          setParsedPlan([]);
+                          setPdfText('');
+                          setPlanCreateMsg('');
+                        }, 1800);
+                      } catch {
+                        setPlanCreateMsg('✗ Error creating plan');
+                      }
+                      setCreatingPlan(false);
+                    }}
+                    disabled={creatingPlan}
+                    className="w-full py-2.5 rounded-xl text-sm font-bold tap text-white disabled:opacity-50"
+                    style={{ background: 'rgb(var(--accent-rgb))' }}>
+                    {creatingPlan ? '⚙ Creating plan...' : `⚡ Create this plan (${parsedPlan.length} days)`}
+                  </button>
+
+                  {/* Raw text toggle */}
+                  {pdfText && (
+                    <button onClick={() => setShowRawText(s => !s)}
+                      className="text-[11px] tap" style={{ color: 'var(--t-faint)' }}>
+                      {showRawText ? '▲ Hide raw text' : '▼ Show raw text'}
+                    </button>
+                  )}
+                  {showRawText && (
+                    <textarea value={pdfText} onChange={e => setPdfText(e.target.value)}
+                      rows={8} className="w-full rounded-xl px-3 py-2 text-xs font-mono resize-y"
+                      style={{ background: 'var(--s1)', border: '1px solid var(--b)', color: 'var(--t-body)' }} />
+                  )}
+                </div>
+              )}
+
+              {/* No days parsed but text available */}
+              {!planLoading && parsedPlan.length === 0 && pdfText && (
                 <div className="space-y-2">
-                  <p className="text-[11px]" style={{ color: 'var(--t-muted)' }}>
-                    Review extracted text below. Edit as needed, then use "Add day" above to build your plan manually from this.
+                  <p className="text-[11px]" style={{ color: '#f87171' }}>
+                    ⚠ Couldn't auto-detect training days. Review the text below and add days manually.
                   </p>
                   <textarea value={pdfText} onChange={e => setPdfText(e.target.value)}
                     rows={10} className="w-full rounded-xl px-3 py-2 text-xs font-mono resize-y"
                     style={{ background: 'var(--s1)', border: '1px solid var(--b)', color: 'var(--t-body)' }} />
                 </div>
               )}
-              <button onClick={() => setShowPdfImport(false)}
+
+              <button onClick={() => { setShowPdfImport(false); setParsedPlan([]); setPdfText(''); setPlanCreateMsg(''); }}
                 className="text-xs tap" style={{ color: 'var(--t-faint)' }}>Close</button>
             </div>
           )}
