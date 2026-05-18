@@ -1,85 +1,106 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Plus, RefreshCw, CheckCircle2, Clock, ChevronRight, Zap } from 'lucide-react';
+import { Plus, RefreshCw, Zap, X, AlertCircle } from 'lucide-react';
 import api from '../lib/api';
 
-interface ParsedGoal {
-  title:  string;
-  icon:   string;
-  bucket: 'hours' | 'days' | 'weeks' | 'months' | 'years';
-  note:   string | null;
-  label:  string;   // e.g. "Quick Win"
-  color:  string;
-  bg:     string;
-  desc:   string;
+interface Sector {
+  id: number;
+  name: string;
+  icon: string;
+  color: string;
+  fillPct: number;   // 0–100, driven by task completion
+  total: number;
+  done: number;
 }
 
-const PLACEHOLDERS = [
-  `I want to learn German because I plan to move to Berlin someday. I also want to get in shape — ideally lose 10kg and be able to run a 5K without dying. I've always wanted to write a book, even just a short one. I want to build a startup around a product I've been sketching out. Also want to get better at drawing and maybe learn guitar. Investing is something I keep putting off — need to just start. And I want to read at least 20 books this year.`,
-  `I want to become fluent in Japanese. I want to start my own agency and go freelance. Build a morning routine, fix my sleep, and start meditating. I want to eventually own a flat and move to a bigger city. Also learn Python and maybe build a small SaaS on the side.`,
-];
+// Animate fill heights in: start at 0, step to actual value after mount
+function useFillAnimate(sectors: Sector[]) {
+  const [fills, setFills] = useState<Record<number, number>>({});
+  useEffect(() => {
+    if (!sectors.length) return;
+    // First tick: all zeros
+    const zeros: Record<number, number> = {};
+    sectors.forEach(s => { zeros[s.id] = 0; });
+    setFills(zeros);
+    // Stagger each card's fill
+    sectors.forEach((s, i) => {
+      setTimeout(() => {
+        setFills(prev => ({ ...prev, [s.id]: s.fillPct }));
+      }, 120 + i * 80);
+    });
+  }, [sectors]);
+  return fills;
+}
+
+const PLACEHOLDER = `I want to get fit and lose some weight. I've been meaning to learn German for ages — planning to move to Berlin eventually. Want to build a startup or at least a side product. Also want to get better at drawing and maybe start producing music. I need to sort out my finances, start investing. And travel more — Japan and Italy are at the top of the list. Really want to work on my discipline and build better habits.`;
 
 export default function LifeProgress() {
   const [rawText, setRawText] = useState('');
-  const [goals, setGoals] = useState<ParsedGoal[]>([]);
-  const [summary, setSummary] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [sectors, setSectors] = useState<Sector[]>([]);
+  const [detecting, setDetecting] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const [addingGoal, setAddingGoal] = useState<string | null>(null);
-  const [addedGoals, setAddedGoals] = useState<Set<string>>(new Set());
-  const taRef = useRef<HTMLTextAreaElement>(null);
+  const [err, setErr] = useState('');
 
-  // Load saved ambitions on mount
-  const loadSaved = useCallback(async () => {
+  // Quick-add task state
+  const [addingTo, setAddingTo] = useState<Sector | null>(null);
+  const [taskTitle, setTaskTitle] = useState('');
+  const [savingTask, setSavingTask] = useState(false);
+
+  const taRef = useRef<HTMLTextAreaElement>(null);
+  const fills = useFillAnimate(sectors);
+
+  const loadSectors = useCallback(async () => {
     try {
-      const r = await api.get<{ raw_text: string; goals: ParsedGoal[] }>('/life/ambitions');
-      if (r.data.raw_text) setRawText(r.data.raw_text);
-      if (r.data.goals?.length) setGoals(r.data.goals);
+      const r = await api.get<{ sectors: Sector[]; rawText: string }>('/life/sectors');
+      setSectors(r.data.sectors);
+      if (r.data.rawText) setRawText(r.data.rawText);
     } catch (_) {}
     setLoaded(true);
   }, []);
 
-  useEffect(() => { loadSaved(); }, [loadSaved]);
+  useEffect(() => { loadSectors(); }, [loadSectors]);
 
-  async function parse() {
-    if (!rawText.trim() || loading) return;
-    setLoading(true);
+  async function detect() {
+    if (!rawText.trim() || detecting) return;
+    setDetecting(true);
+    setErr('');
     try {
-      const r = await api.post<{ goals: ParsedGoal[]; summary: string }>('/life/ambitions/parse', { text: rawText });
-      setGoals(r.data.goals);
-      setSummary(r.data.summary || '');
+      await api.post('/life/detect-sectors', { text: rawText });
+      await loadSectors();
     } catch (_) {
-      setSummary('Something went wrong. Try again.');
+      setErr('Could not map sectors. Try again.');
     }
-    setLoading(false);
+    setDetecting(false);
   }
 
-  async function addToMissions(goal: ParsedGoal) {
-    setAddingGoal(goal.title);
+  async function addTask() {
+    if (!addingTo || !taskTitle.trim()) return;
+    setSavingTask(true);
     try {
       await api.post('/tasks', {
-        title: goal.title,
-        priority: goal.bucket === 'hours' || goal.bucket === 'days' ? 'medium'
-                : goal.bucket === 'weeks' ? 'medium'
-                : goal.bucket === 'months' ? 'high'
-                : 'high',
-        notes: goal.note ?? goal.desc,
+        title: taskTitle.trim(),
+        priority: 'medium',
+        life_area_id: addingTo.id,
       });
-      setAddedGoals(s => new Set([...s, goal.title]));
+      setTaskTitle('');
+      setAddingTo(null);
+      await loadSectors();
     } catch (_) {}
-    setAddingGoal(null);
+    setSavingTask(false);
   }
 
-  const byBucket = goals.reduce((acc, g) => {
-    if (!acc[g.bucket]) acc[g.bucket] = [];
-    acc[g.bucket].push(g);
-    return acc;
-  }, {} as Record<string, ParsedGoal[]>);
+  // Fill visual helpers
+  function fillOpacity(pct: number) {
+    if (pct === 0) return 0.06;
+    return 0.12 + (pct / 100) * 0.55; // 0.12 → 0.67
+  }
 
-  const bucketOrder = (['hours','days','weeks','months','years'] as const).filter(b => byBucket[b]?.length);
+  function glowIntensity(pct: number, color: string) {
+    if (pct < 10) return 'none';
+    const alpha = Math.round((pct / 100) * 40);
+    return `0 0 ${8 + pct / 5}px ${color}${alpha.toString(16).padStart(2, '0')}`;
+  }
 
-  const BUCKET_ICONS: Record<string, string> = {
-    hours: '⚡', days: '📅', weeks: '📆', months: '🗓️', years: '🏔️',
-  };
+  const hasSectors = sectors.length > 0;
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 anim-page pb-10"
@@ -92,12 +113,12 @@ export default function LifeProgress() {
           backgroundImage: 'radial-gradient(circle, #a855f710 1px, transparent 1px)',
           backgroundSize: '22px 22px',
         }} />
-        {/* Corner brackets */}
-        {[['top-0 left-0','borderTop borderLeft'],['top-0 right-0','borderTop borderRight'],['bottom-0 left-0','borderBottom borderLeft'],['bottom-0 right-0','borderBottom borderRight']].map(([pos, borders]) => (
-          <div key={pos} className={`absolute ${pos} pointer-events-none`}
-            style={{ width: 14, height: 14, ...Object.fromEntries(borders.split(' ').map(b => [b, '1.5px solid #a855f7'])), opacity: 0.6 }} />
+        {/* HUD corners */}
+        {(['top-0 left-0 border-t border-l','top-0 right-0 border-t border-r','bottom-0 left-0 border-b border-l','bottom-0 right-0 border-b border-r'] as const).map(cls => (
+          <div key={cls} className={`absolute ${cls} pointer-events-none`}
+            style={{ width: 14, height: 14, borderColor: '#a855f7', opacity: 0.6, borderWidth: '1.5px' }} />
         ))}
-        <div className="absolute top-0 left-0 right-0 h-px"
+        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
           style={{ background: 'linear-gradient(90deg, transparent, #a855f780, transparent)', boxShadow: '0 0 12px #a855f7' }} />
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
@@ -110,21 +131,21 @@ export default function LifeProgress() {
             LIFE PATH
           </h1>
           <p className="font-mono text-[10px] mt-1" style={{ color: '#a855f7', opacity: 0.5 }}>
-            // WHERE YOU'RE HEADED — WRITE IT DOWN, MAKE IT REAL
+            // WRITE YOUR LIFE DOWN — WATCH IT FILL UP
           </p>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-px"
+        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
           style={{ background: 'linear-gradient(90deg, transparent, #a855f740, transparent)' }} />
       </div>
 
-      {/* ── INPUT SECTION ── */}
+      {/* ── TEXT INPUT ── */}
       <div className="space-y-4" style={{ position: 'relative', zIndex: 1 }}>
         <div>
-          <p className="text-xs font-bold tracking-widest uppercase mb-1.5" style={{ color: 'var(--t-faint)' }}>
-            // Write about where you're headed
+          <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: 'var(--t-faint)' }}>
+            // Your life, in your words
           </p>
-          <p className="text-sm mb-3" style={{ color: 'var(--t-muted)' }}>
-            Tell it everything — languages you want to learn, habits to build, things to create, places to go, who you want to become. Write like you're talking to yourself.
+          <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--t-muted)' }}>
+            Write about where you're headed — what you want to learn, build, become, fix, or experience. Don't filter. The sectors below will fill up as you complete tasks linked to them.
           </p>
         </div>
 
@@ -133,8 +154,8 @@ export default function LifeProgress() {
             ref={taRef}
             value={rawText}
             onChange={e => setRawText(e.target.value)}
-            rows={8}
-            placeholder={PLACEHOLDERS[0]}
+            rows={7}
+            placeholder={PLACEHOLDER}
             className="w-full rounded-2xl px-4 py-4 text-sm resize-none focus:outline-none leading-relaxed"
             style={{
               background: 'var(--s1)',
@@ -147,143 +168,208 @@ export default function LifeProgress() {
             onBlur={e => { e.currentTarget.style.borderColor = 'var(--b)'; }}
           />
           <div className="absolute bottom-3 right-3 text-[10px]" style={{ color: 'var(--t-faint)' }}>
-            {rawText.length > 0 ? `${rawText.split(/\s+/).filter(Boolean).length} words` : 'write freely'}
+            {rawText.trim() ? `${rawText.trim().split(/\s+/).length} words` : 'write freely'}
           </div>
         </div>
 
+        {err && (
+          <div className="flex items-center gap-2 text-xs px-3 py-2 rounded-xl"
+            style={{ background: '#ef444418', color: '#f87171', border: '1px solid #ef444430' }}>
+            <AlertCircle size={12} />{err}
+          </div>
+        )}
+
         <div className="flex items-center gap-3">
           <button
-            onClick={parse}
-            disabled={!rawText.trim() || loading}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white tap disabled:opacity-40 transition-all"
+            onClick={detect}
+            disabled={!rawText.trim() || detecting}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white tap disabled:opacity-40"
             style={{ background: 'rgb(var(--accent-rgb))' }}>
-            {loading
-              ? <><span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Analysing...</>
-              : <><Zap size={14} /> Parse my path</>
-            }
+            {detecting
+              ? <><span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Mapping...</>
+              : <><Zap size={14} /> Map my sectors</>}
           </button>
 
-          {goals.length > 0 && (
-            <button onClick={parse} disabled={loading}
+          {hasSectors && (
+            <button onClick={detect} disabled={detecting}
               className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold tap"
               style={{ background: 'var(--s2)', color: 'var(--t-faint)', border: '1px solid var(--b)' }}>
-              <RefreshCw size={11} /> Re-analyse
-            </button>
-          )}
-
-          {!rawText && loaded && (
-            <button
-              onClick={() => { setRawText(PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]); taRef.current?.focus(); }}
-              className="text-xs tap" style={{ color: 'var(--t-faint)' }}>
-              See example
+              <RefreshCw size={11} /> Re-map
             </button>
           )}
         </div>
       </div>
 
-      {/* ── RESULTS ── */}
-      {goals.length > 0 && (
-        <div className="space-y-7" style={{ position: 'relative', zIndex: 1 }}>
+      {/* ── SECTOR GRID ── */}
+      {hasSectors && (
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-xs font-black tracking-widest uppercase" style={{ color: 'var(--t-faint)' }}>
+              // {sectors.length} sector{sectors.length !== 1 ? 's' : ''} detected
+            </span>
+            <div className="flex-1 h-px" style={{ background: 'var(--b)' }} />
+            <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>
+              complete tasks to fill them up
+            </span>
+          </div>
 
-          {/* Summary line */}
-          {summary && (
-            <div className="rounded-xl px-4 py-3 flex items-start gap-3"
-              style={{ background: 'rgb(var(--accent-rgb) / 0.07)', border: '1px solid rgb(var(--accent-rgb) / 0.18)' }}>
-              <Zap size={14} className="shrink-0 mt-0.5" style={{ color: 'rgb(var(--accent-rgb-light))' }} />
-              <p className="text-sm" style={{ color: 'var(--t-muted)' }}>{summary}</p>
-            </div>
-          )}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {sectors.map(sector => {
+              const fill = fills[sector.id] ?? 0;
+              const isGhost = fill === 0;
+              const isFull = fill >= 100;
 
-          {/* Goals grouped by bucket */}
-          {bucketOrder.map(bucket => {
-            const groupGoals = byBucket[bucket];
-            const meta = groupGoals[0]; // grab color/label from first item (same bucket)
-            return (
-              <div key={bucket}>
-                {/* Bucket header */}
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-base">{BUCKET_ICONS[bucket]}</span>
-                  <span className="text-xs font-black tracking-widest uppercase"
-                    style={{ color: meta.color }}>{meta.label}</span>
-                  <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>— {meta.desc}</span>
-                  <div className="flex-1 h-px ml-1" style={{ background: `${meta.color}25` }} />
-                  <span className="text-[10px] font-bold font-mono" style={{ color: meta.color }}>
-                    {groupGoals.length}
-                  </span>
-                </div>
+              return (
+                <div key={sector.id}
+                  className="relative overflow-hidden rounded-2xl flex flex-col"
+                  style={{
+                    background: 'var(--s1)',
+                    border: `1px solid ${isGhost ? `${sector.color}20` : `${sector.color}50`}`,
+                    minHeight: 160,
+                    boxShadow: isGhost ? 'none' : glowIntensity(fill, sector.color),
+                    transition: 'box-shadow 0.6s ease, border-color 0.6s ease',
+                  }}>
 
-                {/* Goal cards */}
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {groupGoals.map(goal => {
-                    const added = addedGoals.has(goal.title);
-                    const adding = addingGoal === goal.title;
-                    return (
-                      <div key={goal.title}
-                        className="rounded-2xl px-4 py-4 flex flex-col gap-2.5 group"
+                  {/* ── Water fill (rises from bottom) ── */}
+                  <div
+                    aria-hidden
+                    style={{
+                      position: 'absolute',
+                      bottom: 0, left: 0, right: 0,
+                      height: `${fill}%`,
+                      background: `linear-gradient(to top, ${sector.color}${Math.round(fillOpacity(fill) * 255).toString(16).padStart(2,'0')}, ${sector.color}${Math.round(fillOpacity(fill) * 0.5 * 255).toString(16).padStart(2,'0')})`,
+                      transition: 'height 1.2s cubic-bezier(0.34,1.2,0.64,1)',
+                      pointerEvents: 'none',
+                    }}
+                  />
+
+                  {/* ── Full-card ghost tint at 0% ── */}
+                  {isGhost && (
+                    <div aria-hidden style={{
+                      position: 'absolute', inset: 0,
+                      background: `${sector.color}08`,
+                      pointerEvents: 'none',
+                    }} />
+                  )}
+
+                  {/* ── Content (above fill) ── */}
+                  <div className="relative z-10 flex flex-col flex-1 p-4 gap-3">
+                    {/* Top row */}
+                    <div className="flex items-start justify-between gap-2">
+                      <span
+                        className="text-3xl leading-none"
                         style={{
-                          background: 'var(--s1)',
-                          border: `1px solid ${goal.color}25`,
-                          borderLeft: `3px solid ${goal.color}`,
+                          opacity: isGhost ? 0.3 : 0.9,
+                          filter: isGhost ? 'none' : `drop-shadow(0 0 6px ${sector.color}80)`,
+                          transition: 'opacity 0.6s, filter 0.6s',
                         }}>
-                        {/* Top row */}
-                        <div className="flex items-start gap-3">
-                          <span className="text-2xl shrink-0 leading-none mt-0.5">{goal.icon}</span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold leading-snug" style={{ color: 'var(--t-head)' }}>
-                              {goal.title}
-                            </p>
-                            {/* Bucket badge */}
-                            <span className="inline-flex items-center gap-1 text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full mt-1"
-                              style={{ background: goal.bg, color: goal.color }}>
-                              {goal.label}
-                            </span>
-                          </div>
-                        </div>
+                        {sector.icon}
+                      </span>
+                      {/* Fill % badge */}
+                      <span className="text-[9px] font-black tracking-wider px-2 py-0.5 rounded-full shrink-0"
+                        style={{
+                          background: isGhost ? 'var(--s3)' : `${sector.color}20`,
+                          color: isGhost ? 'var(--t-faint)' : sector.color,
+                          border: `1px solid ${isGhost ? 'var(--b)' : `${sector.color}40`}`,
+                          transition: 'all 0.4s',
+                        }}>
+                        {fill}%
+                      </span>
+                    </div>
 
-                        {/* Note */}
-                        {goal.note && (
-                          <p className="text-[11px] leading-relaxed flex items-start gap-1.5"
-                            style={{ color: 'var(--t-faint)' }}>
-                            <Clock size={10} className="shrink-0 mt-0.5" />
-                            {goal.note}
-                          </p>
-                        )}
+                    {/* Name */}
+                    <div>
+                      <p className="text-sm font-bold leading-tight"
+                        style={{
+                          color: isGhost ? 'var(--t-faint)' : 'var(--t-head)',
+                          transition: 'color 0.4s',
+                        }}>
+                        {sector.name}
+                      </p>
+                      {isFull && (
+                        <p className="text-[10px] font-bold mt-0.5" style={{ color: sector.color }}>✦ Sector complete</p>
+                      )}
+                    </div>
 
-                        {/* Add to missions */}
+                    {/* Spacer pushes stats to bottom */}
+                    <div className="flex-1" />
+
+                    {/* Task stats */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>
+                        {sector.total === 0
+                          ? 'No tasks yet'
+                          : `${sector.done} / ${sector.total} tasks done`}
+                      </span>
+
+                      {/* Add task button */}
+                      {addingTo?.id === sector.id ? null : (
                         <button
-                          onClick={() => !added && addToMissions(goal)}
-                          disabled={adding || added}
-                          className="flex items-center gap-1.5 text-[11px] font-bold tap self-start px-2.5 py-1.5 rounded-lg transition-all disabled:opacity-60"
+                          onClick={() => { setAddingTo(sector); setTaskTitle(''); }}
+                          className="flex items-center gap-1 text-[10px] font-bold tap px-2 py-1 rounded-lg shrink-0"
                           style={{
-                            background: added ? '#22c55e15' : `${goal.color}12`,
-                            color: added ? '#22c55e' : goal.color,
-                            border: `1px solid ${added ? '#22c55e30' : `${goal.color}30`}`,
+                            background: `${sector.color}14`,
+                            color: sector.color,
+                            border: `1px solid ${sector.color}30`,
                           }}>
-                          {adding
-                            ? <span className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin" />
-                            : added
-                            ? <CheckCircle2 size={11} />
-                            : <Plus size={11} />
-                          }
-                          {adding ? 'Adding...' : added ? 'Added to Missions' : 'Add to Missions'}
-                          {!adding && !added && <ChevronRight size={10} />}
+                          <Plus size={9} /> Task
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Inline add-task form */}
+                    {addingTo?.id === sector.id && (
+                      <div className="flex gap-1.5 mt-1">
+                        <input
+                          autoFocus
+                          value={taskTitle}
+                          onChange={e => setTaskTitle(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') addTask(); if (e.key === 'Escape') setAddingTo(null); }}
+                          placeholder="Task name…"
+                          className="flex-1 rounded-lg px-2 py-1.5 text-xs focus:outline-none"
+                          style={{ background: 'var(--s3)', color: 'var(--t-head)', border: `1px solid ${sector.color}40` }}
+                        />
+                        <button onClick={addTask} disabled={!taskTitle.trim() || savingTask}
+                          className="px-2 py-1.5 rounded-lg text-[11px] font-bold tap disabled:opacity-40 text-white"
+                          style={{ background: sector.color }}>
+                          {savingTask ? '…' : '↵'}
+                        </button>
+                        <button onClick={() => setAddingTo(null)}
+                          className="px-1.5 py-1.5 rounded-lg tap"
+                          style={{ color: 'var(--t-faint)', background: 'var(--s3)' }}>
+                          <X size={11} />
                         </button>
                       </div>
-                    );
-                  })}
+                    )}
+
+                    {/* Thin progress bar at very bottom */}
+                    <div className="w-full h-[3px] rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
+                      <div
+                        style={{
+                          height: '100%',
+                          width: `${fill}%`,
+                          background: sector.color,
+                          boxShadow: fill > 0 ? `0 0 6px ${sector.color}80` : 'none',
+                          borderRadius: 99,
+                          transition: 'width 1.2s cubic-bezier(0.34,1.2,0.64,1)',
+                        }} />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
 
       {/* ── Empty state ── */}
-      {loaded && goals.length === 0 && !loading && rawText.trim() === '' && (
-        <div className="text-center py-12 space-y-2">
-          <p className="text-4xl">🗺️</p>
-          <p className="text-sm font-semibold" style={{ color: 'var(--t-muted)' }}>Your path starts here</p>
-          <p className="text-xs" style={{ color: 'var(--t-faint)' }}>Write about your ambitions above and hit Parse</p>
+      {loaded && !hasSectors && !detecting && (
+        <div className="text-center py-16 space-y-3" style={{ position: 'relative', zIndex: 1 }}>
+          <p className="text-5xl" style={{ opacity: 0.4 }}>🗺️</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--t-muted)' }}>Your sectors will appear here</p>
+          <p className="text-xs" style={{ color: 'var(--t-faint)' }}>
+            Write about your life above and hit <strong>Map my sectors</strong>
+          </p>
         </div>
       )}
 

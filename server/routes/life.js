@@ -3,6 +3,7 @@ const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
 const { SQL_OFF } = require('../utils/dateUtils');
 const { parseAmbitions, generateSummary } = require('../utils/ambitionsParser');
+const { detectSectors } = require('../utils/sectorDetector');
 
 // Ensure life_ambitions table exists
 try {
@@ -232,6 +233,82 @@ router.get('/score', (req, res) => {
     ? Math.round(areas.reduce((s, a) => s + a.progress, 0) / areas.length)
     : 0;
   res.json({ score, areas: areas.length });
+});
+
+// ── Sector detection + fill ───────────────────────────────────
+
+// GET /sectors — all areas with task-completion fill %
+router.get('/sectors', (req, res) => {
+  const uid = req.user.id;
+  const areas = db.prepare('SELECT * FROM life_areas WHERE user_id=? ORDER BY sort_order, id').all(uid);
+
+  const result = areas.map(area => {
+    // Tagged tasks (explicit life_area_id link) — all time
+    const tagged = db.prepare(`
+      SELECT COUNT(*) as total,
+             SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as done
+      FROM tasks WHERE user_id=? AND life_area_id=?
+    `).get(uid, area.id);
+
+    // Keyword-matched tasks (last 60 days, loose link)
+    const keywords = area.name.toLowerCase().split(/[\s&,\/]+/).filter(w => w.length >= 4);
+    let kwStats = { total: 0, done: 0 };
+    if (keywords.length) {
+      const whereClauses = keywords.map(() => 'LOWER(title) LIKE ?').join(' OR ');
+      const kwArgs = [uid, ...keywords.map(k => `%${k}%`)];
+      kwStats = db.prepare(`
+        SELECT COUNT(*) as total,
+               SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as done
+        FROM tasks WHERE user_id=?
+        AND (${whereClauses})
+        AND life_area_id IS NULL
+        AND datetime(created_at) >= datetime('now', ${SQL_OFF}, '-60 days')
+      `).get(...kwArgs) || { total: 0, done: 0 };
+    }
+
+    const total   = (tagged.total || 0) + (kwStats.total || 0);
+    const done    = (tagged.done  || 0) + (kwStats.done  || 0);
+    const fillPct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
+
+    return {
+      id: area.id, name: area.name, icon: area.icon, color: area.color,
+      fillPct, total, done,
+    };
+  });
+
+  const amb = db.prepare('SELECT raw_text FROM life_ambitions WHERE user_id=?').get(uid);
+  res.json({ sectors: result, rawText: amb?.raw_text || '' });
+});
+
+// POST /detect-sectors — parse text, upsert life_areas, return sectors
+router.post('/detect-sectors', (req, res) => {
+  const uid = req.user.id;
+  const { text } = req.body;
+  if (!text?.trim()) return res.status(400).json({ error: 'No text provided' });
+
+  const detected = detectSectors(text);
+
+  // Persist the raw text in life_ambitions
+  db.prepare(`
+    INSERT INTO life_ambitions (user_id, raw_text, goals_json, updated_at)
+    VALUES (?, ?, '[]', CURRENT_TIMESTAMP)
+    ON CONFLICT(user_id) DO UPDATE SET
+      raw_text   = excluded.raw_text,
+      updated_at = CURRENT_TIMESTAMP
+  `).run(uid, text);
+
+  // Upsert one life_area per detected sector (create if not exists by name)
+  for (let i = 0; i < detected.length; i++) {
+    const s = detected[i];
+    const existing = db.prepare('SELECT id FROM life_areas WHERE user_id=? AND name=?').get(uid, s.name);
+    if (!existing) {
+      db.prepare(
+        'INSERT INTO life_areas (user_id, name, icon, color, sort_order) VALUES (?, ?, ?, ?, ?)'
+      ).run(uid, s.name, s.icon, s.color, i);
+    }
+  }
+
+  res.json({ detected: detected.map(s => s.name) });
 });
 
 // ── Ambitions ─────────────────────────────────────────────────
