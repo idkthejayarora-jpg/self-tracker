@@ -126,13 +126,26 @@ export default function Sleep() {
     }
   };
 
-  const last7 = [...logs].slice(0, 7).reverse();
+  // Group logs by date for display
+  const byDate: Map<string, SleepLog[]> = new Map();
+  for (const l of logs) {
+    if (!byDate.has(l.date)) byDate.set(l.date, []);
+    byDate.get(l.date)!.push(l);
+  }
+  const groupedDates = Array.from(byDate.keys()).slice(0, 14); // last 14 days
 
-  const chartData = last7.map(l => ({
-    date: l.date.slice(5),
-    hours: l.duration_minutes ? +(l.duration_minutes / 60).toFixed(1) : 0,
-    quality: l.quality,
-  }));
+  // Chart: aggregate duration per day (sum), take last 7 unique dates
+  const chartDates = groupedDates.slice(0, 7).reverse();
+  const chartData = chartDates.map(date => {
+    const entries = byDate.get(date)!;
+    const totalMins = entries.reduce((s, e) => s + (e.duration_minutes || 0), 0);
+    const avgQuality = entries.reduce((s, e) => s + (e.quality || 0), 0) / entries.filter(e => e.quality).length || 0;
+    return {
+      date: date.slice(5),
+      hours: totalMins ? +(totalMins / 60).toFixed(1) : 0,
+      quality: Math.round(avgQuality),
+    };
+  });
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 anim-page"
@@ -316,37 +329,67 @@ export default function Sleep() {
         </div>
       )}
 
-      {/* Log list */}
+      {/* Log list — grouped by date */}
       {logs.length > 0 ? (
         <div className="card px-4 py-4">
           <p className="text-xs font-semibold mb-3" style={{ color: 'rgb(var(--accent-rgb))', letterSpacing: '0.05em' }}>// HISTORY</p>
           <div className="space-y-0">
-            {logs.slice(0, 10).map(l => (
-              <div key={l.id} className="flex items-center gap-3 py-2.5" style={{ borderBottom: '1px solid var(--b)' }}>
-                <Moon size={13} style={{ color: '#52525b', flexShrink: 0 }} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs font-semibold text-head">{format(new Date(l.date + 'T12:00:00'), 'd MMM')}</p>
-                    {l.bedtime && l.wake_time && (
-                      <span className="text-[11px]" style={{ color: 'var(--t-dim)' }}>{l.bedtime} → {l.wake_time}</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[11px] font-semibold" style={{ color: 'rgb(var(--accent-rgb-light))' }}>
-                      {fmtDuration(l.duration_minutes)}
+            {groupedDates.map(date => {
+              const entries = byDate.get(date)!;
+              const totalMins = entries.reduce((s, e) => s + (e.duration_minutes || 0), 0);
+              return (
+                <div key={date} style={{ borderBottom: '1px solid var(--b)' }}>
+                  {/* Date header with total */}
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-xs font-bold" style={{ color: 'var(--t-body)' }}>
+                      {format(new Date(date + 'T12:00:00'), 'EEE, d MMM')}
                     </span>
-                    {l.quality && (
-                      <span className="text-[11px] font-medium" style={{ color: QUALITY_COLOR[l.quality] }}>
-                        {QUALITY_LABEL[l.quality]}
+                    {entries.length > 1 && totalMins > 0 && (
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                        style={{ background: 'rgb(var(--accent-rgb)/0.1)', color: 'rgb(var(--accent-rgb-light))' }}>
+                        Total {fmtDuration(totalMins)}
                       </span>
                     )}
                   </div>
+                  {/* Each sleep entry for this date */}
+                  {entries.map((l, i) => (
+                    <div key={l.id} className="flex items-center gap-3 py-2 pl-3"
+                      style={{ borderTop: i > 0 ? '1px solid var(--b)' : undefined }}>
+                      <Moon size={11} style={{ color: 'var(--t-faint)', flexShrink: 0 }} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          {entries.length > 1 && (
+                            <span className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                              style={{ background: 'var(--s3)', color: 'var(--t-faint)' }}>
+                              {i === 0 ? 'Night' : 'Nap'}
+                            </span>
+                          )}
+                          {l.bedtime && l.wake_time && (
+                            <span className="text-[11px]" style={{ color: 'var(--t-dim)' }}>{l.bedtime} → {l.wake_time}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[11px] font-semibold" style={{ color: 'rgb(var(--accent-rgb-light))' }}>
+                            {fmtDuration(l.duration_minutes)}
+                          </span>
+                          {l.quality && (
+                            <span className="text-[11px] font-medium" style={{ color: QUALITY_COLOR[l.quality] }}>
+                              {QUALITY_LABEL[l.quality]}
+                            </span>
+                          )}
+                          {l.notes && (
+                            <span className="text-[10px] truncate" style={{ color: 'var(--t-faint)', maxWidth: 120 }}>{l.notes}</span>
+                          )}
+                        </div>
+                      </div>
+                      <button onClick={() => del(l.id)} className="tap" style={{ color: 'var(--t-faint)' }}>
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-                <button onClick={() => del(l.id)} className="tap" style={{ color: '#52525b' }}>
-                  <Trash2 size={13} />
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ) : !showForm && (

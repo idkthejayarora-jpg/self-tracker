@@ -286,4 +286,4 @@ function parse(text, tasks = [], habits = [], userSkills = []) {
   };
 }
 
-module.exports = { parse, detectMood, detectSleep, detectWorkout, computeSkillUpgrades, MUSCLE_MAP };
+module.exports = { parse, detectMood, detectSleep, detectWorkout, computeSkillUpgrades, MUSCLE_MAP, overlap, tokenise };

@@ -4,6 +4,7 @@ const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
 const { awardPoints } = require('../utils/pointsUtils');
 const { localDate } = require('../utils/dateUtils');
+const { parseDietText } = require('../utils/dietParser');
 
 router.use(authMiddleware);
 
@@ -82,6 +83,65 @@ router.post('/log', (req, res) => {
 router.delete('/log/:id', (req, res) => {
   db.prepare('DELETE FROM food_logs WHERE id = ? AND user_id = ?').run(req.params.id, req.user.id);
   res.json({ ok: true });
+});
+
+// ── Quick-log (NLP) ─────────────────────────────────────────────────────────
+
+router.post('/quick-log', (req, res) => {
+  const { text, date } = req.body;
+  if (!text?.trim()) return res.status(400).json({ error: 'text required' });
+
+  const logDate = date || localDate();
+  const { entries, unmatched } = parseDietText(text.trim(), req.user.id);
+
+  const logged = [];
+  const insertedIds = [];
+
+  for (const entry of entries) {
+    if (!entry.name?.trim()) continue;
+
+    // Validate saved_meal_id belongs to user
+    let validMealId = null;
+    if (entry.saved_meal_id) {
+      const meal = db.prepare('SELECT id FROM saved_meals WHERE id = ? AND user_id = ?').get(entry.saved_meal_id, req.user.id);
+      validMealId = meal ? entry.saved_meal_id : null;
+    }
+
+    const result = db.prepare(`
+      INSERT INTO food_logs (user_id, date, meal_type, name, calories, protein_g, carbs_g, fat_g, saved_meal_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      req.user.id, logDate,
+      entry.meal_type, entry.name.trim(),
+      entry.calories || 0, entry.protein_g || 0, entry.carbs_g || 0, entry.fat_g || 0,
+      validMealId
+    );
+    awardPoints(req.user.id, 'diet', 'log_food', 5, result.lastInsertRowid, entry.name);
+    insertedIds.push(result.lastInsertRowid);
+    logged.push({ ...entry, id: result.lastInsertRowid });
+  }
+
+  // Build preview string
+  const preview = logged.length
+    ? logged.slice(0, 5).map(e => `${e.name} (${e.meal_type}${e.calories ? ', ' + e.calories + ' cal' : ''})`).join(' · ')
+    : 'Nothing logged';
+
+  res.status(201).json({
+    logged,
+    unmatched,
+    insertedIds,
+    preview,
+    date: logDate,
+  });
+});
+
+// ── Undo quick-log ───────────────────────────────────────────────────────────
+router.post('/quick-log/undo', (req, res) => {
+  const { ids } = req.body;
+  if (!Array.isArray(ids) || !ids.length) return res.status(400).json({ error: 'ids required' });
+  const placeholders = ids.map(() => '?').join(',');
+  db.prepare(`DELETE FROM food_logs WHERE id IN (${placeholders}) AND user_id = ?`).run(...ids, req.user.id);
+  res.json({ ok: true, deleted: ids.length });
 });
 
 // ── Weekly macro summary (for analytics) ────────────────────────────────────

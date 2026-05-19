@@ -324,6 +324,46 @@ export default function Diet() {
     setDate((delta > 0 ? addDays : subDays)(d, Math.abs(delta)).toISOString().slice(0, 10));
   };
 
+  // ── Quick-log ─────────────────────────────────────────────────────────────
+  const [quickText, setQuickText] = useState('');
+  const [quickLogging, setQuickLogging] = useState(false);
+  const [quickResult, setQuickResult] = useState<{
+    logged: { meal_type: string; name: string; calories: number; protein_g: number }[];
+    unmatched: string[];
+    insertedIds: number[];
+    preview: string;
+  } | null>(null);
+  const [quickErr, setQuickErr] = useState('');
+  const [undoIds, setUndoIds] = useState<number[]>([]);
+
+  async function submitQuickLog() {
+    if (!quickText.trim() || quickLogging) return;
+    setQuickLogging(true);
+    setQuickErr('');
+    setQuickResult(null);
+    try {
+      const r = await api.post('/diet/quick-log', { text: quickText.trim(), date });
+      setQuickResult(r.data);
+      setUndoIds(r.data.insertedIds || []);
+      setQuickText('');
+      await loadLog(date);
+    } catch (e: any) {
+      setQuickErr(e?.response?.data?.error || e?.message || 'Failed to log');
+    } finally {
+      setQuickLogging(false);
+    }
+  }
+
+  async function undoQuickLog() {
+    if (!undoIds.length) return;
+    try {
+      await api.post('/diet/quick-log/undo', { ids: undoIds });
+      setQuickResult(null);
+      setUndoIds([]);
+      await loadLog(date);
+    } catch {/* ignore */}
+  }
+
   const totals = log.reduce(
     (acc, e) => ({ cal: acc.cal + e.calories, p: acc.p + e.protein_g, c: acc.c + e.carbs_g, f: acc.f + e.fat_g }),
     { cal: 0, p: 0, c: 0, f: 0 }
@@ -468,13 +508,55 @@ export default function Diet() {
             <p className="text-xs mt-1" style={{ color: '#52525b' }}>{calPct}% of daily goal</p>
           </div>
 
-          {/* Add entry button */}
-          <button type="button"
-            onClick={() => { setShowAdd(s => !s); setAddError(''); }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold tap"
-            style={{ background: `rgb(var(--accent-rgb) / 0.12)`, color: `rgb(var(--accent-rgb-light))` }}>
-            <Plus size={15} /> Add food
-          </button>
+          {/* Quick-log panel */}
+          <div className="card px-4 py-4 space-y-3"
+            style={{ borderColor: 'rgb(52 211 153 / 0.2)', background: 'linear-gradient(135deg, var(--s1) 0%, rgba(52,211,153,0.03) 100%)' }}>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black tracking-[0.2em]" style={{ color: '#34d399' }}>🍽 QUICK LOG</span>
+              <span className="text-[10px] font-mono opacity-40 text-white">// just tell me what you ate</span>
+            </div>
+            <textarea
+              rows={2}
+              value={quickText}
+              onChange={e => { setQuickText(e.target.value); setQuickResult(null); setUndoIds([]); setQuickErr(''); }}
+              onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitQuickLog(); }}
+              placeholder="e.g. oats and protein shake for breakfast, chicken rice for lunch, banana snack"
+              className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none resize-none"
+              style={{ background: 'var(--s3)', color: 'var(--t-body)', border: '1px solid rgb(52 211 153 / 0.2)' }}
+            />
+            {quickErr && (
+              <p className="text-xs" style={{ color: '#f87171' }}>{quickErr}</p>
+            )}
+            {quickResult && (
+              <div className="rounded-xl px-3 py-3 space-y-2"
+                style={{ background: 'rgb(52 211 153 / 0.06)', border: '1px solid rgb(52 211 153 / 0.15)' }}>
+                <p className="text-xs font-semibold" style={{ color: '#34d399' }}>{quickResult.preview}</p>
+                {quickResult.unmatched.length > 0 && (
+                  <p className="text-[11px]" style={{ color: '#f59e0b' }}>
+                    ⚠ Couldn't match: {quickResult.unmatched.join(', ')} — add to saved meals for auto-matching
+                  </p>
+                )}
+                <button type="button" onClick={undoQuickLog}
+                  className="text-[11px] tap underline"
+                  style={{ color: 'var(--t-faint)' }}>
+                  Undo
+                </button>
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <button type="button"
+                onClick={() => { setShowAdd(s => !s); setAddError(''); }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tap"
+                style={{ background: `rgb(var(--accent-rgb) / 0.08)`, color: `rgb(var(--accent-rgb-light))` }}>
+                <Plus size={13} /> Add manually
+              </button>
+              <button type="button" onClick={submitQuickLog} disabled={!quickText.trim() || quickLogging}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold tap disabled:opacity-40"
+                style={{ background: 'rgb(52 211 153 / 0.9)', color: '#000' }}>
+                {quickLogging ? 'Logging...' : '🍽 Log it'}
+              </button>
+            </div>
+          </div>
 
           {showAdd && (
             <AddEntryForm

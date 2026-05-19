@@ -212,6 +212,29 @@ export default function Workout() {
     }
   }
 
+  // ── Quick-log ────────────────────────────────────────────────────────────
+  const [quickText, setQuickText] = useState('');
+  const [quickLogging, setQuickLogging] = useState(false);
+  const [quickResult, setQuickResult] = useState<{ preview: string; exercises: { name: string; sets: number; reps: string; weight: number | null }[]; cardioMinutes: number } | null>(null);
+  const [quickErr, setQuickErr] = useState('');
+
+  async function submitQuickLog() {
+    if (!quickText.trim() || quickLogging) return;
+    setQuickLogging(true);
+    setQuickErr('');
+    setQuickResult(null);
+    try {
+      const r = await api.post('/workout/quick-log', { text: quickText.trim() });
+      setQuickResult(r.data);
+      setQuickText('');
+      await fetchSessions();
+    } catch (e: any) {
+      setQuickErr(e?.response?.data?.error || e?.message || 'Failed to log');
+    } finally {
+      setQuickLogging(false);
+    }
+  }
+
   return (
     <div className="space-y-4"
       style={{ '--accent-rgb': '255 69 0' } as React.CSSProperties}>
@@ -335,6 +358,55 @@ export default function Workout() {
               </div>
             </div>
           )}
+
+          {/* Quick-log panel */}
+          <div className="card px-4 py-4 space-y-3"
+            style={{ borderColor: 'rgb(255 69 0 / 0.2)', background: 'linear-gradient(135deg, var(--s1) 0%, rgba(255,69,0,0.03) 100%)' }}>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black tracking-[0.2em]" style={{ color: '#ff4500' }}>⚡ QUICK LOG</span>
+              <span className="text-[10px] font-mono opacity-40 text-white">// speak your workout</span>
+            </div>
+            <textarea
+              rows={2}
+              value={quickText}
+              onChange={e => { setQuickText(e.target.value); setQuickResult(null); setQuickErr(''); }}
+              onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitQuickLog(); }}
+              placeholder="e.g. chest day, bench 4x8 80kg, cable flies 3x12, 20 min cardio"
+              className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none resize-none"
+              style={{ background: 'var(--s3)', color: 'var(--t-body)', border: '1px solid rgb(255 69 0 / 0.2)' }}
+            />
+            {quickErr && (
+              <p className="text-xs" style={{ color: '#f87171' }}>{quickErr}</p>
+            )}
+            {quickResult && (
+              <div className="rounded-xl px-3 py-3 space-y-2"
+                style={{ background: 'rgb(255 69 0 / 0.06)', border: '1px solid rgb(255 69 0 / 0.15)' }}>
+                <p className="text-xs font-semibold" style={{ color: '#ff6a00' }}>{quickResult.preview}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {quickResult.exercises.map((ex, i) => (
+                    <span key={i} className="text-[11px] px-2 py-0.5 rounded-full"
+                      style={{ background: 'var(--s3)', color: 'var(--t-muted)' }}>
+                      {ex.name} {ex.sets}×{ex.reps}{ex.weight ? ` @ ${ex.weight}kg` : ''}
+                    </span>
+                  ))}
+                  {quickResult.cardioMinutes > 0 && (
+                    <span className="text-[11px] px-2 py-0.5 rounded-full"
+                      style={{ background: 'var(--s3)', color: '#ef4444' }}>
+                      🏃 {quickResult.cardioMinutes}min cardio
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px]" style={{ color: 'var(--t-faint)' }}>Session logged ✓ — scroll down to see it</p>
+              </div>
+            )}
+            <div className="flex justify-end">
+              <button type="button" onClick={submitQuickLog} disabled={!quickText.trim() || quickLogging}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold tap disabled:opacity-40"
+                style={{ background: 'rgb(255 69 0 / 0.9)', color: '#fff' }}>
+                {quickLogging ? 'Logging...' : '⚡ Log it'}
+              </button>
+            </div>
+          </div>
 
           {sessions.length === 0 && <p className="text-gray-500 text-sm py-8 text-center">No sessions yet. Add your first workout!</p>}
 

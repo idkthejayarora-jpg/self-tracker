@@ -34,11 +34,11 @@
   --cyan-rgb: 0 245 255;
 
   /* Adaptive text tokens */
-  --t-head:  #f1f5f9;
-  --t-body:  #e2e8f0;
-  --t-muted: #94a3b8;
-  --t-dim:   #64748b;
-  --t-faint: #475569;
+  --t-head:  #f8fafc;
+  --t-body:  #f1f5f9;
+  --t-muted: #cbd5e1;
+  --t-dim:   #94a3b8;
+  --t-faint: #64748b;
 
   /* Hero plate background — dark void in dark mode, deep navy in light */
   --hero-bg: #000000;

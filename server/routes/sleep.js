@@ -6,12 +6,38 @@ const { updateStreak } = require('../utils/streakUtils');
 const { awardPoints } = require('../utils/pointsUtils');
 const { localDate, SQL_NOW, sqlDateOf, SQL_OFF } = require('../utils/dateUtils');
 
+// ── One-time migration: remove UNIQUE(user_id, date) so multiple sleeps per day work ──
+try {
+  const info = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='sleep_logs'").get();
+  if (info?.sql?.includes('UNIQUE(user_id, date)')) {
+    db.exec(`
+      BEGIN;
+      ALTER TABLE sleep_logs RENAME TO sleep_logs_old;
+      CREATE TABLE sleep_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        bedtime TEXT,
+        wake_time TEXT,
+        duration_minutes INTEGER,
+        quality INTEGER,
+        notes TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      );
+      INSERT INTO sleep_logs SELECT * FROM sleep_logs_old;
+      DROP TABLE sleep_logs_old;
+      COMMIT;
+    `);
+  }
+} catch (e) { console.error('[sleep] migration error', e.message); }
+
 router.use(authMiddleware);
 
-// GET / — last 30 sleep logs
+// GET / — last 60 sleep log entries (multiple per day)
 router.get('/', (req, res) => {
   const rows = db.prepare(
-    'SELECT * FROM sleep_logs WHERE user_id = ? ORDER BY date DESC LIMIT 30'
+    'SELECT * FROM sleep_logs WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT 60'
   ).all(req.user.id);
   res.json(rows);
 });
@@ -41,24 +67,18 @@ router.get('/stats', (req, res) => {
   res.json({ avgDuration, avgQuality, sleepDebt, count });
 });
 
-// POST / — upsert for date
+// POST / — insert new sleep entry (multiple per day supported)
 router.post('/', (req, res) => {
   const { date, bedtime, wake_time, duration_minutes, quality, notes } = req.body;
   const logDate = date || localDate();
 
-  db.prepare(`
+  const r = db.prepare(`
     INSERT INTO sleep_logs (user_id, date, bedtime, wake_time, duration_minutes, quality, notes)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(user_id, date) DO UPDATE SET
-      bedtime          = excluded.bedtime,
-      wake_time        = excluded.wake_time,
-      duration_minutes = excluded.duration_minutes,
-      quality          = excluded.quality,
-      notes            = excluded.notes
   `).run(req.user.id, logDate, bedtime ?? null, wake_time ?? null,
          duration_minutes ?? null, quality ?? null, notes ?? null);
 
-  const row = db.prepare('SELECT * FROM sleep_logs WHERE user_id = ? AND date = ?').get(req.user.id, logDate);
+  const row = db.prepare('SELECT * FROM sleep_logs WHERE id = ?').get(r.lastInsertRowid);
   updateStreak(req.user.id, 'sleep');
 
   // Award 15 pts once per day for logging sleep

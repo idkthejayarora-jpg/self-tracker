@@ -4,6 +4,7 @@ const { authMiddleware } = require('../middleware/auth');
 const { updateStreak } = require('../utils/streakUtils');
 const { awardPoints } = require('../utils/pointsUtils');
 const { localDate, SQL_OFF } = require('../utils/dateUtils');
+const { parseWorkoutText } = require('../utils/workoutParser');
 
 router.use(authMiddleware);
 
@@ -235,6 +236,71 @@ router.post('/plan/log/:dayId', (req, res) => {
     db.prepare('INSERT INTO workout_sets (session_id,exercise_id,reps,weight,notes) VALUES (?,?,?,?,?)').run(sessionId, exercise.id, parseInt(ex.reps)||0, parseFloat(ex.weight)||0, `${ex.sets} sets × ${ex.reps}`);
   });
   res.status(201).json({ sessionId, day: day.name, exercisesAdded: exercises.length });
+});
+
+// ── Quick-log (NLP) ──────────────────────────────────────────
+router.post('/quick-log', (req, res) => {
+  const { text } = req.body;
+  if (!text?.trim()) return res.status(400).json({ error: 'text required' });
+
+  const parsed = parseWorkoutText(text.trim(), req.user.id);
+  const today = localDate();
+
+  // Create session
+  const sessionResult = db.prepare(
+    'INSERT INTO workout_sessions (user_id, date, name, notes) VALUES (?, ?, ?, ?)'
+  ).run(req.user.id, today, parsed.dayName || 'Quick Log', text.trim());
+  const sessionId = sessionResult.lastInsertRowid;
+
+  updateStreak(req.user.id, 'workout');
+  awardPoints(req.user.id, 'workout', 'session', 30, sessionId, parsed.dayName);
+
+  // Insert sets for each matched exercise
+  const loggedExercises = [];
+  let sortOrder = 0;
+
+  for (const ex of parsed.exercises) {
+    // Find or create exercise in the user's exercise library
+    let exRow = db.prepare('SELECT id FROM exercises WHERE user_id = ? AND LOWER(name) = LOWER(?)').get(req.user.id, ex.name);
+    if (!exRow) {
+      const nr = db.prepare('INSERT INTO exercises (user_id, name) VALUES (?, ?)').run(req.user.id, ex.name);
+      exRow = { id: nr.lastInsertRowid };
+    }
+
+    // Insert one set per "sets" count (or just one representative set)
+    const setCount = Math.min(ex.sets || 1, 10);
+    for (let i = 0; i < setCount; i++) {
+      db.prepare(
+        'INSERT INTO workout_sets (session_id, exercise_id, reps, weight, sort_order) VALUES (?, ?, ?, ?, ?)'
+      ).run(sessionId, exRow.id, parseInt(ex.reps) || null, ex.weight || null, sortOrder++);
+    }
+
+    loggedExercises.push({
+      exercise_id: exRow.id,
+      name: ex.name,
+      sets: ex.sets,
+      reps: ex.reps,
+      weight: ex.weight,
+    });
+  }
+
+  // Build human-readable preview
+  const parts = [`✓ Logged ${parsed.dayName}`];
+  if (loggedExercises.length) {
+    const exSummary = loggedExercises.slice(0, 4).map(e =>
+      `${e.name} ${e.sets}×${e.reps}${e.weight ? ` @ ${e.weight}kg` : ''}`
+    ).join(', ');
+    parts.push(exSummary);
+  }
+  if (parsed.cardioMinutes > 0) parts.push(`${parsed.cardioMinutes} min cardio`);
+
+  res.status(201).json({
+    session_id: sessionId,
+    dayName: parsed.dayName,
+    exercises: loggedExercises,
+    cardioMinutes: parsed.cardioMinutes,
+    preview: parts.join(' — '),
+  });
 });
 
 // ── PDF plan parser ───────────────────────────────────────────
