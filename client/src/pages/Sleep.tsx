@@ -321,11 +321,11 @@ export default function Sleep() {
                 contentStyle={{ background: 'var(--s2)', border: '1px solid var(--b)', borderRadius: 8, fontSize: 12 }}
                 formatter={(v: any) => [`${v}h`, 'Sleep']}
               />
-              <ReferenceLine y={8} stroke="#52525b" strokeDasharray="4 2" />
+              <ReferenceLine y={7} stroke="#52525b" strokeDasharray="4 2" />
               <Bar dataKey="hours" radius={[4, 4, 0, 0]} fill="rgb(var(--accent-rgb))" />
             </BarChart>
           </ResponsiveContainer>
-          <p className="text-[10px] mt-1 text-center" style={{ color: '#52525b' }}>Dashed line = 8h goal</p>
+          <p className="text-[10px] mt-1 text-center" style={{ color: '#52525b' }}>Dashed line = 7h goal</p>
         </div>
       )}
 

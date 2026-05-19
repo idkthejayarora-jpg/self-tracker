@@ -61,7 +61,7 @@ router.get('/stats', (req, res) => {
     ? Math.round((rows.reduce((s, r) => s + (r.quality || 0), 0) / count) * 10) / 10
     : null;
   const sleepDebt = count
-    ? Math.round(rows.reduce((s, r) => s + (480 - (r.duration_minutes || 480)), 0))
+    ? Math.round(rows.reduce((s, r) => s + (420 - (r.duration_minutes || 420)), 0))
     : 0;
 
   res.json({ avgDuration, avgQuality, sleepDebt, count });
