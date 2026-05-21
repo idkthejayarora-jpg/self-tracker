@@ -14,11 +14,9 @@ const CAT_COLOR: Record<string, string> = {
   other:      '#71717a',
 };
 
-const ICONS = ['✅', '💪', '🧠', '🏃', '📚', '🧘', '💧', '🥗', '😴', '🚫', '🎯', '⚡', '🔥', '🌅', '🧹'];
-
 function getToday() { return new Date().toISOString().slice(0, 10); }
 
-const emptyForm = () => ({ name: '', icon: '✅', category: 'discipline', color: '#6366f1' });
+const emptyForm = () => ({ name: '', icon: '', category: 'discipline', color: '#6366f1' });
 
 export default function Habits() {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -208,19 +206,6 @@ export default function Habits() {
             required
             className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none" />
           <div className="space-y-1.5">
-            <p className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>ICON</p>
-            <div className="flex flex-wrap gap-1.5">
-              {ICONS.map(ic => (
-                <button key={ic} type="button"
-                  onClick={() => setForm(f => ({ ...f, icon: ic }))}
-                  className="w-8 h-8 rounded-lg text-base flex items-center justify-center transition-all tap"
-                  style={{ background: form.icon === ic ? `rgb(var(--accent-rgb) / 0.15)` : 'var(--s3)', outline: form.icon === ic ? `1.5px solid rgb(var(--accent-rgb))` : 'none' }}>
-                  {ic}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="space-y-1.5">
             <p className="text-[11px] font-medium" style={{ color: 'var(--t-dim)' }}>CATEGORY</p>
             <div className="flex flex-wrap gap-1.5">
               {CATEGORIES.filter(c => c !== 'all').map(cat => (
@@ -297,7 +282,10 @@ export default function Habits() {
                     border: `1.5px solid ${h.done ? h.color : 'var(--b)'}`,
                     color: h.done ? h.color : '#52525b',
                   }}>
-                  {h.done ? <Check size={15} strokeWidth={3} /> : <span className="text-base leading-none">{h.icon}</span>}
+                  {h.done
+                    ? <Check size={15} strokeWidth={3} />
+                    : <span className="text-xs font-black">{h.name.charAt(0).toUpperCase()}</span>
+                  }
                 </button>
 
                 {/* Info */}

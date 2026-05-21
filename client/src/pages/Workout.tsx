@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText } from 'lucide-react';
 import WorkoutAvatar from '../components/WorkoutAvatar';
 import { format, parseISO } from 'date-fns';
 import {
@@ -363,7 +363,8 @@ export default function Workout() {
           <div className="card px-4 py-4 space-y-3"
             style={{ borderColor: 'rgb(255 69 0 / 0.2)', background: 'linear-gradient(135deg, var(--s1) 0%, rgba(255,69,0,0.03) 100%)' }}>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black tracking-[0.2em]" style={{ color: '#ff4500' }}>⚡ QUICK LOG</span>
+              <Zap size={10} style={{ color: '#ff4500' }} />
+              <span className="text-[10px] font-black tracking-[0.2em]" style={{ color: '#ff4500' }}>QUICK LOG</span>
               <span className="text-[10px] font-mono opacity-40 text-white">// speak your workout</span>
             </div>
             <textarea
@@ -392,7 +393,7 @@ export default function Workout() {
                   {quickResult.cardioMinutes > 0 && (
                     <span className="text-[11px] px-2 py-0.5 rounded-full"
                       style={{ background: 'var(--s3)', color: '#ef4444' }}>
-                      🏃 {quickResult.cardioMinutes}min cardio
+                      {quickResult.cardioMinutes}min cardio
                     </span>
                   )}
                 </div>
@@ -403,7 +404,7 @@ export default function Workout() {
               <button type="button" onClick={submitQuickLog} disabled={!quickText.trim() || quickLogging}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold tap disabled:opacity-40"
                 style={{ background: 'rgb(255 69 0 / 0.9)', color: '#fff' }}>
-                {quickLogging ? 'Logging...' : '⚡ Log it'}
+                <Zap size={13} />{quickLogging ? 'Logging...' : 'Log it'}
               </button>
             </div>
           </div>
@@ -516,7 +517,7 @@ export default function Workout() {
             <button onClick={() => setShowPdfImport(s => !s)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tap"
               style={{ background: 'var(--s3)', color: 'var(--t-muted)' }}>
-              📄 Import PDF
+              <FileText size={12} /> Import PDF
             </button>
           </div>
 
@@ -551,7 +552,7 @@ export default function Workout() {
                 className="w-full text-xs" style={{ color: 'var(--t-muted)' }} />
 
               {planLoading && (
-                <p className="text-xs animate-pulse" style={{ color: 'var(--t-faint)' }}>⚙ Parsing PDF...</p>
+                <p className="text-xs animate-pulse font-mono" style={{ color: 'var(--t-faint)' }}>Parsing PDF...</p>
               )}
 
               {/* Parsed plan preview */}
@@ -630,7 +631,7 @@ export default function Workout() {
                     disabled={creatingPlan}
                     className="w-full py-2.5 rounded-xl text-sm font-bold tap text-white disabled:opacity-50"
                     style={{ background: 'rgb(var(--accent-rgb))' }}>
-                    {creatingPlan ? '⚙ Creating plan...' : `⚡ Create this plan (${parsedPlan.length} days)`}
+                    {creatingPlan ? 'Creating plan...' : `Create this plan (${parsedPlan.length} days)`}
                   </button>
 
                   {/* Raw text toggle */}
@@ -670,17 +671,14 @@ export default function Workout() {
             <form onSubmit={async e => {
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
-              const r = await api.post<PlanDay>('/workout/plan/days', { name: fd.get('name'), icon: fd.get('icon') || '💪', color: fd.get('color') || '#ff4500' });
+              const r = await api.post<PlanDay>('/workout/plan/days', { name: fd.get('name'), icon: '', color: fd.get('color') || '#ff4500' });
               setPlanDays(d => [...d, r.data]);
               (e.target as HTMLFormElement).reset();
               setShowAddDay(false);
             }} className="glass rounded-2xl px-4 py-3 space-y-2 scale-in">
-              <div className="grid grid-cols-3 gap-2">
+              <div className="flex gap-2">
                 <input name="name" required placeholder="Day name (e.g. Back Day)"
-                  className="col-span-2 rounded-xl px-3 py-2 text-sm focus:outline-none"
-                  style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
-                <input name="icon" placeholder="💪"
-                  className="rounded-xl px-3 py-2 text-sm focus:outline-none"
+                  className="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none"
                   style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
               </div>
               <div className="flex items-center gap-2">

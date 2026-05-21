@@ -39,11 +39,11 @@ function useSpeech(onTranscript: (text: string) => void) {
 
 // ── Moods ─────────────────────────────────────────────────────────────────────
 const MOODS = [
-  { value: 1, emoji: '😞', label: 'CRITICAL',  color: '#ff003c', code: 'ERR_FATAL'   },
-  { value: 2, emoji: '😕', label: 'DEGRADED',  color: '#ff6600', code: 'PERF_LOW'    },
-  { value: 3, emoji: '😐', label: 'NOMINAL',   color: '#ffe000', code: 'STANDBY'     },
-  { value: 4, emoji: '🙂', label: 'OPTIMAL',   color: '#00ff9f', code: 'SYS_ONLINE'  },
-  { value: 5, emoji: '😄', label: 'OVERCLOCK', color: '#00f5ff', code: 'MAX_OUTPUT'  },
+  { value: 1, label: 'CRITICAL',  color: '#ff003c', code: 'ERR_FATAL'   },
+  { value: 2, label: 'DEGRADED',  color: '#ff6600', code: 'PERF_LOW'    },
+  { value: 3, label: 'NOMINAL',   color: '#ffe000', code: 'STANDBY'     },
+  { value: 4, label: 'OPTIMAL',   color: '#00ff9f', code: 'SYS_ONLINE'  },
+  { value: 5, label: 'OVERCLOCK', color: '#00f5ff', code: 'MAX_OUTPUT'  },
 ];
 
 // ── Cyber Rain Canvas ─────────────────────────────────────────────────────────
@@ -226,7 +226,9 @@ export default function Journal() {
                   border: `1.5px solid ${moodData?.color ?? '#ffffff'}25`,
                   boxShadow: moodData ? `0 0 20px ${moodData.color}40, inset 0 0 20px ${moodData.color}10` : 'none',
                 }}>
-                <span className="text-2xl">{moodData?.emoji ?? '◌'}</span>
+                <span className="w-5 h-5 rounded-full block"
+                  style={{ background: moodData ? moodData.color : 'rgba(255,255,255,0.15)',
+                    boxShadow: moodData ? `0 0 12px ${moodData.color}` : 'none' }} />
               </div>
               <span className="text-[8px] font-black tracking-widest"
                 style={{ color: moodData?.color ?? '#ffffff', opacity: moodData ? 1 : 0.2,
@@ -313,7 +315,8 @@ export default function Journal() {
                     boxShadow: mood === m.value ? `0 0 16px ${m.color}35, inset 0 0 12px ${m.color}08` : 'none',
                     transform: mood === m.value ? 'scale(1.08)' : undefined,
                   }}>
-                  <span className="text-xl">{m.emoji}</span>
+                  <span className="w-4 h-4 rounded-full block"
+                    style={{ background: m.color, boxShadow: mood === m.value ? `0 0 8px ${m.color}` : 'none' }} />
                   <span className="text-[8px] font-black tracking-widest"
                     style={{ color: mood === m.value ? m.color : 'rgba(255,255,255,0.25)',
                       textShadow: mood === m.value ? `0 0 8px ${m.color}` : 'none' }}>
@@ -461,7 +464,7 @@ export default function Journal() {
                     <div className="flex items-center gap-2">
                       {em && <span className="text-[8px] font-black tracking-widest"
                         style={{ color: em.color, textShadow: `0 0 6px ${em.color}` }}>{em.code}</span>}
-                      {em && <span className="text-base">{em.emoji}</span>}
+                      {em && <span className="w-3 h-3 rounded-full inline-block" style={{ background: em.color }} />}
                     </div>
                   </div>
                   <p className="text-[11px] mt-0.5 line-clamp-1 font-mono pl-6"
