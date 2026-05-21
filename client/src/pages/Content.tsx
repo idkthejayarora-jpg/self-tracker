@@ -389,6 +389,10 @@ export default function Content() {
     <div className="anim-page max-w-2xl mx-auto space-y-5 pb-8"
       style={{ '--accent-rgb': '236 72 153' } as React.CSSProperties}>
 
+      {/* Focus trap — prevents mobile keyboard auto-opening on page load */}
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
+      <div tabIndex={0} style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0 }} aria-hidden="true" />
+
       {/* Dot grid overlay */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{
@@ -483,6 +487,7 @@ export default function Content() {
                 placeholder="What is the idea?"
                 className="flex-1 min-w-0 text-sm rounded-xl px-3 py-2 focus:outline-none"
                 style={{ background: 'var(--s3)', color: 'var(--t-head)', border: `1px solid ${ACCENT}25` }}
+                autoComplete="off"
               />
               <select value={dumpNiche ?? ''} onChange={e => setDumpNiche(e.target.value ? Number(e.target.value) : null)}
                 className="text-sm rounded-xl px-2 py-2"
@@ -551,97 +556,176 @@ export default function Content() {
         <div className="space-y-3">
           {/* Dry-spell warning */}
           {stats && stats.daysSinceLastPost !== null && stats.daysSinceLastPost >= 7 && (
-            <div className="rounded-xl px-4 py-3 flex items-start gap-3"
-              style={{ background: 'rgb(239 68 68 / 0.08)', border: '1px solid rgb(239 68 68 / 0.2)' }}>
+            <div className="relative overflow-hidden rounded-xl px-4 py-3 flex items-start gap-3"
+              style={{ background: 'linear-gradient(135deg, rgb(127 29 29 / 0.5), rgb(153 27 27 / 0.3))',
+                border: '1px solid rgb(239 68 68 / 0.35)', boxShadow: '0 0 18px rgb(239 68 68 / 0.12)' }}>
+              {/* warning neon top bar */}
+              <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+                style={{ background: 'linear-gradient(90deg, transparent, #ef444480, transparent)' }} />
               <AlertTriangle size={15} style={{ color: '#f87171', flexShrink: 0, marginTop: 1 }} />
               <div>
-                <p className="text-sm font-bold tracking-wide" style={{ color: '#f87171' }}>
-                  {stats.daysSinceLastPost} DAYS WITHOUT A POST
+                <p className="text-sm font-black tracking-[0.1em]" style={{ color: '#fca5a5', textShadow: '0 0 10px #ef444450' }}>
+                  {stats.daysSinceLastPost}D SIGNAL BLACKOUT
                 </p>
-                <p className="text-xs mt-0.5 font-mono" style={{ color: 'var(--t-dim)' }}>
-                  Last posted {stats.lastPostDate ? fmtDate(stats.lastPostDate) : 'never'}
+                <p className="text-[11px] mt-0.5 font-mono" style={{ color: 'rgb(239 68 68 / 0.6)' }}>
+                  last_post=
+                  <span style={{ color: '#fca5a5' }}>
+                    {stats.lastPostDate ? fmtDate(stats.lastPostDate) : 'null'}
+                  </span>
                 </p>
               </div>
             </div>
           )}
 
-          <div className="card px-4 py-4">
-            {/* Month navigation */}
-            <div className="flex items-center justify-between mb-4">
-              <button onClick={prevMonth} className="tap w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold"
-                style={{ background: 'var(--s3)', color: 'var(--t-muted)' }}>‹</button>
-              <div className="text-center">
-                <p className="font-black text-sm tracking-wide" style={{ color: 'var(--t-head)' }}>
-                  {new Date(calYear, calMonthNum - 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }).toUpperCase()}
-                </p>
-                <p className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--t-dim)' }}>
-                  {calMonthIdeas.length} idea{calMonthIdeas.length !== 1 ? 's' : ''} · {calPosted} posted
-                </p>
+          {/* Calendar card — full cyberpunk */}
+          <div className="relative overflow-hidden rounded-2xl"
+            style={{ background: 'var(--hero-bg)', border: `1px solid ${ACCENT}20`,
+              boxShadow: `0 0 30px ${ACCENT}08` }}>
+            {/* Scanlines */}
+            <div className="absolute inset-0 pointer-events-none"
+              style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 3px, ${ACCENT}02 3px, ${ACCENT}02 4px)` }} />
+            {/* Top neon bar */}
+            <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+              style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}50, transparent)`,
+                boxShadow: `0 0 6px ${ACCENT}` }} />
+            {/* HUD corners */}
+            {([
+              ['top-0 left-0',     { borderTop: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` }],
+              ['top-0 right-0',    { borderTop: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}` }],
+              ['bottom-0 left-0',  { borderBottom: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` }],
+              ['bottom-0 right-0', { borderBottom: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}` }],
+            ] as [string, React.CSSProperties][]).map(([pos, s], i) => (
+              <div key={i} className={`absolute ${pos} pointer-events-none`}
+                style={{ width: 10, height: 10, opacity: 0.45, ...s }} />
+            ))}
+
+            <div className="relative z-10 px-4 py-4">
+              {/* Month navigation */}
+              <div className="flex items-center justify-between mb-1">
+                <button onClick={prevMonth}
+                  className="tap w-8 h-8 rounded-lg flex items-center justify-center font-black text-base"
+                  style={{ background: `${ACCENT}12`, color: ACCENT, border: `1px solid ${ACCENT}25` }}>
+                  ‹
+                </button>
+                <div className="text-center">
+                  <p className="font-black text-sm tracking-[0.12em] font-mono"
+                    style={{ color: 'var(--t-head)', textShadow: `0 0 12px ${ACCENT}30` }}>
+                    {new Date(calYear, calMonthNum - 1)
+                      .toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
+                      .toUpperCase()}
+                  </p>
+                  <p className="text-[9px] font-mono mt-0.5" style={{ color: ACCENT, opacity: 0.5 }}>
+                    {calMonthIdeas.length}_IDEAS · {calPosted}_POSTED
+                  </p>
+                </div>
+                <button onClick={nextMonth}
+                  className="tap w-8 h-8 rounded-lg flex items-center justify-center font-black text-base"
+                  style={{ background: `${ACCENT}12`, color: ACCENT, border: `1px solid ${ACCENT}25` }}>
+                  ›
+                </button>
               </div>
-              <button onClick={nextMonth} className="tap w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold"
-                style={{ background: 'var(--s3)', color: 'var(--t-muted)' }}>›</button>
-            </div>
 
-            {/* Day headers */}
-            <div className="grid grid-cols-7 gap-1 mb-1">
-              {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
-                <div key={d} className="text-center text-[10px] font-black tracking-wider py-1"
-                  style={{ color: 'var(--t-faint)' }}>{d}</div>
-              ))}
-            </div>
+              {/* Thin separator */}
+              <div className="my-3" style={{ height: 1,
+                background: `linear-gradient(90deg, transparent, ${ACCENT}25, transparent)` }} />
 
-            {/* Grid */}
-            <div className="grid grid-cols-7 gap-1">
-              {Array.from({ length: firstDayOfWeek }).map((_, i) => <div key={`e${i}`} />)}
-              {Array.from({ length: daysInMonth }).map((_, i) => {
-                const day = i + 1;
-                const dateStr = `${calMonth}-${String(day).padStart(2,'0')}`;
-                const dayIdeas = ideasByDate[dateStr] || [];
-                const isToday = dateStr === new Date().toISOString().slice(0,10);
-                const isSelected = calDay === dateStr;
-                return (
-                  <button key={day}
-                    onClick={() => setCalDay(isSelected ? null : dateStr)}
-                    className="tap flex flex-col items-center rounded-lg py-1.5"
-                    style={{
-                      background: isSelected ? `${ACCENT}22` : isToday ? 'var(--s3)' : 'transparent',
-                      border: isToday ? `1px solid ${ACCENT}40` : '1px solid transparent',
-                    }}>
-                    <span className="text-xs font-semibold" style={{
-                      color: isSelected ? ACCENT : isToday ? 'var(--t-head)' : 'var(--t-muted)',
-                    }}>{day}</span>
-                    <div className="flex flex-wrap justify-center gap-0.5 mt-0.5" style={{ minHeight: 6 }}>
-                      {dayIdeas.slice(0, 3).map((idea, j) => (
-                        <div key={j} className="w-1.5 h-1.5 rounded-full"
-                          style={{ background: idea.niche_color || ACCENT }} />
-                      ))}
-                      {dayIdeas.length > 3 && (
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--t-faint)' }} />
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
+              {/* Day headers */}
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {['SU','MO','TU','WE','TH','FR','SA'].map(d => (
+                  <div key={d} className="text-center text-[9px] font-black tracking-[0.2em] py-1 font-mono"
+                    style={{ color: ACCENT, opacity: 0.45 }}>{d}</div>
+                ))}
+              </div>
+
+              {/* Grid */}
+              <div className="grid grid-cols-7 gap-1">
+                {Array.from({ length: firstDayOfWeek }).map((_, i) => <div key={`e${i}`} />)}
+                {Array.from({ length: daysInMonth }).map((_, i) => {
+                  const day = i + 1;
+                  const dateStr = `${calMonth}-${String(day).padStart(2,'0')}`;
+                  const dayIdeas = ideasByDate[dateStr] || [];
+                  const isToday = dateStr === new Date().toISOString().slice(0,10);
+                  const isSelected = calDay === dateStr;
+                  const hasContent = dayIdeas.length > 0;
+                  return (
+                    <button key={day}
+                      onClick={() => setCalDay(isSelected ? null : dateStr)}
+                      className="tap flex flex-col items-center rounded-lg py-1.5 relative"
+                      style={{
+                        background: isSelected
+                          ? `${ACCENT}22`
+                          : isToday
+                          ? `${ACCENT}0e`
+                          : hasContent
+                          ? 'rgba(255,255,255,0.03)'
+                          : 'transparent',
+                        border: isSelected
+                          ? `1px solid ${ACCENT}70`
+                          : isToday
+                          ? `1px solid ${ACCENT}45`
+                          : hasContent
+                          ? '1px solid rgba(255,255,255,0.07)'
+                          : '1px solid transparent',
+                        boxShadow: isSelected ? `0 0 8px ${ACCENT}30` : undefined,
+                      }}>
+                      <span className="text-xs font-mono font-bold" style={{
+                        color: isSelected ? ACCENT : isToday ? 'white' : 'var(--t-muted)',
+                        textShadow: isToday || isSelected ? `0 0 8px ${ACCENT}60` : undefined,
+                      }}>{day}</span>
+                      <div className="flex flex-wrap justify-center gap-0.5 mt-0.5" style={{ minHeight: 5 }}>
+                        {dayIdeas.slice(0, 3).map((idea, j) => (
+                          <div key={j} className="w-1 h-1 rounded-full"
+                            style={{ background: idea.niche_color || ACCENT,
+                              boxShadow: `0 0 3px ${idea.niche_color || ACCENT}` }} />
+                        ))}
+                        {dayIdeas.length > 3 && (
+                          <div className="w-1 h-1 rounded-full" style={{ background: 'var(--t-faint)' }} />
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+            {/* Bottom neon bar */}
+            <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+              style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}25, transparent)` }} />
           </div>
 
           {/* Selected day drawer */}
           {calDay && (
-            <div className="card px-4 py-4 slide-up">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-black tracking-wide" style={{ color: 'var(--t-head)' }}>
-                  {fmtDate(calDay).toUpperCase()}
-                </p>
-                <button onClick={() => setCalDay(null)} className="tap"
-                  style={{ color: 'var(--t-faint)' }}><X size={14} /></button>
+            <div className="relative overflow-hidden rounded-2xl slide-up"
+              style={{ background: 'var(--s1)', border: `1px solid ${ACCENT}20` }}>
+              {/* Top neon bar */}
+              <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+                style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}40, transparent)` }} />
+              <div className="px-4 py-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="text-[9px] font-mono tracking-[0.2em] mb-0.5" style={{ color: ACCENT, opacity: 0.5 }}>
+                      DATE://
+                    </p>
+                    <p className="text-sm font-black font-mono tracking-wide"
+                      style={{ color: 'var(--t-head)', textShadow: `0 0 10px ${ACCENT}30` }}>
+                      {fmtDate(calDay).toUpperCase()}
+                    </p>
+                  </div>
+                  <button onClick={() => setCalDay(null)}
+                    className="tap w-7 h-7 rounded-lg flex items-center justify-center"
+                    style={{ background: `${ACCENT}12`, color: ACCENT }}>
+                    <X size={13} />
+                  </button>
+                </div>
+                {(ideasByDate[calDay] || []).length === 0
+                  ? <p className="text-xs font-mono py-2" style={{ color: 'var(--t-faint)' }}>
+                      // nothing_scheduled
+                    </p>
+                  : (ideasByDate[calDay] || []).map(idea => (
+                      <IdeaCard key={idea.id} idea={idea} niches={niches}
+                        onUpdate={updateIdea} onDelete={deleteIdea} />
+                    ))
+                }
               </div>
-              {(ideasByDate[calDay] || []).length === 0
-                ? <p className="text-xs font-mono" style={{ color: 'var(--t-faint)' }}>// nothing scheduled</p>
-                : (ideasByDate[calDay] || []).map(idea => (
-                    <IdeaCard key={idea.id} idea={idea} niches={niches}
-                      onUpdate={updateIdea} onDelete={deleteIdea} />
-                  ))
-              }
             </div>
           )}
         </div>
