@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
 const db = require('../db/database');
-const { awardPoints } = require('../utils/pointsUtils');
+const { awardPoints, applySkillXP } = require('../utils/pointsUtils');
 const { localDate, SQL_NOW, sqlDateOf } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
@@ -70,6 +70,7 @@ router.put('/log/:habitId', (req, res) => {
     ).get(req.user.id, req.params.habitId);
     if (!alreadyAwarded) {
       awardPoints(req.user.id, 'habit', 'complete', 10, parseInt(req.params.habitId), habit.name);
+      applySkillXP(req.user.id, 'habit', ['discipline', habit.category, habit.name]);
     }
   }
 

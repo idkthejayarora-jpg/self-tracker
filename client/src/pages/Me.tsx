@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Plus, X, ChevronUp, Trash2, Pencil, Check, Sparkles, Trophy, Star, Dumbbell, Heart, Target, Eye, Activity, Wallet } from 'lucide-react';
+import { Plus, X, ChevronUp, Trash2, Pencil, Check, Sparkles, Trophy, Star, Dumbbell, Heart, Target, Eye, Activity, Wallet, Video, History, BookOpen, Salad, Moon, Award, Flame } from 'lucide-react';
 import api from '../lib/api';
-import type { MeSummary, MeProfile, MeSkill, MeClaim, MeMentor } from '../types';
+import type { MeSummary, MeProfile, MeSkill, MeClaim, MeMentor, PointsLogEntry } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 
 // ── Count-up animation hook ───────────────────────────────────────────────────
@@ -26,36 +26,68 @@ function useCountUp(target: number, duration = 900) {
 
 // ── Rank glow config ──────────────────────────────────────────────────────────
 const RANK_GLOW: Record<string, string> = {
-  E: 'rgba(107,114,128,0.25)',
-  D: 'rgba(59,130,246,0.3)',
-  C: 'rgba(34,197,94,0.3)',
-  B: 'rgba(168,85,247,0.35)',
-  A: 'rgba(249,115,22,0.35)',
-  S: 'rgba(239,68,68,0.4)',
-  SS: 'rgba(245,158,11,0.4)',
-  SSS: 'rgba(226,201,126,0.5)',
+  E:    'rgba(107,114,128,0.25)',
+  D:    'rgba(59,130,246,0.3)',
+  C:    'rgba(34,197,94,0.3)',
+  B:    'rgba(168,85,247,0.35)',
+  A:    'rgba(249,115,22,0.35)',
+  S:    'rgba(239,68,68,0.4)',
+  'S+': 'rgba(226,201,126,0.5)',
 };
 
 const RANK_SOLID: Record<string, string> = {
-  E: '#6b7280',
-  D: '#3b82f6',
-  C: '#22c55e',
-  B: '#a855f7',
-  A: '#f97316',
-  S: '#ef4444',
-  SS: '#f59e0b',
-  SSS: '#e2c97e',
+  E:    '#6b7280',
+  D:    '#3b82f6',
+  C:    '#22c55e',
+  B:    '#a855f7',
+  A:    '#f97316',
+  S:    '#ef4444',
+  'S+': '#e2c97e',
 };
 
-// ── Stat config ───────────────────────────────────────────────────────────────
+// ── Stat config (7 stats — Creativity added) ─────────────────────────────────
 const STAT_CONFIG = [
   { key: 'strength',   label: 'STRENGTH',   Icon: Dumbbell,  color: '#ef4444', hint: 'Workouts this month'   },
   { key: 'vitality',   label: 'VITALITY',   Icon: Heart,     color: '#22c55e', hint: 'Sleep quality (7 days)' },
   { key: 'discipline', label: 'DISCIPLINE', Icon: Target,    color: '#f97316', hint: 'Habit rate this week'   },
   { key: 'focus',      label: 'FOCUS',      Icon: Eye,       color: '#6366f1', hint: 'Tasks done this month'  },
   { key: 'endurance',  label: 'ENDURANCE',  Icon: Activity,  color: '#a855f7', hint: 'Longest streak ever'    },
-  { key: 'wealth',     label: 'WEALTH',     Icon: Wallet,    color: '#f59e0b', hint: 'Finance net this month' },
+  { key: 'wealth',     label: 'WEALTH',     Icon: Wallet,    color: '#f59e0b', hint: 'Finance net (half weight)' },
+  { key: 'creativity', label: 'CREATIVITY', Icon: Video,     color: '#ec4899', hint: 'Posts this month'       },
 ];
+
+// ── Point-source → Lucide icon map (for Points History) ──────────────────────
+const SOURCE_ICONS: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
+  task:       Check,
+  habit:      Target,
+  sleep:      Moon,
+  journal:    BookOpen,
+  workout:    Dumbbell,
+  diet:       Salad,
+  body:       Heart,
+  content:    Video,
+  milestone:  Trophy,
+  area_done:  Award,
+  claim:      Star,
+};
+const SOURCE_COLORS: Record<string, string> = {
+  task: '#22c55e', habit: '#f97316', sleep: '#818cf8', journal: '#a855f7',
+  workout: '#ef4444', diet: '#22c55e', body: '#06b6d4',
+  content: '#ec4899', milestone: '#f59e0b', area_done: '#e2c97e', claim: '#a855f7',
+};
+
+// Relative-time formatter (short, no library)
+function relTime(iso: string): string {
+  const t = Date.parse(iso);
+  if (!t) return '';
+  const s = Math.floor((Date.now() - t) / 1000);
+  if (s < 60)    return `${s}s ago`;
+  if (s < 3600)  return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  const d = Math.floor(s / 86400);
+  if (d < 30)    return `${d}d ago`;
+  return new Date(t).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
 
 const CLAIM_TYPE_COLOR: Record<string, string> = {
   quest: '#6366f1',
@@ -182,9 +214,19 @@ export default function Me() {
   const [editingClaimId,  setEditingClaimId]  = useState<number | null>(null);
   const [editingMentorId, setEditingMentorId] = useState<number | null>(null);
 
+  // Points history
+  const [pointsLog, setPointsLog] = useState<PointsLogEntry[]>([]);
+
+  // Claim cooldown error toast
+  const [claimError, setClaimError] = useState<string | null>(null);
+
   const load = useCallback(async () => {
-    const res = await api.get<MeSummary>('/me/summary');
-    setData(res.data);
+    const [summary, log] = await Promise.all([
+      api.get<MeSummary>('/me/summary'),
+      api.get<PointsLogEntry[]>('/points/log?limit=20').catch(() => ({ data: [] as PointsLogEntry[] })),
+    ]);
+    setData(summary.data);
+    setPointsLog(log.data);
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -251,8 +293,27 @@ export default function Me() {
   }
 
   async function claimIt(id: number) {
-    const res = await api.patch<MeClaim>(`/me/claims/${id}`, { status: 'claimed' });
-    setData(d => d ? { ...d, claims: d.claims.map(c => c.id === id ? res.data : c) } : d);
+    try {
+      const res = await api.patch<MeClaim>(`/me/claims/${id}`, { status: 'claimed' });
+      setData(d => d ? { ...d, claims: d.claims.map(c => c.id === id ? res.data : c) } : d);
+      // Refresh points log + summary so merit reflects the new claim
+      load();
+    } catch (e: any) {
+      const msg = e?.response?.data?.error || 'Could not claim — try again';
+      setClaimError(msg);
+      setTimeout(() => setClaimError(null), 4500);
+    }
+  }
+
+  // Helper: how many days until a claim is available (anti-exploit indicator)
+  function claimCooldownDays(claim: MeClaim): number {
+    if (claim.status !== 'active') return 0;
+    const created = Date.parse(claim.created_at as any);
+    if (!created) return 0;
+    const ageDays = Math.floor((Date.now() - created) / 86400000);
+    const deadlinePassed = claim.deadline && claim.deadline <= new Date().toISOString().slice(0, 10);
+    if (deadlinePassed) return 0;
+    return Math.max(0, 3 - ageDays);
   }
 
   async function deleteClaim(id: number) {
@@ -421,13 +482,14 @@ export default function Me() {
               <div className="h-full rounded-full transition-all duration-700 bar-fill"
                 style={{ width: `${meritScore}%`, background: rankSolid, boxShadow: `0 0 8px ${rankSolid}` }} />
             </div>
-            {/* Breakdown */}
-            <div className="grid grid-cols-4 gap-1.5 pt-1">
+            {/* Breakdown — 5 components: Stats/Streaks/Skills/Claims/Pts */}
+            <div className="grid grid-cols-5 gap-1.5 pt-1">
               {([
-                { label: 'STATS', val: meritBreakdown.statScore,  max: 60, color: '#ef4444' },
-                { label: 'SKILLS', val: meritBreakdown.skillScore, max: 20, color: '#39ff14' },
-                { label: 'CLAIMS', val: meritBreakdown.claimScore, max: 10, color: '#6366f1' },
-                { label: 'PTS',   val: meritBreakdown.ptsScore,   max: 10, color: '#f59e0b' },
+                { label: 'STATS',   val: meritBreakdown.statScore,   max: 45, color: '#ef4444' },
+                { label: 'STREAK',  val: meritBreakdown.streakScore, max: 15, color: '#f97316' },
+                { label: 'SKILLS',  val: meritBreakdown.skillScore,  max: 15, color: '#39ff14' },
+                { label: 'CLAIMS',  val: meritBreakdown.claimScore,  max: 10, color: '#6366f1' },
+                { label: 'PTS',     val: meritBreakdown.ptsScore,    max: 15, color: '#f59e0b' },
               ]).map(b => (
                 <div key={b.label} className="flex flex-col items-center gap-0.5">
                   <span className="text-[9px] tracking-wider font-semibold" style={{ color: 'var(--t-muted)' }}>{b.label}</span>
@@ -435,7 +497,7 @@ export default function Me() {
                     {b.val}<span className="text-[9px] opacity-40">/{b.max}</span>
                   </span>
                   <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
-                    <div className="h-full rounded-full" style={{ width: `${(b.val / b.max) * 100}%`, background: b.color }} />
+                    <div className="h-full rounded-full" style={{ width: `${Math.min(100, (b.val / b.max) * 100)}%`, background: b.color }} />
                   </div>
                 </div>
               ))}
@@ -543,7 +605,7 @@ export default function Me() {
           })}
         </div>
         <p className="text-[11px] mt-1.5 font-medium" style={{ color: 'var(--t-muted)' }}>
-          ↑ Stats update as you log workouts, sleep, habits, tasks, streaks & finance
+          ↑ Stats update as you log workouts, sleep, habits, tasks, streaks, finance & content posts
         </p>
       </div>
 
@@ -877,20 +939,36 @@ export default function Me() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
-                        {claim.status === 'active' && (
-                          <button onClick={() => claimIt(claim.id)}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold tap btn-glow claim-pulse-btn"
-                            style={{
-                              background: `${tc}18`,
-                              color: tc,
-                              border: `1px solid ${tc}40`,
-                              '--cp': tc,
-                              '--btn-glow': `${tc}60`,
-                              animation: 'claim-pulse 2.5s ease-in-out infinite',
-                            } as React.CSSProperties}>
-                            <Check size={10} /> Claim it
-                          </button>
-                        )}
+                        {claim.status === 'active' && (() => {
+                          const cd = claimCooldownDays(claim);
+                          if (cd > 0) {
+                            return (
+                              <span className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[10px] font-bold cursor-not-allowed select-none"
+                                style={{
+                                  background: 'var(--s3)',
+                                  color: 'var(--t-faint)',
+                                  border: '1px dashed var(--b)',
+                                }}
+                                title={`Cooldown: this claim must age ${cd} more day(s) before claimable. Or set a deadline that's already passed.`}>
+                                LOCKED · {cd}d
+                              </span>
+                            );
+                          }
+                          return (
+                            <button onClick={() => claimIt(claim.id)}
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold tap btn-glow claim-pulse-btn"
+                              style={{
+                                background: `${tc}18`,
+                                color: tc,
+                                border: `1px solid ${tc}40`,
+                                '--cp': tc,
+                                '--btn-glow': `${tc}60`,
+                                animation: 'claim-pulse 2.5s ease-in-out infinite',
+                              } as React.CSSProperties}>
+                              <Check size={10} /> Claim it
+                            </button>
+                          );
+                        })()}
                         <button
                           onClick={() => { setEditingClaimId(claim.id); setShowClaimForm(false); }}
                           className="w-6 h-6 flex items-center justify-center rounded tap opacity-0 group-hover:opacity-100 transition-opacity"
@@ -1096,6 +1174,88 @@ export default function Me() {
           ))}
         </div>
       </div>
+
+      {/* ══════════════════════════════════════════════════════ POINTS HISTORY */}
+      <div style={{ zIndex: 1, position: 'relative' }}>
+        <div className="glass flex items-center justify-between mb-3 rounded-xl px-3 py-2">
+          <SectionHeader title="POINTS LEDGER" sub="— recent merit transactions" />
+          <span className="flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-1 rounded-lg"
+            style={{ background: 'rgb(245 158 11 / 0.1)', color: '#f59e0b', border: '1px solid rgb(245 158 11 / 0.3)' }}>
+            <History size={10} /> {pointsLog.length}
+          </span>
+        </div>
+
+        {pointsLog.length === 0 ? (
+          <p className="text-sm py-4 text-center font-mono" style={{ color: 'var(--t-faint)' }}>
+            // no points logged yet
+          </p>
+        ) : (
+          <div className="card scale-in" style={{ padding: 0 }}>
+            {/* HUD corner brackets */}
+            <div className="relative">
+              <div className="absolute top-1 left-1 w-3 h-3 pointer-events-none"
+                style={{ borderTop: '1.5px solid #f59e0b', borderLeft: '1.5px solid #f59e0b', opacity: 0.4 }} />
+              <div className="absolute top-1 right-1 w-3 h-3 pointer-events-none"
+                style={{ borderTop: '1.5px solid #f59e0b', borderRight: '1.5px solid #f59e0b', opacity: 0.4 }} />
+              <div className="absolute bottom-1 left-1 w-3 h-3 pointer-events-none"
+                style={{ borderBottom: '1.5px solid #f59e0b', borderLeft: '1.5px solid #f59e0b', opacity: 0.4 }} />
+              <div className="absolute bottom-1 right-1 w-3 h-3 pointer-events-none"
+                style={{ borderBottom: '1.5px solid #f59e0b', borderRight: '1.5px solid #f59e0b', opacity: 0.4 }} />
+
+              <div className="max-h-80 overflow-y-auto px-3 py-2 hide-scroll" style={{ scrollBehavior: 'smooth' }}>
+                {pointsLog.map((p, i) => {
+                  const Icon = SOURCE_ICONS[p.source] || Flame;
+                  const color = SOURCE_COLORS[p.source] || '#94a3b8';
+                  return (
+                    <div key={p.id}
+                      className="flex items-center gap-3 py-2 fade-in"
+                      style={{
+                        borderBottom: i < pointsLog.length - 1 ? '1px solid var(--b)' : 'none',
+                        animationDelay: `${Math.min(i, 8) * 30}ms`,
+                      }}>
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
+                        <Icon size={13} color={color} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold capitalize truncate" style={{ color: 'var(--t-body)' }}>
+                          {p.action.replace(/_/g, ' ')}
+                          {p.note && (
+                            <span className="font-normal opacity-60"> — {p.note.slice(0, 40)}</span>
+                          )}
+                        </p>
+                        <p className="text-[10px] font-mono" style={{ color: 'var(--t-faint)' }}>
+                          <span className="uppercase tracking-wider">{p.source}</span> · {relTime(p.created_at)}
+                        </p>
+                      </div>
+                      <span className="text-sm font-black font-mono tabular-nums shrink-0"
+                        style={{ color, textShadow: `0 0 8px ${color}80` }}>
+                        +{p.points}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Claim cooldown toast (slides up from bottom right) */}
+      {claimError && (
+        <div className="fixed bottom-6 right-6 z-50 slide-up max-w-xs">
+          <div className="rounded-xl px-4 py-3 flex items-start gap-2"
+            style={{
+              background: 'rgba(239,68,68,0.12)',
+              border: '1px solid rgba(239,68,68,0.4)',
+              backdropFilter: 'blur(8px)',
+              boxShadow: '0 8px 32px rgba(239,68,68,0.25)',
+            }}>
+            <X size={14} style={{ color: '#f87171', marginTop: 2 }} />
+            <p className="text-xs font-semibold" style={{ color: '#fca5a5' }}>{claimError}</p>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -207,6 +207,7 @@ export interface MeClaim {
   deadline: string | null;
   reward_text: string;
   icon: string;
+  created_at?: string;
 }
 
 export interface MeMentor {
@@ -227,6 +228,7 @@ export interface MeStats {
   focus: number;
   endurance: number;
   wealth: number;
+  creativity: number;
 }
 
 export interface MeSummary {
@@ -236,13 +238,29 @@ export interface MeSummary {
   rankLabel: string;
   rankDesc: string;
   meritScore: number;
-  meritBreakdown: { statScore: number; skillScore: number; claimScore: number; ptsScore: number };
+  meritBreakdown: {
+    statScore: number;
+    streakScore: number;
+    skillScore: number;
+    claimScore: number;
+    ptsScore: number;
+  };
   nextRank: { rank: string; min: number; color: string; label: string } | null;
   totalPoints: number;
   stats: MeStats;
   skills: MeSkill[];
   claims: MeClaim[];
   mentors: MeMentor[];
+}
+
+export interface PointsLogEntry {
+  id: number;
+  source: string;
+  source_id: number | null;
+  action: string;
+  points: number;
+  note: string | null;
+  created_at: string;
 }
 
 export interface CheckinResult {

@@ -4,8 +4,13 @@ const router  = express.Router();
 const { authMiddleware } = require('../middleware/auth');
 const db = require('../db/database');
 const { localDate } = require('../utils/dateUtils');
+const { awardPoints, alreadyAwardedEver, applySkillXP } = require('../utils/pointsUtils');
+const { updateStreak } = require('../utils/streakUtils');
 
 router.use(authMiddleware);
+
+// Points by content status transition
+const STATUS_POINTS = { scripted: 5, filmed: 10, posted: 25 };
 
 // ── Niches ────────────────────────────────────────────────────────────────────
 
@@ -17,11 +22,15 @@ router.get('/niches', (req, res) => {
 });
 
 router.post('/niches', (req, res) => {
-  const { name, color = '#6366f1', icon = '🎯', sort_order = 0 } = req.body;
+  const { name, color = '#6366f1', icon = '', sort_order = 0 } = req.body;
   if (!name) return res.status(400).json({ error: 'Name required' });
   const r = db.prepare(
     'INSERT INTO content_niches (user_id, name, color, icon, sort_order) VALUES (?,?,?,?,?)'
   ).run(req.user.id, name.trim(), color, icon, sort_order);
+
+  // +5 pts per new niche (once)
+  awardPoints(req.user.id, 'content', 'niche_create', 5, r.lastInsertRowid, name.trim());
+
   res.status(201).json(db.prepare('SELECT * FROM content_niches WHERE id=?').get(r.lastInsertRowid));
 });
 
@@ -99,6 +108,38 @@ router.put('/ideas/:id', (req, res) => {
     SET title=?, notes=?, niche_id=?, content_type=?, status=?, scheduled_date=?, posted_at=?, updated_at=datetime('now')
     WHERE id=?
   `).run(title.trim(), notes, niche_id || null, content_type, status, scheduled_date, resolvedPostedAt, req.params.id);
+
+  // ── Wire into points / streaks / skills on status transitions ────────────
+  if (status && status !== idea.status && STATUS_POINTS[status]) {
+    const uid    = req.user.id;
+    const ideaId = parseInt(req.params.id);
+    const niche  = idea.niche_id
+      ? db.prepare('SELECT name FROM content_niches WHERE id=?').get(idea.niche_id)
+      : null;
+
+    // One-shot per (idea, status) action — prevents double awards on multiple PUTs
+    if (!alreadyAwardedEver(uid, 'content', ideaId, status)) {
+      awardPoints(uid, 'content', status, STATUS_POINTS[status], ideaId, title.trim());
+
+      // Skill XP per stage
+      if (status === 'scripted') applySkillXP(uid, 'content', ['writing','content','script']);
+      if (status === 'filmed')   applySkillXP(uid, 'content', ['video','content','production']);
+      if (status === 'posted') {
+        applySkillXP(uid, 'content', ['content','social','reel', content_type, niche?.name]);
+        updateStreak(uid, 'content');
+      }
+    }
+  }
+
+  // ── Auto-reminder when scheduled_date is set or changed ──────────────────
+  if (scheduled_date && scheduled_date !== idea.scheduled_date) {
+    try {
+      db.prepare(`
+        INSERT INTO reminders (user_id, title, description, remind_at, repeat)
+        VALUES (?, ?, ?, datetime(? || ' 09:00:00'), 'none')
+      `).run(req.user.id, `Post today: ${title.trim()}`, `Scheduled content (${content_type})`, scheduled_date);
+    } catch (e) { /* table missing in old DBs — non-critical */ }
+  }
 
   const updated = db.prepare(`
     SELECT i.*, n.name AS niche_name, n.color AS niche_color, n.icon AS niche_icon

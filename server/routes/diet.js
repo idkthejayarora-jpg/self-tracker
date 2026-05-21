@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
-const { awardPoints } = require('../utils/pointsUtils');
+const { awardPoints, applySkillXP } = require('../utils/pointsUtils');
 const { localDate } = require('../utils/dateUtils');
 const { parseDietText } = require('../utils/dietParser');
 
@@ -77,6 +77,7 @@ router.post('/log', (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(req.user.id, logDate, meal_type, name.trim(), calories, protein_g, carbs_g, fat_g, validMealId);
   awardPoints(req.user.id, 'diet', 'log_food', 5, result.lastInsertRowid, name.trim());
+  applySkillXP(req.user.id, 'diet', ['nutrition','health','diet', name.trim()]);
   res.status(201).json(db.prepare('SELECT * FROM food_logs WHERE id = ?').get(result.lastInsertRowid));
 });
 
@@ -119,6 +120,10 @@ router.post('/quick-log', (req, res) => {
     awardPoints(req.user.id, 'diet', 'log_food', 5, result.lastInsertRowid, entry.name);
     insertedIds.push(result.lastInsertRowid);
     logged.push({ ...entry, id: result.lastInsertRowid });
+  }
+
+  if (logged.length) {
+    applySkillXP(req.user.id, 'diet', ['nutrition','health','diet', ...logged.map(l => l.name)]);
   }
 
   // Build preview string

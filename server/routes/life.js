@@ -213,6 +213,10 @@ router.post('/areas/:id/milestones', (req, res) => {
 router.patch('/milestones/:id', (req, res) => {
   const { title, completed, target_date } = req.body;
   const completedAt = completed === true ? new Date().toISOString() : (completed === false ? null : undefined);
+
+  // Read prior state to detect false→true transition
+  const prior = db.prepare('SELECT * FROM life_milestones WHERE id=?').get(req.params.id);
+
   db.prepare(`
     UPDATE life_milestones SET
       title        = COALESCE(?, title),
@@ -222,6 +226,29 @@ router.patch('/milestones/:id', (req, res) => {
     WHERE id = ?
   `).run(title, completed !== undefined ? (completed ? 1 : 0) : null,
     completedAt, completedAt, target_date, req.params.id);
+
+  // Award points on first-time completion (false → true)
+  if (prior && !prior.completed && completed === true) {
+    try {
+      const { awardPoints, alreadyAwardedEver, applySkillXP } = require('../utils/pointsUtils');
+      const area = db.prepare('SELECT * FROM life_areas WHERE id=?').get(prior.area_id);
+      if (area && area.user_id === req.user.id) {
+        if (!alreadyAwardedEver(req.user.id, 'milestone', parseInt(req.params.id), 'complete')) {
+          awardPoints(req.user.id, 'milestone', 'complete', 50, parseInt(req.params.id), prior.title);
+          applySkillXP(req.user.id, 'milestone', [area.name, prior.title]);
+        }
+
+        // Bonus +100 when ALL milestones in this area are now complete
+        const remaining = db.prepare(
+          'SELECT COUNT(*) as n FROM life_milestones WHERE area_id=? AND completed=0'
+        ).get(area.id).n;
+        if (remaining === 0 && !alreadyAwardedEver(req.user.id, 'area_done', area.id, 'complete')) {
+          awardPoints(req.user.id, 'area_done', 'complete', 100, area.id, area.name);
+        }
+      }
+    } catch (e) { console.error('[milestone award]', e.message); }
+  }
+
   res.json(db.prepare('SELECT * FROM life_milestones WHERE id = ?').get(req.params.id));
 });
 
@@ -466,32 +493,40 @@ router.get('/missed-logs', (req, res) => {
   };
 
   // Diet / food logs
-  const lastFood = db.prepare(
-    `SELECT MAX(date) as d FROM food_logs WHERE user_id = ?`
-  ).get(uid);
+  const lastFood = db.prepare(`SELECT MAX(date) as d FROM food_logs WHERE user_id = ?`).get(uid);
   const foodDays = daysSince(lastFood?.d);
-  if (foodDays > 2) missed.push({ type: 'diet', label: 'Diet', icon: '🍽️', route: '/diet', daysSince: foodDays });
+  if (foodDays > 2) missed.push({ type: 'diet', label: 'Diet', icon: 'diet', route: '/diet', daysSince: foodDays });
 
   // Sleep logs
-  const lastSleep = db.prepare(
-    `SELECT MAX(date) as d FROM sleep_logs WHERE user_id = ?`
-  ).get(uid);
+  const lastSleep = db.prepare(`SELECT MAX(date) as d FROM sleep_logs WHERE user_id = ?`).get(uid);
   const sleepDays = daysSince(lastSleep?.d);
-  if (sleepDays > 2) missed.push({ type: 'sleep', label: 'Sleep', icon: '😴', route: '/sleep', daysSince: sleepDays });
+  if (sleepDays > 2) missed.push({ type: 'sleep', label: 'Sleep', icon: 'sleep', route: '/sleep', daysSince: sleepDays });
 
   // Journal
-  const lastJournal = db.prepare(
-    `SELECT MAX(date) as d FROM journal_entries WHERE user_id = ?`
-  ).get(uid);
+  const lastJournal = db.prepare(`SELECT MAX(date) as d FROM journal_entries WHERE user_id = ?`).get(uid);
   const journalDays = daysSince(lastJournal?.d);
-  if (journalDays > 2) missed.push({ type: 'journal', label: 'Journal', icon: '📓', route: '/journal', daysSince: journalDays });
+  if (journalDays > 2) missed.push({ type: 'journal', label: 'Journal', icon: 'journal', route: '/journal', daysSince: journalDays });
 
   // Workout
-  const lastWorkout = db.prepare(
-    `SELECT MAX(date) as d FROM workout_sessions WHERE user_id = ?`
-  ).get(uid);
+  const lastWorkout = db.prepare(`SELECT MAX(date) as d FROM workout_sessions WHERE user_id = ?`).get(uid);
   const workoutDays = daysSince(lastWorkout?.d);
-  if (workoutDays > 2) missed.push({ type: 'workout', label: 'Workout', icon: '💪', route: '/workout', daysSince: workoutDays });
+  if (workoutDays > 2) missed.push({ type: 'workout', label: 'Workout', icon: 'workout', route: '/workout', daysSince: workoutDays });
+
+  // Content posting — only if user has at least one niche or idea (otherwise irrelevant)
+  try {
+    const hasContent = db.prepare(
+      'SELECT 1 FROM content_ideas WHERE user_id=? LIMIT 1'
+    ).get(uid);
+    if (hasContent) {
+      const lastPost = db.prepare(
+        `SELECT MAX(posted_at) as d FROM content_ideas WHERE user_id=? AND status='posted'`
+      ).get(uid);
+      const contentDays = daysSince(lastPost?.d);
+      if (contentDays > 4) missed.push({
+        type: 'content', label: 'Post a Reel', icon: 'content', route: '/content', daysSince: contentDays
+      });
+    }
+  } catch (_) {}
 
   res.json({ missed });
 });

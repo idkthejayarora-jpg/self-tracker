@@ -79,13 +79,13 @@ addColumnIfMissing('workout_sets', 'notes', 'TEXT DEFAULT NULL');
 // SQLite can't ALTER a CHECK constraint, so we recreate the table.
 try {
   const row = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='streaks'").get();
-  if (row && !row.sql.includes("'workout'")) {
+  if (row && (!row.sql.includes("'workout'") || !row.sql.includes("'content'"))) {
     db.exec(`
       BEGIN;
       CREATE TABLE streaks_new (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        activity_type TEXT NOT NULL CHECK(activity_type IN ('tasks','journal','overall','workout','sleep')),
+        activity_type TEXT NOT NULL CHECK(activity_type IN ('tasks','journal','overall','workout','sleep','content')),
         current_streak INTEGER DEFAULT 0,
         longest_streak INTEGER DEFAULT 0,
         last_activity_date DATE,
@@ -99,7 +99,7 @@ try {
       ALTER TABLE streaks_new RENAME TO streaks;
       COMMIT;
     `);
-    console.log('[migration] Expanded streaks.activity_type CHECK to include workout/sleep');
+    console.log('[migration] Expanded streaks.activity_type CHECK to include workout/sleep/content');
   }
 } catch (e) {
   console.error('[migration] streaks CHECK expand failed:', e.message);

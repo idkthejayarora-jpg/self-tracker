@@ -7,42 +7,51 @@ const { SQL_OFF } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
 
-// ── Merit-based rank system ───────────────────────────────────────────────────
-// Rank is earned through ACTUAL performance, not just points:
-//   Stats score  (0–60): average of all 6 live stats
-//   Skills score (0–20): avg skill level × 2, capped at 20
-//   Claims score (0–10): completed claims × 2, capped at 10
-//   Points score (0–10): total points / 500, capped at 10
-//   Max merit score = 100
+// ── Merit-based rank system (v2 — rebalanced) ─────────────────────────────────
+// Stats score      (0–45): weighted avg of 7 live stats (Wealth weighted ×0.5)
+// Streaks score    (0–15): max current streak across all activities / 30 × 15
+// Skills score     (0–15): avg skill level × 1.5, capped
+// Claims score     (0–10): claimed × 2, capped — gated by 3-day cooldown
+// Points score     (0–15): total points / 800, capped
+// Max merit score = 100. Top tier is S+; SS/SSS removed.
 
 const RANK_TIERS = [
-  { rank: 'SSS', min: 85, color: '#e2c97e', label: 'Shadow Monarch',  desc: 'Transcended human limits' },
-  { rank: 'SS',  min: 70, color: '#f59e0b', label: 'National-Level',  desc: 'Among the world\'s elite'  },
-  { rank: 'S',   min: 55, color: '#ef4444', label: 'S-Class Hunter',  desc: 'Exceptional across all areas' },
-  { rank: 'A',   min: 42, color: '#f97316', label: 'A-Class Hunter',  desc: 'Highly disciplined & consistent' },
-  { rank: 'B',   min: 30, color: '#a855f7', label: 'B-Class Hunter',  desc: 'Solid foundations built' },
-  { rank: 'C',   min: 18, color: '#22c55e', label: 'C-Class Hunter',  desc: 'Establishing the grind' },
-  { rank: 'D',   min: 8,  color: '#3b82f6', label: 'D-Class Hunter',  desc: 'The journey begins'     },
-  { rank: 'E',   min: 0,  color: '#6b7280', label: 'E-Class Hunter',  desc: 'Awakened but untested'  },
+  { rank: 'S+', min: 88, color: '#e2c97e', label: 'Shadow Monarch',  desc: 'Transcended human limits — apex' },
+  { rank: 'S',  min: 74, color: '#ef4444', label: 'S-Class Hunter',  desc: 'Exceptional across all areas' },
+  { rank: 'A',  min: 58, color: '#f97316', label: 'A-Class Hunter',  desc: 'Highly disciplined & consistent' },
+  { rank: 'B',  min: 42, color: '#a855f7', label: 'B-Class Hunter',  desc: 'Solid foundations built' },
+  { rank: 'C',  min: 26, color: '#22c55e', label: 'C-Class Hunter',  desc: 'Establishing the grind' },
+  { rank: 'D',  min: 12, color: '#3b82f6', label: 'D-Class Hunter',  desc: 'The journey begins' },
+  { rank: 'E',  min: 0,  color: '#6b7280', label: 'E-Class Hunter',  desc: 'Awakened but untested' },
 ];
 
-function computeMeritScore(stats, skills, claims, totalPoints) {
-  const statKeys = ['strength', 'vitality', 'discipline', 'focus', 'endurance', 'wealth'];
-  const avgStat    = statKeys.reduce((s, k) => s + (stats[k] || 0), 0) / 6;
-  const statScore  = Math.round((avgStat / 100) * 60);
+function computeMeritScore(stats, skills, claims, totalPoints, maxCurrentStreak) {
+  // 7 stats, Wealth ×0.5 weight, others ×1.0. Denominator = 6.5.
+  const weightedSum =
+    (stats.strength   || 0) +
+    (stats.vitality   || 0) +
+    (stats.discipline || 0) +
+    (stats.focus      || 0) +
+    (stats.endurance  || 0) +
+    (stats.creativity || 0) +
+    0.5 * (stats.wealth || 0);
+  const weightedAvg = weightedSum / 6.5;
+  const statScore  = Math.round((weightedAvg / 100) * 45);
+
+  const streakScore = Math.min(15, Math.round((maxCurrentStreak / 30) * 15));
 
   const avgSkillLvl = skills.length > 0
     ? skills.reduce((s, sk) => s + (sk.level || 1), 0) / skills.length : 0;
-  const skillScore  = Math.min(20, Math.round(avgSkillLvl * 2));
+  const skillScore  = Math.min(15, Math.round(avgSkillLvl * 1.5));
 
   const claimedCount = claims.filter(c => c.status === 'claimed').length;
   const claimScore   = Math.min(10, claimedCount * 2);
 
-  const ptsScore = Math.min(10, Math.round(totalPoints / 500));
+  const ptsScore = Math.min(15, Math.round(totalPoints / 800));
 
   return {
-    total: statScore + skillScore + claimScore + ptsScore,
-    breakdown: { statScore, skillScore, claimScore, ptsScore },
+    total: statScore + streakScore + skillScore + claimScore + ptsScore,
+    breakdown: { statScore, streakScore, skillScore, claimScore, ptsScore },
   };
 }
 
@@ -115,7 +124,22 @@ router.get('/summary', (req, res) => {
     ? Math.min(100, 50 + Math.round((net / 10000) * 50))
     : Math.max(0,  50 - Math.round((Math.abs(net) / 10000) * 50));
 
-  const stats = { strength, vitality, discipline, focus, endurance, wealth };
+  // CREATIVITY: content posts this month (8 = max)
+  let creativity = 0;
+  try {
+    const contentRow = db.prepare(
+      `SELECT COUNT(*) as n FROM content_ideas WHERE user_id=? AND status='posted'
+       AND posted_at >= date('now', ${SQL_OFF}, 'start of month')`
+    ).get(uid);
+    const postsThisMonth = contentRow?.n || 0;
+    creativity = Math.min(100, Math.round((postsThisMonth / 8) * 100));
+  } catch (_) { /* content tables may not exist for very old users */ }
+
+  const stats = { strength, vitality, discipline, focus, endurance, wealth, creativity };
+
+  // ── Max current streak across all activity types (for streak sub-score) ──
+  const streakRow = db.prepare('SELECT MAX(current_streak) as m FROM streaks WHERE user_id=?').get(uid);
+  const maxCurrentStreak = streakRow?.m || 0;
 
   // ── Collections ──
   const skills  = db.prepare('SELECT * FROM me_skills  WHERE user_id=? ORDER BY sort_order, created_at').all(uid);
@@ -123,7 +147,7 @@ router.get('/summary', (req, res) => {
   const mentors = db.prepare('SELECT * FROM me_mentors WHERE user_id=? ORDER BY sort_order, created_at').all(uid);
 
   // ── Merit-based rank ──
-  const merit     = computeMeritScore(stats, skills, claims, totalPoints);
+  const merit     = computeMeritScore(stats, skills, claims, totalPoints, maxCurrentStreak);
   const rankTier  = getRankFromMerit(merit.total);
   const nextTier  = getNextRank(rankTier.rank);
 
@@ -218,6 +242,27 @@ router.patch('/claims/:id', (req, res) => {
   const claim = db.prepare('SELECT * FROM me_claims WHERE id=? AND user_id=?').get(req.params.id, uid);
   if (!claim) return res.status(404).json({ error: 'Not found' });
   const { title, description, claim_type, status, deadline, reward_text, icon } = req.body;
+
+  // ── Anti-exploit: claim must be 3+ days old OR its deadline has passed ──
+  if (status === 'claimed' && claim.status !== 'claimed') {
+    const createdAt = new Date(claim.created_at);
+    const ageDays = Math.floor((Date.now() - createdAt.getTime()) / 86400000);
+    const deadlinePassed = claim.deadline && claim.deadline <= new Date().toISOString().slice(0, 10);
+    if (ageDays < 3 && !deadlinePassed) {
+      const wait = 3 - ageDays;
+      return res.status(400).json({
+        error: `Claim too fresh — earn it. ${wait} day${wait !== 1 ? 's' : ''} of cooldown left, or set a deadline that's passed.`,
+      });
+    }
+    // Award points for claiming (one-shot per claim id)
+    try {
+      const { awardPoints, alreadyAwardedEver } = require('../utils/pointsUtils');
+      if (!alreadyAwardedEver(uid, 'claim', parseInt(req.params.id), 'claim')) {
+        awardPoints(uid, 'claim', 'claim', 30, parseInt(req.params.id), claim.title);
+      }
+    } catch (_) {}
+  }
+
   db.prepare(`UPDATE me_claims SET
     title=COALESCE(?,title), description=COALESCE(?,description),
     claim_type=COALESCE(?,claim_type), status=COALESCE(?,status),

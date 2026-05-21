@@ -3,7 +3,7 @@ const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
 const db = require('../db/database');
 const { updateStreak } = require('../utils/streakUtils');
-const { awardPoints } = require('../utils/pointsUtils');
+const { awardPoints, applySkillXP } = require('../utils/pointsUtils');
 const { localDate, SQL_NOW, sqlDateOf, SQL_OFF } = require('../utils/dateUtils');
 
 // ── One-time migration: remove UNIQUE(user_id, date) so multiple sleeps per day work ──
@@ -87,6 +87,7 @@ router.post('/', (req, res) => {
   ).get(req.user.id);
   if (!alreadyAwarded) {
     awardPoints(req.user.id, 'sleep', 'log', 15, null, logDate);
+    applySkillXP(req.user.id, 'sleep', ['recovery','health','vitality','sleep']);
   }
 
   res.json(row);

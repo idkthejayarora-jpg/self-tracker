@@ -1,7 +1,16 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, AlertTriangle } from 'lucide-react';
+import { X, AlertTriangle, Salad, Moon, BookOpen, Dumbbell, Video } from 'lucide-react';
 import api from '../lib/api';
+
+// Map server icon tokens → Lucide components (no emoji rendering)
+const ICON_MAP: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
+  diet:    Salad,
+  sleep:   Moon,
+  journal: BookOpen,
+  workout: Dumbbell,
+  content: Video,
+};
 
 interface MissedLog {
   type: string;
@@ -35,8 +44,8 @@ export default function MissedLogsBanner() {
         // Native push notification for the worst offender
         const worst = r.data.missed.reduce((a, b) => a.daysSince > b.daysSince ? a : b);
         if (Notification.permission === 'granted') {
-          new Notification(`⚠️ ${worst.label} not logged in ${worst.daysSince} days`, {
-            body: r.data.missed.map(m => `${m.icon} ${m.label}: ${m.daysSince}d ago`).join('\n'),
+          new Notification(`${worst.label} not logged in ${worst.daysSince} days`, {
+            body: r.data.missed.map(m => `${m.label}: ${m.daysSince}d ago`).join('\n'),
             icon: '/favicon.ico',
           });
         } else if (Notification.permission !== 'denied') {
@@ -102,7 +111,7 @@ export default function MissedLogsBanner() {
               <AlertTriangle size={16} className="shrink-0 animate-pulse"
                 style={{ color: maxDays >= 7 ? '#fca5a5' : '#fde68a' }} />
               <span className="text-sm font-black text-white tracking-wide">
-                {maxDays >= 7 ? '⚠️ SERIOUSLY OVERDUE' : maxDays >= 4 ? '⚠️ FALLING BEHIND' : '⚠️ LOGS MISSED'}
+                {maxDays >= 7 ? 'SERIOUSLY OVERDUE' : maxDays >= 4 ? 'FALLING BEHIND' : 'LOGS MISSED'}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -119,30 +128,33 @@ export default function MissedLogsBanner() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {missed.map(m => (
-              <button key={m.type}
-                onClick={() => goLog(m.route)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl tap text-white"
-                style={{
-                  background: 'rgba(255,255,255,0.12)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                }}>
-                <span className="text-base">{m.icon}</span>
-                <div className="text-left">
-                  <p className="text-xs font-bold leading-none">{m.label}</p>
-                  <p className="text-[10px] opacity-70 mt-0.5">
-                    {m.daysSince === 999 ? 'never logged' : `${m.daysSince}d ago`}
-                  </p>
-                </div>
-                <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full ml-1"
+            {missed.map(m => {
+              const Icon = ICON_MAP[m.icon] || ICON_MAP[m.type] || AlertTriangle;
+              return (
+                <button key={m.type}
+                  onClick={() => goLog(m.route)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl tap text-white"
                   style={{
-                    background: m.daysSince >= 7 ? '#ef444440' : m.daysSince >= 4 ? '#f59e0b40' : '#6366f140',
-                    color: m.daysSince >= 7 ? '#fca5a5' : m.daysSince >= 4 ? '#fde68a' : '#a5b4fc',
+                    background: 'rgba(255,255,255,0.12)',
+                    border: '1px solid rgba(255,255,255,0.2)',
                   }}>
-                  LOG NOW →
-                </span>
-              </button>
-            ))}
+                  <Icon size={16} color="rgba(255,255,255,0.95)" />
+                  <div className="text-left">
+                    <p className="text-xs font-bold leading-none">{m.label}</p>
+                    <p className="text-[10px] opacity-70 mt-0.5">
+                      {m.daysSince === 999 ? 'never logged' : `${m.daysSince}d ago`}
+                    </p>
+                  </div>
+                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full ml-1"
+                    style={{
+                      background: m.daysSince >= 7 ? '#ef444440' : m.daysSince >= 4 ? '#f59e0b40' : '#6366f140',
+                      color: m.daysSince >= 7 ? '#fca5a5' : m.daysSince >= 4 ? '#fde68a' : '#a5b4fc',
+                    }}>
+                    LOG NOW →
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           <p className="text-[10px] mt-2.5" style={{ color: 'rgba(255,255,255,0.45)' }}>

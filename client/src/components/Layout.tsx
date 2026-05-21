@@ -30,7 +30,7 @@ const NAV = [
 
 const RANK_COLORS: Record<string, string> = {
   E: '#6b7280', D: '#3b82f6', C: '#22c55e', B: '#a855f7',
-  A: '#f97316', S: '#ef4444', SS: '#f59e0b', SSS: '#e2c97e',
+  A: '#f97316', S: '#ef4444', 'S+': '#e2c97e',
 };
 
 interface MeSnap {

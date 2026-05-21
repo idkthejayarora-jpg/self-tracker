@@ -2,7 +2,7 @@ const router = require('express').Router();
 const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
 const { updateStreak } = require('../utils/streakUtils');
-const { awardPoints } = require('../utils/pointsUtils');
+const { awardPoints, applySkillXP } = require('../utils/pointsUtils');
 const { localDate, SQL_OFF } = require('../utils/dateUtils');
 const { parseWorkoutText } = require('../utils/workoutParser');
 
@@ -47,6 +47,7 @@ router.post('/sessions', (req, res) => {
   const r = db.prepare('INSERT INTO workout_sessions (user_id, date, name, notes) VALUES (?, ?, ?, ?)').run(req.user.id, date, name || null, notes || null);
   updateStreak(req.user.id, 'workout');
   awardPoints(req.user.id, 'workout', 'session', 30, r.lastInsertRowid, name || null);
+  applySkillXP(req.user.id, 'workout', ['workout','strength','fitness', name || '']);
   res.status(201).json(db.prepare('SELECT * FROM workout_sessions WHERE id = ?').get(r.lastInsertRowid));
 });
 
@@ -254,6 +255,8 @@ router.post('/quick-log', (req, res) => {
 
   updateStreak(req.user.id, 'workout');
   awardPoints(req.user.id, 'workout', 'session', 30, sessionId, parsed.dayName);
+  applySkillXP(req.user.id, 'workout',
+    [parsed.dayName || '', ...(parsed.exercises || []).map(e => e.name || '')]);
 
   // Insert sets for each matched exercise
   const loggedExercises = [];

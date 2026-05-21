@@ -2,7 +2,7 @@ const router = require('express').Router();
 const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
 const { updateStreak, maybeUpdateOverallStreak } = require('../utils/streakUtils');
-const { awardPoints } = require('../utils/pointsUtils');
+const { awardPoints, applySkillXP } = require('../utils/pointsUtils');
 const { SQL_NOW, sqlDateOf } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
@@ -48,6 +48,7 @@ router.put('/:date', (req, res) => {
   ).get(req.user.id);
   if (!alreadyAwarded) {
     awardPoints(req.user.id, 'journal', 'write', 20, null, req.params.date);
+    applySkillXP(req.user.id, 'journal', ['mental','reflection','mindfulness','writing']);
   }
 
   res.json(db.prepare('SELECT * FROM journal_entries WHERE user_id = ? AND date = ?')

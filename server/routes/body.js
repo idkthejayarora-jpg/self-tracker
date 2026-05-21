@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
 const db = require('../db/database');
-const { awardPoints } = require('../utils/pointsUtils');
+const { awardPoints, applySkillXP } = require('../utils/pointsUtils');
 const { localDate, SQL_NOW, sqlDateOf } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
@@ -51,6 +51,7 @@ router.post('/', (req, res) => {
   ).get(req.user.id);
   if (!alreadyAwarded) {
     awardPoints(req.user.id, 'body', 'log_stats', 10, null, logDate);
+    applySkillXP(req.user.id, 'body', ['health','body','fitness','tracking']);
   }
 
   res.json(row);
