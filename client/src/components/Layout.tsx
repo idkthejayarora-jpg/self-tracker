@@ -1,6 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import MissedLogsBanner from './MissedLogsBanner';
 import {
   LayoutDashboard, CheckSquare, BookOpen, Bell, BarChart2,
   Dumbbell, Sparkles, LogOut, Sun, Moon, Palette, X, Salad, KeyRound,
@@ -489,7 +488,6 @@ export default function Layout() {
           </div>
         </header>
 
-        <MissedLogsBanner />
         <main className="flex-1 px-4 py-6 md:px-12 md:py-10 max-w-5xl w-full mx-auto">
           <Outlet />
         </main>
