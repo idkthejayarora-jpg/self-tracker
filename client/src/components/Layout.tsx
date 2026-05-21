@@ -4,7 +4,7 @@ import MissedLogsBanner from './MissedLogsBanner';
 import {
   LayoutDashboard, CheckSquare, BookOpen, Bell, BarChart2,
   Dumbbell, Sparkles, LogOut, Sun, Moon, Palette, X, Salad, KeyRound,
-  ShieldOff, Target, Activity, Wallet, Swords, Zap, Shield, ImagePlus,
+  ShieldOff, Target, Activity, Wallet, Swords, Zap, Shield, ImagePlus, Video,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, ACCENT_PRESETS } from '../contexts/ThemeContext';
@@ -25,6 +25,7 @@ const NAV = [
   { to: '/analytics', icon: BarChart2,       label: 'Intel',      color: '#06b6d4' },
   { to: '/reminders', icon: Bell,            label: 'Alerts',     color: '#f97316' },
   { to: '/detox',     icon: ShieldOff,       label: 'Detox',      color: '#84cc16' },
+  { to: '/content',   icon: Video,           label: 'Creator',    color: '#ec4899' },
 ];
 
 const RANK_COLORS: Record<string, string> = {

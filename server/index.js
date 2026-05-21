@@ -26,6 +26,7 @@ app.use('/api/finance', require('./routes/finance'));
 app.use('/api/points', require('./routes/points'));
 app.use('/api/checkin', require('./routes/checkin'));
 app.use('/api/me',      require('./routes/me'));
+app.use('/api/content', require('./routes/content'));
 
 app.get('/api/health', (_, res) => {
   const dbDir  = process.env.DATA_PATH || require('path').join(__dirname, 'data');

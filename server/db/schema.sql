@@ -329,3 +329,28 @@ CREATE TABLE IF NOT EXISTS workout_plan_exercises (
 -- ── Life area tagging on tasks ────────────────────────────────────────────────
 -- Add life_area_id to tasks if it doesn't exist (SQLite migration workaround)
 -- Handled in server startup via db.prepare / try-catch
+
+-- ── Content Creator ───────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS content_niches (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name       TEXT NOT NULL,
+  color      TEXT DEFAULT '#6366f1',
+  icon       TEXT DEFAULT '🎯',
+  sort_order INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS content_ideas (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  niche_id       INTEGER REFERENCES content_niches(id) ON DELETE SET NULL,
+  title          TEXT NOT NULL,
+  notes          TEXT,
+  content_type   TEXT DEFAULT 'reel' CHECK(content_type IN ('reel','post','carousel','story')),
+  status         TEXT DEFAULT 'idea' CHECK(status IN ('idea','scripted','filmed','posted','archived')),
+  scheduled_date DATE,
+  posted_at      DATE,
+  created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at     DATETIME DEFAULT CURRENT_TIMESTAMP
+);
