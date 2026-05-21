@@ -399,7 +399,7 @@ export default function Analytics() {
                 <YAxis domain={[0, 100]} tick={TICK_STYLE} axisLine={false} tickLine={false}
                   tickFormatter={v => `${v}`} />
                 <Tooltip content={<CyberpunkTooltip accent={ACCENT} />}
-                  formatter={(v: any, name: string) => [`${v}%`, name]} />
+                  formatter={(v: any) => [`${v}%`]} />
                 <Area type="monotone" dataKey="task_score"    name="Tasks"
                   stroke="#0ea5e9" fill="url(#gTask)"    strokeWidth={2}
                   dot={false} activeDot={{ r: 4, fill: '#0ea5e9', strokeWidth: 0 }}
@@ -587,7 +587,7 @@ export default function Analytics() {
                 <ReferenceLine y={70} stroke="#22c55e40" strokeDasharray="4 2"
                   label={{ value: '70% target', fill: '#22c55e50', fontSize: 9, fontFamily: 'monospace', position: 'insideTopRight' }} />
                 <Bar dataKey="habits_score" name="Habits"
-                  fill="url(#gHabit)" radius={[3, 3, 0, 0]} connectNulls />
+                  fill="url(#gHabit)" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
