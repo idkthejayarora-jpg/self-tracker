@@ -210,7 +210,7 @@ export default function Layout() {
   const rankColor = me ? (RANK_COLORS[me.rank] ?? '#6366f1') : 'rgb(var(--accent-rgb))';
 
   return (
-    <div className="flex min-h-screen" style={{ background: 'var(--s0)' }}>
+    <div className="flex min-h-screen overflow-x-hidden" style={{ background: 'var(--s0)' }}>
 
       {/* ═══════════════════════════════════════ DESKTOP SIDEBAR */}
       <aside className="hidden md:flex flex-col py-4 px-2 shrink-0"
@@ -488,7 +488,7 @@ export default function Layout() {
           </div>
         </header>
 
-        <main className="flex-1 px-4 py-6 md:px-12 md:py-10 max-w-5xl w-full mx-auto">
+        <main className="flex-1 px-3 py-5 md:px-12 md:py-10 max-w-5xl w-full mx-auto overflow-x-hidden">
           <Outlet />
         </main>
       </div>

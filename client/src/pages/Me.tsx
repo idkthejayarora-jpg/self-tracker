@@ -176,7 +176,7 @@ function EditableField({
           ? <span className={`${large ? 'text-2xl font-bold' : 'text-sm'} ${centered ? 'text-center block' : ''} text-head`}>{value}</span>
           : <span className={`${large ? 'text-2xl font-bold' : 'text-sm'} ${centered ? 'text-center block' : ''}`}
               style={{ color: 'var(--t-faint)' }}>{placeholder}</span>}
-        <Pencil size={10} className="absolute -right-4 top-0.5 opacity-0 group-hover:opacity-40 transition-opacity" style={{ color: 'var(--t-faint)' }} />
+        <Pencil size={10} className="absolute -right-4 top-0.5 opacity-20 group-hover:opacity-40 transition-opacity" style={{ color: 'var(--t-faint)' }} />
       </div>
     );
   }
@@ -730,19 +730,19 @@ export default function Me() {
                         LVL {skill.level}
                       </span>
                       <button onClick={() => levelUpSkill(skill.id)}
-                        className="w-6 h-6 rounded flex items-center justify-center tap opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
+                        className="w-8 h-8 rounded flex items-center justify-center tap opacity-25 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
                         style={{ background: '#22c55e18', border: '1px solid #22c55e30' }} title="Level up">
-                        <ChevronUp size={11} style={{ color: '#22c55e' }} />
+                        <ChevronUp size={13} style={{ color: '#22c55e' }} />
                       </button>
                       <button onClick={() => { setEditingSkillId(skill.id); setShowSkillForm(false); }}
-                        className="w-6 h-6 rounded flex items-center justify-center tap opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="w-8 h-8 rounded flex items-center justify-center tap opacity-25 group-hover:opacity-100 transition-opacity"
                         style={{ background: 'var(--s3)' }} title="Edit skill">
-                        <Pencil size={9} style={{ color: 'rgb(var(--accent-rgb-light))' }} />
+                        <Pencil size={11} style={{ color: 'rgb(var(--accent-rgb-light))' }} />
                       </button>
                       <button onClick={() => deleteSkill(skill.id)}
-                        className="w-6 h-6 rounded flex items-center justify-center tap opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="w-8 h-8 rounded flex items-center justify-center tap opacity-25 group-hover:opacity-100 transition-opacity"
                         style={{ background: 'var(--s3)' }}>
-                        <X size={9} style={{ color: '#ef4444' }} />
+                        <X size={11} style={{ color: '#ef4444' }} />
                       </button>
                     </div>
                   </div>
@@ -971,14 +971,14 @@ export default function Me() {
                         })()}
                         <button
                           onClick={() => { setEditingClaimId(claim.id); setShowClaimForm(false); }}
-                          className="w-6 h-6 flex items-center justify-center rounded tap opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="w-8 h-8 flex items-center justify-center rounded tap opacity-25 group-hover:opacity-100 transition-opacity"
                           style={{ background: 'var(--s3)' }} title="Edit claim">
-                          <Pencil size={9} style={{ color: tc }} />
+                          <Pencil size={11} style={{ color: tc }} />
                         </button>
                         <button onClick={() => deleteClaim(claim.id)}
-                          className="w-6 h-6 flex items-center justify-center rounded tap opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="w-8 h-8 flex items-center justify-center rounded tap opacity-25 group-hover:opacity-100 transition-opacity"
                           style={{ color: 'var(--t-faint)' }}>
-                          <Trash2 size={11} />
+                          <Trash2 size={13} />
                         </button>
                       </div>
                     </div>
@@ -1113,14 +1113,14 @@ export default function Me() {
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => { setEditingMentorId(mentor.id); setShowMentorForm(false); }}
-                        className="w-6 h-6 flex items-center justify-center rounded tap opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="w-8 h-8 flex items-center justify-center rounded tap opacity-25 group-hover:opacity-100 transition-opacity"
                         style={{ background: 'var(--s3)' }} title="Edit mentor">
-                        <Pencil size={9} style={{ color: '#a855f7' }} />
+                        <Pencil size={11} style={{ color: '#a855f7' }} />
                       </button>
                       <button onClick={() => deleteMentor(mentor.id)}
-                        className="w-6 h-6 flex items-center justify-center rounded tap opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="w-8 h-8 flex items-center justify-center rounded tap opacity-25 group-hover:opacity-100 transition-opacity"
                         style={{ color: 'var(--t-faint)' }}>
-                        <Trash2 size={12} />
+                        <Trash2 size={13} />
                       </button>
                     </div>
                   </div>

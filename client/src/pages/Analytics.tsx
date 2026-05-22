@@ -179,7 +179,7 @@ function JournalHeatmap({ data }: { data: { date: string; mood: number | null }[
                 onTouchStart={() => setHovered(d)}
                 className="rounded-sm cursor-pointer"
                 style={{
-                  width: 13, height: 13,
+                  width: 16, height: 16,
                   backgroundColor: d.mood ? MOOD_COLORS[d.mood] : 'var(--s3)',
                   opacity: d.mood ? (isHov ? 1 : 0.75) : (isHov ? 0.5 : 0.2),
                   transform: isHov ? 'scale(1.5)' : undefined,
@@ -377,7 +377,7 @@ export default function Analytics() {
       {/* ── Performance area chart ── */}
       {weekly.length > 0 && (
         <HudCard accent={ACCENT}>
-          <div className="px-4 py-4">
+          <div className="px-4 py-4 overflow-hidden">
             <ChartLabel text={`Performance Scores — ${weeks}W`} accent={ACCENT} />
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
@@ -435,7 +435,7 @@ export default function Analytics() {
       {/* ── Tasks created vs completed ── */}
       {weekly.length > 0 && (
         <HudCard accent="#0ea5e9">
-          <div className="px-4 py-4">
+          <div className="px-4 py-4 overflow-hidden">
             <ChartLabel text="Tasks · Created vs Completed" accent="#0ea5e9" />
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={chartData} barGap={3} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
@@ -464,7 +464,7 @@ export default function Analytics() {
       {/* ── Mood trend line ── */}
       {hasMood && (
         <HudCard accent="#ec4899">
-          <div className="px-4 py-4">
+          <div className="px-4 py-4 overflow-hidden">
             <ChartLabel text={`Mood Trend — ${weeks}W`} accent="#ec4899" />
             <ResponsiveContainer width="100%" height={190}>
               <LineChart data={mood} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
@@ -515,7 +515,7 @@ export default function Analytics() {
       {/* ── Sleep chart ── */}
       {hasSleep && (
         <HudCard accent="#6366f1">
-          <div className="px-4 py-4">
+          <div className="px-4 py-4 overflow-hidden">
             <ChartLabel text="Sleep — avg hrs / night" accent="#6366f1" />
             <ResponsiveContainer width="100%" height={160}>
               <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
@@ -544,7 +544,7 @@ export default function Analytics() {
       {/* ── Workout sessions ── */}
       {hasWorkout && (
         <HudCard accent="#f97316">
-          <div className="px-4 py-4">
+          <div className="px-4 py-4 overflow-hidden">
             <ChartLabel text="Workout Sessions / Week" accent="#f97316" />
             <ResponsiveContainer width="100%" height={160}>
               <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
@@ -569,7 +569,7 @@ export default function Analytics() {
       {/* ── Habits score ── */}
       {hasHabits && (
         <HudCard accent="#22c55e">
-          <div className="px-4 py-4">
+          <div className="px-4 py-4 overflow-hidden">
             <ChartLabel text="Habit Consistency / Week" accent="#22c55e" />
             <ResponsiveContainer width="100%" height={160}>
               <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>

@@ -129,19 +129,19 @@ function IdeaCard({
         {/* Advance button */}
         {nextStatus(idea.status) && (
           <button onClick={advance}
-            className="tap w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+            className="tap w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
             style={{ background: 'var(--s3)', color: 'var(--t-muted)' }}
             title={`Move to ${nextStatus(idea.status)}`}>
-            <ChevronRight size={13} />
+            <ChevronRight size={15} />
           </button>
         )}
 
         {/* Expand toggle */}
         <button
           onClick={() => setExpanded(v => !v)}
-          className="tap w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+          className="tap w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
           style={{ background: 'var(--s3)', color: 'var(--t-faint)' }}>
-          {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+          {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
         </button>
       </div>
 
@@ -603,7 +603,7 @@ export default function Content() {
               {/* Month navigation */}
               <div className="flex items-center justify-between mb-1">
                 <button onClick={prevMonth}
-                  className="tap w-8 h-8 rounded-lg flex items-center justify-center font-black text-base"
+                  className="tap w-10 h-10 rounded-lg flex items-center justify-center font-black text-lg"
                   style={{ background: `${ACCENT}12`, color: ACCENT, border: `1px solid ${ACCENT}25` }}>
                   ‹
                 </button>
@@ -619,7 +619,7 @@ export default function Content() {
                   </p>
                 </div>
                 <button onClick={nextMonth}
-                  className="tap w-8 h-8 rounded-lg flex items-center justify-center font-black text-base"
+                  className="tap w-10 h-10 rounded-lg flex items-center justify-center font-black text-lg"
                   style={{ background: `${ACCENT}12`, color: ACCENT, border: `1px solid ${ACCENT}25` }}>
                   ›
                 </button>
@@ -711,9 +711,9 @@ export default function Content() {
                     </p>
                   </div>
                   <button onClick={() => setCalDay(null)}
-                    className="tap w-7 h-7 rounded-lg flex items-center justify-center"
+                    className="tap w-9 h-9 rounded-lg flex items-center justify-center"
                     style={{ background: `${ACCENT}12`, color: ACCENT }}>
-                    <X size={13} />
+                    <X size={15} />
                   </button>
                 </div>
                 {(ideasByDate[calDay] || []).length === 0
@@ -824,18 +824,20 @@ export default function Content() {
       {tab === 'stats' && stats && (
         <div className="space-y-4">
           {/* Stat tiles */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-3">
             {[
               { label: 'POST STREAK', value: `${stats.postingStreak}w`, sub: 'consecutive weeks', color: '#f97316' },
               { label: 'LAST POST',   value: stats.daysSinceLastPost !== null ? `${stats.daysSinceLastPost}d` : '--',
                 sub: stats.lastPostDate ? fmtDate(stats.lastPostDate) : 'Never posted', color: ACCENT },
               { label: 'PIPELINE',    value: String(stats.inPipeline), sub: 'ideas in flight', color: '#818cf8' },
             ].map(tile => (
-              <div key={tile.label} className="card flex flex-col items-center py-4 px-2 text-center">
-                <span className="text-2xl font-black" style={{ color: tile.color }}>{tile.value}</span>
-                <span className="text-[9px] font-black tracking-[0.15em] mt-1"
+              <div key={tile.label} className="card flex min-[360px]:flex-col items-center min-[360px]:items-center justify-between min-[360px]:justify-start py-3 min-[360px]:py-4 px-4 min-[360px]:px-2 text-left min-[360px]:text-center gap-3 min-[360px]:gap-0">
+                <span className="text-[10px] font-black tracking-[0.15em]"
                   style={{ color: tile.color, opacity: 0.7 }}>{tile.label}</span>
-                <span className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--t-faint)' }}>{tile.sub}</span>
+                <div className="flex items-baseline gap-2 min-[360px]:block min-[360px]:text-center">
+                  <span className="text-2xl font-black" style={{ color: tile.color }}>{tile.value}</span>
+                  <span className="text-[10px] font-mono min-[360px]:block min-[360px]:mt-0.5" style={{ color: 'var(--t-faint)' }}>{tile.sub}</span>
+                </div>
               </div>
             ))}
           </div>

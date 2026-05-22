@@ -722,17 +722,17 @@ export default function Workout() {
                       ▶ LOG THIS
                     </button>
                     <button onClick={() => setEditingDayId(editingDayId === day.id ? null : day.id)}
-                      className="w-7 h-7 rounded-lg flex items-center justify-center tap opacity-0 group-hover:opacity-100"
+                      className="w-9 h-9 rounded-lg flex items-center justify-center tap opacity-25 group-hover:opacity-100"
                       style={{ background: 'var(--s3)' }}>
-                      <Pencil size={11} style={{ color: 'var(--t-muted)' }} />
+                      <Pencil size={13} style={{ color: 'var(--t-muted)' }} />
                     </button>
                     <button onClick={async () => {
                       await api.delete(`/workout/plan/days/${day.id}`);
                       setPlanDays(d => d.filter(x => x.id !== day.id));
                     }}
-                      className="w-7 h-7 rounded-lg flex items-center justify-center tap opacity-0 group-hover:opacity-100"
+                      className="w-9 h-9 rounded-lg flex items-center justify-center tap opacity-25 group-hover:opacity-100"
                       style={{ background: 'var(--s3)' }}>
-                      <Trash2 size={11} style={{ color: '#ef4444' }} />
+                      <Trash2 size={13} style={{ color: '#ef4444' }} />
                     </button>
                   </div>
                 </div>
@@ -772,9 +772,9 @@ export default function Workout() {
                         await api.delete(`/workout/plan/exercises/${ex.id}`);
                         setPlanDays(d => d.map(dd => dd.id === day.id ? { ...dd, exercises: dd.exercises.filter(e => e.id !== ex.id) } : dd));
                       }}
-                        className="opacity-0 group-hover/ex:opacity-100 tap"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg opacity-20 group-hover/ex:opacity-100 tap"
                         style={{ color: 'var(--t-faint)' }}>
-                        <X size={10} />
+                        <X size={13} />
                       </button>
                     </div>
                   ))}
