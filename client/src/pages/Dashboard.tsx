@@ -5,7 +5,7 @@ import {
   Send, X, Mic, MicOff, Volume2, ChevronDown, Plus, Target,
   Wallet, AlertTriangle, ArrowUp, Minus, ChevronDown as ChevDown,
   TrendingUp, Coffee, Activity, BarChart2, CheckCircle2, Circle,
-  MessageSquare, Award, ChevronRight, Swords,
+  MessageSquare, Award, ChevronRight,
 } from 'lucide-react';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';

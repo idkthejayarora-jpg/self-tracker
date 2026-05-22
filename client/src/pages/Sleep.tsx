@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Moon, Plus, Trash2, Star, Clock, AlertCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import api from '../lib/api';
@@ -31,40 +31,6 @@ const emptyForm = () => ({
   bedtime: '', wake_time: '', quality: 3, notes: '',
 });
 
-function StarField() {
-  const ref = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const c = ref.current; if (!c) return;
-    const ctx = c.getContext('2d'); if (!ctx) return;
-    const W = c.offsetWidth || 600; const H = 130;
-    c.width = W; c.height = H;
-    const stars = Array.from({ length: 80 }, () => ({
-      x: Math.random() * W, y: Math.random() * H,
-      r: Math.random() * 1.5 + 0.3,
-      speed: Math.random() * 0.3 + 0.05,
-      phase: Math.random() * Math.PI * 2,
-    }));
-    let raf: number;
-    function draw() {
-      ctx!.clearRect(0, 0, W, H);
-      const t = Date.now() / 1000;
-      stars.forEach(s => {
-        const alpha = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
-        ctx!.beginPath();
-        ctx!.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        const color = Math.random() > 0.9 ? '#f0abfc' : (Math.random() > 0.7 ? '#a78bfa' : '#ffffff');
-        ctx!.fillStyle = color;
-        ctx!.globalAlpha = alpha;
-        ctx!.fill();
-      });
-      ctx!.globalAlpha = 1;
-      raf = requestAnimationFrame(draw);
-    }
-    draw();
-    return () => cancelAnimationFrame(raf);
-  }, []);
-  return <canvas ref={ref} style={{ width: '100%', height: 130, display: 'block' }} />;
-}
 
 export default function Sleep() {
   const [logs, setLogs] = useState<SleepLog[]>([]);

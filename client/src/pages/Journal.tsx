@@ -46,53 +46,6 @@ const MOODS = [
   { value: 5, label: 'OVERCLOCK', color: '#3b82f6', code: 'MAX_OUTPUT'  },
 ];
 
-// ── Cyber Rain Canvas ─────────────────────────────────────────────────────────
-function CyberRain({ height = 120 }: { height?: number }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const W = canvas.offsetWidth || 600;
-    canvas.width = W; canvas.height = height;
-    const cols = Math.floor(W / 14);
-    const drops = Array.from({ length: cols }, () => Math.random() * -height);
-    const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノ!#$%&*'.split('');
-    let raf: number;
-    function draw() {
-      ctx!.fillStyle = 'rgba(0,0,0,0.18)';
-      ctx!.fillRect(0, 0, W, height);
-      drops.forEach((y, i) => {
-        const ch = chars[Math.floor(Math.random() * chars.length)];
-        const bright = y < 20;
-        ctx!.fillStyle = bright ? '#ffffff' : (Math.random() > 0.5 ? '#00f5ff' : '#00ff9f');
-        ctx!.font = bright ? 'bold 11px monospace' : '10px monospace';
-        ctx!.globalAlpha = bright ? 0.9 : 0.35;
-        ctx!.fillText(ch, i * 14, y);
-        ctx!.globalAlpha = 1;
-        drops[i] = y > height + Math.random() * 40 ? -12 : y + 13;
-      });
-      raf = requestAnimationFrame(draw);
-    }
-    draw();
-    return () => cancelAnimationFrame(raf);
-  }, [height]);
-  return <canvas ref={canvasRef} style={{ width: '100%', height, display: 'block' }} />;
-}
-
-// ── HUD corner brackets ────────────────────────────────────────────────────────
-function HUD({ color = '#00f5ff', size = 14, opacity = 0.6 }: { color?: string; size?: number; opacity?: number }) {
-  const s = `${size}px`, b = `1.5px solid ${color}`;
-  return (
-    <>
-      <div className="absolute top-0 left-0"    style={{ width: s, height: s, borderTop: b, borderLeft:  b, opacity, pointerEvents: 'none' }} />
-      <div className="absolute top-0 right-0"   style={{ width: s, height: s, borderTop: b, borderRight: b, opacity, pointerEvents: 'none' }} />
-      <div className="absolute bottom-0 left-0"  style={{ width: s, height: s, borderBottom: b, borderLeft:  b, opacity, pointerEvents: 'none' }} />
-      <div className="absolute bottom-0 right-0" style={{ width: s, height: s, borderBottom: b, borderRight: b, opacity, pointerEvents: 'none' }} />
-    </>
-  );
-}
 
 // ── Section label ─────────────────────────────────────────────────────────────
 function NeonDivider({ label, color = 'rgb(var(--accent-rgb))' }: { label: string; color?: string }) {

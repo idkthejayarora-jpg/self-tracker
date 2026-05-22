@@ -30,19 +30,6 @@ const emptyForm = () => ({
   notes: '',
 });
 
-function EKGLine() {
-  return (
-    <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none overflow-hidden" style={{ opacity: 0.4 }}>
-      <svg viewBox="0 0 400 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
-        <polyline
-          points="0,20 40,20 55,20 65,5 75,28 85,15 95,20 140,20 155,20 165,2 175,28 185,14 195,20 240,20 255,20 265,4 275,28 285,15 295,20 340,20 355,20 365,3 375,28 385,15 400,20"
-          fill="none" stroke="#38bdf8" strokeWidth="1.5"
-          strokeDasharray="200" style={{ animation: 'ekg-sweep 2.5s linear infinite' }}
-        />
-      </svg>
-    </div>
-  );
-}
 
 export default function BodyStats() {
   const [stats, setStats] = useState<BodyStat[]>([]);

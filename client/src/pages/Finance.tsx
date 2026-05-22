@@ -28,22 +28,6 @@ const emptyEntry = (type: 'income' | 'expense') => ({
   note: '',
 });
 
-const TICKER_ITEMS = ['STRENGTH +12','HABITS 87%','SLEEP 7.2h','FOCUS 94%','NET +₹4.2k','XP +240','STREAK 14d','TASKS 8/10','WELLNESS 91%'];
-function TickerTape() {
-  const items = [...TICKER_ITEMS, ...TICKER_ITEMS];
-  return (
-    <div style={{ overflow: 'hidden', height: 20, display: 'flex', alignItems: 'center' }}>
-      <div style={{ display: 'flex', gap: 24, animation: 'ticker-scroll 18s linear infinite', whiteSpace: 'nowrap' }}>
-        {items.map((item, i) => (
-          <span key={i} className="text-[9px] font-black font-mono tracking-widest"
-            style={{ color: item.includes('+') ? '#22c55e' : item.includes('%') ? 'var(--t-muted)' : '#ef4444' }}>
-            ▶ {item}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export default function Finance() {
   const now = new Date();

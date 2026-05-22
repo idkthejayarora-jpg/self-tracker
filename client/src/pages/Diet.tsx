@@ -480,24 +480,6 @@ function SaveMealModal({ onSave, onClose }: { onSave: (m: Omit<SavedMeal, 'id'>)
   );
 }
 
-function MolecularBg() {
-  const hexPoints = '12,2 22,8 22,20 12,26 2,20 2,8';
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {[...Array(8)].map((_, i) => (
-        <div key={i} className="absolute"
-          style={{
-            left: `${10 + i * 12}%`, top: `${20 + (i % 3) * 20}%`,
-            animation: `hex-drift ${3 + (i % 3)}s ease-in-out ${i * 400}ms infinite`,
-          }}>
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-            <polygon points={hexPoints} stroke="#34d399" strokeWidth="1" fill="none" />
-          </svg>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function Diet() {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -881,7 +863,6 @@ export default function Diet() {
 
       {showSaveModal && <SaveMealModal onSave={saveMeal} onClose={() => setShowSaveModal(false)} />}
 
-      </div>{/* end relative zIndex wrapper */}
     </div>
   );
 }
