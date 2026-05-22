@@ -155,4 +155,96 @@ router.get('/journal', (req, res) => {
   res.json(rows);
 });
 
+// GET /api/analytics/daily?days=30
+// Returns one row per calendar day for the last N days
+router.get('/daily', (req, res) => {
+  const days = Math.min(Math.max(Number(req.query.days) || 30, 1), 90);
+  const uid  = req.user.id;
+
+  const totalHabits = (
+    db.prepare('SELECT COUNT(*) as c FROM habits WHERE user_id = ?').get(uid) || {}
+  ).c || 0;
+
+  const data = [];
+
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const date  = d.toISOString().slice(0, 10);
+    const mm    = String(d.getMonth() + 1).padStart(2, '0');
+    const dd    = String(d.getDate()).padStart(2, '0');
+    const label = `${mm}/${dd}`;
+
+    // Tasks created & completed that day
+    const tasks = db.prepare(`
+      SELECT
+        COUNT(*) as created,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed
+      FROM tasks WHERE user_id = ? AND DATE(created_at) = ?
+    `).get(uid, date) || { created: 0, completed: 0 };
+
+    const taskPct = tasks.created > 0
+      ? Math.round((tasks.completed / tasks.created) * 100) : null;
+
+    // Journal entry + mood for that day
+    const journalRow = db.prepare(
+      `SELECT mood FROM journal_entries WHERE user_id = ? AND date = ? LIMIT 1`
+    ).get(uid, date);
+
+    // Habits
+    let habitsDone = 0, habitPct = null;
+    if (totalHabits > 0) {
+      habitsDone = (db.prepare(
+        `SELECT COUNT(*) as c FROM habit_logs WHERE user_id = ? AND done = 1 AND date = ?`
+      ).get(uid, date) || {}).c || 0;
+      habitPct = Math.round((habitsDone / totalHabits) * 100);
+    }
+
+    // Sleep — average in case multi-log exists
+    let sleepHrs = null;
+    try {
+      const sleepRow = db.prepare(
+        `SELECT AVG(duration_minutes) as m, AVG(quality) as q
+         FROM sleep_logs WHERE user_id = ? AND date = ?`
+      ).get(uid, date);
+      if (sleepRow?.m != null) sleepHrs = Math.round((sleepRow.m / 60) * 10) / 10;
+    } catch (_) {}
+
+    // Workout sessions
+    let workouts = 0;
+    try {
+      workouts = (db.prepare(
+        `SELECT COUNT(*) as c FROM workout_sessions WHERE user_id = ? AND date = ?`
+      ).get(uid, date) || {}).c || 0;
+    } catch (_) {}
+
+    // Points earned
+    let points = 0;
+    try {
+      points = (db.prepare(
+        `SELECT COALESCE(SUM(points), 0) as p FROM points_log
+         WHERE user_id = ? AND DATE(created_at) = ?`
+      ).get(uid, date) || {}).p || 0;
+    } catch (_) {}
+
+    data.push({
+      date,
+      label,
+      tasks_created:   tasks.created   || 0,
+      tasks_completed: tasks.completed || 0,
+      task_pct:        taskPct,
+      journal:         journalRow ? 1 : 0,
+      mood:            journalRow?.mood ?? null,
+      habits_done:     habitsDone,
+      habits_total:    totalHabits,
+      habit_pct:       habitPct,
+      sleep_hrs:       sleepHrs,
+      workouts,
+      points,
+    });
+  }
+
+  res.json(data);
+});
+
 module.exports = router;
