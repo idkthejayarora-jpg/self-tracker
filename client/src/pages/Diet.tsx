@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, BookMarked, ChevronLeft, ChevronRight, X, Save, Pencil, Check, AlertCircle } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Plus, Trash2, BookMarked, ChevronLeft, ChevronRight, X, Save, Pencil, Check, AlertCircle, Search } from 'lucide-react';
 import { format, parseISO, addDays, subDays } from 'date-fns';
 import api from '../lib/api';
 
@@ -31,6 +31,206 @@ type MealType = typeof MEAL_TYPES[number];
 const MEAL_EMOJI: Record<MealType, string> = {
   breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍎',
 };
+
+interface FoodItem {
+  id: number; name: string; serving: string;
+  calories: number; protein_g: number; carbs_g: number; fat_g: number;
+  category: string;
+}
+
+function defaultMealType(): MealType {
+  const h = new Date().getHours();
+  if (h < 11) return 'breakfast';
+  if (h < 15) return 'lunch';
+  if (h < 19) return 'snack';
+  return 'dinner';
+}
+
+const ACCENT_DIET = '#34d399';
+const MEAL_LABELS: Record<MealType, string> = { breakfast: 'B', lunch: 'L', dinner: 'D', snack: 'S' };
+const QTY_OPTIONS = [0.5, 1, 2, 3];
+
+function FoodSearchBar({ onLogged }: { onLogged: () => void }) {
+  const [query, setQuery]       = useState('');
+  const [results, setResults]   = useState<FoodItem[]>([]);
+  const [loading, setLoading]   = useState(false);
+  const [qty, setQty]           = useState<Record<number, number>>({});
+  const [meal, setMeal]         = useState<Record<number, MealType>>({});
+  const [logging, setLogging]   = useState<Record<number, boolean>>({});
+  const [done, setDone]         = useState<Record<number, boolean>>({});
+  const debounceRef             = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const getQty  = (id: number) => qty[id]  ?? 1;
+  const getMeal = (id: number) => meal[id] ?? defaultMealType();
+
+  const search = useCallback(async (q: string) => {
+    setLoading(true);
+    try {
+      const r = await api.get<FoodItem[]>(`/diet/food-search?q=${encodeURIComponent(q)}&limit=6`);
+      setResults(r.data);
+    } finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => search(query), 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [query, search]);
+
+  useEffect(() => { search(''); }, [search]);
+
+  const logItem = async (item: FoodItem) => {
+    const q = getQty(item.id);
+    const m = getMeal(item.id);
+    setLogging(p => ({ ...p, [item.id]: true }));
+    try {
+      await api.post('/diet/log', {
+        name: item.name,
+        meal_type: m,
+        calories:  Math.round(item.calories  * q),
+        protein_g: Math.round(item.protein_g * q * 10) / 10,
+        carbs_g:   Math.round(item.carbs_g   * q * 10) / 10,
+        fat_g:     Math.round(item.fat_g     * q * 10) / 10,
+      });
+      setDone(p => ({ ...p, [item.id]: true }));
+      setTimeout(() => setDone(p => { const n = {...p}; delete n[item.id]; return n; }), 1500);
+      onLogged();
+    } finally { setLogging(p => ({ ...p, [item.id]: false })); }
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl"
+      style={{ background: 'var(--hero-bg)', border: `1px solid ${ACCENT_DIET}18`, boxShadow: `0 0 20px ${ACCENT_DIET}07` }}>
+      {/* Scanlines */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 3px, ${ACCENT_DIET}02 3px, ${ACCENT_DIET}02 4px)` }} />
+      {/* Top bar */}
+      <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{ background: `linear-gradient(90deg, transparent, ${ACCENT_DIET}55, transparent)`, boxShadow: `0 0 5px ${ACCENT_DIET}` }} />
+      {/* HUD corners */}
+      {(['top-0 left-0','top-0 right-0','bottom-0 left-0','bottom-0 right-0'] as const).map((pos, i) => (
+        <div key={i} className={`absolute ${pos} pointer-events-none`} style={{
+          width: 10, height: 10, opacity: 0.4,
+          ...(i===0 && { borderTop:`1.5px solid ${ACCENT_DIET}`, borderLeft:`1.5px solid ${ACCENT_DIET}` }),
+          ...(i===1 && { borderTop:`1.5px solid ${ACCENT_DIET}`, borderRight:`1.5px solid ${ACCENT_DIET}` }),
+          ...(i===2 && { borderBottom:`1.5px solid ${ACCENT_DIET}`, borderLeft:`1.5px solid ${ACCENT_DIET}` }),
+          ...(i===3 && { borderBottom:`1.5px solid ${ACCENT_DIET}`, borderRight:`1.5px solid ${ACCENT_DIET}` }),
+        }} />
+      ))}
+
+      <div className="relative z-10 px-4 py-4 space-y-3">
+        {/* Header */}
+        <div className="flex items-center gap-2">
+          <div className="w-0.5 h-4 rounded-full" style={{ background: ACCENT_DIET, boxShadow: `0 0 5px ${ACCENT_DIET}` }} />
+          <span className="text-[10px] font-black tracking-[0.22em] font-mono" style={{ color: ACCENT_DIET, opacity: 0.65 }}>
+            FOOD_SEARCH://
+          </span>
+          <span className="text-[10px] font-mono opacity-30 text-white">// type any food, Indian or otherwise</span>
+        </div>
+
+        {/* Search input */}
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: ACCENT_DIET, opacity: 0.5 }} />
+          <input
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="roti, chicken breast, protein bar..."
+            autoComplete="off"
+            className="w-full text-sm rounded-xl pl-8 pr-3 py-2 focus:outline-none"
+            style={{ background: 'var(--s3)', color: 'var(--t-head)', border: `1px solid ${ACCENT_DIET}25` }}
+          />
+          {loading && (
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono animate-pulse"
+              style={{ color: ACCENT_DIET, opacity: 0.5 }}>...</span>
+          )}
+        </div>
+
+        {/* Results */}
+        <div className="space-y-2">
+          {results.map(item => {
+            const q = getQty(item.id);
+            const m = getMeal(item.id);
+            const isDone = done[item.id];
+            const isLogging = logging[item.id];
+            return (
+              <div key={item.id} className="rounded-xl px-3 py-2.5"
+                style={{ background: 'var(--s2)', border: `1px solid ${isDone ? ACCENT_DIET+'50' : 'rgba(255,255,255,0.06)'}`,
+                  transition: 'border-color 0.2s' }}>
+                {/* Name + macros row */}
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold leading-tight truncate" style={{ color: 'var(--t-head)' }}>
+                      {item.name}
+                    </p>
+                    <p className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--t-faint)' }}>
+                      {item.serving}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0 text-[10px] font-mono font-bold">
+                    <span style={{ color: '#f59e0b' }}>{Math.round(item.calories * q)}kcal</span>
+                    <span style={{ color: '#60a5fa' }}>{Math.round(item.protein_g * q * 10)/10}P</span>
+                    <span style={{ color: ACCENT_DIET }}>{Math.round(item.carbs_g * q * 10)/10}C</span>
+                    <span style={{ color: '#fbbf24' }}>{Math.round(item.fat_g * q * 10)/10}F</span>
+                  </div>
+                </div>
+
+                {/* Meal + qty + log row */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Meal type */}
+                  <div className="flex gap-1">
+                    {(Object.keys(MEAL_LABELS) as MealType[]).map(mt => (
+                      <button key={mt}
+                        onClick={() => setMeal(p => ({ ...p, [item.id]: mt }))}
+                        className="tap text-[9px] font-black px-1.5 py-0.5 rounded-md"
+                        style={m === mt
+                          ? { background: ACCENT_DIET, color: '#000' }
+                          : { background: 'var(--s3)', color: 'var(--t-faint)' }}>
+                        {MEAL_LABELS[mt]}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Qty */}
+                  <div className="flex gap-1">
+                    {QTY_OPTIONS.map(v => (
+                      <button key={v}
+                        onClick={() => setQty(p => ({ ...p, [item.id]: v }))}
+                        className="tap text-[9px] font-black px-1.5 py-0.5 rounded-md"
+                        style={q === v
+                          ? { background: `${ACCENT_DIET}30`, color: ACCENT_DIET, border: `1px solid ${ACCENT_DIET}50` }
+                          : { background: 'var(--s3)', color: 'var(--t-faint)', border: '1px solid transparent' }}>
+                        ×{v}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Log button */}
+                  <button
+                    onClick={() => logItem(item)}
+                    disabled={isLogging || isDone}
+                    className="tap ml-auto text-[11px] font-black px-3 py-1 rounded-lg"
+                    style={{
+                      background: isDone ? `${ACCENT_DIET}20` : ACCENT_DIET,
+                      color: isDone ? ACCENT_DIET : '#000',
+                      border: isDone ? `1px solid ${ACCENT_DIET}50` : 'none',
+                      opacity: isLogging ? 0.6 : 1,
+                    }}>
+                    {isDone ? '✓ LOGGED' : isLogging ? '...' : '+ LOG'}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          {results.length === 0 && !loading && (
+            <p className="text-[11px] font-mono text-center py-2" style={{ color: 'var(--t-faint)', opacity: 0.5 }}>
+              // no matches — try a different spelling
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function getStoredGoal() {
   const v = localStorage.getItem('calorie_goal');
@@ -328,7 +528,7 @@ export default function Diet() {
   const [quickText, setQuickText] = useState('');
   const [quickLogging, setQuickLogging] = useState(false);
   const [quickResult, setQuickResult] = useState<{
-    logged: { meal_type: string; name: string; calories: number; protein_g: number }[];
+    logged: { meal_type: string; name: string; calories: number; protein_g: number; source?: string }[];
     unmatched: string[];
     insertedIds: number[];
     preview: string;
@@ -508,6 +708,9 @@ export default function Diet() {
             <p className="text-xs mt-1" style={{ color: '#52525b' }}>{calPct}% of daily goal</p>
           </div>
 
+          {/* ── Food Search ── */}
+          <FoodSearchBar onLogged={() => loadLog(date)} />
+
           {/* Quick-log panel */}
           <div className="card px-4 py-4 space-y-3"
             style={{ borderColor: 'rgb(52 211 153 / 0.2)', background: 'linear-gradient(135deg, var(--s1) 0%, rgba(52,211,153,0.03) 100%)' }}>
@@ -530,10 +733,22 @@ export default function Diet() {
             {quickResult && (
               <div className="rounded-xl px-3 py-3 space-y-2"
                 style={{ background: 'rgb(52 211 153 / 0.06)', border: '1px solid rgb(52 211 153 / 0.15)' }}>
-                <p className="text-xs font-semibold" style={{ color: '#34d399' }}>{quickResult.preview}</p>
+                <div className="flex flex-wrap gap-1 mb-1">
+                  {quickResult.logged.map((e, i) => (
+                    <span key={i} className="flex items-center gap-1 text-[11px] font-mono"
+                      style={{ color: '#34d399' }}>
+                      {e.name}
+                      {e.source === 'db' && (
+                        <span className="text-[9px] px-1 py-0.5 rounded font-black"
+                          style={{ background: '#f59e0b20', color: '#f59e0b' }}>~avg</span>
+                      )}
+                      {i < quickResult.logged.length - 1 && <span style={{ color: 'var(--t-faint)' }}> · </span>}
+                    </span>
+                  ))}
+                </div>
                 {quickResult.unmatched.length > 0 && (
                   <p className="text-[11px]" style={{ color: '#f59e0b' }}>
-                    ⚠ Couldn't match: {quickResult.unmatched.join(', ')} — add to saved meals for auto-matching
+                    Unrecognised: {quickResult.unmatched.join(', ')} — search above or add to saved meals
                   </p>
                 )}
                 <button type="button" onClick={undoQuickLog}

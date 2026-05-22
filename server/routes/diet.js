@@ -5,6 +5,27 @@ const { authMiddleware } = require('../middleware/auth');
 const { awardPoints, applySkillXP } = require('../utils/pointsUtils');
 const { localDate } = require('../utils/dateUtils');
 const { parseDietText } = require('../utils/dietParser');
+const INDIAN_FOODS = require('../utils/indianFoods');
+
+// ── Food search scoring ──────────────────────────────────────────────────────
+function tokenise(str) {
+  return str.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+}
+
+function scoreFood(food, queryTokens) {
+  const haystack = tokenise(`${food.name} ${food.keywords.join(' ')}`);
+  let score = 0;
+  for (const qt of queryTokens) {
+    for (const ht of haystack) {
+      if (ht === qt) { score += 1.0; break; }
+      if (ht.startsWith(qt) && qt.length >= 3) { score += 0.6; break; }
+      if (qt.startsWith(ht) && ht.length >= 3) { score += 0.5; break; }
+    }
+  }
+  return queryTokens.length > 0 ? score / queryTokens.length : 0;
+}
+
+const FEATURED_IDS = [1, 26, 46, 96, 162, 160, 7, 231]; // roti,rice,dal,dahi,chicken breast,egg,aloo paratha,chai
 
 router.use(authMiddleware);
 
@@ -122,6 +143,42 @@ router.post('/quick-log', (req, res) => {
     logged.push({ ...entry, id: result.lastInsertRowid });
   }
 
+  // DB fallback for unmatched items
+  const stillUnmatched = [];
+  for (const name of unmatched) {
+    const qTokens = tokenise(name);
+    if (!qTokens.length) { stillUnmatched.push(name); continue; }
+    const best = INDIAN_FOODS
+      .map(f => ({ f, s: scoreFood(f, qTokens) }))
+      .sort((a, b) => b.s - a.s)[0];
+
+    if (best && best.s >= 0.4) {
+      const dbFood = best.f;
+      // detect multiplier from the original segment if present (default 1)
+      const mulMatch = name.match(/^(\d+(?:\.\d+)?)\s/);
+      const mul = mulMatch ? parseFloat(mulMatch[1]) : 1;
+      const entry = {
+        name: dbFood.name,
+        meal_type: 'snack',
+        calories: Math.round(dbFood.calories * mul),
+        protein_g: Math.round(dbFood.protein_g * mul * 10) / 10,
+        carbs_g:   Math.round(dbFood.carbs_g   * mul * 10) / 10,
+        fat_g:     Math.round(dbFood.fat_g     * mul * 10) / 10,
+        source: 'db',
+      };
+      const result = db.prepare(`
+        INSERT INTO food_logs (user_id, date, meal_type, name, calories, protein_g, carbs_g, fat_g)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(req.user.id, logDate, entry.meal_type, entry.name,
+             entry.calories, entry.protein_g, entry.carbs_g, entry.fat_g);
+      awardPoints(req.user.id, 'diet', 'log_food', 5, result.lastInsertRowid, entry.name);
+      insertedIds.push(result.lastInsertRowid);
+      logged.push({ ...entry, id: result.lastInsertRowid });
+    } else {
+      stillUnmatched.push(name);
+    }
+  }
+
   if (logged.length) {
     applySkillXP(req.user.id, 'diet', ['nutrition','health','diet', ...logged.map(l => l.name)]);
   }
@@ -133,7 +190,7 @@ router.post('/quick-log', (req, res) => {
 
   res.status(201).json({
     logged,
-    unmatched,
+    unmatched: stillUnmatched,
     insertedIds,
     preview,
     date: logDate,
@@ -147,6 +204,28 @@ router.post('/quick-log/undo', (req, res) => {
   const placeholders = ids.map(() => '?').join(',');
   db.prepare(`DELETE FROM food_logs WHERE id IN (${placeholders}) AND user_id = ?`).run(...ids, req.user.id);
   res.json({ ok: true, deleted: ids.length });
+});
+
+// ── Indian food DB search ────────────────────────────────────────────────────
+
+router.get('/food-search', (req, res) => {
+  const q = (req.query.q || '').trim();
+  const limit = Math.min(Number(req.query.limit) || 8, 20);
+
+  if (!q) {
+    const featured = FEATURED_IDS.map(id => INDIAN_FOODS.find(f => f.id === id)).filter(Boolean);
+    return res.json(featured);
+  }
+
+  const qTokens = tokenise(q);
+  const scored = INDIAN_FOODS
+    .map(f => ({ ...f, _score: scoreFood(f, qTokens) }))
+    .filter(f => f._score > 0)
+    .sort((a, b) => b._score - a._score)
+    .slice(0, limit)
+    .map(({ _score, ...f }) => f);
+
+  res.json(scored);
 });
 
 // ── Weekly macro summary (for analytics) ────────────────────────────────────
