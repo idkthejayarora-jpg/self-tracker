@@ -37,7 +37,7 @@ function getGreeting() {
 function SysLabel({ icon: Icon, text, color }: { icon?: any; text: string; color?: string }) {
   return (
     <div className="flex items-center gap-1.5 mb-3">
-      {Icon && <Icon size={11} style={{ color: color ?? 'var(--cyan)', opacity: 0.8 }} />}
+      {Icon && <Icon size={11} style={{ color: color ?? 'rgb(var(--accent-rgb))', opacity: 0.8 }} />}
       <span className="sys-label" style={{ color: color ? `${color}cc` : undefined }}>{text}</span>
     </div>
   );
@@ -62,7 +62,7 @@ function MissionCard({ task, onComplete }: { task: Task; onComplete: (id: number
     <div className="mission-card group">
       {/* Priority indicator */}
       <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
-        <div className="w-1 h-8 rounded-full shrink-0" style={{ background: p.color, boxShadow: `0 0 5px ${p.color}60` }} />
+        <div className="w-1 h-8 rounded-full shrink-0" style={{ background: p.color }} />
         <PIcon size={11} style={{ color: p.color }} />
       </div>
       <div className="flex-1 min-w-0">
@@ -150,8 +150,8 @@ function SnapshotSection({ snap }: { snap: DashboardSnapshot }) {
       <div className="flex gap-3 overflow-x-auto pb-1 hide-scroll">
         {cards.map(c => (
           <Link key={c.to} to={c.to}
-            className="streak-node card-hover glow-card flex flex-col gap-1 no-underline"
-            style={{ minWidth: 96, textDecoration: 'none', '--gc': `${c.color}55` } as React.CSSProperties}>
+            className="streak-node card-hover flex flex-col gap-1 no-underline"
+            style={{ minWidth: 96, textDecoration: 'none' }}>
             <c.icon size={13} style={{ color: c.color }} />
             <p className="text-sm font-black text-head tabular-nums font-mono leading-tight mt-1">{c.primary}</p>
             <p className="text-[10px] font-semibold" style={{ color: 'var(--t-faint)' }}>{c.label}</p>
@@ -222,7 +222,7 @@ function RankPanel({ pts }: { pts: PointsSummary }) {
       </div>
       {/* XP progress bar */}
       <div className="xp-track mb-1.5">
-        <div className="xp-fill bar-fill" style={{ width: `${pts.progressPct}%`, background: color, boxShadow: `0 0 8px ${color}60` }} />
+        <div className="xp-fill bar-fill" style={{ width: `${pts.progressPct}%`, background: color }} />
       </div>
       <div className="flex justify-between mb-3">
         <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>{pts.progressPct}% to next level</span>
@@ -246,7 +246,6 @@ function RankPanel({ pts }: { pts: PointsSummary }) {
               height: '100%',
               width: `${lifeScore}%`,
               background: lifeColor,
-              boxShadow: `0 0 6px ${lifeColor}80`,
               borderRadius: 99,
               transition: 'width 0.8s ease',
             }} />
@@ -746,7 +745,7 @@ export default function Dashboard() {
     <div className="flex items-center justify-center min-h-[40vh]">
       <div className="flex flex-col items-center gap-3">
         <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-          style={{ borderColor: 'var(--cyan)', borderTopColor: 'transparent' }} />
+          style={{ borderColor: 'rgb(var(--accent-rgb))', borderTopColor: 'transparent' }} />
         <p className="sys-label">Loading command center…</p>
       </div>
     </div>
@@ -775,83 +774,15 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 anim-page pb-10"
-      style={{ '--accent-rgb': '57 255 20' } as React.CSSProperties}>
+    <div className="max-w-2xl mx-auto space-y-8 anim-page pb-10">
 
-      {/* ── WAR ROOM HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl mb-5"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #39ff1425', minHeight: 120 }}>
-        {/* Tactical grid */}
-        <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: 'radial-gradient(circle, #39ff1408 1px, transparent 1px)',
-          backgroundSize: '22px 22px',
-        }} />
-        {/* Radar arc */}
-        <div className="absolute top-3 right-3 pointer-events-none" style={{ width: 70, height: 70 }}>
-          <div style={{
-            position: 'absolute', inset: 0, borderRadius: '50%',
-            border: '1px solid #39ff1430',
-            boxShadow: '0 0 8px #39ff1420',
-          }} />
-          <div style={{
-            position: 'absolute', top: '50%', left: '50%',
-            width: 35, height: 1.5,
-            background: 'linear-gradient(90deg, #39ff14, transparent)',
-            transformOrigin: 'left center',
-            animation: 'radar-rotate 3s linear infinite',
-            boxShadow: '0 0 6px #39ff14',
-          }} />
-          <div style={{ position: 'absolute', inset: 10, borderRadius: '50%', border: '1px solid #39ff1418' }} />
-          <div style={{ position: 'absolute', inset: 20, borderRadius: '50%', border: '1px solid #39ff1410' }} />
-        </div>
-        {/* HUD corners */}
-        <div className="absolute top-0 left-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderTop: '1.5px solid #39ff14', borderLeft: '1.5px solid #39ff14', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderTop: '1.5px solid #39ff14', borderRight: '1.5px solid #39ff14', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderBottom: '1.5px solid #39ff14', borderLeft: '1.5px solid #39ff14', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderBottom: '1.5px solid #39ff14', borderRight: '1.5px solid #39ff14', opacity: 0.7 }} />
-        {/* Content */}
-        <div className="relative z-10 px-5 py-5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.35em]" style={{ color: '#39ff14', opacity: 0.6, textShadow: '0 0 8px #39ff14' }}>SYS://</span>
-            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">COMMAND_CENTER</span>
-            <span className="cursor-blink font-mono" style={{ color: '#39ff14', fontSize: 11 }}>▌</span>
-          </div>
-          <h1 className="text-3xl font-black tracking-tight text-white leading-none"
-            style={{ textShadow: '0 0 30px #39ff1440' }}>
-            COMMAND CENTER
-          </h1>
-          <p className="font-mono text-[11px] mt-1" style={{ color: '#39ff14', opacity: 0.5 }}>
-            {'// MISSION CONTROL — GOOD '}
-            {new Date().getHours() < 12 ? 'MORNING' : new Date().getHours() < 17 ? 'AFTERNOON' : 'EVENING'}
-            {', OPERATOR'}
-          </p>
-          {/* Neon bottom edge */}
-          <div className="absolute bottom-0 left-0 right-0 h-px"
-            style={{ background: 'linear-gradient(90deg, transparent, #39ff1450, transparent)' }} />
-        </div>
-      </div>
-
-      {/* Cyberpunk body overlay */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(57,255,20,0.06) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }} />
-      </div>
-
-      <div className="space-y-8" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="space-y-8">
 
       {/* ═══════════════════════════════════════ HEADER */}
       <div>
         <div className="flex items-start justify-between">
           <div>
-            <p className="sys-label mb-1.5 flex items-center gap-1.5">
-              <Swords size={10} style={{ color: 'var(--cyan)', opacity: 0.8 }} />
+            <p className="sys-label mb-1.5">
               {format(new Date(), 'EEEE · d MMMM yyyy').toUpperCase()}
             </p>
             <h1 className="text-2xl font-black text-head tracking-tight">
@@ -933,10 +864,10 @@ export default function Dashboard() {
         <SysLabel icon={TrendingUp} text="// Streak Intel" color="#f97316" />
         <div className="flex gap-3 overflow-x-auto pb-1 hide-scroll">
           {streakData.map((s, i) => (
-            <div key={s.label} className="streak-node card-hover glow-card"
-              style={{ animationDelay: `${i * 50}ms`, '--gc': `${s.color}55` } as React.CSSProperties}>
+            <div key={s.label} className="streak-node card-hover"
+              style={{ animationDelay: `${i * 50}ms` }}>
               <s.icon size={13} style={{ color: s.color, marginBottom: 4 }} />
-              <p className="text-2xl font-black font-mono tabular-nums" style={{ color: s.color, textShadow: `0 0 10px ${s.color}60` }}>
+              <p className="text-2xl font-black font-mono tabular-nums" style={{ color: s.color }}>
                 {s.value}
               </p>
               <p className="text-[9px] font-bold tracking-wider uppercase mt-0.5" style={{ color: 'var(--t-faint)' }}>{s.label}</p>

@@ -82,46 +82,17 @@ export default function SocialDetox() {
         }} />
       </div>
 
-      {/* ── FIREWALL HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #f43f5e25', minHeight: 110 }}>
-        {/* Corrupted pixel noise */}
-        <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.06 }}>
-          {[...Array(6)].map((_,i) => (
-            <div key={i} style={{
-              position: 'absolute',
-              left: `${i * 17}%`, top: `${20 + (i%3)*20}%`,
-              width: 40, height: 6,
-              background: i%2===0 ? '#f43f5e' : '#8b5cf6',
-              animation: `glitch-block 5s step-end ${i*700}ms infinite`,
-            }} />
-          ))}
-        </div>
-        {/* Diagonal warning stripe */}
-        <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(244,63,94,0.02) 20px, rgba(244,63,94,0.02) 22px)',
-        }} />
-        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #f43f5e', borderLeft: '1.5px solid #f43f5e', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #f43f5e', borderRight: '1.5px solid #f43f5e', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #f43f5e', borderLeft: '1.5px solid #f43f5e', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #f43f5e', borderRight: '1.5px solid #f43f5e', opacity: 0.7 }} />
-        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #f43f5e80, transparent)', boxShadow: '0 0 8px #f43f5e' }} />
-        <div className="relative z-10 px-5 py-5" style={{ animation: 'glitch-block 8s step-end 2s infinite' }}>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#f43f5e', opacity: 0.7 }}>BLOCK://</span>
-            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">FIREWALL_ACTIVE</span>
-            <span className="cursor-blink font-mono" style={{ color: '#f43f5e', fontSize: 11 }}>▌</span>
+      <div className="page-header flex items-center justify-between gap-3 mb-5">
+        <div className="flex items-center gap-3">
+          <div className="shrink-0 flex items-center justify-center rounded-2xl"
+            style={{ width: 44, height: 44, background: '#84cc1615', border: '1px solid #84cc1625' }}>
+            <Shield size={22} style={{ color: '#84cc16' }} strokeWidth={1.7} />
           </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: '0 0 30px #f43f5e50' }}>
-            DIGITAL DETOX
-          </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#8b5cf6', opacity: 0.6 }}>
-            // neural firewall engaged — signal blocking protocol
-          </p>
+          <div>
+            <h1 className="text-2xl font-black text-head tracking-tight">Digital Detox</h1>
+            <p className="text-xs text-muted mt-0.5">Screen time control</p>
+          </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #f43f5e30, transparent)' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>

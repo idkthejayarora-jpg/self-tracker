@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, ChevronRight, ChevronDown, ChevronUp, Trash2, X,
-  AlertTriangle, Lightbulb, PenLine, Film, CheckCircle2, Archive,
+  AlertTriangle, Lightbulb, PenLine, Film, CheckCircle2, Archive, Video,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import api from '../lib/api';
@@ -386,66 +386,22 @@ export default function Content() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="anim-page max-w-2xl mx-auto space-y-5 pb-8"
-      style={{ '--accent-rgb': '236 72 153' } as React.CSSProperties}>
+    <div className="anim-page max-w-2xl mx-auto space-y-5 pb-8">
 
-      {/* Focus trap — prevents mobile keyboard auto-opening on page load */}
-      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
+      {/* Focus trap */}
       <div tabIndex={0} style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0 }} aria-hidden="true" />
 
-      {/* Dot grid overlay */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: `radial-gradient(circle, rgba(236,72,153,0.06) 1px, transparent 1px)`,
-          backgroundSize: '24px 24px',
-        }} />
-      </div>
-
-      {/* ── STUDIO HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl"
-        style={{ background: 'var(--hero-bg)', border: `1px solid ${ACCENT}25`, minHeight: 110, zIndex: 1 }}>
-        {/* Scanlines */}
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 3px, ${ACCENT}03 3px, ${ACCENT}03 4px)` }} />
-        {/* HUD corners */}
-        {[['top-0 left-0', 'borderTop borderLeft'], ['top-0 right-0', 'borderTop borderRight'],
-          ['bottom-0 left-0', 'borderBottom borderLeft'], ['bottom-0 right-0', 'borderBottom borderRight']
-        ].map(([pos], i) => (
-          <div key={i} className={`absolute ${pos} pointer-events-none`}
-            style={{ width: 12, height: 12,
-              ...(i === 0 && { borderTop: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}`, opacity: 0.5 }),
-              ...(i === 1 && { borderTop: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}`, opacity: 0.5 }),
-              ...(i === 2 && { borderBottom: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}`, opacity: 0.5 }),
-              ...(i === 3 && { borderBottom: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}`, opacity: 0.5 }),
-            }} />
-        ))}
-        {/* Top neon bar */}
-        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}60, transparent)`, boxShadow: `0 0 8px ${ACCENT}` }} />
-        {/* REC indicator — top right */}
-        <div className="absolute top-3 right-4 flex items-center gap-1.5 pointer-events-none">
-          <span className="w-1.5 h-1.5 rounded-full"
-            style={{ background: ACCENT, animation: 'neon-pulse 1.2s ease-in-out infinite', boxShadow: `0 0 6px ${ACCENT}` }} />
-          <span className="text-[8px] font-mono font-black tracking-widest" style={{ color: ACCENT, opacity: 0.7 }}>REC</span>
-        </div>
-        {/* Content */}
-        <div className="relative z-10 px-5 py-5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: ACCENT, opacity: 0.6 }}>SIG://</span>
-            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">CONTENT_STUDIO</span>
-            <span className="cursor-blink font-mono" style={{ color: ACCENT, fontSize: 11 }}>▌</span>
+      <div className="page-header flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="shrink-0 flex items-center justify-center rounded-2xl"
+            style={{ width: 44, height: 44, background: `${ACCENT}15`, border: `1px solid ${ACCENT}25` }}>
+            <Video size={22} style={{ color: ACCENT }} strokeWidth={1.7} />
           </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: `0 0 30px ${ACCENT}50` }}>
-            CONTENT STUDIO
-          </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: ACCENT, opacity: 0.5 }}>
-            {'// idea pipeline — broadcast protocol active'}
-          </p>
+          <div>
+            <h1 className="text-2xl font-black text-head tracking-tight">Creator Studio</h1>
+            <p className="text-xs text-muted mt-0.5">Idea pipeline · content tracker</p>
+          </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}40, transparent)` }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
@@ -556,50 +512,23 @@ export default function Content() {
         <div className="space-y-3">
           {/* Dry-spell warning */}
           {stats && stats.daysSinceLastPost !== null && stats.daysSinceLastPost >= 7 && (
-            <div className="relative overflow-hidden rounded-xl px-4 py-3 flex items-start gap-3"
-              style={{ background: 'linear-gradient(135deg, rgb(127 29 29 / 0.5), rgb(153 27 27 / 0.3))',
-                border: '1px solid rgb(239 68 68 / 0.35)', boxShadow: '0 0 18px rgb(239 68 68 / 0.12)' }}>
-              {/* warning neon top bar */}
-              <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-                style={{ background: 'linear-gradient(90deg, transparent, #ef444480, transparent)' }} />
+            <div className="card px-4 py-3 flex items-start gap-3"
+              style={{ borderLeft: '3px solid #ef4444', background: 'rgb(239 68 68 / 0.06)' }}>
               <AlertTriangle size={15} style={{ color: '#f87171', flexShrink: 0, marginTop: 1 }} />
               <div>
-                <p className="text-sm font-black tracking-[0.1em]" style={{ color: '#fca5a5', textShadow: '0 0 10px #ef444450' }}>
-                  {stats.daysSinceLastPost}D SIGNAL BLACKOUT
+                <p className="text-sm font-bold" style={{ color: '#f87171' }}>
+                  {stats.daysSinceLastPost} days without posting
                 </p>
-                <p className="text-[11px] mt-0.5 font-mono" style={{ color: 'rgb(239 68 68 / 0.6)' }}>
-                  last_post=
-                  <span style={{ color: '#fca5a5' }}>
-                    {stats.lastPostDate ? fmtDate(stats.lastPostDate) : 'null'}
-                  </span>
+                <p className="text-xs mt-0.5 text-muted">
+                  Last post: {stats.lastPostDate ? fmtDate(stats.lastPostDate) : 'never'}
                 </p>
               </div>
             </div>
           )}
 
-          {/* Calendar card — full cyberpunk */}
-          <div className="relative overflow-hidden rounded-2xl"
-            style={{ background: 'var(--hero-bg)', border: `1px solid ${ACCENT}20`,
-              boxShadow: `0 0 30px ${ACCENT}08` }}>
-            {/* Scanlines */}
-            <div className="absolute inset-0 pointer-events-none"
-              style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 3px, ${ACCENT}02 3px, ${ACCENT}02 4px)` }} />
-            {/* Top neon bar */}
-            <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-              style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}50, transparent)`,
-                boxShadow: `0 0 6px ${ACCENT}` }} />
-            {/* HUD corners */}
-            {([
-              ['top-0 left-0',     { borderTop: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` }],
-              ['top-0 right-0',    { borderTop: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}` }],
-              ['bottom-0 left-0',  { borderBottom: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` }],
-              ['bottom-0 right-0', { borderBottom: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}` }],
-            ] as [string, React.CSSProperties][]).map(([pos, s], i) => (
-              <div key={i} className={`absolute ${pos} pointer-events-none`}
-                style={{ width: 10, height: 10, opacity: 0.45, ...s }} />
-            ))}
-
-            <div className="relative z-10 px-4 py-4">
+          {/* Calendar card */}
+          <div className="card overflow-hidden">
+            <div className="px-4 py-4">
               {/* Month navigation */}
               <div className="flex items-center justify-between mb-1">
                 <button onClick={prevMonth}
@@ -608,14 +537,13 @@ export default function Content() {
                   ‹
                 </button>
                 <div className="text-center">
-                  <p className="font-black text-sm tracking-[0.12em] font-mono"
-                    style={{ color: 'var(--t-head)', textShadow: `0 0 12px ${ACCENT}30` }}>
+                  <p className="font-black text-sm tracking-tight text-head">
                     {new Date(calYear, calMonthNum - 1)
                       .toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
                       .toUpperCase()}
                   </p>
-                  <p className="text-[9px] font-mono mt-0.5" style={{ color: ACCENT, opacity: 0.5 }}>
-                    {calMonthIdeas.length}_IDEAS · {calPosted}_POSTED
+                  <p className="text-[9px] mt-0.5 text-muted">
+                    {calMonthIdeas.length} ideas · {calPosted} posted
                   </p>
                 </div>
                 <button onClick={nextMonth}
@@ -657,26 +585,24 @@ export default function Content() {
                           : isToday
                           ? `${ACCENT}0e`
                           : hasContent
-                          ? 'rgba(255,255,255,0.03)'
+                          ? 'var(--s2)'
                           : 'transparent',
                         border: isSelected
                           ? `1px solid ${ACCENT}70`
                           : isToday
                           ? `1px solid ${ACCENT}45`
                           : hasContent
-                          ? '1px solid rgba(255,255,255,0.07)'
+                          ? '1px solid var(--b)'
                           : '1px solid transparent',
-                        boxShadow: isSelected ? `0 0 8px ${ACCENT}30` : undefined,
                       }}>
-                      <span className="text-xs font-mono font-bold" style={{
-                        color: isSelected ? ACCENT : isToday ? 'white' : 'var(--t-muted)',
-                        textShadow: isToday || isSelected ? `0 0 8px ${ACCENT}60` : undefined,
+                      <span className="text-xs font-bold" style={{
+                        color: isSelected ? ACCENT : isToday ? 'var(--t-head)' : 'var(--t-muted)',
+                        fontWeight: isToday || isSelected ? 800 : 500,
                       }}>{day}</span>
                       <div className="flex flex-wrap justify-center gap-0.5 mt-0.5" style={{ minHeight: 5 }}>
                         {dayIdeas.slice(0, 3).map((idea, j) => (
                           <div key={j} className="w-1 h-1 rounded-full"
-                            style={{ background: idea.niche_color || ACCENT,
-                              boxShadow: `0 0 3px ${idea.niche_color || ACCENT}` }} />
+                            style={{ background: idea.niche_color || ACCENT }} />
                         ))}
                         {dayIdeas.length > 3 && (
                           <div className="w-1 h-1 rounded-full" style={{ background: 'var(--t-faint)' }} />
@@ -687,27 +613,16 @@ export default function Content() {
                 })}
               </div>
             </div>
-            {/* Bottom neon bar */}
-            <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-              style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}25, transparent)` }} />
           </div>
 
           {/* Selected day drawer */}
           {calDay && (
-            <div className="relative overflow-hidden rounded-2xl slide-up"
-              style={{ background: 'var(--s1)', border: `1px solid ${ACCENT}20` }}>
-              {/* Top neon bar */}
-              <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-                style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}40, transparent)` }} />
+            <div className="card slide-up">
               <div className="px-4 py-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <p className="text-[9px] font-mono tracking-[0.2em] mb-0.5" style={{ color: ACCENT, opacity: 0.5 }}>
-                      DATE://
-                    </p>
-                    <p className="text-sm font-black font-mono tracking-wide"
-                      style={{ color: 'var(--t-head)', textShadow: `0 0 10px ${ACCENT}30` }}>
-                      {fmtDate(calDay).toUpperCase()}
+                    <p className="text-sm font-bold text-head">
+                      {fmtDate(calDay)}
                     </p>
                   </div>
                   <button onClick={() => setCalDay(null)}

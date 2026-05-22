@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Send, Plus, X, Check, Settings2 } from 'lucide-react';
+import { Send, Plus, X, Check, Settings2, Sparkles } from 'lucide-react';
 import api from '../lib/api';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -241,38 +241,19 @@ export default function LifeProgress() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 anim-page pb-10"
-      style={{ '--accent-rgb': '168 85 247' } as React.CSSProperties}>
+    <div className="max-w-5xl mx-auto space-y-6 anim-page pb-10">
 
-      {/* ── HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl"
-        style={{
-          background: 'linear-gradient(180deg, #1a0a2e 0%, var(--hero-bg) 65%)',
-          border: '1px solid #a855f730',
-          minHeight: 100,
-        }}>
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ backgroundImage: 'radial-gradient(circle, #a855f710 1px, transparent 1px)', backgroundSize: '22px 22px' }} />
-        <div className="absolute top-0 left-0 pointer-events-none"    style={{ width: 14, height: 14, borderTop: '1.5px solid #a855f7', borderLeft:  '1.5px solid #a855f7', opacity: 0.6 }} />
-        <div className="absolute top-0 right-0 pointer-events-none"   style={{ width: 14, height: 14, borderTop: '1.5px solid #a855f7', borderRight: '1.5px solid #a855f7', opacity: 0.6 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #a855f7', borderLeft:  '1.5px solid #a855f7', opacity: 0.6 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none"style={{ width: 14, height: 14, borderBottom: '1.5px solid #a855f7', borderRight: '1.5px solid #a855f7', opacity: 0.6 }} />
-        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #a855f780, transparent)', boxShadow: '0 0 12px #a855f7' }} />
-        <div className="relative z-10 px-5 py-5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#a855f7', opacity: 0.7 }}>AXIS://</span>
-            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">LIFE_MANAGER</span>
-            <span className="cursor-blink font-mono" style={{ color: '#a855f7', fontSize: 11 }}>▌</span>
+      <div className="page-header flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="shrink-0 flex items-center justify-center rounded-2xl"
+            style={{ width: 44, height: 44, background: '#a855f715', border: '1px solid #a855f725' }}>
+            <Sparkles size={22} style={{ color: '#a855f7' }} strokeWidth={1.7} />
           </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: '0 0 40px #a855f760' }}>LIFE PATH</h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#a855f7', opacity: 0.5 }}>
-            // WRITE YOUR GOALS — AXIS BUILDS YOUR PLAN
-          </p>
+          <div>
+            <h1 className="text-2xl font-black text-head tracking-tight">Life Path</h1>
+            <p className="text-xs text-muted mt-0.5">Goals · AXIS life manager</p>
+          </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #a855f740, transparent)' }} />
       </div>
 
       {/* ── SPLIT: chat (left) + sectors (right) ── */}
@@ -285,8 +266,7 @@ export default function LifeProgress() {
           {/* Chat header bar */}
           <div className="px-4 py-3 flex items-center gap-2"
             style={{ borderBottom: '1px solid var(--b)', background: 'var(--s2)' }}>
-            <span className="text-sm font-black tracking-widest" style={{ color: '#a855f7' }}>AXIS</span>
-            <span className="cursor-blink font-mono text-xs" style={{ color: '#a855f7' }}>▌</span>
+            <span className="text-sm font-black" style={{ color: '#a855f7' }}>AXIS</span>
             <span className="text-xs ml-auto" style={{ color: 'var(--t-faint)' }}>your life manager</span>
           </div>
 
@@ -629,7 +609,6 @@ export default function LifeProgress() {
                             height: '100%',
                             width: `${fill}%`,
                             background: sector.color,
-                            boxShadow: fill > 0 ? `0 0 4px ${sector.color}80` : 'none',
                             borderRadius: 99,
                             transition: 'width 1.2s cubic-bezier(0.34,1.2,0.64,1)',
                           }} />

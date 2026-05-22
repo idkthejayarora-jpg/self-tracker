@@ -118,35 +118,17 @@ export default function BodyStats() {
         }} />
       </div>
 
-      {/* ── MEDICAL SCANNER HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #38bdf825', minHeight: 110 }}>
-        <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: 'radial-gradient(circle, #38bdf806 1px, transparent 1px)',
-          backgroundSize: '18px 18px',
-        }} />
-        <EKGLine />
-        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #38bdf8', borderLeft: '1.5px solid #38bdf8', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #38bdf8', borderRight: '1.5px solid #38bdf8', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #38bdf8', borderLeft: '1.5px solid #38bdf8', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #38bdf8', borderRight: '1.5px solid #38bdf8', opacity: 0.7 }} />
-        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #38bdf870, transparent)', boxShadow: '0 0 8px #38bdf8' }} />
-        <div className="relative z-10 px-5 py-5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#38bdf8', opacity: 0.6 }}>MED://</span>
-            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">BIOMETRIC_SCAN</span>
-            <span className="cursor-blink font-mono" style={{ color: '#38bdf8', fontSize: 11 }}>▌</span>
+      <div className="page-header flex items-center justify-between gap-3 mb-5">
+        <div className="flex items-center gap-3">
+          <div className="shrink-0 flex items-center justify-center rounded-2xl"
+            style={{ width: 44, height: 44, background: '#06b6d415', border: '1px solid #06b6d425' }}>
+            <Activity size={22} style={{ color: '#06b6d4' }} strokeWidth={1.7} />
           </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: '0 0 30px #38bdf840' }}>
-            BIOMETRIC SCAN
-          </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#38bdf8', opacity: 0.5 }}>
-            // full body analysis — vitals monitoring active
-          </p>
+          <div>
+            <h1 className="text-2xl font-black text-head tracking-tight">Body</h1>
+            <p className="text-xs text-muted mt-0.5">Biometric tracking</p>
+          </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #38bdf830, transparent)' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>

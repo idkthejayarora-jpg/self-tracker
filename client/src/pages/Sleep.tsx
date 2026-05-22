@@ -160,47 +160,17 @@ export default function Sleep() {
         }} />
       </div>
 
-      {/* ── DEEP SPACE HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #a78bfa25', minHeight: 130 }}>
-        {/* Starfield */}
-        <div className="absolute inset-0 pointer-events-none">
-          <StarField />
-        </div>
-        {/* Dark bottom vignette */}
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%)' }} />
-        {/* Nebula glow spot */}
-        <div className="absolute pointer-events-none" style={{
-          right: -20, top: -20, width: 150, height: 150, borderRadius: '50%',
-          background: 'radial-gradient(circle, #a78bfa15 0%, transparent 70%)',
-          filter: 'blur(20px)',
-        }} />
-        {/* HUD corners */}
-        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #a78bfa', borderLeft: '1.5px solid #a78bfa', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #a78bfa', borderRight: '1.5px solid #a78bfa', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #a78bfa', borderLeft: '1.5px solid #a78bfa', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #a78bfa', borderRight: '1.5px solid #a78bfa', opacity: 0.7 }} />
-        {/* Top violet edge */}
-        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #a78bfa80, transparent)', boxShadow: '0 0 10px #a78bfa' }} />
-        {/* Content */}
-        <div className="relative z-10 px-5 py-5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#a78bfa', opacity: 0.6 }}>VOID://</span>
-            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">HYPERSLEEP_ARCHIVE</span>
-            <span className="cursor-blink font-mono" style={{ color: '#a78bfa', fontSize: 11 }}>▌</span>
+      <div className="page-header flex items-center justify-between gap-3 mb-5">
+        <div className="flex items-center gap-3">
+          <div className="shrink-0 flex items-center justify-center rounded-2xl"
+            style={{ width: 44, height: 44, background: '#818cf815', border: '1px solid #818cf825' }}>
+            <Moon size={22} style={{ color: '#818cf8' }} strokeWidth={1.7} />
           </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: '0 0 40px #a78bfa50' }}>
-            HYPERSLEEP ARCHIVE
-          </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#a78bfa', opacity: 0.5 }}>
-            // rest cycle analysis — neural recovery metrics
-          </p>
+          <div>
+            <h1 className="text-2xl font-black text-head tracking-tight">Sleep</h1>
+            <p className="text-xs text-muted mt-0.5">Rest cycle tracking</p>
+          </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #a78bfa30, transparent)' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>

@@ -104,62 +104,17 @@ export default function Habits() {
         }} />
       </div>
 
-      {/* ── BIORHYTHM HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #a78bfa25', minHeight: 110 }}>
-        {/* Pulse rings */}
-        <div className="absolute pointer-events-none" style={{ top: '50%', right: 40, transform: 'translateY(-50%)' }}>
-          <div className="absolute rounded-full" style={{
-            width: 80, height: 80, top: -40, left: -40,
-            border: '1px solid #a78bfa',
-            animation: 'pulse-ring-out 2.4s ease-out 0ms infinite',
-          }} />
-          <div className="absolute rounded-full" style={{
-            width: 80, height: 80, top: -40, left: -40,
-            border: '1px solid #a78bfa',
-            animation: 'pulse-ring-out 2.4s ease-out 600ms infinite',
-          }} />
-          <div className="absolute rounded-full" style={{
-            width: 80, height: 80, top: -40, left: -40,
-            border: '1px solid #a78bfa',
-            animation: 'pulse-ring-out 2.4s ease-out 1200ms infinite',
-          }} />
-          <div className="w-3 h-3 rounded-full absolute" style={{
-            top: -6, left: -6,
-            background: '#f0abfc',
-            boxShadow: '0 0 12px #f0abfc, 0 0 24px #a78bfa',
-          }} />
-        </div>
-        {/* HUD corners */}
-        <div className="absolute top-0 left-0 pointer-events-none"
-          style={{ width: 12, height: 12, borderTop: '1.5px solid #a78bfa', borderLeft: '1.5px solid #a78bfa', opacity: 0.6 }} />
-        <div className="absolute top-0 right-0 pointer-events-none"
-          style={{ width: 12, height: 12, borderTop: '1.5px solid #a78bfa', borderRight: '1.5px solid #a78bfa', opacity: 0.6 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none"
-          style={{ width: 12, height: 12, borderBottom: '1.5px solid #a78bfa', borderLeft: '1.5px solid #a78bfa', opacity: 0.6 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none"
-          style={{ width: 12, height: 12, borderBottom: '1.5px solid #a78bfa', borderRight: '1.5px solid #a78bfa', opacity: 0.6 }} />
-        {/* Top neon edge */}
-        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #a78bfa60, transparent)', boxShadow: '0 0 8px #a78bfa' }} />
-        {/* Content */}
-        <div className="relative z-10 px-5 py-5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#a78bfa', opacity: 0.6 }}>BIO://</span>
-            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">BEHAVIORAL_MATRIX</span>
-            <span className="cursor-blink font-mono" style={{ color: '#f0abfc', fontSize: 11 }}>▌</span>
+      <div className="page-header flex items-center justify-between gap-3 mb-5">
+        <div className="flex items-center gap-3">
+          <div className="shrink-0 flex items-center justify-center rounded-2xl"
+            style={{ width: 44, height: 44, background: '#f9731615', border: '1px solid #f9731625' }}>
+            <Target size={22} style={{ color: '#f97316' }} strokeWidth={1.7} />
           </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: '0 0 30px #a78bfa50' }}>
-            BEHAVIORAL MATRIX
-          </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#a78bfa', opacity: 0.5 }}>
-            {'// neural pathway reinforcement protocol — daily cycles active'}
-          </p>
+          <div>
+            <h1 className="text-2xl font-black text-head tracking-tight">Habits</h1>
+            <p className="text-xs text-muted mt-0.5">Daily reinforcement</p>
+          </div>
         </div>
-        {/* Bottom neon edge */}
-        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #a78bfa40, transparent)' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>

@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   LayoutDashboard, CheckSquare, BookOpen, Bell, BarChart2,
   Dumbbell, Sparkles, LogOut, Sun, Moon, Palette, X, Salad, KeyRound,
-  ShieldOff, Target, Activity, Wallet, Swords, Zap, Shield, ImagePlus, Video,
+  ShieldOff, Target, Activity, Wallet, Swords, Shield, ImagePlus, Video,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, ACCENT_PRESETS } from '../contexts/ThemeContext';
@@ -246,25 +246,21 @@ export default function Layout() {
         </div>
 
         {/* Character snapshot */}
-        <div className="mx-1 mb-2 px-3 py-2.5 rounded-xl glow-card"
-          style={{ background: 'var(--s2)', border: `1px solid ${rankColor}25`, '--gc': `${rankColor}50` } as React.CSSProperties}>
+        <div className="mx-1 mb-2 px-3 py-2.5 rounded-xl"
+          style={{ background: 'var(--s2)', border: `1px solid ${rankColor}22` }}>
           <div className="flex items-center gap-2 mb-2">
             {/* Avatar */}
             <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl shrink-0"
-              style={{ background: `${rankColor}18`, border: `1px solid ${rankColor}35` }}>
+              style={{ background: `${rankColor}15`, border: `1px solid ${rankColor}28` }}>
               {me?.profile.avatar_emoji || '⚔️'}
             </div>
             <div className="min-w-0">
-              {/* Rank badge with radar rings */}
+              {/* Rank badge */}
               <div className="flex items-center gap-1.5 mb-0.5">
-                <div className="relative inline-flex" style={{ color: rankColor }}>
-                  <span className="ring-ping ring-ping-2" />
-                  <span className="ring-ping ring-ping-3" />
-                  <span className="text-[9px] font-black px-2 py-0.5 rounded-full tracking-widest relative z-10"
-                    style={{ background: `${rankColor}22`, color: rankColor, border: `1px solid ${rankColor}40` }}>
-                    {me?.rank || 'E'} RANK
-                  </span>
-                </div>
+                <span className="text-[9px] font-black px-2 py-0.5 rounded-full tracking-widest"
+                  style={{ background: `${rankColor}18`, color: rankColor, border: `1px solid ${rankColor}32` }}>
+                  {me?.rank || 'E'} RANK
+                </span>
               </div>
               <p className="text-xs font-bold text-head truncate leading-tight">
                 {me?.profile.character_name || user?.username || 'Hunter'}
@@ -284,7 +280,7 @@ export default function Layout() {
             </div>
             <div className="xp-track">
               <div className="xp-fill bar-fill"
-                style={{ width: `${me?.meritScore ?? 0}%`, background: rankColor, boxShadow: `0 0 6px ${rankColor}80` }} />
+                style={{ width: `${me?.meritScore ?? 0}%`, background: rankColor }} />
             </div>
           </div>
         </div>
@@ -296,7 +292,7 @@ export default function Layout() {
         <nav className="flex-1 space-y-0.5 overflow-y-auto hide-scroll pb-2">
           {NAV.map(({ to, icon: Icon, label, color }) => (
             <NavLink key={to} to={to} end={to === '/'}
-              className={({ isActive }) => isActive ? 'nav-active-glow' : ''}
+              className=""
               style={({ isActive }) => ({
                 display: 'flex',
                 alignItems: 'center',
@@ -481,8 +477,7 @@ export default function Layout() {
             </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Zap size={11} style={{ color: 'var(--cyan)' }} />
-            <span className="text-[11px] font-black font-mono" style={{ color: 'var(--cyan)' }}>
+            <span className="text-[11px] font-black font-mono" style={{ color: rankColor }}>
               {me?.meritScore ?? 0}<span className="opacity-50">/100</span>
             </span>
           </div>
