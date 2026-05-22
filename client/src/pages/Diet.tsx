@@ -48,19 +48,75 @@ function defaultMealType(): MealType {
 
 const ACCENT_DIET = '#34d399';
 const MEAL_LABELS: Record<MealType, string> = { breakfast: 'B', lunch: 'L', dinner: 'D', snack: 'S' };
-const QTY_OPTIONS = [0.5, 1, 2, 3];
+
+/** Parse a free-form quantity string into a numeric multiplier relative to the item's serving size.
+ *  Examples (serving "1 piece (~30g)"):
+ *    "2"       → 2          (2 servings)
+ *    "half"    → 0.5
+ *    "500ml"   → 500/200    (if serving has 200ml)
+ *    "150g"    → 150/30     (if serving has ~30g)
+ *    "2 cups"  → 2          (cup = 1 serving unit)
+ *    "1 tbsp"  → 1/16       (tbsp fraction of serving)
+ */
+function parseQtyToMultiplier(input: string, serving: string): number {
+  if (!input.trim()) return 1;
+  const text = input.trim().toLowerCase().replace(/\s+/g, ' ');
+
+  // Word shortcuts
+  if (text === 'half' || text === '1/2') return 0.5;
+  if (text === 'quarter' || text === '1/4') return 0.25;
+  if (text === 'double') return 2;
+  if (text === 'triple') return 3;
+
+  const numMatch = text.match(/^(\d+(?:\.\d+)?)\s*(.*)/);
+  if (!numMatch) return 1;
+  const num = parseFloat(numMatch[1]);
+  if (isNaN(num) || num <= 0) return 1;
+  const unit = numMatch[2].trim();
+  if (!unit) return num; // bare number = N servings
+
+  const sLow = serving.toLowerCase();
+
+  // ml / litre → derive from serving ml info
+  if (/^(ml|millil[ei]tr?e?s?)$/.test(unit)) {
+    const m = sLow.match(/(\d+(?:\.\d+)?)\s*ml/);
+    return m ? num / parseFloat(m[1]) : num / 200;
+  }
+  if (/^(l|litr?e?s?)$/.test(unit)) {
+    const m = sLow.match(/(\d+(?:\.\d+)?)\s*ml/);
+    return m ? (num * 1000) / parseFloat(m[1]) : num * 5;
+  }
+
+  // g / kg → derive from serving g info
+  if (/^(g|gm|grams?)$/.test(unit)) {
+    const m = sLow.match(/~?(\d+(?:\.\d+)?)\s*g/);
+    return m ? num / parseFloat(m[1]) : num / 100;
+  }
+  if (/^(kg|kilograms?)$/.test(unit)) {
+    const m = sLow.match(/~?(\d+(?:\.\d+)?)\s*g/);
+    return m ? (num * 1000) / parseFloat(m[1]) : num * 10;
+  }
+
+  // Small volume fractions
+  if (/^(tbsp|tablespoons?)$/.test(unit)) return num / 16;
+  if (/^(tsp|teaspoons?)$/.test(unit))   return num / 48;
+
+  // Everything else (piece, cup, glass, bowl, katori, plate, scoop, bar,
+  // pack, slice, roti, paratha, serving, portion, etc.) = N servings
+  return num;
+}
 
 function FoodSearchBar({ onLogged }: { onLogged: () => void }) {
   const [query, setQuery]       = useState('');
   const [results, setResults]   = useState<FoodItem[]>([]);
   const [loading, setLoading]   = useState(false);
-  const [qty, setQty]           = useState<Record<number, number>>({});
+  const [qtyText, setQtyText]   = useState<Record<number, string>>({});
   const [meal, setMeal]         = useState<Record<number, MealType>>({});
   const [logging, setLogging]   = useState<Record<number, boolean>>({});
   const [done, setDone]         = useState<Record<number, boolean>>({});
   const debounceRef             = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const getQty  = (id: number) => qty[id]  ?? 1;
+  const getQty  = (item: FoodItem) => parseQtyToMultiplier(qtyText[item.id] ?? '', item.serving);
   const getMeal = (id: number) => meal[id] ?? defaultMealType();
 
   const search = useCallback(async (q: string) => {
@@ -80,7 +136,7 @@ function FoodSearchBar({ onLogged }: { onLogged: () => void }) {
   useEffect(() => { search(''); }, [search]);
 
   const logItem = async (item: FoodItem) => {
-    const q = getQty(item.id);
+    const q = getQty(item);
     const m = getMeal(item.id);
     setLogging(p => ({ ...p, [item.id]: true }));
     try {
@@ -150,7 +206,7 @@ function FoodSearchBar({ onLogged }: { onLogged: () => void }) {
         {/* Results */}
         <div className="space-y-2">
           {results.map(item => {
-            const q = getQty(item.id);
+            const q = getQty(item);
             const m = getMeal(item.id);
             const isDone = done[item.id];
             const isLogging = logging[item.id];
@@ -191,18 +247,25 @@ function FoodSearchBar({ onLogged }: { onLogged: () => void }) {
                       </button>
                     ))}
                   </div>
-                  {/* Qty */}
-                  <div className="flex gap-1">
-                    {QTY_OPTIONS.map(v => (
-                      <button key={v}
-                        onClick={() => setQty(p => ({ ...p, [item.id]: v }))}
-                        className="tap text-[9px] font-black px-1.5 py-0.5 rounded-md"
-                        style={q === v
-                          ? { background: `${ACCENT_DIET}30`, color: ACCENT_DIET, border: `1px solid ${ACCENT_DIET}50` }
-                          : { background: 'var(--s3)', color: 'var(--t-faint)', border: '1px solid transparent' }}>
-                        ×{v}
-                      </button>
-                    ))}
+                  {/* Qty text input */}
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <input
+                      type="text"
+                      value={qtyText[item.id] ?? ''}
+                      onChange={e => setQtyText(p => ({ ...p, [item.id]: e.target.value }))}
+                      placeholder={item.serving}
+                      className="text-[11px] font-mono rounded-lg px-2 py-1 focus:outline-none w-28"
+                      style={{
+                        background: 'var(--s3)', color: 'var(--t-body)',
+                        border: `1px solid ${ACCENT_DIET}25`,
+                      }}
+                    />
+                    {(qtyText[item.id] ?? '').trim() && (
+                      <span className="text-[9px] font-black font-mono flex-shrink-0"
+                        style={{ color: ACCENT_DIET, opacity: 0.7 }}>
+                        ×{q.toFixed(q % 1 === 0 ? 0 : 2)}
+                      </span>
+                    )}
                   </div>
                   {/* Log button */}
                   <button
