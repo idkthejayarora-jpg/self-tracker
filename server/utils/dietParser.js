@@ -37,22 +37,48 @@ const MEAL_SIGNALS = [
 ];
 
 function detectMealType(segment) {
+  // Pick the signal whose match starts EARLIEST in the string.
+  // This ensures "snacks after breakfast" → snack (not breakfast),
+  // because "snacks" appears before "breakfast".
+  let earliest = null, earliestIdx = Infinity;
   for (const { type, rx } of MEAL_SIGNALS) {
-    if (rx.test(segment)) return type;
+    const plain = new RegExp(rx.source, rx.flags.replace('g', ''));
+    const m = plain.exec(segment);
+    if (m && m.index < earliestIdx) {
+      earliestIdx = m.index;
+      earliest = type;
+    }
   }
-  return null;
+  return earliest;
 }
 
 // ── Quantity multiplier ───────────────────────────────────────────────────────
-const QTY_RE     = /\b(\d+(?:\.\d+)?)\s*(?:scoops?|servings?|portions?|pieces?|slices?|cups?|bowls?|plates?|cans?|bars?|glasses?)\b/i;
+// Matches explicit unit words: "2 cups", "1 bowl", "3 scoops", "500 ml", "150 g"
+const QTY_UNIT_RE = /\b(\d+(?:\.\d+)?)\s*(?:scoops?|servings?|portions?|pieces?|slices?|cups?|bowls?|katoris?|plates?|cans?|bars?|glasses?|ml|millil[ei]tr?e?s?|grams?|gm|kg)\b/i;
+// Matches "2 chapatis", "3 eggs", "4 rotis" — leading number straight before food name
+const INLINE_NUM_RE = /\b(\d+(?:\.\d+)?)\s+(?!\s*(?:min(?:utes?)?|hours?|days?|weeks?|months?|years?|km|m\b|kg\b|lbs?))/i;
 const HALF_RE    = /\bhalf\b/i;
 const DOUBLE_RE  = /\b(double|2x|two\s+portions?|two\s+servings?)\b/i;
+// Size words → approximate multipliers
+const SIZE_MAP = [
+  [/\b(large|big|huge|xl)\b/i,    1.5],
+  [/\bmedium\b/i,                  1.0],
+  [/\b(small|little|tiny|mini)\b/i, 0.7],
+];
 
 function detectMultiplier(seg) {
   if (DOUBLE_RE.test(seg)) return 2;
   if (HALF_RE.test(seg))   return 0.5;
-  const m = QTY_RE.exec(seg);
-  if (m) return parseFloat(m[1]);
+  // Explicit unit: "1 cup of dahi" → 1, "500 ml milk" → 500 (raw, diet.js uses this)
+  const mu = QTY_UNIT_RE.exec(seg);
+  if (mu) return parseFloat(mu[1]);
+  // Inline count: "2 chapatis", "3 eggs"
+  const mn = INLINE_NUM_RE.exec(seg);
+  if (mn) return parseFloat(mn[1]);
+  // Size descriptor
+  for (const [rx, val] of SIZE_MAP) {
+    if (rx.test(seg)) return val;
+  }
   return 1;
 }
 
@@ -64,7 +90,7 @@ const FILLER_RE = /\b(i|then|also|had|have|ate|eat|was|were|it|just|only|a|an|th
 const TIME_WORDS_RE = /\b(morning|evening|afternoon|night|midnight|early|late|today|yesterday)\b/gi;
 
 // Meal name words themselves (to strip after we've captured meal type)
-const MEAL_WORDS_RE = /\b(breakfast|brunch|lunch|dinner|supper|snack|meal)\b/gi;
+const MEAL_WORDS_RE = /\b(breakfast|brunch|lunch|dinner|supper|snacks?|meals?)\b/gi;
 
 // ── Segment splitter ──────────────────────────────────────────────────────────
 function splitSegments(text) {
@@ -101,6 +127,11 @@ function splitSegments(text) {
   return merged;
 }
 
+// Unit-of-measure words that aren't part of a food name
+const UNIT_WORDS_RE = /\b(cups?|bowls?|katoris?|glasses?|plates?|pieces?|scoops?|tbsp|tsp|tablespoons?|teaspoons?|servings?|portions?|ml|millil[ei]tr?e?s?|grams?|gm|kg|lbs?|litres?|liters?)\b/gi;
+// Descriptor / temporal words
+const DESCRIPTOR_RE = /\b(medium|large|small|big|little|tiny|huge|mini|full|sized?|size|after|before|around|about|approximately)\b/gi;
+
 // ── Clean segment → food name ─────────────────────────────────────────────────
 function extractFoodName(seg) {
   return seg
@@ -108,6 +139,9 @@ function extractFoodName(seg) {
     .replace(MEAL_WORDS_RE, ' ')
     .replace(/\b(in|for|at|with)\s+(the\s+)?(morning|evening|afternoon|night)?\b/gi, ' ')
     .replace(/\b(in|for|at)\s*$/gi, '')
+    .replace(DESCRIPTOR_RE, ' ')     // strip "medium sized", "after", "large" etc.
+    .replace(UNIT_WORDS_RE, ' ')     // strip "cup", "bowl", "ml", "g" etc.
+    .replace(/\bof\b/gi, ' ')        // strip "of" connectors ("1 cup of dahi" → "dahi")
     .replace(FILLER_RE, ' ')
     .replace(/[^a-zA-Z0-9\s\-']/g, ' ')
     .replace(/\s+/g, ' ')

@@ -133,7 +133,8 @@ function FoodSearchBar({ onLogged }: { onLogged: () => void }) {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [query, search]);
 
-  useEffect(() => { search(''); }, [search]);
+  // Only fetch when the user actually types something
+  // (no featured-food dropdown on empty state)
 
   const logItem = async (item: FoodItem) => {
     const q = getQty(item);
@@ -284,9 +285,14 @@ function FoodSearchBar({ onLogged }: { onLogged: () => void }) {
               </div>
             );
           })}
-          {results.length === 0 && !loading && (
+          {results.length === 0 && !loading && query.trim() && (
             <p className="text-[11px] font-mono text-center py-2" style={{ color: 'var(--t-faint)', opacity: 0.5 }}>
               // no matches — try a different spelling
+            </p>
+          )}
+          {results.length === 0 && !loading && !query.trim() && (
+            <p className="text-[11px] font-mono text-center py-3" style={{ color: 'var(--t-faint)', opacity: 0.35 }}>
+              // start typing to search 300+ Indian foods
             </p>
           )}
         </div>

@@ -146,7 +146,15 @@ router.post('/quick-log', (req, res) => {
   // DB fallback for unmatched items
   const stillUnmatched = [];
   for (const name of unmatched) {
-    const qTokens = tokenise(name);
+    // Strip leading number (that's the multiplier), unit words, size descriptors and
+    // "of" connectors so they don't dilute the food-name token score.
+    // "1 Cup Of Dahi" → "Dahi",  "2 Chapatis" → "Chapatis",  "Medium Sized Apple" → "Apple"
+    const cleanName = name
+      .replace(/^(\d+(?:\.\d+)?)\s*/, '')
+      .replace(/\b(cups?|bowls?|katoris?|glasses?|pieces?|scoops?|tbsp|tsp|servings?|portions?|ml|grams?|gm|kg|litres?|liters?|medium|large|small|big|tiny|sized?|after|before|of)\b/gi, ' ')
+      .replace(/\s+/g, ' ').trim();
+
+    const qTokens = tokenise(cleanName || name);
     if (!qTokens.length) { stillUnmatched.push(name); continue; }
     const best = INDIAN_FOODS
       .map(f => ({ f, s: scoreFood(f, qTokens) }))
