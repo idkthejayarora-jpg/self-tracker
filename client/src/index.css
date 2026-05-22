@@ -15,12 +15,12 @@
   --accent-rgb-dark:  22 163 74;
   --accent-rgb-light: 74 222 128;
 
-  /* ── Surfaces — Clean forest dark ── */
-  --s0: #0d1210;
-  --s1: #131d19;
-  --s2: #192620;
-  --s3: #1f2e28;
-  --s4: #263830;
+  /* ── Surfaces — Deep forest dark ── */
+  --s0: #0a1810;
+  --s1: #0f2318;
+  --s2: #152e22;
+  --s3: #1c3d2e;
+  --s4: #24503a;
 
   --b:  rgba(255,255,255,0.07);
   --bh: rgba(255,255,255,0.13);
@@ -50,33 +50,33 @@
   --radius-card: 18px;
 }
 
-/* ── Light mode — warm paper / planty ── */
+/* ── Light mode — mint green / botanical ── */
 html.light {
-  --s0: #f6f4ef;
-  --s1: #ffffff;
-  --s2: #f1ede6;
-  --s3: #e9e5dc;
-  --s4: #ddd8ce;
+  --s0: #d6eddf;   /* mint green page background */
+  --s1: #ffffff;   /* pure white cards */
+  --s2: #eef8f2;   /* light green secondary surfaces */
+  --s3: #e2f2e9;   /* input / chip backgrounds */
+  --s4: #c8dfd2;   /* heavier dividers / borders */
 
-  --b:  rgba(0,0,0,0.08);
-  --bh: rgba(0,0,0,0.15);
+  --b:  rgba(0,0,0,0.07);
+  --bh: rgba(0,0,0,0.13);
 
-  --hero-bg:  #f0ede6;
+  --hero-bg:  #c8dfd2;
 
-  --t-head:  #18201c;
-  --t-body:  #2e3d36;
-  --t-muted: #5a7060;
-  --t-dim:   #7a8f82;
-  --t-faint: #a8b8af;
+  --t-head:  #0d2318;   /* very dark forest heading */
+  --t-body:  #1a3828;   /* dark green body */
+  --t-muted: #3d6b52;   /* muted sage */
+  --t-dim:   #6a9e82;   /* dim sage */
+  --t-faint: #9dc4ae;   /* faint sage */
 
   --gold:     #c47f17;
   --gold-rgb: 196 127 23;
   --cyan:     #1a8075;
   --cyan-rgb: 26 128 117;
 
-  --shadow-sm: 0 1px 4px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.05);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.11), 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.05);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

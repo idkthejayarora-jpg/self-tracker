@@ -151,7 +151,7 @@ function SidebarClock() {
       <p className="text-[9px] font-black tracking-[0.14em]" style={{ color: 'var(--t-faint)' }}>{day} · {date}</p>
       <div className="mt-2 h-[2px] rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
         <div className="h-full rounded-full bar-fill"
-          style={{ width: `${minPct}%`, background: 'rgb(var(--accent-rgb) / 0.7)', boxShadow: '0 0 5px rgb(var(--accent-rgb) / 0.5)' }} />
+          style={{ width: `${minPct}%`, background: 'rgb(var(--accent-rgb) / 0.7)' }} />
       </div>
     </div>
   );

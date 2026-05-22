@@ -25,6 +25,7 @@ export const ACCENT_PRESETS: AccentPreset[] = [
   { id: 'gold',    label: 'Gold',     main: '#C9A84C', dark: '#A8872A', light: '#DCB24F' },
   { id: 'coral',   label: 'Coral',    main: '#FF6B6B', dark: '#e05555', light: '#ff8f8f' },
   // Greens
+  { id: 'forest',  label: 'Forest',   main: '#166534', dark: '#14532d', light: '#22c55e' },
   { id: 'lime',    label: 'Lime',     main: '#84cc16', dark: '#65a30d', light: '#a3e635' },
   { id: 'green',   label: 'Green',    main: '#22c55e', dark: '#16a34a', light: '#4ade80' },
   { id: 'teal',    label: 'Teal',     main: '#14b8a6', dark: '#0d9488', light: '#2dd4bf' },
@@ -67,11 +68,11 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue>(null!);
 
-const DEFAULT_ACCENT = ACCENT_PRESETS.find(p => p.id === 'sky')!;
+const DEFAULT_ACCENT = ACCENT_PRESETS.find(p => p.id === 'forest')!;
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>(() =>
-    (localStorage.getItem('st_theme') as ThemeMode) || 'dark'
+    (localStorage.getItem('st_theme') as ThemeMode) || 'light'
   );
   const [accent, setAccentState] = useState<AccentPreset>(() => {
     const saved = localStorage.getItem('st_accent');
