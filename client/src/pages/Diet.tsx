@@ -216,7 +216,7 @@ function FoodSearchBar({ onLogged }: { onLogged: () => void }) {
             <span className="text-[10px] font-black tracking-[0.22em] font-mono" style={{ color: ACCENT_DIET, opacity: 0.65 }}>
               FOOD_SEARCH://
             </span>
-            <span className="text-[10px] font-mono opacity-30 text-white">// 300+ Indian foods + custom</span>
+            <span className="text-[10px] font-mono opacity-30 text-white">// 430+ Indian foods + typo-tolerant</span>
           </div>
 
           {/* Search input */}
@@ -316,7 +316,7 @@ function FoodSearchBar({ onLogged }: { onLogged: () => void }) {
             )}
             {results.length === 0 && !loading && !query.trim() && (
               <p className="text-[11px] font-mono text-center py-3" style={{ color: 'var(--t-faint)', opacity: 0.35 }}>
-                // start typing to search 300+ foods
+                // start typing — 430+ foods, typo-tolerant
               </p>
             )}
           </div>
@@ -416,7 +416,8 @@ function AddEntryForm({
       <input required value={name}
         onChange={e => { setName(e.target.value); setSelectedSaved(null); }}
         placeholder="Food name"
-        className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none" />
+        className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none"
+        style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
 
       {/* Meal type — inline compact chips */}
       <div className="flex gap-1.5 flex-wrap">
@@ -444,7 +445,8 @@ function AddEntryForm({
           <div key={label}>
             <p className="text-[11px] font-medium mb-1" style={{ color: 'var(--t-dim)' }}>{label}</p>
             <input type="number" min={0} value={val} onChange={e => set(e.target.value)}
-              className="w-full rounded-lg px-2 py-1.5 text-sm border focus:outline-none" />
+              className="w-full rounded-lg px-2 py-1.5 text-sm focus:outline-none"
+              style={{ background: 'var(--s3)', color: 'var(--t-body)', border: '1px solid var(--b)' }} />
           </div>
         ))}
       </div>
@@ -481,7 +483,8 @@ function SaveMealModal({ onSave, onClose }: { onSave: (m: Omit<SavedMeal, 'id'>)
           <button type="button" onClick={onClose} className="tap" style={{ color: 'var(--t-dim)' }}><X size={16} /></button>
         </div>
         <input required value={name} onChange={e => setName(e.target.value)} placeholder="Meal name (e.g. Protein shake)"
-          className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none" />
+          className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none"
+          style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
         <div className="grid grid-cols-4 gap-2">
           {[
             { val: calories, set: setCalories, label: 'kcal' },
@@ -492,12 +495,14 @@ function SaveMealModal({ onSave, onClose }: { onSave: (m: Omit<SavedMeal, 'id'>)
             <div key={label}>
               <p className="text-[11px] font-medium mb-1" style={{ color: 'var(--t-dim)' }}>{label}</p>
               <input type="number" min={0} value={val} onChange={e => set(e.target.value)}
-                className="w-full rounded-lg px-2 py-1.5 text-sm border focus:outline-none" />
+                className="w-full rounded-lg px-2 py-1.5 text-sm focus:outline-none"
+              style={{ background: 'var(--s3)', color: 'var(--t-body)', border: '1px solid var(--b)' }} />
             </div>
           ))}
         </div>
         <input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes (optional)"
-          className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none" />
+          className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none"
+          style={{ background: 'var(--s3)', color: 'var(--t-head)', border: '1px solid var(--b)' }} />
         <div className="flex gap-2">
           <button type="button" onClick={onClose}
             className="flex-1 py-2 rounded-lg text-sm font-medium tap"
@@ -644,7 +649,7 @@ export default function Diet() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 anim-page pb-10"
-      style={{ '--accent-rgb': '52 211 153' } as React.CSSProperties}>
+      style={{ '--accent-rgb': '52 211 153', '--accent-rgb-light': '#34d399' } as React.CSSProperties}>
 
       {/* Background grid */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>

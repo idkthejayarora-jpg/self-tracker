@@ -209,9 +209,11 @@ function parseDietText(text, userId) {
           .replace(/\s+/g, ' ')
           .trim();
         const name = titleCase(cleanedSub.split(' ').filter(w => w.length > 0).slice(0, 5).join(' '));
+        // Only add to unmatched — diet.js DB fallback will try the Indian food DB
+        // and insert with the correct mealType. Do NOT add to entries here to avoid
+        // duplicate 0-calorie rows.
         if (name && name.length >= 2) {
-          entries.push({ meal_type: mealType, name, saved_meal_id: null, calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 });
-          unmatched.push(name);
+          unmatched.push({ name, mealType });
         }
       }
     }

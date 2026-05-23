@@ -12,20 +12,55 @@ function tokenise(str) {
   return str.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
 }
 
+// Levenshtein edit distance — O(m*n) but m,n are short food tokens so fine
+function editDist(a, b) {
+  if (a === b) return 0;
+  const m = a.length, n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  const dp = Array.from({ length: m + 1 }, (_, i) => i);
+  for (let j = 1; j <= n; j++) {
+    let prev = dp[0];
+    dp[0] = j;
+    for (let i = 1; i <= m; i++) {
+      const tmp = dp[i];
+      dp[i] = a[i - 1] === b[j - 1] ? prev : 1 + Math.min(prev, dp[i], dp[i - 1]);
+      prev = tmp;
+    }
+  }
+  return dp[m];
+}
+
+function tokenSim(qt, ht) {
+  if (ht === qt) return 1.0;
+  if (ht.startsWith(qt) && qt.length >= 3) return 0.65;
+  if (qt.startsWith(ht) && ht.length >= 3) return 0.55;
+  // Fuzzy: 1-edit typo on tokens ≥ 4 chars ("partha"→"paratha", "dahi"→"dahi")
+  if (qt.length >= 4 && ht.length >= 4) {
+    const d = editDist(qt, ht);
+    if (d === 1) return 0.80;
+    if (d === 2 && qt.length >= 6) return 0.50;
+  }
+  return 0;
+}
+
 function scoreFood(food, queryTokens) {
+  if (!queryTokens.length) return 0;
   const haystack = tokenise(`${food.name} ${food.keywords.join(' ')}`);
   let score = 0;
   for (const qt of queryTokens) {
+    let best = 0;
     for (const ht of haystack) {
-      if (ht === qt) { score += 1.0; break; }
-      if (ht.startsWith(qt) && qt.length >= 3) { score += 0.6; break; }
-      if (qt.startsWith(ht) && ht.length >= 3) { score += 0.5; break; }
+      const s = tokenSim(qt, ht);
+      if (s > best) best = s;
+      if (best === 1.0) break; // can't do better
     }
+    score += best;
   }
-  return queryTokens.length > 0 ? score / queryTokens.length : 0;
+  return score / queryTokens.length;
 }
 
-const FEATURED_IDS = [1, 26, 46, 96, 162, 160, 7, 231]; // roti,rice,dal,dahi,chicken breast,egg,aloo paratha,chai
+const FEATURED_IDS = [1, 26, 434, 361, 353, 351, 7, 397]; // roti,rice,dal tadka,dahi,chicken breast,boiled egg,aloo paratha,masala chai
 
 router.use(authMiddleware);
 
@@ -144,31 +179,35 @@ router.post('/quick-log', (req, res) => {
   }
 
   // DB fallback for unmatched items
+  // Each unmatched item is now { name: string, mealType: string } from the parser
   const stillUnmatched = [];
-  for (const name of unmatched) {
-    // Strip leading number (that's the multiplier), unit words, size descriptors and
-    // "of" connectors so they don't dilute the food-name token score.
+  for (const unmatchedItem of unmatched) {
+    // Support both old string form (legacy) and new object form
+    const rawName    = typeof unmatchedItem === 'string' ? unmatchedItem : unmatchedItem.name;
+    const itemMeal   = typeof unmatchedItem === 'string' ? 'snack'       : unmatchedItem.mealType;
+
+    // Strip leading numbers/units so they don't dilute the food-name token score
     // "1 Cup Of Dahi" → "Dahi",  "2 Chapatis" → "Chapatis",  "Medium Sized Apple" → "Apple"
-    const cleanName = name
+    const cleanName = rawName
       .replace(/^(\d+(?:\.\d+)?)\s*/, '')
       .replace(/\b(cups?|bowls?|katoris?|glasses?|pieces?|scoops?|tbsp|tsp|servings?|portions?|ml|grams?|gm|kg|litres?|liters?|medium|large|small|big|tiny|sized?|after|before|of)\b/gi, ' ')
       .replace(/\s+/g, ' ').trim();
 
-    const qTokens = tokenise(cleanName || name);
-    if (!qTokens.length) { stillUnmatched.push(name); continue; }
+    const qTokens = tokenise(cleanName || rawName);
+    if (!qTokens.length) { stillUnmatched.push(rawName); continue; }
+
     const best = INDIAN_FOODS
       .map(f => ({ f, s: scoreFood(f, qTokens) }))
       .sort((a, b) => b.s - a.s)[0];
 
-    if (best && best.s >= 0.4) {
+    if (best && best.s >= 0.35) {
       const dbFood = best.f;
-      // detect multiplier from the original segment if present (default 1)
-      const mulMatch = name.match(/^(\d+(?:\.\d+)?)\s/);
+      const mulMatch = rawName.match(/^(\d+(?:\.\d+)?)\s/);
       const mul = mulMatch ? parseFloat(mulMatch[1]) : 1;
       const entry = {
-        name: dbFood.name,
-        meal_type: 'snack',
-        calories: Math.round(dbFood.calories * mul),
+        name:      dbFood.name,
+        meal_type: itemMeal,           // ← use detected meal type, not hardcoded 'snack'
+        calories:  Math.round(dbFood.calories  * mul),
         protein_g: Math.round(dbFood.protein_g * mul * 10) / 10,
         carbs_g:   Math.round(dbFood.carbs_g   * mul * 10) / 10,
         fat_g:     Math.round(dbFood.fat_g     * mul * 10) / 10,
@@ -183,7 +222,7 @@ router.post('/quick-log', (req, res) => {
       insertedIds.push(result.lastInsertRowid);
       logged.push({ ...entry, id: result.lastInsertRowid });
     } else {
-      stillUnmatched.push(name);
+      stillUnmatched.push(rawName);
     }
   }
 
