@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, X, Shield, Flame, Check } from 'lucide-react';
+import { Plus, Trash2, X, Shield, Flame, Check, Camera, Music2, Globe, Briefcase, Ghost, MessageCircle, Smartphone } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import api from '../lib/api';
 
 interface DetoxApp {
@@ -12,15 +13,15 @@ interface DetoxApp {
 }
 interface StreakData { app_id: number; name: string; icon: string; color: string; streak: number; longest: number; }
 
-const APP_PRESETS = [
-  { name: 'Instagram', icon: '📸', color: '#e1306c' },
-  { name: 'TikTok',    icon: '🎵', color: '#000000' },
-  { name: 'X / Twitter', icon: '🐦', color: '#1da1f2' },
-  { name: 'YouTube',   icon: '▶️', color: '#ff0000' },
-  { name: 'Reddit',    icon: '🤖', color: '#ff4500' },
-  { name: 'LinkedIn',  icon: '💼', color: '#0077b5' },
-  { name: 'Snapchat',  icon: '👻', color: '#fffc00' },
-  { name: 'WhatsApp',  icon: '💬', color: '#25d366' },
+const APP_PRESETS: { name: string; Icon: LucideIcon; color: string }[] = [
+  { name: 'Instagram',   Icon: Camera,         color: '#e1306c' },
+  { name: 'TikTok',      Icon: Music2,         color: '#010101' },
+  { name: 'X / Twitter', Icon: Globe,          color: '#1da1f2' },
+  { name: 'YouTube',     Icon: Globe,          color: '#ff0000' },
+  { name: 'Reddit',      Icon: Globe,          color: '#ff4500' },
+  { name: 'LinkedIn',    Icon: Briefcase,      color: '#0077b5' },
+  { name: 'Snapchat',    Icon: Ghost,          color: '#f7c948' },
+  { name: 'WhatsApp',    Icon: MessageCircle,  color: '#25d366' },
 ];
 const COLORS = ['#6366f1','#a855f7','#ec4899','#f43f5e','#f97316','#eab308','#22c55e','#14b8a6','#0ea5e9','#e1306c'];
 
@@ -29,7 +30,7 @@ export default function SocialDetox() {
   const [streaks, setStreaks]  = useState<StreakData[]>([]);
   const [showAdd, setShowAdd]  = useState(false);
   const [newName, setNewName]  = useState('');
-  const [newIcon, setNewIcon]  = useState('📱');
+  const [newIcon, setNewIcon]  = useState('');
   const [newColor, setNewColor]= useState('#6366f1');
   const [newLimit, setNewLimit]= useState('0');
 
@@ -52,7 +53,7 @@ export default function SocialDetox() {
   async function addApp() {
     if (!newName.trim()) return;
     await api.post('/detox/apps', { name: newName, icon: newIcon, color: newColor, daily_limit_minutes: Number(newLimit) });
-    setShowAdd(false); setNewName(''); setNewIcon('📱'); setNewColor('#6366f1'); setNewLimit('0');
+    setShowAdd(false); setNewName(''); setNewIcon(''); setNewColor('#6366f1'); setNewLimit('0');
     load();
   }
 
@@ -62,7 +63,7 @@ export default function SocialDetox() {
   }
 
   function fillPreset(p: typeof APP_PRESETS[0]) {
-    setNewName(p.name); setNewIcon(p.icon); setNewColor(p.color);
+    setNewName(p.name); setNewIcon(''); setNewColor(p.color);
   }
 
   const cleanCount = apps.filter(a => a.log?.status === 'clean').length;
@@ -70,17 +71,7 @@ export default function SocialDetox() {
   const streakMap = Object.fromEntries(streaks.map(s => [s.app_id, s]));
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 anim-page"
-      style={{ '--accent-rgb': '244 63 94' } as React.CSSProperties}>
-
-      {/* Cyberpunk body overlay */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(244,63,94,0.06) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }} />
-      </div>
+    <div className="max-w-2xl mx-auto space-y-5 anim-page pb-10 px-1 sm:px-0">
 
       <div className="page-header flex items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-3">
@@ -95,7 +86,7 @@ export default function SocialDetox() {
         </div>
       </div>
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      <div>
 
       <div className="flex justify-end">
         <button onClick={() => setShowAdd(s => !s)}
@@ -141,8 +132,8 @@ export default function SocialDetox() {
               {APP_PRESETS.map(p => (
                 <button key={p.name} onClick={() => fillPreset(p)}
                   className="tap flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
-                  style={{ background: newName === p.name ? p.color + '22' : 'var(--s2)', color: newName === p.name ? p.color : '#a1a1aa', border: `1px solid ${newName === p.name ? p.color + '44' : 'var(--b)'}` }}>
-                  {p.icon} {p.name}
+                  style={{ background: newName === p.name ? p.color + '22' : 'var(--s2)', color: newName === p.name ? p.color : 'var(--t-muted)', border: `1px solid ${newName === p.name ? p.color + '44' : 'var(--b)'}` }}>
+                  <p.Icon size={11} /> {p.name}
                 </button>
               ))}
             </div>
@@ -178,7 +169,9 @@ export default function SocialDetox() {
       {/* App cards */}
       {apps.length === 0 && !showAdd && (
         <div className="card px-4 py-12 text-center space-y-3">
-          <p className="text-3xl">📵</p>
+          <div className="flex justify-center mb-1">
+            <Smartphone size={32} style={{ color: 'var(--t-faint)' }} />
+          </div>
           <p className="text-sm font-semibold text-head">No apps tracked yet</p>
           <p className="text-xs" style={{ color: 'var(--t-dim)' }}>Add apps you want to limit or avoid</p>
         </div>
@@ -194,7 +187,10 @@ export default function SocialDetox() {
           return (
             <div key={app.id} className="card px-4 py-3 tap" style={{ borderLeft: `3px solid ${app.color}` }}>
               <div className="flex items-center gap-3">
-                <span className="text-2xl leading-none">{app.icon}</span>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: app.color + '18', border: '1px solid ' + app.color + '30' }}>
+                  <Smartphone size={14} style={{ color: app.color }} />
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-head">{app.name}</span>
@@ -226,10 +222,10 @@ export default function SocialDetox() {
                     className="tap flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
                     style={{
                       background: isSlipped ? '#ef444422' : 'var(--s2)',
-                      color: isSlipped ? '#ef4444' : '#71717a',
+                      color: isSlipped ? '#ef4444' : 'var(--t-muted)',
                       border: `1px solid ${isSlipped ? '#ef444444' : 'var(--b)'}`,
                     }}>
-                    ✗
+                    <X size={11} /> Slip
                   </button>
                   <button onClick={() => deleteApp(app.id)}
                     className="tap p-1.5 rounded-lg transition-colors"
@@ -245,7 +241,7 @@ export default function SocialDetox() {
               {isSlipped && (
                 <div className="mt-2 text-[11px] px-2 py-1 rounded-md"
                   style={{ background: '#ef444410', color: '#f87171' }}>
-                  Slipped today — tomorrow is a fresh start 🙏
+                  Slipped today — tomorrow is a fresh start
                 </div>
               )}
             </div>
@@ -260,7 +256,7 @@ export default function SocialDetox() {
           <div className="space-y-2.5">
             {streaks.filter(s => s.streak > 0).sort((a,b) => b.streak - a.streak).map(s => (
               <div key={s.app_id} className="flex items-center gap-3">
-                <span className="text-base leading-none">{s.icon}</span>
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: s.color }} />
                 <span className="text-sm text-body flex-1">{s.name}</span>
                 <div className="flex-1 h-1 rounded-full mx-2" style={{ background: 'var(--s3)', maxWidth: 80 }}>
                   <div className="h-1 rounded-full bar-fill"

@@ -5,7 +5,7 @@ import {
   Send, X, Mic, MicOff, Volume2, ChevronDown, Plus, Target,
   Wallet, AlertTriangle, ArrowUp, Minus, ChevronDown as ChevDown,
   TrendingUp, Coffee, Activity, BarChart2, CheckCircle2, Circle,
-  MessageSquare, Award, ChevronRight,
+  MessageSquare, Award, ChevronRight, Sparkles,
 } from 'lucide-react';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
@@ -140,7 +140,7 @@ function SnapshotSection({ snap }: { snap: DashboardSnapshot }) {
       primary: snap.financeIncome != null || snap.financeExpenses != null
         ? `${(snap.financeIncome ?? 0) - (snap.financeExpenses ?? 0) >= 0 ? '+' : ''}${Math.round(((snap.financeIncome ?? 0) - (snap.financeExpenses ?? 0)) * 10) / 10}`
         : '—',
-      sub: snap.financeIncome != null ? `↑${snap.financeIncome} ↓${snap.financeExpenses ?? 0}` : 'No entries',
+      sub: snap.financeIncome != null ? `+${snap.financeIncome} −${snap.financeExpenses ?? 0}` : 'No entries',
     },
   ];
 
@@ -227,15 +227,15 @@ function RankPanel({ pts }: { pts: PointsSummary }) {
       <div className="flex justify-between mb-3">
         <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>{pts.progressPct}% to next level</span>
         <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>
-          {pts.nextLevel != null ? `${pts.nextLevel.toLocaleString()} XP needed` : '⚡ Max level'}
+          {pts.nextLevel != null ? `${pts.nextLevel.toLocaleString()} XP needed` : <><Zap size={10} className="inline mr-0.5" />Max level</>}
         </span>
       </div>
       {/* Life score bar */}
       {lifeScore !== null && (
         <div className="pt-3" style={{ borderTop: '1px solid var(--b)' }}>
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--t-faint)' }}>
-              ✦ Life Score
+            <span className="flex items-center gap-1 text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--t-faint)' }}>
+              <Sparkles size={9} /> Life Score
             </span>
             <span className="text-sm font-black tabular-nums font-mono" style={{ color: lifeColor }}>
               {lifeScore}<span className="text-[10px] opacity-50">/100</span>

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Plus, Check, Trash2, ChevronDown, ChevronUp, Zap, Pencil, Save, AlertCircle, CheckSquare } from 'lucide-react';
+import { Plus, Check, Trash2, ChevronDown, ChevronUp, Zap, Pencil, Save, AlertCircle, CheckSquare, AlertTriangle } from 'lucide-react';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
 import type { Task, TaskPriority, TaskStatus } from '../types';
@@ -361,7 +361,7 @@ export default function Tasks() {
         {/* ── Active missions ── */}
         {showSplit && activeTasks.length === 0 && tasks.length > 0 && (
           <div className="rounded-xl py-8 text-center" style={{ border: '1px dashed var(--b)' }}>
-            <p className="text-sm font-semibold" style={{ color: 'var(--t-muted)' }}>All missions complete 🎯</p>
+            <p className="text-sm font-semibold" style={{ color: 'var(--t-muted)' }}>All tasks complete</p>
           </div>
         )}
 
@@ -400,7 +400,7 @@ export default function Tasks() {
                     </span>
                     {task.due_date && (
                       <span className="text-[11px]" style={{ color: isOverdue ? '#f43f5e' : '#71717a' }}>
-                        {isOverdue ? '⚠ ' : ''}Due {task.due_date}{task.due_time ? ` ${task.due_time}` : ''}
+                        {isOverdue && <AlertTriangle size={10} className="inline mr-0.5" />}Due {task.due_date}{task.due_time ? ` ${task.due_time}` : ''}
                       </span>
                     )}
                     {task.is_recurring === 1 && (
@@ -521,7 +521,7 @@ export default function Tasks() {
               <div className="flex-1 h-px" style={{ background: 'var(--b)' }} />
               <span className="text-[10px] font-black tracking-widest shrink-0"
                 style={{ color: 'var(--t-faint)' }}>
-                ✓ COMPLETED ({doneTasks.length})
+                <Check size={11} className="inline mr-0.5" /> COMPLETED ({doneTasks.length})
               </span>
               <div className="flex-1 h-px" style={{ background: 'var(--b)' }} />
               <span style={{ color: 'var(--t-faint)', fontSize: 12 }}>{showDone ? '▲' : '▼'}</span>

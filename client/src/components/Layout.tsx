@@ -10,27 +10,23 @@ import { useTheme, ACCENT_PRESETS } from '../contexts/ThemeContext';
 import api from '../lib/api';
 
 const NAV = [
-  { to: '/me',        icon: Swords,          label: 'Character',  color: '#e2c97e' },
-  { to: '/',          icon: LayoutDashboard, label: 'Command',    color: '#6366f1' },
-  { to: '/tasks',     icon: CheckSquare,     label: 'Missions',   color: '#818cf8' },
-  { to: '/habits',    icon: Target,          label: 'Habits',     color: '#f97316' },
-  { to: '/workout',   icon: Dumbbell,        label: 'Training',   color: '#ef4444' },
-  { to: '/sleep',     icon: Moon,            label: 'Sleep',      color: '#818cf8' },
-  { to: '/journal',   icon: BookOpen,        label: 'Journal',    color: '#a855f7' },
-  { to: '/finance',   icon: Wallet,          label: 'Finance',    color: '#f59e0b' },
-  { to: '/diet',      icon: Salad,           label: 'Nutrition',  color: '#22c55e' },
-  { to: '/body',      icon: Activity,        label: 'Body',       color: '#06b6d4' },
-  { to: '/life',      icon: Sparkles,        label: 'Life Path',  color: '#ec4899' },
-  { to: '/analytics', icon: BarChart2,       label: 'Intel',      color: '#06b6d4' },
-  { to: '/reminders', icon: Bell,            label: 'Alerts',     color: '#f97316' },
-  { to: '/detox',     icon: ShieldOff,       label: 'Detox',      color: '#84cc16' },
-  { to: '/content',   icon: Video,           label: 'Creator',    color: '#ec4899' },
+  { to: '/me',        icon: Swords,          label: 'Character'  },
+  { to: '/',          icon: LayoutDashboard, label: 'Dashboard'  },
+  { to: '/tasks',     icon: CheckSquare,     label: 'Tasks'      },
+  { to: '/habits',    icon: Target,          label: 'Habits'     },
+  { to: '/workout',   icon: Dumbbell,        label: 'Workout'    },
+  { to: '/sleep',     icon: Moon,            label: 'Sleep'      },
+  { to: '/journal',   icon: BookOpen,        label: 'Journal'    },
+  { to: '/finance',   icon: Wallet,          label: 'Finance'    },
+  { to: '/diet',      icon: Salad,           label: 'Nutrition'  },
+  { to: '/body',      icon: Activity,        label: 'Body'       },
+  { to: '/life',      icon: Sparkles,        label: 'Life Path'  },
+  { to: '/analytics', icon: BarChart2,       label: 'Analytics'  },
+  { to: '/reminders', icon: Bell,            label: 'Reminders'  },
+  { to: '/detox',     icon: ShieldOff,       label: 'Detox'      },
+  { to: '/content',   icon: Video,           label: 'Creator'    },
 ];
 
-const RANK_COLORS: Record<string, string> = {
-  E: '#6b7280', D: '#3b82f6', C: '#22c55e', B: '#a855f7',
-  A: '#f97316', S: '#ef4444', 'S+': '#e2c97e',
-};
 
 interface MeSnap {
   rank: string;
@@ -121,38 +117,26 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
 /* ── Sidebar Clock ── */
 function SidebarClock() {
   const [now, setNow] = useState(new Date());
-  const [prevSec, setPrevSec] = useState(-1);
   useEffect(() => {
-    const id = setInterval(() => {
-      setNow(n => { const d = new Date(); setPrevSec(n.getSeconds()); return d; });
-    }, 1000);
+    const id = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(id);
   }, []);
   const raw  = now.getHours();
   const hh   = ((raw % 12) || 12).toString().padStart(2, '0');
   const mm   = now.getMinutes().toString().padStart(2, '0');
-  const ss   = now.getSeconds().toString().padStart(2, '0');
   const ampm = raw < 12 ? 'AM' : 'PM';
-  const day  = now.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-  const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
-  const secTick = now.getSeconds() !== prevSec;
-  const minPct  = Math.round((now.getSeconds() / 60) * 100);
+  const day  = now.toLocaleDateString('en-US', { weekday: 'short' });
+  const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   return (
     <div className="px-3 py-3 mb-2" style={{ borderBottom: '1px solid var(--b)' }}>
       <div className="flex items-baseline gap-0.5 mb-0.5">
-        <span className="tabular-nums font-black" style={{ fontSize: 26, color: 'rgb(var(--accent-rgb-light))', letterSpacing: '-0.03em' }}>{hh}</span>
-        <span className="clock-colon font-black" style={{ fontSize: 26, color: 'rgb(var(--accent-rgb) / 0.4)', letterSpacing: '-0.03em' }}>:</span>
-        <span className="tabular-nums font-black" style={{ fontSize: 26, color: 'rgb(var(--accent-rgb-light))', letterSpacing: '-0.03em' }}>{mm}</span>
-        <span key={ss} className={`tabular-nums font-semibold ml-1 ${secTick ? 'clock-seconds-tick' : ''}`}
-          style={{ fontSize: 11, color: 'var(--t-faint)', marginBottom: 2 }}>:{ss}</span>
-        <span className="font-black ml-1" style={{ fontSize: 11, color: 'rgb(var(--accent-rgb) / 0.6)', marginBottom: 2 }}>{ampm}</span>
+        <span className="tabular-nums font-black" style={{ fontSize: 24, color: 'var(--t-head)', letterSpacing: '-0.03em' }}>{hh}</span>
+        <span className="clock-colon font-black" style={{ fontSize: 24, color: 'var(--t-dim)', letterSpacing: '-0.03em' }}>:</span>
+        <span className="tabular-nums font-black" style={{ fontSize: 24, color: 'var(--t-head)', letterSpacing: '-0.03em' }}>{mm}</span>
+        <span className="font-semibold ml-1.5" style={{ fontSize: 11, color: 'var(--t-muted)', marginBottom: 2 }}>{ampm}</span>
       </div>
-      <p className="text-[9px] font-black tracking-[0.14em]" style={{ color: 'var(--t-faint)' }}>{day} · {date}</p>
-      <div className="mt-2 h-[2px] rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
-        <div className="h-full rounded-full bar-fill"
-          style={{ width: `${minPct}%`, background: 'rgb(var(--accent-rgb) / 0.7)' }} />
-      </div>
+      <p className="text-[11px]" style={{ color: 'var(--t-muted)' }}>{day}, {date}</p>
     </div>
   );
 }
@@ -207,7 +191,6 @@ export default function Layout() {
       .catch(() => {});
   }, []);
 
-  const rankColor = me ? (RANK_COLORS[me.rank] ?? '#6366f1') : 'rgb(var(--accent-rgb))';
 
   return (
     <div className="flex min-h-screen overflow-x-hidden" style={{ background: 'var(--s0)' }}>
@@ -247,18 +230,20 @@ export default function Layout() {
 
         {/* Character snapshot */}
         <div className="mx-1 mb-2 px-3 py-2.5 rounded-xl"
-          style={{ background: 'var(--s2)', border: `1px solid ${rankColor}22` }}>
+          style={{ background: 'var(--s2)', border: '1px solid var(--b)' }}>
           <div className="flex items-center gap-2 mb-2">
             {/* Avatar */}
             <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl shrink-0"
-              style={{ background: `${rankColor}15`, border: `1px solid ${rankColor}28` }}>
-              {me?.profile.avatar_emoji || '⚔️'}
+              style={{ background: 'var(--s3)', border: '1px solid var(--b)' }}>
+              {me?.profile.avatar_emoji
+                ? <span>{me.profile.avatar_emoji}</span>
+                : <Swords size={18} style={{ color: 'var(--t-muted)' }} />}
             </div>
             <div className="min-w-0">
               {/* Rank badge */}
               <div className="flex items-center gap-1.5 mb-0.5">
                 <span className="text-[9px] font-black px-2 py-0.5 rounded-full tracking-widest"
-                  style={{ background: `${rankColor}18`, color: rankColor, border: `1px solid ${rankColor}32` }}>
+                  style={{ background: 'rgb(var(--accent-rgb) / 0.12)', color: 'rgb(var(--accent-rgb))', border: '1px solid rgb(var(--accent-rgb) / 0.25)' }}>
                   {me?.rank || 'E'} RANK
                 </span>
               </div>
@@ -266,7 +251,7 @@ export default function Layout() {
                 {me?.profile.character_name || user?.username || 'Hunter'}
               </p>
               {me?.rankLabel && (
-                <p className="text-[9px]" style={{ color: rankColor }}>{me.rankLabel}</p>
+                <p className="text-[9px]" style={{ color: 'var(--t-muted)' }}>{me.rankLabel}</p>
               )}
             </div>
           </div>
@@ -274,13 +259,13 @@ export default function Layout() {
           <div>
             <div className="flex justify-between items-center mb-1">
               <span className="text-[9px] font-bold tracking-widest uppercase" style={{ color: 'var(--t-faint)' }}>MERIT SCORE</span>
-              <span className="text-[10px] font-black font-mono" style={{ color: rankColor }}>
+              <span className="text-[10px] font-black font-mono" style={{ color: 'rgb(var(--accent-rgb))' }}>
                 {me?.meritScore ?? 0}<span className="opacity-50">/100</span>
               </span>
             </div>
             <div className="xp-track">
               <div className="xp-fill bar-fill"
-                style={{ width: `${me?.meritScore ?? 0}%`, background: rankColor }} />
+                style={{ width: `${me?.meritScore ?? 0}%`, background: 'rgb(var(--accent-rgb))' }} />
             </div>
           </div>
         </div>
@@ -290,20 +275,20 @@ export default function Layout() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-0.5 overflow-y-auto hide-scroll pb-2">
-          {NAV.map(({ to, icon: Icon, label, color }) => (
+          {NAV.map(({ to, icon: Icon, label }) => (
             <NavLink key={to} to={to} end={to === '/'}
               className=""
               style={({ isActive }) => ({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 9,
-                padding: isActive ? '7px 10px 7px 8px' : '7px 10px',
+                padding: '7px 10px 7px 8px',
                 borderRadius: 10,
                 fontSize: 13,
                 fontWeight: isActive ? 600 : 500,
-                color: isActive ? color : 'var(--t-faint)',
-                background: isActive ? `${color}14` : 'transparent',
-                borderLeft: isActive ? `2px solid ${color}` : '2px solid transparent',
+                color: isActive ? 'rgb(var(--accent-rgb))' : 'var(--t-faint)',
+                background: isActive ? 'rgb(var(--accent-rgb) / 0.1)' : 'transparent',
+                borderLeft: isActive ? '2px solid rgb(var(--accent-rgb))' : '2px solid transparent',
                 textDecoration: 'none',
                 transition: 'all 0.15s',
               } as React.CSSProperties)}
@@ -322,9 +307,9 @@ export default function Layout() {
               {({ isActive }) => (
                 <>
                   {isActive && (
-                    <span className="active-dot shrink-0" style={{ color, background: color }} />
+                    <span className="active-dot shrink-0" style={{ background: 'rgb(var(--accent-rgb))' }} />
                   )}
-                  <Icon size={14} style={{ color: isActive ? color : 'inherit', flexShrink: 0, transition: 'color 0.15s' }} />
+                  <Icon size={14} style={{ flexShrink: 0, transition: 'color 0.15s' }} />
                   <span className="truncate">{label}</span>
                 </>
               )}
@@ -405,19 +390,19 @@ export default function Layout() {
 
         {/* Nav icons */}
         <div className="flex-1 min-h-0 overflow-y-auto hide-scroll w-full flex flex-col items-center gap-0.5 py-1">
-          {NAV.map(({ to, icon: Icon, label, color }) => (
+          {NAV.map(({ to, icon: Icon, label }) => (
             <NavLink key={to} to={to} end={to === '/'} title={label}
               className="relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-150"
               style={({ isActive }) => ({
-                background: isActive ? `${color}18` : 'transparent',
-                color: isActive ? color : 'var(--t-faint)',
+                background: isActive ? 'rgb(var(--accent-rgb) / 0.12)' : 'transparent',
+                color: isActive ? 'rgb(var(--accent-rgb))' : 'var(--t-faint)',
                 textDecoration: 'none',
               })}>
               {({ isActive }) => (
                 <>
                   {isActive && (
                     <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full"
-                      style={{ background: color }} />
+                      style={{ background: 'rgb(var(--accent-rgb))' }} />
                   )}
                   <Icon size={16} />
                 </>
@@ -469,7 +454,7 @@ export default function Layout() {
           style={{ background: 'var(--s1)', borderBottom: '1px solid var(--b)' }}>
           <div className="flex items-center gap-2">
             <span className="text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full"
-              style={{ background: `${rankColor}20`, color: rankColor, border: `1px solid ${rankColor}40` }}>
+              style={{ background: 'rgb(var(--accent-rgb) / 0.12)', color: 'rgb(var(--accent-rgb))', border: '1px solid rgb(var(--accent-rgb) / 0.25)' }}>
               {me?.rank || 'E'}
             </span>
             <span className="text-[13px] font-bold text-head">
@@ -477,7 +462,7 @@ export default function Layout() {
             </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-black font-mono" style={{ color: rankColor }}>
+            <span className="text-[11px] font-black font-mono" style={{ color: 'rgb(var(--accent-rgb))' }}>
               {me?.meritScore ?? 0}<span className="opacity-50">/100</span>
             </span>
           </div>
