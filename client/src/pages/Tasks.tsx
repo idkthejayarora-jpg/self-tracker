@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Plus, Check, Trash2, ChevronDown, ChevronUp, Zap, Pencil, Save, AlertCircle, CheckSquare } from 'lucide-react';
+import { Plus, Check, Trash2, ChevronDown, ChevronUp, Zap, Pencil, Save, AlertCircle } from 'lucide-react';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
 import type { Task, TaskPriority, TaskStatus } from '../types';
@@ -179,16 +179,42 @@ export default function Tasks() {
         }} />
       </div>
 
-      <div className="page-header flex items-center justify-between gap-3 mb-5">
-        <div className="flex items-center gap-3">
-          <div className="shrink-0 flex items-center justify-center rounded-2xl"
-            style={{ width: 44, height: 44, background: '#818cf815', border: '1px solid #818cf825' }}>
-            <CheckSquare size={22} style={{ color: '#818cf8' }} strokeWidth={1.7} />
+      {/* ── TERMINAL HEADER ── */}
+      <div className="relative overflow-hidden rounded-2xl mb-4"
+        style={{ background: 'var(--hero-bg)', border: '1px solid #39ff1420' }}>
+        {/* Scanlines */}
+        <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{
+          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, #39ff1403 3px, #39ff1403 4px)',
+        }} />
+        {/* Top neon bar */}
+        <div className="absolute top-0 left-0 right-0 h-px" style={{
+          background: 'linear-gradient(90deg, transparent, #39ff1460, transparent)',
+          boxShadow: '0 0 8px #39ff14',
+        }} />
+        {/* Content */}
+        <div className="relative z-10 px-5 py-4">
+          {/* Terminal top bar */}
+          <div className="flex items-center gap-2 mb-3">
+            <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#ff5f56' }} />
+            <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#ffbd2e' }} />
+            <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#27c93f' }} />
+            <span className="text-[9px] font-mono ml-2 opacity-30 text-white">mission_queue.exe — bash</span>
+            <span className="ml-auto flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#ff5f56', animation: 'neon-pulse 1.2s ease-in-out infinite' }} />
+              <span className="text-[8px] font-mono" style={{ color: '#ff5f56', opacity: 0.7 }}>REC</span>
+            </span>
           </div>
-          <div>
-            <h1 className="text-2xl font-black text-head tracking-tight">Missions</h1>
-            <p className="text-xs text-muted mt-0.5">Task management</p>
+          <p className="font-mono text-[11px] mb-1" style={{ color: '#39ff14', opacity: 0.5 }}>root@system:~$</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black font-mono tracking-tight"
+              style={{ color: '#39ff14', textShadow: '0 0 20px #39ff1460' }}>
+              ./MISSION_QUEUE
+            </h1>
+            <span className="cursor-blink font-mono text-2xl" style={{ color: '#39ff14' }}>_</span>
           </div>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#39ff14', opacity: 0.4 }}>
+            {'// executing task management protocol...'}
+          </p>
         </div>
       </div>
 

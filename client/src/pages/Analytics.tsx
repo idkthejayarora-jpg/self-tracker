@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from 'react';
-import { BarChart2 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line, ComposedChart,
   XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell,
@@ -40,8 +39,8 @@ const RANK_TIERS = [
 const MOOD_LABELS = ['', 'ROUGH', 'LOW', 'OKAY', 'GOOD', 'GREAT'];
 const MOOD_COLORS = ['', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6'];
 
-const TICK  = { fill: 'var(--t-faint)', fontSize: 10, fontFamily: 'inherit' };
-const TICK_S = { fill: 'var(--t-faint)', fontSize: 9,  fontFamily: 'inherit' };
+const TICK  = { fill: '#52525b', fontSize: 10, fontFamily: 'monospace' };
+const TICK_S = { fill: '#3f3f46', fontSize: 9,  fontFamily: 'monospace' };
 
 // ── Shared UI ─────────────────────────────────────────────────────────────────
 
@@ -49,9 +48,24 @@ function HudCard({ children, accent = ACCENT, className = '' }: {
   children: React.ReactNode; accent?: string; className?: string;
 }) {
   return (
-    <div className={`card overflow-hidden ${className}`}
-      style={{ borderTop: `2px solid ${accent}35` }}>
-      {children}
+    <div className={`relative overflow-hidden rounded-2xl ${className}`}
+      style={{ background: 'var(--hero-bg)', border: `1px solid ${accent}18`,
+        boxShadow: `0 0 24px ${accent}07` }}>
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ backgroundImage: `repeating-linear-gradient(0deg,transparent,transparent 3px,${accent}02 3px,${accent}02 4px)` }} />
+      <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{ background: `linear-gradient(90deg,transparent,${accent}55,transparent)`, boxShadow: `0 0 5px ${accent}` }} />
+      {([['top-0 left-0',{borderTop:`1.5px solid ${accent}`,borderLeft:`1.5px solid ${accent}`}],
+         ['top-0 right-0',{borderTop:`1.5px solid ${accent}`,borderRight:`1.5px solid ${accent}`}],
+         ['bottom-0 left-0',{borderBottom:`1.5px solid ${accent}`,borderLeft:`1.5px solid ${accent}`}],
+         ['bottom-0 right-0',{borderBottom:`1.5px solid ${accent}`,borderRight:`1.5px solid ${accent}`}],
+      ] as [string, React.CSSProperties][]).map(([pos, s], i) => (
+        <div key={i} className={`absolute ${pos} pointer-events-none`}
+          style={{ width: 10, height: 10, opacity: 0.45, ...s }} />
+      ))}
+      <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+        style={{ background: `linear-gradient(90deg,transparent,${accent}22,transparent)` }} />
+      <div className="relative z-10">{children}</div>
     </div>
   );
 }
@@ -59,9 +73,10 @@ function HudCard({ children, accent = ACCENT, className = '' }: {
 function SectionLabel({ text, accent = ACCENT }: { text: string; accent?: string }) {
   return (
     <div className="flex items-center gap-2 mb-3">
-      <div className="w-0.5 h-4 rounded-full flex-shrink-0" style={{ background: accent }} />
-      <span className="text-[10px] font-black tracking-[0.18em] uppercase"
-        style={{ color: accent, opacity: 0.75 }}>{text}</span>
+      <div className="w-0.5 h-4 rounded-full flex-shrink-0"
+        style={{ background: accent, boxShadow: `0 0 6px ${accent}` }} />
+      <span className="text-[10px] font-black tracking-[0.22em] font-mono uppercase"
+        style={{ color: accent, opacity: 0.65 }}>{text}</span>
     </div>
   );
 }
@@ -69,13 +84,14 @@ function SectionLabel({ text, accent = ACCENT }: { text: string; accent?: string
 function Tooltip2({ active, payload, label, accent = ACCENT }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: 'var(--s2)', border: `1px solid var(--b)`,
-      borderRadius: 10, padding: '7px 11px', fontSize: 11, boxShadow: 'var(--shadow-md)' }}>
-      <p style={{ color: accent, fontWeight: 700, marginBottom: 3 }}>{label}</p>
+    <div style={{ background: 'rgba(0,0,0,0.93)', border: `1px solid ${accent}30`,
+      borderRadius: 8, padding: '7px 11px', fontSize: 11, boxShadow: `0 0 14px ${accent}18` }}>
+      <p style={{ color: accent, fontFamily: 'monospace', fontWeight: 900,
+        letterSpacing: '0.1em', marginBottom: 3, opacity: 0.8 }}>{label}</p>
       {payload.map((p: any, i: number) => (
-        <p key={i} style={{ color: p.color || 'var(--t-head)', marginBottom: 1 }}>
-          <span style={{ color: 'var(--t-muted)' }}>{p.name}: </span>
-          <span style={{ fontWeight: 700 }}>{p.value ?? '—'}</span>
+        <p key={i} style={{ color: p.color || 'var(--t-head)', fontFamily: 'monospace', marginBottom: 1 }}>
+          <span style={{ opacity: 0.55 }}>{p.name}: </span>
+          <span style={{ fontWeight: 900 }}>{p.value ?? '—'}</span>
         </p>
       ))}
     </div>
@@ -98,7 +114,8 @@ function RangePicker({ value, onChange }: { value: number; onChange: (v: number)
         <button key={r.days}
           className="tap px-3 py-1.5 rounded-lg text-[11px] font-black font-mono tracking-widest"
           style={value === r.days
-            ? { background: `${ACCENT}18`, color: ACCENT, border: `1px solid ${ACCENT}35` }
+            ? { background: `${ACCENT}20`, color: ACCENT, border: `1px solid ${ACCENT}40`,
+                boxShadow: `0 0 8px ${ACCENT}20` }
             : { background: 'var(--s3)', color: 'var(--t-faint)', border: '1px solid transparent' }}
           onClick={() => onChange(r.days)}>
           {r.label}
@@ -108,6 +125,20 @@ function RangePicker({ value, onChange }: { value: number; onChange: (v: number)
   );
 }
 
+// ── DataParticles ─────────────────────────────────────────────────────────────
+
+function DataParticles() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: 0.12 }}>
+      {[...Array(12)].map((_, i) => (
+        <div key={i} className="absolute w-px"
+          style={{ left: `${8 + i * 7.5}%`, top: 0, bottom: 0,
+            background: `linear-gradient(to bottom,transparent,${ACCENT},transparent)`,
+            animation: `data-scroll ${2 + (i % 3) * 0.8}s linear ${i * 200}ms infinite` }} />
+      ))}
+    </div>
+  );
+}
 
 // ── Rank Card ─────────────────────────────────────────────────────────────────
 
@@ -129,7 +160,7 @@ function RankCard({ me }: { me: MeSummary | null }) {
               style={{ color: tier.color, opacity: 0.55 }}>HUNTER_RANK://</p>
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-black font-mono leading-none"
-                style={{ color: tier.color }}>
+                style={{ color: tier.color, textShadow: `0 0 24px ${tier.color}60` }}>
                 {me.rank}
               </span>
               <span className="text-xs font-bold tracking-wide" style={{ color: 'var(--t-muted)' }}>
@@ -139,7 +170,7 @@ function RankCard({ me }: { me: MeSummary | null }) {
           </div>
           <div className="text-right">
             <p className="text-2xl font-black font-mono leading-none"
-              style={{ color: 'var(--t-head)' }}>
+              style={{ color: 'var(--t-head)', textShadow: `0 0 14px ${tier.color}40` }}>
               {me.meritScore}
               <span className="text-sm font-normal opacity-40">/100</span>
             </p>
@@ -157,7 +188,8 @@ function RankCard({ me }: { me: MeSummary | null }) {
           </div>
           <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
             <div className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${tier.color}80, ${tier.color})` }} />
+              style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${tier.color}80, ${tier.color})`,
+                boxShadow: `0 0 8px ${tier.color}60` }} />
           </div>
           <p className="text-[9px] font-mono mt-0.5 text-right" style={{ color: tier.color, opacity: 0.6 }}>
             {pct}% to next rank
@@ -391,21 +423,52 @@ export default function Analytics() {
     <div className="max-w-2xl mx-auto space-y-4 anim-page pb-10 overflow-x-hidden"
       style={{ '--accent-rgb': '96 165 250' } as React.CSSProperties}>
 
-      <div className="space-y-4">
+      {/* Dot grid bg */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{ position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle,rgba(96,165,250,0.05) 1px,transparent 1px)',
+          backgroundSize: '24px 24px' }} />
+      </div>
 
-      {/* Header + range picker */}
-      <div className="page-header flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="shrink-0 flex items-center justify-center rounded-2xl"
-            style={{ width: 44, height: 44, background: '#60a5fa15', border: '1px solid #60a5fa25' }}>
-            <BarChart2 size={22} style={{ color: '#60a5fa' }} strokeWidth={1.7} />
+      {/* ── Header ── */}
+      <div className="relative overflow-hidden rounded-2xl"
+        style={{ background: 'var(--hero-bg)', border: '1px solid #60a5fa25', minHeight: 110, zIndex: 1 }}>
+        <DataParticles />
+        <div className="absolute top-0 left-0 pointer-events-none"
+          style={{ width: 14, height: 14, borderTop: '1.5px solid #60a5fa', borderLeft: '1.5px solid #60a5fa', opacity: 0.6 }} />
+        <div className="absolute top-0 right-0 pointer-events-none"
+          style={{ width: 14, height: 14, borderTop: '1.5px solid #60a5fa', borderRight: '1.5px solid #60a5fa', opacity: 0.6 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none"
+          style={{ width: 14, height: 14, borderBottom: '1.5px solid #60a5fa', borderLeft: '1.5px solid #60a5fa', opacity: 0.6 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none"
+          style={{ width: 14, height: 14, borderBottom: '1.5px solid #60a5fa', borderRight: '1.5px solid #60a5fa', opacity: 0.6 }} />
+        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg,transparent,#60a5fa80,transparent)', boxShadow: '0 0 8px #60a5fa' }} />
+        <div className="relative z-10 px-5 py-5">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: ACCENT, opacity: 0.6 }}>ORACLE://</span>
+            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">DATA_CORE</span>
+            <span className="cursor-blink font-mono" style={{ color: ACCENT, fontSize: 11 }}>▌</span>
           </div>
-          <div>
-            <h1 className="text-2xl font-black text-head tracking-tight">Intel</h1>
-            <p className="text-xs text-muted mt-0.5">
-              {loading ? '...' : `${days}d · ${activedays} active days`}
-            </p>
-          </div>
+          <h1 className="text-3xl font-black tracking-tight leading-none text-white"
+            style={{ textShadow: '0 0 30px #60a5fa40' }}>ORACLE CORE</h1>
+          <p className="font-mono text-[10px] mt-1" style={{ color: ACCENT, opacity: 0.45 }}>
+            // daily signal analysis — behavioral pattern recognition
+          </p>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg,transparent,#60a5fa25,transparent)' }} />
+      </div>
+
+      <div style={{ position: 'relative', zIndex: 1 }} className="space-y-4">
+
+      {/* Range picker */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[9px] font-mono tracking-[0.2em] mb-0.5" style={{ color: ACCENT, opacity: 0.5 }}>TIME_RANGE://</p>
+          <p className="text-xs font-mono" style={{ color: 'var(--t-faint)' }}>
+            {loading ? '...' : `${days}d · ${activedays} active days`}
+          </p>
         </div>
         <RangePicker value={days} onChange={setDays} />
       </div>
@@ -420,7 +483,8 @@ export default function Analytics() {
           <div className="px-3 py-3">
             <p className="text-[9px] font-black tracking-[0.2em] font-mono mb-1" style={{ color: '#0ea5e9', opacity: 0.55 }}>TASK RATE</p>
             <p className="text-3xl font-black font-mono leading-none"
-              style={{ color: completionRate >= 70 ? '#22c55e' : completionRate >= 40 ? '#f59e0b' : '#ef4444' }}>
+              style={{ color: completionRate >= 70 ? '#22c55e' : completionRate >= 40 ? '#f59e0b' : '#ef4444',
+                textShadow: '0 0 14px currentColor' }}>
               {completionRate}<span className="text-base opacity-40">%</span>
             </p>
             <p className="text-[10px] font-mono mt-1" style={{ color: 'var(--t-faint)' }}>

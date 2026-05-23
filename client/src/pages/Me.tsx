@@ -100,7 +100,7 @@ function SectionHeader({ title, sub, color }: { title: string; sub?: string; col
   return (
     <div className="flex items-baseline gap-2 mb-3">
       <h2 className="text-[11px] font-black tracking-[0.14em] uppercase"
-        style={{ color: color ?? 'rgb(var(--accent-rgb))' }}>{title}</h2>
+        style={{ color: color ?? 'var(--cyan)' }}>{title}</h2>
       {sub && <span className="text-[10px] font-medium" style={{ color: 'var(--t-muted)' }}>{sub}</span>}
     </div>
   );
@@ -396,17 +396,37 @@ export default function Me() {
   return (
     <div className="max-w-2xl mx-auto space-y-4 anim-page pb-12 relative px-1 sm:px-0" style={{ background: 'var(--s0)' }}>
 
+      {/* Page-level animated scan line */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-none" style={{ zIndex: 0 }}>
+        {/* Hex-dot grid overlay */}
+        <div className="absolute inset-0"
+          style={{
+            opacity: isLight ? 0.06 : 0.03,
+            backgroundImage: `radial-gradient(circle, ${isLight ? '#000000' : '#ffffff'} 1px, transparent 1px)`,
+            backgroundSize: '28px 28px',
+          }} />
+        {/* Scan line */}
+        <div className="absolute left-0 right-0 h-[3px] pointer-events-none"
+          style={{
+            background: isLight
+              ? 'linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.08) 40%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.08) 60%, transparent 100%)'
+              : 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 40%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.18) 60%, transparent 100%)',
+            animation: 'scan-line 7s linear infinite',
+          }} />
+      </div>
+
       {/* ══════════════════════════════════════════════════════ CHARACTER CARD */}
       <div className="relative overflow-hidden rounded-2xl"
         style={{
-          minHeight: 300,
+          minHeight: 360,
           background: isLight
-            ? `radial-gradient(ellipse at 50% -5%, ${rankGlow} 0%, #f6f4ef 55%, #eceae4 100%)`
-            : `radial-gradient(ellipse at 50% -5%, ${rankGlow} 0%, var(--s1) 55%, var(--s0) 100%)`,
+            ? `radial-gradient(ellipse at 50% -5%, ${rankGlow} 0%, #f0f2f7 55%, #e4e8f0 100%)`
+            : `radial-gradient(ellipse at 50% -5%, ${rankGlow} 0%, #090b10 55%, #030508 100%)`,
           boxShadow: isLight
-            ? `0 4px 24px ${rankGlow}30, var(--shadow-md)`
-            : `0 8px 32px ${rankGlow}20, var(--shadow-lg)`,
-          border: `1px solid var(--b)`,
+            ? `0 0 60px ${rankGlow}, 0 0 120px ${rankGlow}40, inset 0 1px 0 rgba(255,255,255,0.80), 0 20px 60px rgba(0,0,0,0.12)`
+            : `0 0 80px ${rankGlow}, 0 0 160px ${rankGlow}40, inset 0 1px 0 rgba(255,255,255,0.10), 0 30px 80px rgba(0,0,0,0.6)`,
+          border: isLight ? `1px solid rgba(0,0,0,0.08)` : `1px solid rgba(255,255,255,0.10)`,
+          backdropFilter: 'blur(0px)',
           zIndex: 1,
         }}>
 
@@ -437,37 +457,37 @@ export default function Me() {
                 {rank} RANK
               </span>
               <span className="font-mono text-[11px] font-bold tabular-nums"
-                style={{ color: rankSolid }}>
+                style={{ color: rankSolid, textShadow: `0 0 10px ${rankSolid}80` }}>
                 {totalPoints.toLocaleString()} PTS
               </span>
             </div>
             {/* Rank label + desc */}
             <div className="text-center">
-              <p className="text-[13px] font-bold tracking-wide" style={{ color: rankSolid }}>{rankLabel}</p>
+              <p className="text-[13px] font-bold tracking-wide" style={{ color: rankSolid, textShadow: isLight ? 'none' : `0 0 10px ${rankSolid}60` }}>{rankLabel}</p>
               <p className="text-[11px] mt-0.5 font-medium" style={{ color: 'var(--t-muted)' }}>{rankDesc}</p>
             </div>
           </div>
 
           {/* Merit score panel */}
-          <div className="w-full max-w-sm rounded-xl px-4 py-3 space-y-2"
-            style={{ background: 'var(--s2)', border: `1px solid ${rankSolid}25` }}>
+          <div className="glass w-full max-w-sm rounded-xl px-4 py-3 space-y-2"
+            style={{ border: `1px solid ${rankSolid}25` }}>
             {/* Total merit bar */}
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--t-muted)' }}>MERIT SCORE</span>
-              <span className="font-black font-mono text-sm tabular-nums" style={{ color: rankSolid }}>
+              <span className="font-black font-mono text-sm tabular-nums" style={{ color: rankSolid, textShadow: `0 0 8px ${rankSolid}80` }}>
                 {animatedMerit}<span className="text-[10px] font-normal opacity-50">/100</span>
               </span>
             </div>
             <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
               <div className="h-full rounded-full transition-all duration-700 bar-fill"
-                style={{ width: `${meritScore}%`, background: rankSolid }} />
+                style={{ width: `${meritScore}%`, background: rankSolid, boxShadow: `0 0 8px ${rankSolid}` }} />
             </div>
             {/* Breakdown — 5 components: Stats/Streaks/Skills/Claims/Pts */}
             <div className="grid grid-cols-5 gap-1.5 pt-1">
               {([
                 { label: 'STATS',   val: meritBreakdown.statScore,   max: 45, color: '#ef4444' },
                 { label: 'STREAK',  val: meritBreakdown.streakScore, max: 15, color: '#f97316' },
-                { label: 'SKILLS',  val: meritBreakdown.skillScore,  max: 15, color: '#22c55e' },
+                { label: 'SKILLS',  val: meritBreakdown.skillScore,  max: 15, color: '#39ff14' },
                 { label: 'CLAIMS',  val: meritBreakdown.claimScore,  max: 10, color: '#6366f1' },
                 { label: 'PTS',     val: meritBreakdown.ptsScore,    max: 15, color: '#f59e0b' },
               ]).map(b => (
@@ -498,7 +518,8 @@ export default function Me() {
               style={{
                 width: 96, height: 96,
                 border: `2px solid ${rankSolid}`,
-                opacity: 0.35,
+                opacity: 0.4,
+                boxShadow: `0 0 14px ${rankSolid}60`,
               }} />
             <div className="relative z-10" style={{ fontSize: 52, lineHeight: 1, padding: 4 }}>
               {profile.avatar_emoji || '⚔️'}
@@ -536,7 +557,7 @@ export default function Me() {
       </div>
 
       {/* ══════════════════════════════════════════════════════ ADVENTURE */}
-      <div className="card rounded-2xl px-5 py-4 relative"
+      <div className="glass rounded-2xl px-5 py-4 relative"
         style={{ borderLeft: `3px solid rgb(var(--accent-rgb))`, zIndex: 1 }}>
         <p className="text-[10px] font-bold tracking-[0.15em] mb-2 flex items-center gap-1.5"
           style={{ color: 'var(--t-faint)' }}>
@@ -557,13 +578,13 @@ export default function Me() {
             const val = stats[s.key as keyof typeof stats];
             return (
               <div key={s.key}
-                className="card rounded-2xl px-3 py-3 space-y-2 stat-pop transition-all duration-200"
+                className="glass glow-card rounded-2xl px-3 py-3 space-y-2 stat-pop group transition-all duration-200"
                 title={s.hint}
-                style={{ borderLeft: `3px solid ${s.color}`, animationDelay: `${idx * 60}ms` }}>
+                style={{ borderLeft: `3px solid ${s.color}`, animationDelay: `${idx * 60}ms`, '--gc': `${s.color}55` } as React.CSSProperties}>
                 <div className="flex items-center justify-between">
                   <s.Icon size={16} style={{ color: s.color }} />
                   <span className="text-3xl font-black tabular-nums font-mono"
-                    style={{ color: s.color }}>{val}</span>
+                    style={{ color: s.color, textShadow: `0 0 12px ${s.color}80` }}>{val}</span>
                 </div>
                 <div>
                   <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
@@ -571,6 +592,7 @@ export default function Me() {
                       style={{
                         width: `${val}%`,
                         background: s.color,
+                        boxShadow: `0 0 8px ${s.color}`,
                       }} />
                   </div>
                   <p className="text-[10px] mt-1 font-bold tracking-[0.12em] uppercase"
@@ -589,7 +611,7 @@ export default function Me() {
 
       {/* ══════════════════════════════════════════════════════ SKILLS */}
       <div style={{ zIndex: 1, position: 'relative' }}>
-        <div className="card flex items-center justify-between mb-3 rounded-xl px-3 py-2">
+        <div className="glass flex items-center justify-between mb-3 rounded-xl px-3 py-2">
           <SectionHeader title="SKILLS & ABILITIES" />
           <button onClick={() => setShowSkillForm(s => !s)}
             className="flex items-center gap-1 text-[11px] font-semibold tap px-2 py-1 rounded-lg"
@@ -645,8 +667,8 @@ export default function Me() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {skills.map(skill => (
             <div key={skill.id}
-              className="card rounded-2xl overflow-hidden group transition-all duration-200"
-              style={{ borderLeft: `3px solid rgb(var(--accent-rgb)/0.5)` }}>
+              className="glass glow-card rounded-2xl overflow-hidden group transition-all duration-200"
+              style={{ borderLeft: `3px solid rgb(var(--accent-rgb)/0.6)`, '--gc': 'rgba(99,102,241,0.45)' } as React.CSSProperties}>
 
               {/* ── Edit form (shown when editing) ── */}
               {editingSkillId === skill.id ? (
@@ -704,7 +726,7 @@ export default function Me() {
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <span className="text-[10px] font-black px-2 py-1 rounded-md"
-                        style={{ background: 'rgb(var(--accent-rgb)/0.1)', color: 'rgb(var(--accent-rgb-light))', border: '1px solid rgb(var(--accent-rgb)/0.25)' }}>
+                        style={{ background: '#39ff1412', color: '#39ff14', border: '1px solid #39ff1440', textShadow: '0 0 8px #39ff1480' }}>
                         LVL {skill.level}
                       </span>
                       <button onClick={() => levelUpSkill(skill.id)}
@@ -739,7 +761,8 @@ export default function Me() {
                       <div className="h-full rounded-full bar-fill"
                         style={{
                           width: `${skill.xp}%`,
-                          background: `linear-gradient(90deg, rgb(var(--accent-rgb)/0.7), rgb(var(--accent-rgb)))`,
+                          background: `linear-gradient(90deg, rgb(var(--accent-rgb)/0.8), rgb(var(--accent-rgb)))`,
+                          boxShadow: `0 0 6px rgb(var(--accent-rgb)/0.6)`,
                         }} />
                       {skill.xp > 0 && (
                         <div className="xp-shimmer-bar absolute inset-0 rounded-full" style={{ mixBlendMode: 'screen' }} />
@@ -759,7 +782,7 @@ export default function Me() {
 
       {/* ══════════════════════════════════════════════════════ CLAIMS */}
       <div style={{ zIndex: 1, position: 'relative' }}>
-        <div className="card flex items-center justify-between mb-3 rounded-xl px-3 py-2 flex-wrap gap-2">
+        <div className="glass flex items-center justify-between mb-3 rounded-xl px-3 py-2 flex-wrap gap-2">
           {/* Tabs — styled as quest log header */}
           <div className="flex items-center gap-1 flex-wrap">
             {(['active', 'claimed'] as const).map(tab => (
@@ -832,8 +855,8 @@ export default function Me() {
             const isOverdue = claim.deadline && claim.deadline < new Date().toISOString().slice(0, 10);
             return (
               <div key={claim.id}
-                className="card rounded-2xl overflow-hidden transition-all duration-200 group"
-                style={{ borderLeft: `4px solid ${tc}`, opacity: claim.status === 'claimed' ? 0.7 : 1 }}>
+                className="glass glow-card rounded-2xl overflow-hidden transition-all duration-200 group"
+                style={{ borderLeft: `4px solid ${tc}`, opacity: claim.status === 'claimed' ? 0.7 : 1, '--gc': `${tc}55` } as React.CSSProperties}>
 
                 {/* ── Edit form ── */}
                 {editingClaimId === claim.id ? (
@@ -892,7 +915,8 @@ export default function Me() {
                               style={{
                                 background: '#f59e0b18',
                                 color: '#f59e0b',
-                                border: '1px solid #f59e0b40',
+                                border: '1px solid #f59e0b50',
+                                textShadow: '0 0 8px #f59e0b80',
                               }}>
                               ✓ CLAIMED
                             </span>
@@ -932,12 +956,15 @@ export default function Me() {
                           }
                           return (
                             <button onClick={() => claimIt(claim.id)}
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold tap"
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold tap btn-glow claim-pulse-btn"
                               style={{
                                 background: `${tc}18`,
                                 color: tc,
                                 border: `1px solid ${tc}40`,
-                              }}>
+                                '--cp': tc,
+                                '--btn-glow': `${tc}60`,
+                                animation: 'claim-pulse 2.5s ease-in-out infinite',
+                              } as React.CSSProperties}>
                               <Check size={10} /> Claim it
                             </button>
                           );
@@ -965,7 +992,7 @@ export default function Me() {
 
       {/* ══════════════════════════════════════════════════════ MENTOR HALL */}
       <div style={{ zIndex: 1, position: 'relative' }}>
-        <div className="card flex items-center justify-between mb-3 rounded-xl px-3 py-2">
+        <div className="glass flex items-center justify-between mb-3 rounded-xl px-3 py-2">
           <SectionHeader title="MENTOR HALL" sub="— figures you embody" />
           <button onClick={() => setShowMentorForm(s => !s)}
             className="flex items-center gap-1 text-[11px] font-semibold tap px-2 py-1 rounded-lg"
@@ -1018,7 +1045,8 @@ export default function Me() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {mentors.map(mentor => (
             <div key={mentor.id}
-              className="card rounded-2xl group relative overflow-hidden">
+              className="glass glow-card rounded-2xl group relative overflow-hidden"
+              style={{ '--gc': 'rgba(168,85,247,0.4)' } as React.CSSProperties}>
 
               {/* ── Edit form ── */}
               {editingMentorId === mentor.id ? (
@@ -1108,7 +1136,10 @@ export default function Me() {
                     <div className="flex justify-between">
                       <span className="text-[10px] font-bold tracking-wider uppercase" style={{ color: 'var(--t-muted)' }}>EMBODIMENT</span>
                       <span className="text-[10px] font-black font-mono"
-                        style={{ color: 'rgb(var(--accent-rgb-light))' }}>
+                        style={{
+                          color: 'rgb(var(--accent-rgb-light))',
+                          textShadow: mentor.progress > 0 ? '0 0 8px rgb(var(--accent-rgb)/0.6)' : 'none',
+                        }}>
                         {mentor.progress}%
                       </span>
                     </div>
@@ -1124,6 +1155,7 @@ export default function Me() {
                         style={{
                           width: `${mentor.progress}%`,
                           background: 'rgb(var(--accent-rgb))',
+                          boxShadow: '0 0 8px rgb(var(--accent-rgb)/0.7)',
                         }} />
                       {mentor.progress > 0 && (
                         <div className="xp-shimmer-bar absolute inset-0 rounded-full" style={{ mixBlendMode: 'screen' }} />
@@ -1145,7 +1177,7 @@ export default function Me() {
 
       {/* ══════════════════════════════════════════════════════ POINTS HISTORY */}
       <div style={{ zIndex: 1, position: 'relative' }}>
-        <div className="card flex items-center justify-between mb-3 rounded-xl px-3 py-2">
+        <div className="glass flex items-center justify-between mb-3 rounded-xl px-3 py-2">
           <SectionHeader title="POINTS LEDGER" sub="— recent merit transactions" />
           <span className="flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-1 rounded-lg"
             style={{ background: 'rgb(245 158 11 / 0.1)', color: '#f59e0b', border: '1px solid rgb(245 158 11 / 0.3)' }}>
@@ -1159,7 +1191,18 @@ export default function Me() {
           </p>
         ) : (
           <div className="card scale-in" style={{ padding: 0 }}>
-            <div className="max-h-80 overflow-y-auto px-3 py-2 hide-scroll" style={{ scrollBehavior: 'smooth' }}>
+            {/* HUD corner brackets */}
+            <div className="relative">
+              <div className="absolute top-1 left-1 w-3 h-3 pointer-events-none"
+                style={{ borderTop: '1.5px solid #f59e0b', borderLeft: '1.5px solid #f59e0b', opacity: 0.4 }} />
+              <div className="absolute top-1 right-1 w-3 h-3 pointer-events-none"
+                style={{ borderTop: '1.5px solid #f59e0b', borderRight: '1.5px solid #f59e0b', opacity: 0.4 }} />
+              <div className="absolute bottom-1 left-1 w-3 h-3 pointer-events-none"
+                style={{ borderBottom: '1.5px solid #f59e0b', borderLeft: '1.5px solid #f59e0b', opacity: 0.4 }} />
+              <div className="absolute bottom-1 right-1 w-3 h-3 pointer-events-none"
+                style={{ borderBottom: '1.5px solid #f59e0b', borderRight: '1.5px solid #f59e0b', opacity: 0.4 }} />
+
+              <div className="max-h-80 overflow-y-auto px-3 py-2 hide-scroll" style={{ scrollBehavior: 'smooth' }}>
                 {pointsLog.map((p, i) => {
                   const Icon = SOURCE_ICONS[p.source] || Flame;
                   const color = SOURCE_COLORS[p.source] || '#94a3b8';
@@ -1186,13 +1229,14 @@ export default function Me() {
                         </p>
                       </div>
                       <span className="text-sm font-black font-mono tabular-nums shrink-0"
-                        style={{ color }}>
+                        style={{ color, textShadow: `0 0 8px ${color}80` }}>
                         +{p.points}
                       </span>
                     </div>
                   );
                 })}
               </div>
+            </div>
           </div>
         )}
       </div>
@@ -1202,10 +1246,10 @@ export default function Me() {
         <div className="fixed bottom-6 right-6 z-50 slide-up max-w-xs">
           <div className="rounded-xl px-4 py-3 flex items-start gap-2"
             style={{
-              background: 'var(--s1)',
-              border: '1px solid rgba(239,68,68,0.35)',
-              borderLeft: '3px solid #ef4444',
+              background: 'rgba(239,68,68,0.12)',
+              border: '1px solid rgba(239,68,68,0.4)',
               backdropFilter: 'blur(8px)',
+              boxShadow: '0 8px 32px rgba(239,68,68,0.25)',
             }}>
             <X size={14} style={{ color: '#f87171', marginTop: 2 }} />
             <p className="text-xs font-semibold" style={{ color: '#fca5a5' }}>{claimError}</p>

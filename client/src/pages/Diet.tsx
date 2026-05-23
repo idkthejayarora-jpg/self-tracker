@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Trash2, BookMarked, ChevronLeft, ChevronRight, X, Save, Pencil, Check, AlertCircle, Search, Salad } from 'lucide-react';
+import { Plus, Trash2, BookMarked, ChevronLeft, ChevronRight, X, Save, Pencil, Check, AlertCircle, Search } from 'lucide-react';
 import { format, parseISO, addDays, subDays } from 'date-fns';
 import api from '../lib/api';
 
@@ -156,15 +156,33 @@ function FoodSearchBar({ onLogged }: { onLogged: () => void }) {
   };
 
   return (
-    <div className="card">
-      <div className="px-4 py-4 space-y-3">
+    <div className="relative overflow-hidden rounded-2xl"
+      style={{ background: 'var(--hero-bg)', border: `1px solid ${ACCENT_DIET}18`, boxShadow: `0 0 20px ${ACCENT_DIET}07` }}>
+      {/* Scanlines */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 3px, ${ACCENT_DIET}02 3px, ${ACCENT_DIET}02 4px)` }} />
+      {/* Top bar */}
+      <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{ background: `linear-gradient(90deg, transparent, ${ACCENT_DIET}55, transparent)`, boxShadow: `0 0 5px ${ACCENT_DIET}` }} />
+      {/* HUD corners */}
+      {(['top-0 left-0','top-0 right-0','bottom-0 left-0','bottom-0 right-0'] as const).map((pos, i) => (
+        <div key={i} className={`absolute ${pos} pointer-events-none`} style={{
+          width: 10, height: 10, opacity: 0.4,
+          ...(i===0 && { borderTop:`1.5px solid ${ACCENT_DIET}`, borderLeft:`1.5px solid ${ACCENT_DIET}` }),
+          ...(i===1 && { borderTop:`1.5px solid ${ACCENT_DIET}`, borderRight:`1.5px solid ${ACCENT_DIET}` }),
+          ...(i===2 && { borderBottom:`1.5px solid ${ACCENT_DIET}`, borderLeft:`1.5px solid ${ACCENT_DIET}` }),
+          ...(i===3 && { borderBottom:`1.5px solid ${ACCENT_DIET}`, borderRight:`1.5px solid ${ACCENT_DIET}` }),
+        }} />
+      ))}
+
+      <div className="relative z-10 px-4 py-4 space-y-3">
         {/* Header */}
         <div className="flex items-center gap-2">
-          <div className="w-0.5 h-4 rounded-full" style={{ background: ACCENT_DIET }} />
-          <span className="text-[10px] font-black tracking-[0.18em] uppercase" style={{ color: ACCENT_DIET, opacity: 0.75 }}>
-            Food Search
+          <div className="w-0.5 h-4 rounded-full" style={{ background: ACCENT_DIET, boxShadow: `0 0 5px ${ACCENT_DIET}` }} />
+          <span className="text-[10px] font-black tracking-[0.22em] font-mono" style={{ color: ACCENT_DIET, opacity: 0.65 }}>
+            FOOD_SEARCH://
           </span>
-          <span className="text-[10px] text-muted opacity-60">· Indian foods & more</span>
+          <span className="text-[10px] font-mono opacity-30 text-white">// type any food, Indian or otherwise</span>
         </div>
 
         {/* Search input */}
@@ -480,6 +498,24 @@ function SaveMealModal({ onSave, onClose }: { onSave: (m: Omit<SavedMeal, 'id'>)
   );
 }
 
+function MolecularBg() {
+  const hexPoints = '12,2 22,8 22,20 12,26 2,20 2,8';
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {[...Array(8)].map((_, i) => (
+        <div key={i} className="absolute"
+          style={{
+            left: `${10 + i * 12}%`, top: `${20 + (i % 3) * 20}%`,
+            animation: `hex-drift ${3 + (i % 3)}s ease-in-out ${i * 400}ms infinite`,
+          }}>
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <polygon points={hexPoints} stroke="#34d399" strokeWidth="1" fill="none" />
+          </svg>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function Diet() {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -610,19 +646,49 @@ export default function Diet() {
   }, {} as Record<string, FoodLog[]>);
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 anim-page">
+    <div className="max-w-2xl mx-auto space-y-5 anim-page"
+      style={{ '--accent-rgb': '52 211 153' } as React.CSSProperties}>
 
-      <div className="page-header flex items-center justify-between gap-3 mb-5">
-        <div className="flex items-center gap-3">
-          <div className="shrink-0 flex items-center justify-center rounded-2xl"
-            style={{ width: 44, height: 44, background: '#22c55e15', border: '1px solid #22c55e25' }}>
-            <Salad size={22} style={{ color: '#22c55e' }} strokeWidth={1.7} />
+      {/* Cyberpunk body overlay */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(52,211,153,0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+      </div>
+
+      {/* ── BIOLAB HEADER ── */}
+      <div className="relative overflow-hidden rounded-2xl mb-4"
+        style={{ background: 'var(--hero-bg)', border: '1px solid #34d39925', minHeight: 110 }}>
+        <MolecularBg />
+        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #34d399', borderLeft: '1.5px solid #34d399', opacity: 0.7 }} />
+        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #34d399', borderRight: '1.5px solid #34d399', opacity: 0.7 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #34d399', borderLeft: '1.5px solid #34d399', opacity: 0.7 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #34d399', borderRight: '1.5px solid #34d399', opacity: 0.7 }} />
+        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent, #34d39980, transparent)', boxShadow: '0 0 8px #34d399' }} />
+        <div className="relative z-10 px-5 py-5">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#34d399', opacity: 0.6 }}>LAB://</span>
+            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">NUTRIENT_SYNTHESIS</span>
+            <span className="cursor-blink font-mono" style={{ color: '#34d399', fontSize: 11 }}>▌</span>
           </div>
-          <div>
-            <h1 className="text-2xl font-black text-head tracking-tight">Nutrition</h1>
-            <p className="text-xs text-muted mt-0.5">Food & calorie tracking</p>
-          </div>
+          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: '0 0 30px #34d39940' }}>
+            BIOLAB
+          </h1>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#34d399', opacity: 0.5 }}>
+            // molecular nutrition analysis — fuel optimization protocol
+          </p>
         </div>
+        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent, #34d39930, transparent)' }} />
+      </div>
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
+
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'rgb(var(--accent-rgb))' }}>// Diet</h1>
         <div className="flex gap-2">
         <button type="button" onClick={() => setShowSaveModal(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tap"
@@ -863,6 +929,7 @@ export default function Diet() {
 
       {showSaveModal && <SaveMealModal onSave={saveMeal} onClose={() => setShowSaveModal(false)} />}
 
+      </div>{/* end relative zIndex wrapper */}
     </div>
   );
 }

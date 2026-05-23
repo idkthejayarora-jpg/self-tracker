@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText, Dumbbell } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText } from 'lucide-react';
 import WorkoutAvatar from '../components/WorkoutAvatar';
 import { format, parseISO } from 'date-fns';
 import {
@@ -248,17 +248,55 @@ export default function Workout() {
         }} />
       </div>
 
-      <div className="page-header flex items-center justify-between gap-3 mb-5">
-        <div className="flex items-center gap-3">
-          <div className="shrink-0 flex items-center justify-center rounded-2xl"
-            style={{ width: 44, height: 44, background: '#ef444415', border: '1px solid #ef444425' }}>
-            <Dumbbell size={22} style={{ color: '#ef4444' }} strokeWidth={1.7} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black text-head tracking-tight">Training</h1>
-            <p className="text-xs text-muted mt-0.5">Strength protocol</p>
-          </div>
+      {/* ── FORGE HEADER ── */}
+      <div className="relative overflow-hidden rounded-2xl mb-4"
+        style={{ background: 'linear-gradient(180deg, #1a0800 0%, var(--hero-bg) 60%)', border: '1px solid #ff450030', minHeight: 120 }}>
+        {/* Heat shimmer columns */}
+        <div className="absolute inset-0 pointer-events-none flex gap-8 px-8" style={{ opacity: 0.15 }}>
+          {[0,200,400,600,800,1000,1200,1400].map(d => (
+            <div key={d} style={{
+              width: 2, flex: '0 0 2px', background: 'linear-gradient(to top, #ff4500, transparent)',
+              animation: `heat-shimmer 1.8s ease-in-out ${d}ms infinite`,
+            }} />
+          ))}
         </div>
+        {/* Ember particles */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[...Array(6)].map((_,i) => (
+            <div key={i} className="absolute rounded-full" style={{
+              width: 3, height: 3,
+              background: i % 2 === 0 ? '#ff4500' : '#ff8c00',
+              boxShadow: `0 0 6px ${i % 2 === 0 ? '#ff4500' : '#ff8c00'}`,
+              left: `${15 + i * 14}%`,
+              bottom: 16,
+              animation: `ember-float ${1.5 + i * 0.3}s ease-out ${i * 400}ms infinite`,
+            }} />
+          ))}
+        </div>
+        {/* HUD corners in orange */}
+        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #ff4500', borderLeft: '1.5px solid #ff4500', opacity: 0.7 }} />
+        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #ff4500', borderRight: '1.5px solid #ff4500', opacity: 0.7 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #ff4500', borderLeft: '1.5px solid #ff4500', opacity: 0.7 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #ff4500', borderRight: '1.5px solid #ff4500', opacity: 0.7 }} />
+        {/* Top lava edge */}
+        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent, #ff4500, transparent)', boxShadow: '0 0 12px #ff4500' }} />
+        {/* Content */}
+        <div className="relative z-10 px-5 py-5">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#ff4500', opacity: 0.7 }}>FORGE://</span>
+            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">IRON_PROTOCOL</span>
+            <span className="cursor-blink font-mono" style={{ color: '#ff4500', fontSize: 11 }}>▌</span>
+          </div>
+          <h1 className="text-3xl font-black tracking-tight leading-none" style={{ color: '#fff', textShadow: '0 0 40px #ff450060, 0 0 80px #ff450030' }}>
+            THE FORGE
+          </h1>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#ff4500', opacity: 0.5 }}>
+            // STRENGTH PROTOCOL ACTIVE — forge your limits
+          </p>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent, #ff450040, transparent)' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
@@ -660,8 +698,8 @@ export default function Workout() {
 
           {/* Day cards */}
           {planDays.map(day => (
-            <div key={day.id} className="card rounded-2xl overflow-hidden group"
-              style={{ borderLeft: `3px solid ${day.color}` }}>
+            <div key={day.id} className="glass glow-card rounded-2xl overflow-hidden group"
+              style={{ borderLeft: `3px solid ${day.color}`, '--gc': `${day.color}55` } as React.CSSProperties}>
               <div className="px-4 py-3">
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
