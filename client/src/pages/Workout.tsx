@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText, Dumbbell, Check, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText, Dumbbell } from 'lucide-react';
 import WorkoutAvatar from '../components/WorkoutAvatar';
 import { format, parseISO } from 'date-fns';
 import {
@@ -359,7 +359,7 @@ export default function Workout() {
                     </span>
                   )}
                 </div>
-                <p className="text-[10px]" style={{ color: 'var(--t-faint)' }}>Session logged <Check size={9} className="inline" /> — scroll down to see it</p>
+                <p className="text-[10px]" style={{ color: 'var(--t-faint)' }}>Session logged ✓ — scroll down to see it</p>
               </div>
             )}
             <div className="flex justify-end">
@@ -522,7 +522,7 @@ export default function Workout() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-bold" style={{ color: 'var(--t-muted)' }}>
-                      <Check size={11} className="inline mr-0.5" /> Found {parsedPlan.length} training day{parsedPlan.length !== 1 ? 's' : ''}
+                      ✓ Found {parsedPlan.length} training day{parsedPlan.length !== 1 ? 's' : ''}
                     </p>
                     {planCreateMsg && (
                       <span className="text-[11px] font-semibold" style={{ color: '#22c55e' }}>{planCreateMsg}</span>
@@ -615,7 +615,7 @@ export default function Workout() {
               {!planLoading && parsedPlan.length === 0 && pdfText && (
                 <div className="space-y-2">
                   <p className="text-[11px]" style={{ color: '#f87171' }}>
-                    <AlertTriangle size={11} className="inline mr-1" />Couldn't auto-detect training days. Review the text below and add days manually.
+                    ⚠ Couldn't auto-detect training days. Review the text below and add days manually.
                   </p>
                   <textarea value={pdfText} onChange={e => setPdfText(e.target.value)}
                     rows={10} className="w-full rounded-xl px-3 py-2 text-xs font-mono resize-y"

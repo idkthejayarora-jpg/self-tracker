@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Trash2, BookMarked, ChevronLeft, ChevronRight, X, Save, Pencil, Check, AlertCircle, Search, Salad, Sunrise, Sun, Moon, Apple, BookOpen, List } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { Plus, Trash2, BookMarked, ChevronLeft, ChevronRight, X, Save, Pencil, Check, AlertCircle, Search, Salad } from 'lucide-react';
 import { format, parseISO, addDays, subDays } from 'date-fns';
 import api from '../lib/api';
 
@@ -29,8 +28,8 @@ interface FoodLog {
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 type MealType = typeof MEAL_TYPES[number];
 
-const MEAL_ICON: Record<MealType, LucideIcon> = {
-  breakfast: Sunrise, lunch: Sun, dinner: Moon, snack: Apple,
+const MEAL_EMOJI: Record<MealType, string> = {
+  breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍎',
 };
 
 interface FoodItem {
@@ -390,7 +389,7 @@ function AddEntryForm({
               color: mealType === t ? `rgb(var(--accent-rgb-light))` : '#71717a',
               border: `1px solid ${mealType === t ? `rgb(var(--accent-rgb) / 0.3)` : 'transparent'}`,
             }}>
-            {(() => { const Icon = MEAL_ICON[t]; return <Icon size={12} className="inline mr-1" />; })()} {t}
+            {MEAL_EMOJI[t]} {t}
           </button>
         ))}
       </div>
@@ -633,7 +632,7 @@ export default function Diet() {
         <button type="button" onClick={() => setActiveTab(t => t === 'log' ? 'meals' : 'log')}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tap"
           style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>
-          {activeTab === 'log' ? <><BookOpen size={13} /> Saved</> : <><List size={13} /> Log</>}
+          {activeTab === 'log' ? '📚 Saved' : '📋 Log'}
         </button>
         </div>
       </div>
@@ -794,7 +793,7 @@ export default function Diet() {
             return (
               <div key={mt} className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  {(() => { const Icon = MEAL_ICON[mt]; return <Icon size={14} style={{ color: 'var(--t-muted)', flexShrink: 0 }} />; })()}
+                  <span className="text-base">{MEAL_EMOJI[mt]}</span>
                   <span className="text-sm font-semibold text-head capitalize">{mt}</span>
                   <span className="text-xs ml-auto" style={{ color: 'var(--t-dim)' }}>{Math.round(subtotal)} kcal</span>
                 </div>
@@ -838,7 +837,7 @@ export default function Diet() {
           </p>
           {savedMeals.length === 0 && (
             <div className="card py-10 text-center">
-              <div className="flex justify-center mb-3"><BookOpen size={28} style={{ color: 'var(--t-faint)' }} /></div>
+              <p className="text-3xl mb-2">📚</p>
               <p className="text-sm" style={{ color: 'var(--t-dim)' }}>No saved meals yet</p>
             </div>
           )}

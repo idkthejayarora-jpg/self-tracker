@@ -1,6 +1,3 @@
-import { Zap, Dumbbell, Trophy, Flame, Star, Award } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
-
 interface WorkoutStats {
   weekly_sessions: number;
   total_sets: number;
@@ -9,7 +6,7 @@ interface WorkoutStats {
 
 interface Buff {
   id: string;
-  Icon: LucideIcon;
+  emoji: string;
   label: string;
   description: string;
   color: string;
@@ -19,21 +16,21 @@ function getBuffs(stats: WorkoutStats): Buff[] {
   const buffs: Buff[] = [];
 
   if (stats.weekly_sessions >= 5) {
-    buffs.push({ id: 'beast', Icon: Zap, label: 'Beast Mode', description: '5+ sessions this week', color: '#f43f5e' });
+    buffs.push({ id: 'beast', emoji: '🦁', label: 'Beast Mode', description: '5+ sessions this week', color: '#f43f5e' });
   } else if (stats.weekly_sessions >= 3) {
-    buffs.push({ id: 'strong', Icon: Dumbbell, label: 'Strong', description: '3+ sessions this week', color: '#f97316' });
+    buffs.push({ id: 'strong', emoji: '💪', label: 'Strong', description: '3+ sessions this week', color: '#f97316' });
   } else if (stats.weekly_sessions >= 1) {
-    buffs.push({ id: 'active', Icon: Zap, label: 'Active', description: 'Working out this week', color: '#eab308' });
+    buffs.push({ id: 'active', emoji: '⚡', label: 'Active', description: 'Working out this week', color: '#eab308' });
   }
 
   if (stats.personal_bests >= 3) {
-    buffs.push({ id: 'record', Icon: Trophy, label: 'Record Breaker', description: `${stats.personal_bests} personal bests`, color: '#f59e0b' });
+    buffs.push({ id: 'record', emoji: '🏆', label: 'Record Breaker', description: `${stats.personal_bests} personal bests`, color: '#f59e0b' });
   }
 
   if (stats.total_sets >= 50) {
-    buffs.push({ id: 'grind', Icon: Flame, label: 'Grinder', description: `${stats.total_sets} sets logged`, color: '#ef4444' });
+    buffs.push({ id: 'grind', emoji: '🔥', label: 'Grinder', description: `${stats.total_sets} sets logged`, color: '#ef4444' });
   } else if (stats.total_sets >= 20) {
-    buffs.push({ id: 'consistent', Icon: Star, label: 'Consistent', description: `${stats.total_sets} sets logged`, color: '#a78bfa' });
+    buffs.push({ id: 'consistent', emoji: '✨', label: 'Consistent', description: `${stats.total_sets} sets logged`, color: '#a78bfa' });
   }
 
   return buffs;
@@ -51,20 +48,28 @@ export default function WorkoutAvatar({ stats }: { stats: WorkoutStats }) {
   const tier = getAvatarTier(stats.weekly_sessions);
 
   return (
-    <div className="card p-5">
+    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
       <div className="flex items-center gap-5">
         {/* Avatar SVG */}
         <div className="relative shrink-0">
           <svg width="88" height="88" viewBox="0 0 88 88" fill="none">
+            {/* Aura glow */}
             <circle cx="44" cy="44" r="40" fill={tier.aura} />
+            {/* Body figure */}
             <circle cx="44" cy="22" r="10" fill={tier.body} opacity="0.9" />
+            {/* Torso */}
             <path d="M44 32 C40 40 38 50 37 58" stroke={tier.body} strokeWidth="5" strokeLinecap="round" opacity="0.9"/>
+            {/* Raised arm left (flexing) */}
             <path d="M42 36 C34 30 28 26 25 22" stroke={tier.body} strokeWidth="4" strokeLinecap="round" opacity="0.85"/>
+            {/* Raised arm right (flexing) */}
             <path d="M46 36 C54 30 60 26 63 22" stroke={tier.body} strokeWidth="4" strokeLinecap="round" opacity="0.85"/>
+            {/* Legs */}
             <path d="M37 58 C34 66 32 72 30 78" stroke={tier.body} strokeWidth="4" strokeLinecap="round" opacity="0.85"/>
             <path d="M37 58 C40 66 44 72 46 78" stroke={tier.body} strokeWidth="4" strokeLinecap="round" opacity="0.85"/>
+            {/* Fists */}
             <circle cx="24" cy="21" r="4" fill={tier.body} opacity="0.8"/>
             <circle cx="64" cy="21" r="4" fill={tier.body} opacity="0.8"/>
+            {/* Stars / energy sparks at top */}
             {stats.weekly_sessions >= 3 && (
               <>
                 <circle cx="44" cy="6" r="2" fill="#fbbf24" opacity="0.9"/>
@@ -78,18 +83,13 @@ export default function WorkoutAvatar({ stats }: { stats: WorkoutStats }) {
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-lg font-bold text-head">{tier.label}</span>
-            <span className="text-xs text-muted">· this week</span>
+            <span className="text-lg font-bold text-white">{tier.label}</span>
+            <span className="text-xs text-gray-500">· this week</span>
           </div>
-          <div className="text-xs text-muted space-y-0.5 mb-3">
+          <div className="text-xs text-gray-400 space-y-0.5 mb-3">
             <p>{stats.weekly_sessions} session{stats.weekly_sessions !== 1 ? 's' : ''}</p>
             <p>{stats.total_sets} total sets</p>
-            {stats.personal_bests > 0 && (
-              <p className="flex items-center gap-1">
-                <Award size={11} style={{ color: '#f59e0b' }} />
-                {stats.personal_bests} personal best{stats.personal_bests !== 1 ? 's' : ''}
-              </p>
-            )}
+            {stats.personal_bests > 0 && <p>🏅 {stats.personal_bests} personal best{stats.personal_bests !== 1 ? 's' : ''}</p>}
           </div>
 
           {/* Buffs */}
@@ -102,12 +102,12 @@ export default function WorkoutAvatar({ stats }: { stats: WorkoutStats }) {
                   className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium"
                   style={{ backgroundColor: b.color + '22', color: b.color, border: `1px solid ${b.color}44` }}
                 >
-                  <b.Icon size={10} /> {b.label}
+                  {b.emoji} {b.label}
                 </span>
               ))}
             </div>
           ) : (
-            <p className="text-xs italic" style={{ color: 'var(--t-faint)' }}>Log a session to unlock buffs</p>
+            <p className="text-xs text-gray-600 italic">Log a session to unlock buffs</p>
           )}
         </div>
       </div>

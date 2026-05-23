@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Plus, X, ChevronUp, Trash2, Pencil, Check, Sparkles, Trophy, Star, Dumbbell, Heart, Target, Eye, Activity, Wallet, Video, History, BookOpen, Salad, Moon, Award, Flame, AlertTriangle, Clock } from 'lucide-react';
+import { Plus, X, ChevronUp, Trash2, Pencil, Check, Sparkles, Trophy, Star, Dumbbell, Heart, Target, Eye, Activity, Wallet, Video, History, BookOpen, Salad, Moon, Award, Flame } from 'lucide-react';
 import api from '../lib/api';
 import type { MeSummary, MeProfile, MeSkill, MeClaim, MeMentor, PointsLogEntry } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
@@ -894,7 +894,7 @@ export default function Me() {
                                 color: '#f59e0b',
                                 border: '1px solid #f59e0b40',
                               }}>
-                              <Check size={9} /> Claimed
+                              ✓ CLAIMED
                             </span>
                           )}
                         </div>
@@ -904,7 +904,7 @@ export default function Me() {
                         <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                           {claim.deadline && (
                             <span className="text-[10px]" style={{ color: isOverdue ? '#ef4444' : 'var(--t-faint)' }}>
-                              {isOverdue && <AlertTriangle size={10} className="inline mr-0.5" />}<Clock size={10} className="inline mr-0.5" />{claim.deadline}
+                              {isOverdue ? '⚠ ' : ''}⏳ {claim.deadline}
                             </span>
                           )}
                           {claim.reward_text && (

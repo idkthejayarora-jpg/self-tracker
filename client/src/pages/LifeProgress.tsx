@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Send, Plus, X, Check, Settings2, Sparkles, Zap, Star } from 'lucide-react';
+import { Send, Plus, X, Check, Settings2, Sparkles } from 'lucide-react';
 import api from '../lib/api';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -275,7 +275,7 @@ export default function LifeProgress() {
 
             {loaded && !hasHistory && !sending && (
               <div className="flex flex-col items-center justify-center text-center py-12 space-y-3">
-                <Zap size={32} style={{ color: 'var(--t-faint)' }} />
+                <p className="text-4xl" style={{ opacity: 0.2 }}>⚡</p>
                 <p className="text-sm font-semibold" style={{ color: 'var(--t-muted)' }}>Tell AXIS what you're working toward</p>
                 <p className="text-xs max-w-xs leading-relaxed" style={{ color: 'var(--t-faint)' }}>
                   Write freely — goals, plans, struggles. AXIS reads your data and queues tasks that actually move things forward.
@@ -325,7 +325,7 @@ export default function LifeProgress() {
                               }}>
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-semibold" style={{ color: isDone ? '#4ade80' : 'var(--t-head)' }}>
-                                  {isDone && <Check size={10} className="inline mr-0.5" />}{rec.title}
+                                  {isDone && '✓ '}{rec.title}
                                 </p>
                                 <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                                   <PriorityBadge p={rec.priority} />
@@ -340,7 +340,7 @@ export default function LifeProgress() {
                                   <button onClick={() => acceptRec(rec, key)}
                                     className="text-[10px] font-bold px-2 py-1 rounded-lg tap text-white"
                                     style={{ background: '#16a34a' }}>
-                                    <Check size={10} className="inline mr-0.5" /> Add
+                                    ✓ Add
                                   </button>
                                   <button onClick={() => setSkipped(prev => new Set(prev).add(key))}
                                     className="w-6 h-6 rounded-lg flex items-center justify-center tap"
@@ -515,7 +515,7 @@ export default function LifeProgress() {
                               <input autoFocus value={editIcon} onChange={e => setEditIcon(e.target.value)}
                                 className="w-9 rounded-lg px-1 py-1 text-sm text-center focus:outline-none"
                                 style={{ background: 'var(--s3)', color: 'var(--t-head)', border: `1px solid ${sector.color}40` }}
-                                placeholder="icon" />
+                                placeholder="🎯" />
                               <input value={editName} onChange={e => setEditName(e.target.value)}
                                 onKeyDown={e => { if (e.key === 'Enter') saveEdit(sector.id); if (e.key === 'Escape') setEditingId(null); }}
                                 className="flex-1 rounded-lg px-2 py-1 text-xs focus:outline-none"
@@ -558,7 +558,7 @@ export default function LifeProgress() {
                               style={{ color: isGhost ? 'var(--t-faint)' : 'var(--t-head)', transition: 'color 0.4s' }}>
                               {sector.name}
                             </p>
-                            {isFull && <p className="text-[9px] font-bold mt-0.5 flex items-center gap-0.5" style={{ color: sector.color }}><Star size={9} /> Complete</p>}
+                            {isFull && <p className="text-[9px] font-bold mt-0.5" style={{ color: sector.color }}>✦ Complete</p>}
                           </div>
                         )}
 
