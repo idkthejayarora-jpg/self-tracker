@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Plus, ChevronRight, ChevronDown, ChevronUp, Trash2, X,
   AlertTriangle, Lightbulb, PenLine, Film, CheckCircle2, Archive,
@@ -65,6 +66,128 @@ function nextStatus(s: Idea['status']): Idea['status'] | null {
   const i = STATUS_ORDER.indexOf(s);
   if (i < 0 || i >= STATUS_ORDER.indexOf('posted')) return null;
   return STATUS_ORDER[i + 1];
+}
+
+// ── Custom Select ─────────────────────────────────────────────────────────────
+
+interface SelectOption {
+  value: string | number | null;
+  label: string;
+  color?: string;
+}
+
+function CustomSelect({
+  value, options, onChange, placeholder = 'Select…', accent, wide,
+}: {
+  value: string | number | null;
+  options: SelectOption[];
+  onChange: (v: string | number | null) => void;
+  placeholder?: string;
+  accent?: string;
+  wide?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef   = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
+
+  const selected = options.find(o => o.value === value);
+  const accentColor = accent || ACCENT;
+
+  const openPanel = () => {
+    if (!triggerRef.current) return;
+    const r = triggerRef.current.getBoundingClientRect();
+    const panelH = Math.min(options.length * 42 + 12, 260);
+    const top = (window.innerHeight - r.bottom) >= panelH ? r.bottom + 4 : r.top - panelH - 4;
+    setPos({ top, left: r.left, width: wide ? Math.max(r.width, 190) : Math.max(r.width, 150) });
+    setOpen(true);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => {
+      if (!panelRef.current?.contains(e.target as Node) && !triggerRef.current?.contains(e.target as Node))
+        setOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [open]);
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => open ? setOpen(false) : openPanel()}
+        className="flex items-center justify-between gap-2 text-sm rounded-xl px-3 py-2 tap"
+        style={{
+          background: 'var(--s3)',
+          color: selected?.color || 'var(--t-muted)',
+          border: `1px solid ${open ? accentColor + '55' : 'var(--b)'}`,
+          minWidth: 0,
+          transition: 'border-color 0.15s',
+        }}>
+        <span className="flex items-center gap-1.5 truncate min-w-0">
+          {selected?.color && (
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: selected.color }} />
+          )}
+          {selected
+            ? <span className="truncate">{selected.label}</span>
+            : <span style={{ color: 'var(--t-faint)' }}>{placeholder}</span>
+          }
+        </span>
+        <ChevronDown size={11} style={{
+          flexShrink: 0, opacity: 0.45,
+          transform: open ? 'rotate(180deg)' : undefined,
+          transition: 'transform 0.15s',
+        }} />
+      </button>
+
+      {open && pos && createPortal(
+        <div
+          ref={panelRef}
+          className="scale-in"
+          style={{
+            position: 'fixed',
+            top: pos.top,
+            left: pos.left,
+            width: pos.width,
+            zIndex: 99999,
+            background: 'var(--s1)',
+            border: `1px solid ${accentColor}35`,
+            borderRadius: 14,
+            boxShadow: `0 12px 40px rgba(0,0,0,0.55), 0 0 0 1px ${accentColor}12`,
+            overflow: 'hidden',
+            maxHeight: 260,
+            overflowY: 'auto',
+          }}>
+          {/* neon top line */}
+          <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${accentColor}55, transparent)` }} />
+          <div style={{ padding: '4px 0' }}>
+            {options.map((opt, i) => {
+              const isSel = opt.value === value;
+              return (
+                <button key={i} type="button"
+                  onClick={() => { onChange(opt.value); setOpen(false); }}
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2.5 tap text-left"
+                  style={{
+                    background: isSel ? `${opt.color || accentColor}18` : 'transparent',
+                    color: isSel ? (opt.color || accentColor) : 'var(--t-body)',
+                  }}>
+                  {opt.color && (
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: opt.color }} />
+                  )}
+                  <span className="text-sm font-medium flex-1">{opt.label}</span>
+                  {isSel && <span className="text-[10px] font-black" style={{ color: opt.color || accentColor }}>✓</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  );
 }
 
 // ── Idea Card ─────────────────────────────────────────────────────────────────
@@ -273,23 +396,24 @@ function IdeaCard({
             <div>
               <label className="text-[10px] mb-1.5 block font-black tracking-[0.15em]"
                 style={{ color: 'var(--t-faint)' }}>NICHE</label>
-              <select value={selNiche ?? ''} onChange={e => setSelNiche(e.target.value ? Number(e.target.value) : null)}
-                className="w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none"
-                style={{ background: 'var(--s3)', color: 'var(--t-body)', border: '1px solid var(--b)' }}>
-                <option value="">None</option>
-                {niches.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
-              </select>
+              <CustomSelect
+                value={selNiche}
+                options={[{ value: null, label: 'None' }, ...niches.map(n => ({ value: n.id, label: n.name, color: n.color }))]}
+                onChange={v => setSelNiche(v as number | null)}
+                placeholder="None"
+                accent={ACCENT}
+                wide
+              />
             </div>
             <div>
               <label className="text-[10px] mb-1.5 block font-black tracking-[0.15em]"
                 style={{ color: 'var(--t-faint)' }}>TYPE</label>
-              <select value={selType} onChange={e => setSelType(e.target.value as Idea['content_type'])}
-                className="w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none"
-                style={{ background: 'var(--s3)', color: 'var(--t-body)', border: '1px solid var(--b)' }}>
-                {(['reel','post','carousel','story'] as const).map(t =>
-                  <option key={t} value={t}>{TYPE_LABELS[t]}</option>
-                )}
-              </select>
+              <CustomSelect
+                value={selType}
+                options={(['reel','post','carousel','story'] as const).map(t => ({ value: t, label: TYPE_LABELS[t] }))}
+                onChange={v => setSelType(v as Idea['content_type'])}
+                accent={ACCENT}
+              />
             </div>
           </div>
 
@@ -571,20 +695,20 @@ export default function Content() {
                 style={{ background: 'var(--s3)', color: 'var(--t-head)', border: `1px solid ${ACCENT}25` }}
                 autoComplete="off"
               />
-              <select value={dumpNiche ?? ''} onChange={e => setDumpNiche(e.target.value ? Number(e.target.value) : null)}
-                className="text-sm rounded-xl px-2 py-2"
-                style={{ background: 'var(--s3)', color: 'var(--t-muted)', border: '1px solid var(--b)' }}>
-                <option value="">No niche</option>
-                {niches.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
-              </select>
-              <select value={dumpType} onChange={e => setDumpType(e.target.value as Idea['content_type'])}
-                className="text-sm rounded-xl px-2 py-2"
-                style={{ background: 'var(--s3)', color: 'var(--t-muted)', border: '1px solid var(--b)' }}>
-                <option value="reel">Reel</option>
-                <option value="post">Post</option>
-                <option value="carousel">Carousel</option>
-                <option value="story">Story</option>
-              </select>
+              <CustomSelect
+                value={dumpNiche}
+                options={[{ value: null, label: 'No niche' }, ...niches.map(n => ({ value: n.id, label: n.name, color: n.color }))]}
+                onChange={v => setDumpNiche(v as number | null)}
+                placeholder="No niche"
+                accent={ACCENT}
+                wide
+              />
+              <CustomSelect
+                value={dumpType}
+                options={(['reel','post','carousel','story'] as const).map(t => ({ value: t, label: TYPE_LABELS[t] }))}
+                onChange={v => setDumpType(v as Idea['content_type'])}
+                accent={ACCENT}
+              />
               <button type="submit" disabled={dumping || !dumpTitle.trim()}
                 className="tap flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl font-bold"
                 style={{ background: `${ACCENT}e6`, color: '#fff', opacity: dumpTitle.trim() ? 1 : 0.4 }}>
