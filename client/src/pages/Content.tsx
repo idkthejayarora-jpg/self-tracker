@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Plus, ChevronRight, ChevronDown, ChevronUp, Trash2, X,
   AlertTriangle, Lightbulb, PenLine, Film, CheckCircle2, Archive,
@@ -78,11 +78,21 @@ function IdeaCard({
   onDelete: (id: number) => Promise<void>;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [notes, setNotes] = useState(idea.notes || '');
-  const [schedDate, setSchedDate] = useState(idea.scheduled_date || '');
+  const [editing,  setEditing]  = useState(false);
+  const [notes,    setNotes]    = useState(idea.notes || '');
+  const [schedDate,setSchedDate]= useState(idea.scheduled_date || '');
   const [selNiche, setSelNiche] = useState<number | null>(idea.niche_id);
-  const [selType, setSelType] = useState<Idea['content_type']>(idea.content_type);
-  const [saving, setSaving] = useState(false);
+  const [selType,  setSelType]  = useState<Idea['content_type']>(idea.content_type);
+  const [saving,   setSaving]   = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Scroll the expanded content into view so user doesn't have to hunt for it
+  useEffect(() => {
+    if (expanded && cardRef.current) {
+      setTimeout(() => cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+    }
+    if (!expanded) setEditing(false);
+  }, [expanded]);
 
   const advance = async () => {
     const next = nextStatus(idea.status);
@@ -99,105 +109,199 @@ function IdeaCard({
       content_type: selType,
     });
     setSaving(false);
-    setExpanded(false);
+    setEditing(false);
   };
 
   const sm = STATUS_META[idea.status];
 
   return (
-    <div className="rounded-xl mb-2"
-      style={{ background: 'var(--s2)', border: '1px solid var(--b)' }}>
-      {/* Header row */}
-      <div className="flex items-center gap-2 px-3 py-2.5">
-        {/* Niche dot */}
-        <div className="w-2 h-2 rounded-full flex-shrink-0"
-          style={{ background: idea.niche_color || 'var(--t-faint)' }} />
+    <div ref={cardRef} className="rounded-xl mb-3"
+      style={{ background: 'var(--s2)', border: `1px solid ${expanded ? (idea.niche_color || ACCENT) + '30' : 'var(--b)'}`, transition: 'border-color 0.2s' }}>
 
-        {/* Title */}
-        <p className="flex-1 text-sm font-medium leading-snug min-w-0 truncate"
+      {/* ── Header row ── */}
+      <div className="flex items-center gap-2 px-4 py-3">
+        {/* Niche colour dot */}
+        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+          style={{ background: idea.niche_color || 'var(--t-faint)', boxShadow: expanded ? `0 0 6px ${idea.niche_color || ACCENT}` : undefined }} />
+
+        {/* Title — truncate only when collapsed */}
+        <p className={`flex-1 text-sm font-semibold leading-snug min-w-0 ${expanded ? 'whitespace-normal' : 'truncate'}`}
           style={{ color: 'var(--t-head)' }}>
           {idea.title}
         </p>
 
         {/* Status badge */}
-        <span className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md font-semibold flex-shrink-0"
+        <span className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg font-bold flex-shrink-0"
           style={{ background: sm.color + '18', color: sm.color }}>
           {sm.icon}
           <span className="hidden sm:inline">{sm.label}</span>
         </span>
 
-        {/* Advance button */}
-        {nextStatus(idea.status) && (
-          <button onClick={advance}
-            className="tap w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
-            style={{ background: 'var(--s3)', color: 'var(--t-muted)' }}
-            title={`Move to ${nextStatus(idea.status)}`}>
-            <ChevronRight size={15} />
-          </button>
-        )}
-
         {/* Expand toggle */}
         <button
           onClick={() => setExpanded(v => !v)}
-          className="tap w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
-          style={{ background: 'var(--s3)', color: 'var(--t-faint)' }}>
+          className="tap w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ background: expanded ? `${ACCENT}12` : 'var(--s3)', color: expanded ? ACCENT : 'var(--t-faint)' }}>
           {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
         </button>
       </div>
 
-      {/* Meta row */}
-      <div className="flex flex-wrap items-center gap-1.5 px-3 pb-2.5" style={{ marginTop: -4 }}>
-        {idea.niche_name && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium"
-            style={{ background: (idea.niche_color || ACCENT) + '18', color: idea.niche_color || ACCENT }}>
-            {idea.niche_name}
+      {/* ── Collapsed meta row ── */}
+      {!expanded && (
+        <div className="flex flex-wrap items-center gap-1.5 px-4 pb-3" style={{ marginTop: -4 }}>
+          {idea.niche_name && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium"
+              style={{ background: (idea.niche_color || ACCENT) + '18', color: idea.niche_color || ACCENT }}>
+              {idea.niche_name}
+            </span>
+          )}
+          <span className="text-[10px] px-1.5 py-0.5 rounded-md"
+            style={{ background: 'var(--s3)', color: 'var(--t-faint)' }}>
+            {TYPE_LABELS[idea.content_type]}
           </span>
-        )}
-        <span className="text-[10px] px-1.5 py-0.5 rounded-md"
-          style={{ background: 'var(--s3)', color: 'var(--t-faint)' }}>
-          {TYPE_LABELS[idea.content_type]}
-        </span>
-        {idea.scheduled_date && (
-          <span className="text-[10px] flex items-center gap-1" style={{ color: 'var(--t-dim)' }}>
-            {fmtDate(idea.scheduled_date)}
-          </span>
-        )}
-      </div>
+          {idea.scheduled_date && (
+            <span className="text-[10px]" style={{ color: 'var(--t-dim)' }}>
+              {fmtDate(idea.scheduled_date)}
+            </span>
+          )}
+        </div>
+      )}
 
-      {/* Expanded edit panel */}
-      {expanded && (
-        <div className="px-3 pb-3 space-y-2.5" style={{ borderTop: '1px solid var(--b)', paddingTop: 12 }}>
+      {/* ── Expanded: VIEW mode ── */}
+      {expanded && !editing && (
+        <div className="px-4 pb-4 space-y-4" style={{ borderTop: '1px solid var(--b)', paddingTop: 16 }}>
+
+          {/* Properties grid */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+            <div>
+              <p className="text-[9px] font-black tracking-[0.18em] mb-1" style={{ color: 'var(--t-faint)' }}>STATUS</p>
+              <span className="flex items-center gap-1.5 text-xs font-bold" style={{ color: sm.color }}>
+                {sm.icon} {sm.label}
+              </span>
+            </div>
+            <div>
+              <p className="text-[9px] font-black tracking-[0.18em] mb-1" style={{ color: 'var(--t-faint)' }}>TYPE</p>
+              <span className="text-xs font-semibold" style={{ color: 'var(--t-body)' }}>
+                {TYPE_LABELS[idea.content_type]}
+              </span>
+            </div>
+            {idea.niche_name && (
+              <div>
+                <p className="text-[9px] font-black tracking-[0.18em] mb-1" style={{ color: 'var(--t-faint)' }}>NICHE</p>
+                <span className="text-xs font-bold" style={{ color: idea.niche_color || ACCENT }}>
+                  {idea.niche_name}
+                </span>
+              </div>
+            )}
+            {idea.scheduled_date && (
+              <div>
+                <p className="text-[9px] font-black tracking-[0.18em] mb-1" style={{ color: 'var(--t-faint)' }}>SCHEDULED</p>
+                <span className="text-xs font-semibold" style={{ color: 'var(--t-body)' }}>
+                  {fmtDate(idea.scheduled_date)}
+                </span>
+              </div>
+            )}
+            {idea.posted_at && (
+              <div>
+                <p className="text-[9px] font-black tracking-[0.18em] mb-1" style={{ color: 'var(--t-faint)' }}>POSTED</p>
+                <span className="text-xs font-bold" style={{ color: '#22c55e' }}>
+                  {fmtDate(idea.posted_at)}
+                </span>
+              </div>
+            )}
+            <div>
+              <p className="text-[9px] font-black tracking-[0.18em] mb-1" style={{ color: 'var(--t-faint)' }}>CREATED</p>
+              <span className="text-xs" style={{ color: 'var(--t-muted)' }}>
+                {fmtDate(idea.created_at.slice(0, 10))}
+              </span>
+            </div>
+          </div>
+
+          {/* Notes / description */}
+          {idea.notes ? (
+            <div>
+              <p className="text-[9px] font-black tracking-[0.18em] mb-1.5" style={{ color: 'var(--t-faint)' }}>NOTES</p>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--t-muted)' }}>
+                {idea.notes}
+              </p>
+            </div>
+          ) : (
+            <p className="text-[11px] font-mono italic" style={{ color: 'var(--t-faint)', opacity: 0.5 }}>
+              // no notes yet — tap Edit to add
+            </p>
+          )}
+
+          {/* Action row */}
+          <div className="flex items-center justify-between pt-1">
+            <div className="flex gap-2 flex-wrap">
+              {nextStatus(idea.status) && (
+                <button onClick={advance}
+                  className="tap flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl font-bold"
+                  style={{ background: sm.color + '18', color: sm.color, border: `1px solid ${sm.color}30` }}>
+                  <ChevronRight size={12} /> {nextStatus(idea.status)}
+                </button>
+              )}
+              <button onClick={() => setEditing(true)}
+                className="tap text-xs px-3 py-2 rounded-xl font-semibold"
+                style={{ background: 'var(--s3)', color: 'var(--t-muted)' }}>
+                Edit
+              </button>
+            </div>
+            <div className="flex gap-1.5">
+              {idea.status !== 'archived' && (
+                <button onClick={() => onUpdate(idea.id, { status: 'archived' })}
+                  className="tap p-2 rounded-xl flex items-center justify-center"
+                  title="Archive"
+                  style={{ background: 'var(--s3)', color: 'var(--t-faint)' }}>
+                  <Archive size={13} />
+                </button>
+              )}
+              <button onClick={() => onDelete(idea.id)}
+                className="tap p-2 rounded-xl flex items-center justify-center"
+                title="Delete"
+                style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+                <Trash2 size={13} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Expanded: EDIT mode ── */}
+      {expanded && editing && (
+        <div className="px-4 pb-4 space-y-3" style={{ borderTop: '1px solid var(--b)', paddingTop: 16 }}>
+          <p className="text-[9px] font-black tracking-[0.18em]" style={{ color: ACCENT, opacity: 0.7 }}>EDITING</p>
           <textarea
-            rows={2}
+            rows={3}
             placeholder="Notes, caption ideas, hashtags..."
             value={notes}
             onChange={e => setNotes(e.target.value)}
-            className="w-full text-xs rounded-lg px-3 py-2 resize-none"
-            style={{ background: 'var(--s3)', color: 'var(--t-body)', border: '1px solid var(--b)' }}
+            className="w-full text-sm rounded-xl px-3 py-2.5 resize-none focus:outline-none"
+            style={{ background: 'var(--s3)', color: 'var(--t-body)', border: `1px solid ${ACCENT}25` }}
           />
-          <div className="flex flex-wrap gap-2">
-            <div className="flex-1 min-w-[130px]">
-              <label className="text-[10px] mb-1 block font-semibold tracking-wider"
-                style={{ color: 'var(--t-faint)' }}>SCHEDULE</label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="text-[10px] mb-1.5 block font-black tracking-[0.15em]"
+                style={{ color: 'var(--t-faint)' }}>SCHEDULE DATE</label>
               <input type="date" value={schedDate} onChange={e => setSchedDate(e.target.value)}
-                className="w-full text-xs rounded-lg px-2 py-1.5"
+                className="w-full text-sm rounded-xl px-3 py-2 focus:outline-none"
                 style={{ background: 'var(--s3)', color: 'var(--t-body)', border: '1px solid var(--b)' }} />
             </div>
-            <div className="flex-1 min-w-[110px]">
-              <label className="text-[10px] mb-1 block font-semibold tracking-wider"
+            <div>
+              <label className="text-[10px] mb-1.5 block font-black tracking-[0.15em]"
                 style={{ color: 'var(--t-faint)' }}>NICHE</label>
               <select value={selNiche ?? ''} onChange={e => setSelNiche(e.target.value ? Number(e.target.value) : null)}
-                className="w-full text-xs rounded-lg px-2 py-1.5"
+                className="w-full text-sm rounded-xl px-3 py-2 focus:outline-none"
                 style={{ background: 'var(--s3)', color: 'var(--t-body)', border: '1px solid var(--b)' }}>
                 <option value="">None</option>
                 {niches.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
               </select>
             </div>
-            <div className="flex-1 min-w-[100px]">
-              <label className="text-[10px] mb-1 block font-semibold tracking-wider"
-                style={{ color: 'var(--t-faint)' }}>TYPE</label>
+            <div>
+              <label className="text-[10px] mb-1.5 block font-black tracking-[0.15em]"
+                style={{ color: 'var(--t-faint)' }}>CONTENT TYPE</label>
               <select value={selType} onChange={e => setSelType(e.target.value as Idea['content_type'])}
-                className="w-full text-xs rounded-lg px-2 py-1.5"
+                className="w-full text-sm rounded-xl px-3 py-2 focus:outline-none"
                 style={{ background: 'var(--s3)', color: 'var(--t-body)', border: '1px solid var(--b)' }}>
                 {(['reel','post','carousel','story'] as const).map(t =>
                   <option key={t} value={t}>{TYPE_LABELS[t]}</option>
@@ -205,33 +309,17 @@ function IdeaCard({
               </select>
             </div>
           </div>
-          <div className="flex items-center justify-between">
-            <div className="flex gap-2">
-              <button onClick={saveEdits} disabled={saving}
-                className="tap text-xs px-3 py-1.5 rounded-lg font-semibold"
-                style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
-                {saving ? 'Saving...' : 'Save'}
-              </button>
-              <button onClick={() => setExpanded(false)}
-                className="tap text-xs px-3 py-1.5 rounded-lg"
-                style={{ background: 'var(--s3)', color: 'var(--t-muted)' }}>
-                Cancel
-              </button>
-            </div>
-            <div className="flex gap-1.5">
-              {idea.status !== 'archived' && (
-                <button onClick={() => onUpdate(idea.id, { status: 'archived' })}
-                  className="tap text-xs px-2 py-1.5 rounded-lg flex items-center gap-1"
-                  style={{ background: 'var(--s3)', color: 'var(--t-faint)' }}>
-                  <Archive size={11} /> Archive
-                </button>
-              )}
-              <button onClick={() => onDelete(idea.id)}
-                className="tap text-xs px-2 py-1.5 rounded-lg flex items-center gap-1"
-                style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
-                <Trash2 size={11} /> Delete
-              </button>
-            </div>
+          <div className="flex items-center gap-2 pt-1">
+            <button onClick={saveEdits} disabled={saving}
+              className="tap text-sm px-4 py-2 rounded-xl font-bold flex-1"
+              style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
+              {saving ? 'Saving...' : 'Save changes'}
+            </button>
+            <button onClick={() => setEditing(false)}
+              className="tap text-sm px-4 py-2 rounded-xl font-semibold"
+              style={{ background: 'var(--s3)', color: 'var(--t-muted)' }}>
+              Cancel
+            </button>
           </div>
         </div>
       )}
@@ -386,7 +474,7 @@ export default function Content() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="anim-page max-w-2xl mx-auto space-y-5 pb-8"
+    <div className="anim-page max-w-2xl mx-auto space-y-6 pb-12"
       style={{ '--accent-rgb': '236 72 153' } as React.CSSProperties}>
 
       {/* Focus trap — prevents mobile keyboard auto-opening on page load */}
@@ -451,7 +539,7 @@ export default function Content() {
       <div style={{ position: 'relative', zIndex: 1 }}>
 
       {/* Tabs */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2.5 flex-wrap">
         {(['board','calendar','niches','stats'] as const).map(t => (
           <button key={t}
             className="tap px-4 py-1.5 rounded-xl text-sm font-semibold transition-colors capitalize"
@@ -468,7 +556,7 @@ export default function Content() {
 
       {/* ── BOARD TAB ── */}
       {tab === 'board' && (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {/* Quick dump bar */}
           <form onSubmit={quickDump} className="card px-4 py-4 space-y-3"
             style={{ borderColor: `${ACCENT}25`, background: `linear-gradient(135deg, var(--s1) 0%, ${ACCENT}05 100%)` }}>
@@ -517,7 +605,7 @@ export default function Content() {
             const meta = STATUS_META[status];
             const isCollapsed = collapsed[status];
             return (
-              <div key={status} className="card" style={{ padding: '12px 14px' }}>
+              <div key={status} className="card" style={{ padding: '16px 18px' }}>
                 <button
                   className="tap w-full flex items-center justify-between mb-3"
                   onClick={() => setCollapsed(c => ({ ...c, [status]: !c[status] }))}>

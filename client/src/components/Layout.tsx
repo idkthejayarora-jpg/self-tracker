@@ -488,7 +488,7 @@ export default function Layout() {
           </div>
         </header>
 
-        <main className="flex-1 px-3 py-5 md:px-12 md:py-10 max-w-5xl w-full mx-auto overflow-x-hidden">
+        <main className="flex-1 px-4 py-6 md:px-12 md:py-10 max-w-5xl w-full mx-auto overflow-x-hidden">
           <Outlet />
         </main>
       </div>

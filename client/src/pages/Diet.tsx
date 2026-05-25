@@ -547,6 +547,14 @@ export default function Diet() {
   const [calorieGoal, setCalorieGoal] = useState<number>(getStoredGoal);
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalInput, setGoalInput]     = useState('');
+  const addFormRef = useRef<HTMLDivElement>(null);
+
+  // Scroll the manual-add form into view when it opens (avoids hunting for it)
+  useEffect(() => {
+    if (showAdd && addFormRef.current) {
+      setTimeout(() => addFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+    }
+  }, [showAdd]);
 
   const isToday = date === new Date().toISOString().slice(0, 10);
 
@@ -648,7 +656,7 @@ export default function Diet() {
   }, {} as Record<string, FoodLog[]>);
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 anim-page pb-10"
+    <div className="max-w-2xl mx-auto space-y-6 anim-page pb-16"
       style={{ '--accent-rgb': '52 211 153', '--accent-rgb-light': '#34d399' } as React.CSSProperties}>
 
       {/* Background grid */}
@@ -822,10 +830,12 @@ export default function Diet() {
             </div>
 
             {showAdd && (
-              <AddEntryForm
-                onAdd={addEntry} savedMeals={savedMeals}
-                onClose={() => { setShowAdd(false); setAddError(''); }} addError={addError}
-              />
+              <div ref={addFormRef}>
+                <AddEntryForm
+                  onAdd={addEntry} savedMeals={savedMeals}
+                  onClose={() => { setShowAdd(false); setAddError(''); }} addError={addError}
+                />
+              </div>
             )}
 
             {/* Meal groups */}
@@ -834,25 +844,25 @@ export default function Diet() {
               if (entries.length === 0) return null;
               const subtotal = entries.reduce((s, e) => s + e.calories, 0);
               return (
-                <div key={mt} className="space-y-1.5">
-                  <div className="flex items-center gap-2">
+                <div key={mt} className="space-y-2">
+                  <div className="flex items-center gap-2 px-1">
                     <span className="text-base">{MEAL_EMOJI[mt]}</span>
-                    <span className="text-sm font-semibold text-head capitalize">{mt}</span>
-                    <span className="text-xs ml-auto" style={{ color: 'var(--t-dim)' }}>{Math.round(subtotal)} kcal</span>
+                    <span className="text-sm font-bold text-head capitalize tracking-wide">{mt}</span>
+                    <span className="text-xs ml-auto font-mono" style={{ color: 'var(--t-dim)' }}>{Math.round(subtotal)} kcal</span>
                   </div>
                   {entries.map(e => (
-                    <div key={e.id} className="card flex items-center gap-3 px-3 py-2.5">
+                    <div key={e.id} className="card flex items-center gap-3 px-4 py-3">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-head truncate">{e.name}</p>
-                        <p className="text-xs mt-0.5" style={{ color: 'var(--t-dim)' }}>
-                          {e.calories} kcal
-                          {e.protein_g > 0 && ` · ${e.protein_g}g P`}
-                          {e.carbs_g  > 0 && ` · ${e.carbs_g}g C`}
-                          {e.fat_g    > 0 && ` · ${e.fat_g}g F`}
+                        <p className="text-sm font-semibold text-head leading-snug">{e.name}</p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--t-dim)' }}>
+                          <span style={{ color: '#f59e0b' }}>{e.calories} kcal</span>
+                          {e.protein_g > 0 && <span style={{ color: '#60a5fa' }}> · {e.protein_g}g P</span>}
+                          {e.carbs_g  > 0 && <span style={{ color: '#34d399' }}> · {e.carbs_g}g C</span>}
+                          {e.fat_g    > 0 && <span style={{ color: '#fbbf24' }}> · {e.fat_g}g F</span>}
                         </p>
                       </div>
-                      <button type="button" onClick={() => deleteEntry(e.id)} className="tap" style={{ color: 'var(--t-faint)' }}>
-                        <Trash2 size={14} />
+                      <button type="button" onClick={() => deleteEntry(e.id)} className="tap p-1.5 rounded-lg" style={{ color: 'var(--t-faint)', background: 'var(--s3)' }}>
+                        <Trash2 size={13} />
                       </button>
                     </div>
                   ))}
