@@ -343,14 +343,20 @@ export default function Layout() {
               {me?.profile.avatar_emoji || '⚔️'}
             </div>
             <div className="min-w-0 flex-1">
-              {/* Class tier label — tiny pill above rank badge */}
-              {me?.rankClass && (() => {
-                const cm = CLASS_META[me.rankClass];
+              {/* Class tier label — inferred from rank if API hasn't sent it yet */}
+              {(() => {
+                const RANK_TO_CLASS_SB: Record<string,string> = {
+                  E:'Soldier',D:'Soldier',C:'Soldier',B:'Soldier',
+                  A:'General',S:'General','S+':'King','∞':'King',
+                };
+                const cls = me?.rankClass || (me?.rank ? RANK_TO_CLASS_SB[me.rank] : null);
+                if (!cls) return null;
+                const cm = CLASS_META[cls];
                 return (
                   <div className="flex items-center gap-1 mb-0.5">
                     <span className="text-[8px] font-black tracking-[0.22em]"
                       style={{ color: cm?.color ?? rankColor, opacity: 0.75 }}>
-                      {cm?.label ?? me.rankClass}
+                      {cm?.label ?? cls}
                     </span>
                     <span className="text-[8px]" style={{ color: 'var(--t-faint)', opacity: 0.4 }}>CLASS</span>
                   </div>
@@ -672,12 +678,17 @@ export default function Layout() {
           }}>
           <div className="flex items-center gap-2">
             <div className="flex flex-col items-start">
-              {me?.rankClass && (
-                <span className="text-[7px] font-black tracking-[0.2em] leading-none mb-0.5"
-                  style={{ color: CLASS_META[me.rankClass]?.color ?? rankColor, opacity: 0.7 }}>
-                  {me.rankClass.toUpperCase()}
-                </span>
-              )}
+              {(() => {
+                const R2C: Record<string,string> = {E:'Soldier',D:'Soldier',C:'Soldier',B:'Soldier',A:'General',S:'General','S+':'King','∞':'King'};
+                const cls = me?.rankClass || (me?.rank ? R2C[me.rank] : null);
+                if (!cls) return null;
+                return (
+                  <span className="text-[7px] font-black tracking-[0.2em] leading-none mb-0.5"
+                    style={{ color: CLASS_META[cls]?.color ?? rankColor, opacity: 0.7 }}>
+                    {cls.toUpperCase()}
+                  </span>
+                );
+              })()}
               <span className="text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full"
                 style={{ background: `${rankColor}20`, color: rankColor, border: `1px solid ${rankColor}40` }}>
                 {me?.rank || 'E'} RANK

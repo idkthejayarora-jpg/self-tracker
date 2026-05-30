@@ -229,6 +229,32 @@ export default function Me() {
   // Claim cooldown error toast
   const [claimError, setClaimError] = useState<string | null>(null);
 
+  // Rank card color — syncs with sidebar via localStorage
+  const [customRankColor, setCustomRankColor] = useState<string | null>(
+    () => localStorage.getItem('rank_card_color')
+  );
+  const [showRankPalette, setShowRankPalette] = useState(false);
+
+  const RANK_PALETTE_ME = [
+    '#e2c97e','#ef4444','#f97316','#a855f7','#22c55e',
+    '#3b82f6','#ec4899','#06b6d4','#f59e0b','#84cc16',
+    '#6366f1','#ffffff',
+  ];
+
+  function applyRankColorMe(hex: string) {
+    setCustomRankColor(hex);
+    localStorage.setItem('rank_card_color', hex);
+    document.documentElement.style.setProperty('--rank-rgb',
+      hex.replace('#','').match(/.{2}/g)!.map(x=>parseInt(x,16)).join(' ')
+    );
+    setShowRankPalette(false);
+  }
+  function resetRankColorMe() {
+    setCustomRankColor(null);
+    localStorage.removeItem('rank_card_color');
+    setShowRankPalette(false);
+  }
+
   const load = useCallback(async () => {
     const [summary, log] = await Promise.all([
       api.get<MeSummary>('/me/summary'),
@@ -397,8 +423,18 @@ export default function Me() {
   const activeClaims = claims.filter(c => c.status === 'active');
   const claimedList  = claims.filter(c => c.status === 'claimed');
   const rankGlow     = RANK_GLOW[rank] ?? 'transparent';
-  const rankSolid    = RANK_SOLID[rank] ?? rankColor;
-  const classCfg     = rankClass ? CLASS_CONFIG[rankClass] : null;
+  const autoSolid    = RANK_SOLID[rank] ?? rankColor;
+  // Custom color from palette picker (shared with sidebar via localStorage)
+  const rankSolid    = customRankColor ?? autoSolid;
+
+  // Infer class from rank if API hasn't sent rankClass yet (backwards compat)
+  const RANK_TO_CLASS: Record<string, string> = {
+    E: 'Soldier', D: 'Soldier', C: 'Soldier', B: 'Soldier',
+    A: 'General', S: 'General',
+    'S+': 'King', '∞': 'King',
+  };
+  const effectiveClass = rankClass || RANK_TO_CLASS[rank] || 'Soldier';
+  const classCfg = CLASS_CONFIG[effectiveClass];
 
   // ── Form field style shorthand
   const ff = 'w-full rounded-xl px-3 py-2 text-sm focus:outline-none';
@@ -476,23 +512,64 @@ export default function Me() {
           )}
 
           {/* Rank badge + label */}
-          <div className="flex flex-col items-center gap-1.5">
+          <div className="flex flex-col items-center gap-1.5 relative">
             <div className="flex items-center gap-3">
-              <span
-                className="rank-glow-anim text-[12px] font-black px-4 py-1.5 rounded-full tracking-[0.2em] uppercase"
+              {/* Rank badge — tap to open color picker */}
+              <button
+                onClick={() => setShowRankPalette(v => !v)}
+                title="Tap to change rank color"
+                className="rank-glow-anim tap text-[12px] font-black px-4 py-1.5 rounded-full tracking-[0.2em] uppercase relative"
                 style={{
                   background: `${rankSolid}18`,
                   color: rankSolid,
                   border: `1px solid ${rankSolid}60`,
                   '--rg': rankSolid,
                 } as React.CSSProperties}>
+                <span className="ring-ping ring-ping-2" style={{ color: rankSolid }} />
                 {rank} RANK
-              </span>
+              </button>
               <span className="font-mono text-[11px] font-bold tabular-nums"
                 style={{ color: rankSolid, textShadow: `0 0 10px ${rankSolid}80` }}>
                 {totalPoints.toLocaleString()} PTS
               </span>
             </div>
+
+            {/* Inline color palette */}
+            {showRankPalette && (
+              <div className="scale-in rounded-2xl p-3 mt-1"
+                style={{
+                  background: 'rgba(8,12,22,0.92)',
+                  backdropFilter: 'blur(28px)',
+                  WebkitBackdropFilter: 'blur(28px)',
+                  border: `1px solid ${rankSolid}30`,
+                  boxShadow: `0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px ${rankSolid}12`,
+                  minWidth: 200,
+                }}>
+                <p className="text-[9px] font-black tracking-[0.2em] mb-2.5 text-center"
+                  style={{ color: 'var(--t-faint)' }}>RANK COLOR</p>
+                <div className="grid grid-cols-6 gap-2 justify-items-center mb-2.5">
+                  {RANK_PALETTE_ME.map(c => (
+                    <button key={c} type="button" onClick={() => applyRankColorMe(c)}
+                      className="tap w-7 h-7 rounded-full"
+                      style={{
+                        background: c,
+                        transform: rankSolid === c ? 'scale(1.3)' : undefined,
+                        outline: rankSolid === c ? `2px solid ${c}` : '2px solid transparent',
+                        outlineOffset: 2,
+                        boxShadow: rankSolid === c ? `0 0 10px ${c}` : undefined,
+                      }} />
+                  ))}
+                </div>
+                {customRankColor && (
+                  <button onClick={resetRankColorMe}
+                    className="w-full text-[10px] py-1.5 rounded-xl tap text-center"
+                    style={{ background: 'rgba(255,255,255,0.07)', color: 'var(--t-faint)' }}>
+                    Reset to rank default
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Rank label + desc */}
             <div className="text-center">
               <p className="text-[13px] font-bold tracking-wide" style={{ color: rankSolid, textShadow: isLight ? 'none' : `0 0 10px ${rankSolid}60` }}>{rankLabel}</p>
