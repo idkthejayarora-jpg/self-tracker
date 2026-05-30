@@ -68,6 +68,9 @@
   /* ── Radius ── */
   --r-card: 20px;
   --r-sm:   14px;
+
+  /* ── Rank color — updated by JS when rank changes; drives body gradient ── */
+  --rank-rgb: 99 102 241;   /* default indigo until JS sets real rank color */
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -83,14 +86,17 @@
   body {
     /* Base deep navy */
     background-color: #080c16;
-    /* Fixed gradient orbs — glass panels blur these to create real glass */
+    /* Dynamic gradient orbs — two primary orbs track --rank-rgb so the
+       whole background shifts to match the user's current rank color.
+       Two ambient orbs stay fixed for depth. */
     background-image:
-      radial-gradient(ellipse 75% 65% at 8%  12%,  rgba(99,102,241,0.22)  0%, transparent 58%),
-      radial-gradient(ellipse 60% 55% at 92% 88%,  rgba(168,85,247,0.16)  0%, transparent 58%),
-      radial-gradient(ellipse 55% 50% at 50% 50%,  rgba(14,165,233,0.08)  0%, transparent 65%),
-      radial-gradient(ellipse 40% 40% at 78% 18%,  rgba(236,72,153,0.09)  0%, transparent 55%);
+      radial-gradient(ellipse 80% 70% at 10% 10%,  rgba(var(--rank-rgb),0.22) 0%, transparent 58%),
+      radial-gradient(ellipse 65% 60% at 92% 90%,  rgba(var(--rank-rgb),0.13) 0%, transparent 58%),
+      radial-gradient(ellipse 55% 50% at 50% 50%,  rgba(14,165,233,0.06)      0%, transparent 65%),
+      radial-gradient(ellipse 40% 40% at 75% 15%,  rgba(var(--rank-rgb),0.08) 0%, transparent 55%);
     background-attachment: fixed;
     background-size: 100% 100%;
+    transition: background-image 0.8s ease;
 
     color: var(--t-head);
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', sans-serif;
@@ -442,9 +448,9 @@ html.light {
 html.light body {
   background-color: #e4eaf4;
   background-image:
-    radial-gradient(ellipse 75% 65% at 8%  12%, rgba(99,102,241,0.14) 0%, transparent 58%),
-    radial-gradient(ellipse 60% 55% at 92% 88%, rgba(168,85,247,0.10) 0%, transparent 58%),
-    radial-gradient(ellipse 40% 40% at 78% 18%, rgba(236,72,153,0.07) 0%, transparent 55%);
+    radial-gradient(ellipse 80% 70% at 10% 10%, rgba(var(--rank-rgb),0.14) 0%, transparent 58%),
+    radial-gradient(ellipse 65% 60% at 92% 90%, rgba(var(--rank-rgb),0.08) 0%, transparent 58%),
+    radial-gradient(ellipse 40% 40% at 75% 15%, rgba(var(--rank-rgb),0.06) 0%, transparent 55%);
   color: var(--t-head);
 }
 html.light input, html.light textarea, html.light select {

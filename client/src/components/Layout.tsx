@@ -32,6 +32,30 @@ const RANK_COLORS: Record<string, string> = {
   A: '#f97316', S: '#ef4444', 'S+': '#e2c97e',
 };
 
+// Palette for custom rank card / gradient color
+const RANK_PALETTE = [
+  '#e2c97e', // gold
+  '#ef4444', // red
+  '#f97316', // orange
+  '#a855f7', // purple
+  '#22c55e', // green
+  '#3b82f6', // blue
+  '#ec4899', // pink
+  '#06b6d4', // cyan
+  '#f59e0b', // amber
+  '#84cc16', // lime
+  '#6366f1', // indigo
+  '#ffffff',  // white
+];
+
+function hexToRgb(hex: string): string {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+  return `${r} ${g} ${b}`;
+}
+
 interface MeSnap {
   rank: string;
   rankColor: string;
@@ -193,6 +217,12 @@ export default function Layout() {
   const [customLogo, setCustomLogo] = useState<string | null>(() => localStorage.getItem('custom_logo'));
   const logoInputRef = useRef<HTMLInputElement>(null);
 
+  // Custom rank card / gradient color
+  const [customRankColor, setCustomRankColor] = useState<string | null>(
+    () => localStorage.getItem('rank_card_color')
+  );
+  const [showRankPalette, setShowRankPalette] = useState(false);
+
   function handleLogoClick() { logoInputRef.current?.click(); }
   function handleLogoFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -213,7 +243,36 @@ export default function Layout() {
       .catch(() => {});
   }, []);
 
-  const rankColor = me ? (RANK_COLORS[me.rank] ?? '#6366f1') : 'rgb(var(--accent-rgb))';
+  // Effective rank color — custom overrides auto; falls back to indigo on load
+  const autoRankColor = me ? (RANK_COLORS[me.rank] ?? '#6366f1') : '#6366f1';
+  const rankColor     = customRankColor ?? autoRankColor;
+
+  // Keep --rank-rgb CSS variable in sync → drives the body gradient orbs
+  useEffect(() => {
+    document.documentElement.style.setProperty('--rank-rgb', hexToRgb(rankColor));
+  }, [rankColor]);
+
+  // Close palette on click-outside
+  useEffect(() => {
+    if (!showRankPalette) return;
+    const close = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-rank-palette]')) setShowRankPalette(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [showRankPalette]);
+
+  function applyRankColor(hex: string) {
+    setCustomRankColor(hex);
+    localStorage.setItem('rank_card_color', hex);
+    setShowRankPalette(false);
+  }
+  function resetRankColor() {
+    setCustomRankColor(null);
+    localStorage.removeItem('rank_card_color');
+    setShowRankPalette(false);
+  }
 
   return (
     <div className="flex min-h-screen overflow-x-hidden">
@@ -260,31 +319,36 @@ export default function Layout() {
         </div>
 
         {/* Character snapshot */}
-        <div className="mx-1 mb-2 px-3 py-2.5 rounded-xl"
+        <div className="mx-1 mb-2 px-3 py-2.5 rounded-xl relative" data-rank-palette
           style={{
-            background: `rgba(255,255,255,0.06)`,
+            background: `${rankColor}10`,
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            border: `1px solid rgba(255,255,255,0.12)`,
-            boxShadow: `inset 0 1px 0 rgba(255,255,255,0.14), 0 4px 16px rgba(0,0,0,0.3)`,
+            border: `1px solid ${rankColor}30`,
+            boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 20px ${rankColor}15`,
+            transition: 'background 0.4s, border-color 0.4s, box-shadow 0.4s',
           }}>
           <div className="flex items-center gap-2 mb-2">
             {/* Avatar */}
             <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl shrink-0"
-              style={{ background: `${rankColor}18`, border: `1px solid ${rankColor}35` }}>
+              style={{ background: `${rankColor}20`, border: `1px solid ${rankColor}40` }}>
               {me?.profile.avatar_emoji || '⚔️'}
             </div>
-            <div className="min-w-0">
-              {/* Rank badge with radar rings */}
+            <div className="min-w-0 flex-1">
+              {/* Rank badge — click to open color picker */}
               <div className="flex items-center gap-1.5 mb-0.5">
-                <div className="relative inline-flex" style={{ color: rankColor }}>
+                <button
+                  onClick={() => setShowRankPalette(v => !v)}
+                  title="Customise rank color"
+                  className="relative inline-flex tap"
+                  style={{ color: rankColor }}>
                   <span className="ring-ping ring-ping-2" />
                   <span className="ring-ping ring-ping-3" />
                   <span className="text-[9px] font-black px-2 py-0.5 rounded-full tracking-widest relative z-10"
                     style={{ background: `${rankColor}22`, color: rankColor, border: `1px solid ${rankColor}40` }}>
                     {me?.rank || 'E'} RANK
                   </span>
-                </div>
+                </button>
               </div>
               <p className="text-xs font-bold text-head truncate leading-tight">
                 {me?.profile.character_name || user?.username || 'Hunter'}
@@ -294,6 +358,7 @@ export default function Layout() {
               )}
             </div>
           </div>
+
           {/* Merit bar */}
           <div>
             <div className="flex justify-between items-center mb-1">
@@ -304,9 +369,45 @@ export default function Layout() {
             </div>
             <div className="xp-track">
               <div className="xp-fill bar-fill"
-                style={{ width: `${me?.meritScore ?? 0}%`, background: rankColor, boxShadow: `0 0 6px ${rankColor}80` }} />
+                style={{ width: `${me?.meritScore ?? 0}%`, background: rankColor, boxShadow: `0 0 8px ${rankColor}90`, transition: 'background 0.4s, box-shadow 0.4s' }} />
             </div>
           </div>
+
+          {/* Color palette popup */}
+          {showRankPalette && (
+            <div className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl p-3 scale-in"
+              style={{
+                background: 'rgba(10,15,30,0.92)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                border: '1px solid rgba(255,255,255,0.14)',
+                boxShadow: `0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px ${rankColor}20`,
+              }}>
+              <p className="text-[9px] font-black tracking-[0.18em] mb-2.5" style={{ color: 'var(--t-faint)' }}>
+                RANK COLOR
+              </p>
+              <div className="grid grid-cols-6 gap-1.5 mb-2.5">
+                {RANK_PALETTE.map(c => (
+                  <button key={c} type="button" onClick={() => applyRankColor(c)}
+                    className="tap w-6 h-6 rounded-full transition-transform"
+                    style={{
+                      background: c,
+                      transform: rankColor === c ? 'scale(1.3)' : undefined,
+                      outline: rankColor === c ? `2px solid ${c}` : '2px solid transparent',
+                      outlineOffset: 2,
+                      boxShadow: rankColor === c ? `0 0 8px ${c}` : undefined,
+                    }} />
+                ))}
+              </div>
+              {customRankColor && (
+                <button onClick={resetRankColor}
+                  className="w-full text-[10px] py-1 rounded-lg tap text-center"
+                  style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--t-faint)' }}>
+                  Reset to rank default
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Clock */}
@@ -564,7 +665,7 @@ export default function Layout() {
           </div>
         </header>
 
-        <main className="flex-1 px-4 py-6 md:px-12 md:py-10 max-w-5xl w-full mx-auto overflow-x-hidden">
+        <main className="flex-1 px-5 py-7 md:px-14 md:py-10 max-w-5xl w-full mx-auto overflow-x-hidden">
           <Outlet />
         </main>
       </div>
