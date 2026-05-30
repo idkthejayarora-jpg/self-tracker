@@ -490,21 +490,21 @@ export default function Me() {
         {/* Card content overlay */}
         <div className="relative flex flex-col items-center gap-3 px-4 py-6 sm:gap-4 sm:px-5 sm:py-8" style={{ zIndex: 3 }}>
 
-          {/* Class tier banner — Soldier / General / King */}
+          {/* Class tier banner — uses rankSolid so custom color applies everywhere */}
           {classCfg && (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full scale-in"
               style={{
-                background: classCfg.bgColor,
-                border: `1px solid ${classCfg.color}30`,
+                background: `${rankSolid}14`,
+                border: `1px solid ${rankSolid}35`,
                 backdropFilter: 'blur(12px)',
               }}>
               <div className="flex flex-col items-center gap-0 leading-none">
                 <span className="text-[9px] font-black tracking-[0.28em]"
-                  style={{ color: classCfg.color }}>
+                  style={{ color: rankSolid }}>
                   {classCfg.label}
                 </span>
                 <span className="text-[8px] font-medium tracking-wider"
-                  style={{ color: classCfg.color, opacity: 0.55 }}>
+                  style={{ color: rankSolid, opacity: 0.55 }}>
                   {classCfg.sublabel}
                 </span>
               </div>

@@ -351,14 +351,13 @@ export default function Layout() {
                 };
                 const cls = me?.rankClass || (me?.rank ? RANK_TO_CLASS_SB[me.rank] : null);
                 if (!cls) return null;
-                const cm = CLASS_META[cls];
                 return (
                   <div className="flex items-center gap-1 mb-0.5">
                     <span className="text-[8px] font-black tracking-[0.22em]"
-                      style={{ color: cm?.color ?? rankColor, opacity: 0.75 }}>
-                      {cm?.label ?? cls}
+                      style={{ color: rankColor, opacity: 0.75 }}>
+                      {CLASS_META[cls]?.label ?? cls}
                     </span>
-                    <span className="text-[8px]" style={{ color: 'var(--t-faint)', opacity: 0.4 }}>CLASS</span>
+                    <span className="text-[8px]" style={{ color: rankColor, opacity: 0.3 }}>CLASS</span>
                   </div>
                 );
               })()}
@@ -684,7 +683,7 @@ export default function Layout() {
                 if (!cls) return null;
                 return (
                   <span className="text-[7px] font-black tracking-[0.2em] leading-none mb-0.5"
-                    style={{ color: CLASS_META[cls]?.color ?? rankColor, opacity: 0.7 }}>
+                    style={{ color: rankColor, opacity: 0.7 }}>
                     {cls.toUpperCase()}
                   </span>
                 );
