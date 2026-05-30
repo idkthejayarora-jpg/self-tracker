@@ -26,28 +26,39 @@ const RANK_TIERS = [
 ];
 
 function computeMeritScore(stats, skills, claims, totalPoints, maxCurrentStreak) {
-  // 7 stats, Wealth ×0.5 weight, others ×1.0. Denominator = 6.5.
-  const weightedSum =
-    (stats.strength   || 0) +
-    (stats.vitality   || 0) +
-    (stats.discipline || 0) +
-    (stats.focus      || 0) +
-    (stats.endurance  || 0) +
-    (stats.creativity || 0) +
-    0.5 * (stats.wealth || 0);
-  const weightedAvg = weightedSum / 6.5;
-  const statScore  = Math.round((weightedAvg / 100) * 45);
+  // Stats: if a system is genuinely unused its stat is null/undefined → treat as
+  // a neutral 30 so one unused feature doesn't crater the whole score.
+  // Wealth always defaults to 50 (break-even) when no finance data exists.
+  const s = {
+    strength:   stats.strength   ?? 30,
+    vitality:   stats.vitality   ?? 30,   // no sleep logs → neutral, not zero
+    discipline: stats.discipline ?? 30,   // no habits → neutral
+    focus:      stats.focus      ?? 30,   // no tasks → neutral
+    endurance:  stats.endurance  ?? 20,
+    creativity: stats.creativity ?? 20,   // not a creator → neutral
+    wealth:     stats.wealth     ?? 50,
+  };
 
-  const streakScore = Math.min(15, Math.round((maxCurrentStreak / 30) * 15));
+  const weightedSum  = s.strength + s.vitality + s.discipline + s.focus +
+                       s.endurance + s.creativity + 0.5 * s.wealth;
+  const weightedAvg  = weightedSum / 6.5;
+  const statScore    = Math.round((weightedAvg / 100) * 45);
 
-  const avgSkillLvl = skills.length > 0
-    ? skills.reduce((s, sk) => s + (sk.level || 1), 0) / skills.length : 0;
-  const skillScore  = Math.min(15, Math.round(avgSkillLvl * 1.5));
+  // Streak: 14-day current streak = full 15 pts (was 30 — too brutal)
+  const streakScore  = Math.min(15, Math.round((maxCurrentStreak / 14) * 15));
 
+  // Skills: level 5 avg = full 15 pts; all-level-1 still earns ~3 pts
+  const avgSkillLvl  = skills.length > 0
+    ? skills.reduce((a, sk) => a + (sk.level || 1), 0) / skills.length : 1;
+  const skillScore   = Math.min(15, Math.round(avgSkillLvl * 3));
+
+  // Claims: unchanged
   const claimedCount = claims.filter(c => c.status === 'claimed').length;
   const claimScore   = Math.min(10, claimedCount * 2);
 
-  const ptsScore = Math.min(15, Math.round(totalPoints / 800));
+  // Points: every 200 pts = 1 merit point → 3 000 pts needed for full 15
+  // (was /800 → needed 12 000 pts — basically unreachable)
+  const ptsScore     = Math.min(15, Math.floor(totalPoints / 200));
 
   return {
     total: statScore + streakScore + skillScore + claimScore + ptsScore,
@@ -80,60 +91,76 @@ router.get('/summary', (req, res) => {
   const totalPoints = getTotalPoints(uid);
 
   // ── Stats ──
-  // STRENGTH: workout sessions this month
+  // Each stat returns null when the feature hasn't been used at all so the
+  // merit formula can apply a neutral default instead of a punishing zero.
+
+  // STRENGTH: workout sessions this month — 12 sessions = 100 (was 20, too brutal)
   const workoutSessions = (db.prepare(
     `SELECT COUNT(*) as n FROM workout_sessions WHERE user_id=? AND strftime('%Y-%m',date)=strftime('%Y-%m', date('now', ${SQL_OFF}))`
   ).get(uid) || {}).n || 0;
-  const strength = Math.min(100, Math.round((workoutSessions / 20) * 100));
+  const strength = Math.min(100, Math.round((workoutSessions / 12) * 100));
 
-  // VITALITY: avg sleep quality last 7 nights
+  // VITALITY: avg sleep quality last 7 nights — null if nothing logged
   const sleepRow = db.prepare(
-    `SELECT AVG(quality) as q FROM sleep_logs WHERE user_id=? AND date >= date('now', ${SQL_OFF}, '-7 days')`
+    `SELECT AVG(quality) as q, COUNT(*) as cnt FROM sleep_logs WHERE user_id=? AND date >= date('now', ${SQL_OFF}, '-7 days')`
   ).get(uid);
-  const vitality = sleepRow?.q ? Math.round(sleepRow.q * 20) : 0;
+  const vitality = (sleepRow?.cnt > 0 && sleepRow?.q)
+    ? Math.round(sleepRow.q * 20)
+    : null;   // null → neutral 30 in formula
 
-  // DISCIPLINE: habit completion rate this week
+  // DISCIPLINE: habit completion rate this week — null if no habits exist
   const habitTotal = (db.prepare('SELECT COUNT(*) as n FROM habits WHERE user_id=?').get(uid) || {}).n || 0;
   const habitDone = (db.prepare(
     `SELECT COUNT(*) as n FROM habit_logs WHERE user_id=? AND done=1 AND date >= date('now', ${SQL_OFF}, '-7 days')`
   ).get(uid) || {}).n || 0;
   const maxHabitDays = habitTotal * 7;
-  const discipline = maxHabitDays > 0 ? Math.min(100, Math.round((habitDone / maxHabitDays) * 100)) : 0;
+  const discipline = maxHabitDays > 0
+    ? Math.min(100, Math.round((habitDone / maxHabitDays) * 100))
+    : null;   // null → neutral 30
 
-  // FOCUS: task completion rate this month
+  // FOCUS: task completion rate this month — null if no tasks created this month
   const taskTotal = (db.prepare(
     `SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND created_at >= date('now', ${SQL_OFF}, 'start of month')`
   ).get(uid) || {}).n || 0;
   const taskDone = (db.prepare(
     `SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND status='completed' AND completed_at >= date('now', ${SQL_OFF}, 'start of month')`
   ).get(uid) || {}).n || 0;
-  const focus = taskTotal > 0 ? Math.min(100, Math.round((taskDone / taskTotal) * 100)) : 0;
+  const focus = taskTotal > 0
+    ? Math.min(100, Math.round((taskDone / taskTotal) * 100))
+    : null;   // null → neutral 30
 
-  // ENDURANCE: longest streak
+  // ENDURANCE: longest streak ever — 14 days = 100 (was 30, near-impossible)
   const longestStreak = (db.prepare(
     'SELECT MAX(longest_streak) as m FROM streaks WHERE user_id=?'
   ).get(uid) || {}).m || 0;
-  const endurance = Math.min(100, Math.round((longestStreak / 30) * 100));
+  const endurance = Math.min(100, Math.round((longestStreak / 14) * 100));
 
-  // WEALTH: finance net this month → 0-100 (50 = break-even)
+  // WEALTH: finance net this month — 50 when no entries (break-even assumed)
   const finRow = db.prepare(
-    `SELECT SUM(CASE WHEN type='income' THEN amount ELSE -amount END) as net FROM finance_entries WHERE user_id=? AND strftime('%Y-%m',date)=strftime('%Y-%m', date('now', ${SQL_OFF}))`
+    `SELECT SUM(CASE WHEN type='income' THEN amount ELSE -amount END) as net,
+            COUNT(*) as cnt
+     FROM finance_entries WHERE user_id=? AND strftime('%Y-%m',date)=strftime('%Y-%m', date('now', ${SQL_OFF}))`
   ).get(uid);
-  const net = finRow?.net || 0;
-  const wealth = net >= 0
-    ? Math.min(100, 50 + Math.round((net / 10000) * 50))
-    : Math.max(0,  50 - Math.round((Math.abs(net) / 10000) * 50));
+  const net    = finRow?.net || 0;
+  const wealth = finRow?.cnt > 0
+    ? (net >= 0
+        ? Math.min(100, 50 + Math.round((net / 10000) * 50))
+        : Math.max(0,   50 - Math.round((Math.abs(net) / 10000) * 50)))
+    : null;   // null → formula uses 50 default
 
-  // CREATIVITY: content posts this month (8 = max)
-  let creativity = 0;
+  // CREATIVITY: content posts this month — 4 posts = 100 (was 8)
+  // null if never used the Creator feature
+  let creativity = null;
   try {
     const contentRow = db.prepare(
       `SELECT COUNT(*) as n FROM content_ideas WHERE user_id=? AND status='posted'
        AND posted_at >= date('now', ${SQL_OFF}, 'start of month')`
     ).get(uid);
-    const postsThisMonth = contentRow?.n || 0;
-    creativity = Math.min(100, Math.round((postsThisMonth / 8) * 100));
-  } catch (_) { /* content tables may not exist for very old users */ }
+    if (contentRow?.n > 0) {
+      creativity = Math.min(100, Math.round((contentRow.n / 4) * 100));
+    }
+    // if n === 0 stay null → neutral 20 in formula (not penalised for non-creator)
+  } catch (_) { /* content tables may not exist */ }
 
   const stats = { strength, vitality, discipline, focus, endurance, wealth, creativity };
 
