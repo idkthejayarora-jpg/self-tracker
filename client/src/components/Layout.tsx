@@ -69,7 +69,13 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
       style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}>
       <div className="scale-in p-5 w-full max-w-sm space-y-4 rounded-2xl"
-        style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
+        style={{
+          background: 'rgba(255,255,255,0.09)',
+          backdropFilter: 'blur(40px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(200%)',
+          border: '1px solid rgba(255,255,255,0.16)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), 0 24px 64px rgba(0,0,0,0.6)',
+        }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center"
@@ -210,11 +216,19 @@ export default function Layout() {
   const rankColor = me ? (RANK_COLORS[me.rank] ?? '#6366f1') : 'rgb(var(--accent-rgb))';
 
   return (
-    <div className="flex min-h-screen overflow-x-hidden" style={{ background: 'var(--s0)' }}>
+    <div className="flex min-h-screen overflow-x-hidden">
 
       {/* ═══════════════════════════════════════ DESKTOP SIDEBAR */}
       <aside className="hidden md:flex flex-col py-4 px-2 shrink-0"
-        style={{ width: 228, background: 'var(--s1)', borderRight: '1px solid var(--b)', position: 'sticky', top: 0, height: '100vh', overflowY: 'auto' }}>
+        style={{
+          width: 228,
+          background: 'rgba(255,255,255,0.05)',
+          backdropFilter: 'blur(40px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(200%)',
+          borderRight: '1px solid rgba(255,255,255,0.09)',
+          boxShadow: 'inset -1px 0 0 rgba(255,255,255,0.06)',
+          position: 'sticky', top: 0, height: '100vh', overflowY: 'auto',
+        }}>
 
         {/* Logo — click to upload custom image from gallery */}
         <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoFile} />
@@ -246,8 +260,14 @@ export default function Layout() {
         </div>
 
         {/* Character snapshot */}
-        <div className="mx-1 mb-2 px-3 py-2.5 rounded-xl glow-card"
-          style={{ background: 'var(--s2)', border: `1px solid ${rankColor}25`, '--gc': `${rankColor}50` } as React.CSSProperties}>
+        <div className="mx-1 mb-2 px-3 py-2.5 rounded-xl"
+          style={{
+            background: `rgba(255,255,255,0.06)`,
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: `1px solid rgba(255,255,255,0.12)`,
+            boxShadow: `inset 0 1px 0 rgba(255,255,255,0.14), 0 4px 16px rgba(0,0,0,0.3)`,
+          }}>
           <div className="flex items-center gap-2 mb-2">
             {/* Avatar */}
             <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl shrink-0"
@@ -301,33 +321,39 @@ export default function Layout() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 9,
-                padding: isActive ? '7px 10px 7px 8px' : '7px 10px',
-                borderRadius: 10,
+                padding: '7px 10px',
+                borderRadius: 12,
                 fontSize: 13,
                 fontWeight: isActive ? 600 : 500,
                 color: isActive ? color : 'var(--t-faint)',
-                background: isActive ? `${color}14` : 'transparent',
-                borderLeft: isActive ? `2px solid ${color}` : '2px solid transparent',
+                background: isActive
+                  ? `rgba(255,255,255,0.08)`
+                  : 'transparent',
+                border: isActive
+                  ? `1px solid rgba(255,255,255,0.13)`
+                  : '1px solid transparent',
+                boxShadow: isActive
+                  ? `inset 0 1px 0 rgba(255,255,255,0.14), 0 2px 8px rgba(0,0,0,0.2)`
+                  : 'none',
                 textDecoration: 'none',
-                transition: 'all 0.15s',
+                transition: 'all 0.18s cubic-bezier(0.34,1.2,0.64,1)',
               } as React.CSSProperties)}
               onMouseEnter={e => {
                 if (e.currentTarget.getAttribute('aria-current') !== 'page') {
                   e.currentTarget.style.color = 'var(--t-body)';
-                  e.currentTarget.style.background = 'var(--s2)';
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                  e.currentTarget.style.border = '1px solid rgba(255,255,255,0.09)';
                 }
               }}
               onMouseLeave={e => {
                 if (e.currentTarget.getAttribute('aria-current') !== 'page') {
                   e.currentTarget.style.color = 'var(--t-faint)';
                   e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.border = '1px solid transparent';
                 }
               }}>
               {({ isActive }) => (
                 <>
-                  {isActive && (
-                    <span className="active-dot shrink-0" style={{ color, background: color }} />
-                  )}
                   <Icon size={14} style={{ color: isActive ? color : 'inherit', flexShrink: 0, transition: 'color 0.15s' }} />
                   <span className="truncate">{label}</span>
                 </>
@@ -339,14 +365,22 @@ export default function Layout() {
         {/* Bottom utilities */}
         <div className="shrink-0 pt-2 space-y-0.5" style={{ borderTop: '1px solid var(--b)' }}>
           {([
-            { icon: isLight ? Moon : Sun, label: isLight ? 'Dark mode' : 'Light mode', onClick: toggleMode, hoverColor: 'var(--t-head)' },
-            { icon: KeyRound, label: 'Password', onClick: () => setShowChangePw(true), hoverColor: 'var(--t-head)' },
+            { icon: isLight ? Moon : Sun, label: isLight ? 'Dark mode' : 'Light mode', onClick: toggleMode },
+            { icon: KeyRound, label: 'Password', onClick: () => setShowChangePw(true) },
           ] as const).map(({ icon: Icon, label, onClick }) => (
             <button key={label} onClick={onClick}
               className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150"
-              style={{ color: 'var(--t-faint)' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--t-head)'; (e.currentTarget as HTMLElement).style.background = 'var(--s2)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--t-faint)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+              style={{ color: 'var(--t-faint)', border: '1px solid transparent' }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.color = 'var(--t-head)';
+                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)';
+                (e.currentTarget as HTMLElement).style.border = '1px solid rgba(255,255,255,0.10)';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.color = 'var(--t-faint)';
+                (e.currentTarget as HTMLElement).style.background = 'transparent';
+                (e.currentTarget as HTMLElement).style.border = '1px solid transparent';
+              }}>
               <Icon size={13} /> {label}
             </button>
           ))}
@@ -354,15 +388,30 @@ export default function Layout() {
           {/* Accent picker */}
           <button onClick={() => setShowTheme(s => !s)}
             className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150"
-            style={{ color: 'var(--t-faint)' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--t-head)'; (e.currentTarget as HTMLElement).style.background = 'var(--s2)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--t-faint)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+            style={{ color: 'var(--t-faint)', border: '1px solid transparent' }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.color = 'var(--t-head)';
+              (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)';
+              (e.currentTarget as HTMLElement).style.border = '1px solid rgba(255,255,255,0.10)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.color = 'var(--t-faint)';
+              (e.currentTarget as HTMLElement).style.background = 'transparent';
+              (e.currentTarget as HTMLElement).style.border = '1px solid transparent';
+            }}>
             <Palette size={13} />
             <span className="flex-1 text-left">Accent</span>
             <span className="w-3 h-3 rounded-full border border-white/10" style={{ background: accent.main }} />
           </button>
           {showTheme && (
-            <div className="rounded-xl p-3 space-y-2" style={{ background: 'var(--s2)', border: '1px solid var(--b)' }}>
+            <div className="rounded-xl p-3 space-y-2"
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255,255,255,0.14)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.14), 0 4px 16px rgba(0,0,0,0.3)',
+              }}>
               <div className="flex items-center justify-between">
                 <span className="sys-label">Accent Color</span>
                 <button onClick={() => setShowTheme(false)} style={{ color: 'var(--t-faint)' }}><X size={11} /></button>
@@ -380,9 +429,17 @@ export default function Layout() {
 
           <button onClick={logout}
             className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150"
-            style={{ color: 'var(--t-faint)' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#f87171'; (e.currentTarget as HTMLElement).style.background = '#ef444410'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--t-faint)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+            style={{ color: 'var(--t-faint)', border: '1px solid transparent' }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.color = '#f87171';
+              (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.10)';
+              (e.currentTarget as HTMLElement).style.border = '1px solid rgba(239,68,68,0.16)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.color = 'var(--t-faint)';
+              (e.currentTarget as HTMLElement).style.background = 'transparent';
+              (e.currentTarget as HTMLElement).style.border = '1px solid transparent';
+            }}>
             <LogOut size={13} /> Sign out
           </button>
         </div>
@@ -390,7 +447,13 @@ export default function Layout() {
 
       {/* ═══════════════════════════════════════ MOBILE ICON STRIP */}
       <aside className="md:hidden fixed left-0 top-0 bottom-0 z-50 flex flex-col items-center"
-        style={{ width: 'var(--sidebar-w)', background: 'var(--s1)', borderRight: '1px solid var(--b)' }}>
+        style={{
+          width: 'var(--sidebar-w)',
+          background: 'rgba(255,255,255,0.05)',
+          backdropFilter: 'blur(32px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(32px) saturate(200%)',
+          borderRight: '1px solid rgba(255,255,255,0.09)',
+        }}>
 
         {/* Logo (mobile) — click to upload */}
         <div className="shrink-0 pt-3 pb-1">
@@ -450,7 +513,15 @@ export default function Layout() {
       {/* Mobile accent picker */}
       {showTheme && (
         <div className="md:hidden fixed z-40 scale-in"
-          style={{ left: 'calc(var(--sidebar-w) + 8px)', bottom: '80px', background: 'var(--s2)', border: '1px solid var(--b)', borderRadius: 14, padding: 12, minWidth: 160 }}>
+          style={{
+            left: 'calc(var(--sidebar-w) + 8px)', bottom: '80px',
+            background: 'rgba(255,255,255,0.09)',
+            backdropFilter: 'blur(28px) saturate(200%)',
+            WebkitBackdropFilter: 'blur(28px) saturate(200%)',
+            border: '1px solid rgba(255,255,255,0.16)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.16), 0 8px 32px rgba(0,0,0,0.4)',
+            borderRadius: 16, padding: 12, minWidth: 160,
+          }}>
           <div className="flex items-center justify-between mb-2">
             <span className="sys-label">Accent</span>
             <button onClick={() => setShowTheme(false)} style={{ color: 'var(--t-faint)' }}><X size={11} /></button>
@@ -470,7 +541,12 @@ export default function Layout() {
       <div className="mob-offset flex-1 flex flex-col min-w-0">
         {/* Mobile top header */}
         <header className="md:hidden flex items-center justify-between px-3 py-2.5"
-          style={{ background: 'var(--s1)', borderBottom: '1px solid var(--b)' }}>
+          style={{
+            background: 'rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(24px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            borderBottom: '1px solid rgba(255,255,255,0.09)',
+          }}>
           <div className="flex items-center gap-2">
             <span className="text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full"
               style={{ background: `${rankColor}20`, color: rankColor, border: `1px solid ${rankColor}40` }}>
