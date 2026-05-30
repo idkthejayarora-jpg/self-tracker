@@ -29,7 +29,14 @@ const NAV = [
 
 const RANK_COLORS: Record<string, string> = {
   E: '#6b7280', D: '#3b82f6', C: '#22c55e', B: '#a855f7',
-  A: '#f97316', S: '#ef4444', 'S+': '#e2c97e',
+  A: '#f97316', S: '#ef4444', 'S+': '#e2c97e', '∞': '#93c5fd',
+};
+
+// Class tier config — drives the faint class pill shown above the rank badge
+const CLASS_META: Record<string, { label: string; color: string }> = {
+  Soldier: { label: 'SOLDIER',  color: '#94a3b8' },
+  General: { label: 'GENERAL',  color: '#fb923c' },
+  King:    { label: 'KING',     color: '#fbbf24' },
 };
 
 // Palette for custom rank card / gradient color
@@ -58,6 +65,7 @@ function hexToRgb(hex: string): string {
 
 interface MeSnap {
   rank: string;
+  rankClass: string;
   rankColor: string;
   rankLabel: string;
   meritScore: number;
@@ -335,6 +343,20 @@ export default function Layout() {
               {me?.profile.avatar_emoji || '⚔️'}
             </div>
             <div className="min-w-0 flex-1">
+              {/* Class tier label — tiny pill above rank badge */}
+              {me?.rankClass && (() => {
+                const cm = CLASS_META[me.rankClass];
+                return (
+                  <div className="flex items-center gap-1 mb-0.5">
+                    <span className="text-[8px] font-black tracking-[0.22em]"
+                      style={{ color: cm?.color ?? rankColor, opacity: 0.75 }}>
+                      {cm?.label ?? me.rankClass}
+                    </span>
+                    <span className="text-[8px]" style={{ color: 'var(--t-faint)', opacity: 0.4 }}>CLASS</span>
+                  </div>
+                );
+              })()}
+
               {/* Rank badge — click to open color picker */}
               <div className="flex items-center gap-1.5 mb-0.5">
                 <button
@@ -649,10 +671,18 @@ export default function Layout() {
             borderBottom: '1px solid rgba(255,255,255,0.09)',
           }}>
           <div className="flex items-center gap-2">
-            <span className="text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full"
-              style={{ background: `${rankColor}20`, color: rankColor, border: `1px solid ${rankColor}40` }}>
-              {me?.rank || 'E'}
-            </span>
+            <div className="flex flex-col items-start">
+              {me?.rankClass && (
+                <span className="text-[7px] font-black tracking-[0.2em] leading-none mb-0.5"
+                  style={{ color: CLASS_META[me.rankClass]?.color ?? rankColor, opacity: 0.7 }}>
+                  {me.rankClass.toUpperCase()}
+                </span>
+              )}
+              <span className="text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full"
+                style={{ background: `${rankColor}20`, color: rankColor, border: `1px solid ${rankColor}40` }}>
+                {me?.rank || 'E'} RANK
+              </span>
+            </div>
             <span className="text-[13px] font-bold text-head">
               {me?.profile.character_name || user?.username}
             </span>

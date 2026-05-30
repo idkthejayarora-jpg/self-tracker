@@ -33,6 +33,7 @@ const RANK_GLOW: Record<string, string> = {
   A:    'rgba(249,115,22,0.35)',
   S:    'rgba(239,68,68,0.4)',
   'S+': 'rgba(226,201,126,0.5)',
+  '∞':  'rgba(147,197,253,0.6)',
 };
 
 const RANK_SOLID: Record<string, string> = {
@@ -43,6 +44,14 @@ const RANK_SOLID: Record<string, string> = {
   A:    '#f97316',
   S:    '#ef4444',
   'S+': '#e2c97e',
+  '∞':  '#93c5fd',
+};
+
+// Class tier display config
+const CLASS_CONFIG: Record<string, { label: string; sublabel: string; color: string; bgColor: string }> = {
+  Soldier: { label: 'SOLDIER CLASS',  sublabel: '4 ranks · Ground tier',            color: '#94a3b8', bgColor: 'rgba(148,163,184,0.08)' },
+  General: { label: 'GENERAL CLASS',  sublabel: '2 ranks · Command tier',           color: '#fb923c', bgColor: 'rgba(251,146,60,0.10)'  },
+  King:    { label: 'KING CLASS',     sublabel: '2 ranks · Apex tier',              color: '#fbbf24', bgColor: 'rgba(251,191,36,0.10)'  },
 };
 
 // ── Stat config (7 stats — Creativity added) ─────────────────────────────────
@@ -384,11 +393,12 @@ export default function Me() {
     </div>
   );
 
-  const { profile, rank, rankColor, rankLabel, rankDesc, meritScore, meritBreakdown, nextRank, totalPoints, stats, skills, claims, mentors } = data;
+  const { profile, rank, rankClass, rankColor, rankLabel, rankDesc, meritScore, meritBreakdown, nextRank, totalPoints, stats, skills, claims, mentors } = data;
   const activeClaims = claims.filter(c => c.status === 'active');
   const claimedList  = claims.filter(c => c.status === 'claimed');
   const rankGlow     = RANK_GLOW[rank] ?? 'transparent';
   const rankSolid    = RANK_SOLID[rank] ?? rankColor;
+  const classCfg     = rankClass ? CLASS_CONFIG[rankClass] : null;
 
   // ── Form field style shorthand
   const ff = 'w-full rounded-xl px-3 py-2 text-sm focus:outline-none';
@@ -443,6 +453,28 @@ export default function Me() {
 
         {/* Card content overlay */}
         <div className="relative flex flex-col items-center gap-3 px-4 py-6 sm:gap-4 sm:px-5 sm:py-8" style={{ zIndex: 3 }}>
+
+          {/* Class tier banner — Soldier / General / King */}
+          {classCfg && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full scale-in"
+              style={{
+                background: classCfg.bgColor,
+                border: `1px solid ${classCfg.color}30`,
+                backdropFilter: 'blur(12px)',
+              }}>
+              <div className="flex flex-col items-center gap-0 leading-none">
+                <span className="text-[9px] font-black tracking-[0.28em]"
+                  style={{ color: classCfg.color }}>
+                  {classCfg.label}
+                </span>
+                <span className="text-[8px] font-medium tracking-wider"
+                  style={{ color: classCfg.color, opacity: 0.55 }}>
+                  {classCfg.sublabel}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Rank badge + label */}
           <div className="flex flex-col items-center gap-1.5">
             <div className="flex items-center gap-3">
@@ -505,8 +537,15 @@ export default function Me() {
             {/* Next rank progress */}
             {nextRank && (
               <p className="text-[10px] text-center pt-0.5" style={{ color: 'var(--t-faint)' }}>
-                Next: <span style={{ color: nextRank.color, fontWeight: 700 }}>{nextRank.rank} — {nextRank.label}</span>
-                <span className="opacity-60"> ({nextRank.min - meritScore} pts to go)</span>
+                Next:&nbsp;
+                <span style={{ color: nextRank.color, fontWeight: 700 }}>{nextRank.rank} RANK</span>
+                {nextRank.rankClass && nextRank.rankClass !== rankClass && (
+                  <span className="font-black ml-1"
+                    style={{ color: CLASS_CONFIG[nextRank.rankClass]?.color ?? nextRank.color }}>
+                    · {nextRank.rankClass.toUpperCase()} CLASS ↑
+                  </span>
+                )}
+                <span className="opacity-60"> — {nextRank.min - meritScore} pts to go</span>
               </p>
             )}
           </div>

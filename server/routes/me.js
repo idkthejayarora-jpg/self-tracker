@@ -7,22 +7,36 @@ const { SQL_OFF } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
 
-// ── Merit-based rank system (v2 — rebalanced) ─────────────────────────────────
-// Stats score      (0–45): weighted avg of 7 live stats (Wealth weighted ×0.5)
-// Streaks score    (0–15): max current streak across all activities / 30 × 15
-// Skills score     (0–15): avg skill level × 1.5, capped
-// Claims score     (0–10): claimed × 2, capped — gated by 3-day cooldown
-// Points score     (0–15): total points / 800, capped
-// Max merit score = 100. Top tier is S+; SS/SSS removed.
+// ── Merit-based rank system (v3 — 3-tier class hierarchy) ────────────────────
+// Stats score      (0–45): weighted avg of 7 live stats (Wealth ×0.5)
+// Streaks score    (0–15): max current streak / 14 × 15
+// Skills score     (0–15): avg skill level × 3, capped
+// Claims score     (0–10): claimed × 2, capped
+// Points score     (0–15): floor(totalPoints / 200), capped
+// Max merit = 100
+//
+// ┌──────── KING CLASS (75–100) ────────────────────────────────────────────┐
+// │  ∞   Rank  90–100  Absolute Ruler     — no rank above, the infinite end │
+// │  S+  Rank  75–89   Shadow Monarch     — King-class, one step from apex  │
+// ├──────── GENERAL CLASS (50–74) ──────────────────────────────────────────┤
+// │  S   Rank  65–74   Supreme General    — commands every front             │
+// │  A   Rank  50–64   Battle Commander   — hardened across all disciplines  │
+// ├──────── SOLDIER CLASS (0–49) — 4 ranks ─────────────────────────────────┤
+// │  B   Rank  35–49   Elite Soldier      — top of Soldier, promotion close  │
+// │  C   Rank  25–34   Veteran Soldier    — real foundations built            │
+// │  D   Rank  15–24   Foot Soldier       — on the path, earning every point  │
+// │  E   Rank   0–14   Raw Recruit        — the journey begins                │
+// └─────────────────────────────────────────────────────────────────────────┘
 
 const RANK_TIERS = [
-  { rank: 'S+', min: 88, color: '#e2c97e', label: 'Shadow Monarch',  desc: 'Transcended human limits — apex' },
-  { rank: 'S',  min: 74, color: '#ef4444', label: 'S-Class Hunter',  desc: 'Exceptional across all areas' },
-  { rank: 'A',  min: 58, color: '#f97316', label: 'A-Class Hunter',  desc: 'Highly disciplined & consistent' },
-  { rank: 'B',  min: 42, color: '#a855f7', label: 'B-Class Hunter',  desc: 'Solid foundations built' },
-  { rank: 'C',  min: 26, color: '#22c55e', label: 'C-Class Hunter',  desc: 'Establishing the grind' },
-  { rank: 'D',  min: 12, color: '#3b82f6', label: 'D-Class Hunter',  desc: 'The journey begins' },
-  { rank: 'E',  min: 0,  color: '#6b7280', label: 'E-Class Hunter',  desc: 'Awakened but untested' },
+  { rank: '∞',  cls: 'King',    min: 90, color: '#93c5fd', label: 'Absolute Ruler',   desc: 'Beyond all ranks — the infinite threshold' },
+  { rank: 'S+', cls: 'King',    min: 75, color: '#e2c97e', label: 'Shadow Monarch',   desc: 'King-class power — one step from infinity' },
+  { rank: 'S',  cls: 'General', min: 65, color: '#ef4444', label: 'Supreme General',  desc: 'Commands every front — peak of General class' },
+  { rank: 'A',  cls: 'General', min: 50, color: '#f97316', label: 'Battle Commander', desc: 'Hardened across all disciplines' },
+  { rank: 'B',  cls: 'Soldier', min: 35, color: '#a855f7', label: 'Elite Soldier',    desc: 'Top of Soldier ranks — promotion is close' },
+  { rank: 'C',  cls: 'Soldier', min: 25, color: '#22c55e', label: 'Veteran Soldier',  desc: 'Real foundations built — seasoned fighter' },
+  { rank: 'D',  cls: 'Soldier', min: 15, color: '#3b82f6', label: 'Foot Soldier',     desc: 'On the path — earning every point' },
+  { rank: 'E',  cls: 'Soldier', min:  0, color: '#6b7280', label: 'Raw Recruit',      desc: 'The journey begins — Soldier class' },
 ];
 
 function computeMeritScore(stats, skills, claims, totalPoints, maxCurrentStreak) {
@@ -181,16 +195,18 @@ router.get('/summary', (req, res) => {
   res.json({
     profile,
     rank:      rankTier.rank,
+    rankClass: rankTier.cls,
     rankColor: rankTier.color,
     rankLabel: rankTier.label,
     rankDesc:  rankTier.desc,
     meritScore:     merit.total,
     meritBreakdown: merit.breakdown,
     nextRank: nextTier ? {
-      rank:  nextTier.rank,
-      min:   nextTier.min,
-      color: nextTier.color,
-      label: nextTier.label,
+      rank:     nextTier.rank,
+      rankClass:nextTier.cls,
+      min:      nextTier.min,
+      color:    nextTier.color,
+      label:    nextTier.label,
     } : null,
     totalPoints,
     stats,

@@ -234,6 +234,7 @@ export interface MeStats {
 export interface MeSummary {
   profile: MeProfile;
   rank: string;
+  rankClass: string;
   rankColor: string;
   rankLabel: string;
   rankDesc: string;
@@ -245,7 +246,7 @@ export interface MeSummary {
     claimScore: number;
     ptsScore: number;
   };
-  nextRank: { rank: string; min: number; color: string; label: string } | null;
+  nextRank: { rank: string; rankClass?: string; min: number; color: string; label: string } | null;
   totalPoints: number;
   stats: MeStats;
   skills: MeSkill[];
