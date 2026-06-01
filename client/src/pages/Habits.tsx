@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Target, Plus, Trash2, Flame, Check, AlertCircle } from 'lucide-react';
+import { Target, Plus, Trash2, Flame, Check, AlertCircle, Zap } from 'lucide-react';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
 import { format } from 'date-fns';
@@ -18,9 +18,14 @@ function getToday() { return new Date().toISOString().slice(0, 10); }
 
 const emptyForm = () => ({ name: '', icon: '', category: 'discipline', color: '#6366f1' });
 
+interface Violation { habit_id: number; missStreak: number; penaltyToday: number; }
+interface Momentum { multiplier: number; expiresAt: string; }
+
 export default function Habits() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [streaks, setStreaks] = useState<Record<number, number>>({});
+  const [violations, setViolations] = useState<Record<number, Violation>>({});
+  const [momentum, setMomentum] = useState<Momentum | null>(null);
   const [filter, setFilter] = useState<string>('all');
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState(emptyForm());
@@ -32,14 +37,20 @@ export default function Habits() {
     try {
       setLoadErr('');
       const td = getToday();
-      const [habitsRes, streaksRes] = await Promise.all([
+      const [habitsRes, streaksRes, enfRes] = await Promise.all([
         api.get<Habit[]>(`/habits/logs?date=${td}`),
         api.get<{ habit_id: number; streak: number }[]>('/habits/streaks'),
+        api.get<{ violations: Violation[]; momentum: Momentum | null }>('/habits/enforcement')
+          .catch(() => ({ data: { violations: [], momentum: null } })),
       ]);
       setHabits(habitsRes.data);
       const sm: Record<number, number> = {};
       streaksRes.data.forEach(s => { sm[s.habit_id] = s.streak; });
       setStreaks(sm);
+      const vm: Record<number, Violation> = {};
+      enfRes.data.violations.forEach(v => { vm[v.habit_id] = v; });
+      setViolations(vm);
+      setMomentum(enfRes.data.momentum);
     } catch (e: any) {
       setLoadErr(e?.response?.data?.error || e?.message || 'Failed to load habits');
     }
@@ -197,6 +208,20 @@ export default function Habits() {
         </div>
       )}
 
+      {/* Momentum buff badge */}
+      {momentum && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl scale-in"
+          style={{ background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.4)', boxShadow: '0 0 18px rgba(34,197,94,0.15)' }}>
+          <Zap size={14} color="#22c55e" className="glow-pulse" />
+          <span className="text-xs font-black tracking-wide" style={{ color: '#22c55e' }}>
+            MOMENTUM ×{momentum.multiplier}
+          </span>
+          <span className="text-[11px] font-mono" style={{ color: '#22c55e', opacity: 0.7 }}>
+            · habit points doubled — keep the streak alive
+          </span>
+        </div>
+      )}
+
       {/* Add form */}
       {showAdd && (
         <form onSubmit={addHabit} className="card px-4 py-4 space-y-3 scale-in">
@@ -272,8 +297,14 @@ export default function Habits() {
         <div className="space-y-2">
           {filtered.map(h => {
             const streak = streaks[h.id] ?? 0;
+            const viol = violations[h.id];
             return (
-              <div key={h.id} className="card px-4 py-3 flex items-center gap-3">
+              <div key={h.id} className="card px-4 py-3 flex items-center gap-3"
+                style={viol ? {
+                  borderColor: 'rgba(239,68,68,0.55)',
+                  boxShadow: '0 0 18px rgba(239,68,68,0.18)',
+                  animation: 'glow-pulse 2s ease-in-out infinite',
+                } : undefined}>
                 {/* Done toggle */}
                 <button type="button" onClick={() => toggle(h)}
                   className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 tap transition-all"
@@ -293,9 +324,15 @@ export default function Habits() {
                   <p className="text-sm font-semibold text-head" style={{ textDecoration: h.done ? 'line-through' : 'none', opacity: h.done ? 0.6 : 1 }}>
                     {h.name}
                   </p>
-                  <p className="text-[11px] capitalize mt-0.5" style={{ color: CAT_COLOR[h.category] ?? '#71717a' }}>
-                    {h.category}
-                  </p>
+                  {viol ? (
+                    <p className="text-[10px] font-black tracking-wide mt-0.5 flex items-center gap-1" style={{ color: '#ef4444' }}>
+                      <Flame size={10} /> {viol.missStreak} DAYS MISSED · PENALTY ACTIVE
+                    </p>
+                  ) : (
+                    <p className="text-[11px] capitalize mt-0.5" style={{ color: CAT_COLOR[h.category] ?? '#71717a' }}>
+                      {h.category}
+                    </p>
+                  )}
                 </div>
 
                 {/* Streak */}

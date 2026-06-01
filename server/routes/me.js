@@ -72,7 +72,9 @@ function computeMeritScore(stats, skills, claims, totalPoints, maxCurrentStreak)
 
   // Points: every 200 pts = 1 merit point → 3 000 pts needed for full 15
   // (was /800 → needed 12 000 pts — basically unreachable)
-  const ptsScore     = Math.min(15, Math.floor(totalPoints / 200));
+  // Clamp ≥ 0: penalties can drive totalPoints negative, which must not
+  // produce a negative merit component and corrupt the total.
+  const ptsScore     = Math.max(0, Math.min(15, Math.floor(totalPoints / 200)));
 
   return {
     total: statScore + streakScore + skillScore + claimScore + ptsScore,

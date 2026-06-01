@@ -183,6 +183,29 @@ CREATE TABLE IF NOT EXISTS habit_logs (
   UNIQUE(user_id, habit_id, date)
 );
 
+-- Habit enforcement: penalties (3+ day miss) and redemption bonuses
+CREATE TABLE IF NOT EXISTS habit_penalties (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  habit_id INTEGER NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  kind TEXT NOT NULL CHECK(kind IN ('penalty','redemption')),
+  miss_streak INTEGER NOT NULL,
+  points INTEGER NOT NULL,          -- negative for penalty, positive for redemption
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, habit_id, date, kind)
+);
+
+-- Temporary user buffs (e.g. Momentum ×2 after a comeback)
+CREATE TABLE IF NOT EXISTS user_buffs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,               -- 'momentum'
+  multiplier REAL DEFAULT 2.0,
+  expires_at DATETIME NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Body Stats
 CREATE TABLE IF NOT EXISTS body_stats (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

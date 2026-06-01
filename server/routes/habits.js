@@ -4,6 +4,10 @@ const { authMiddleware } = require('../middleware/auth');
 const db = require('../db/database');
 const { awardPoints, applySkillXP } = require('../utils/pointsUtils');
 const { localDate, SQL_NOW, sqlDateOf } = require('../utils/dateUtils');
+const {
+  runEnforcement, computeMissStreak, redemptionFor,
+  activeMomentum, grantMomentum, MISS_THRESHOLD,
+} = require('../utils/habitEnforcement');
 
 router.use(authMiddleware);
 
@@ -63,18 +67,57 @@ router.put('/log/:habitId', (req, res) => {
   const log = db.prepare('SELECT * FROM habit_logs WHERE user_id = ? AND habit_id = ? AND date = ?')
     .get(req.user.id, req.params.habitId, logDate);
 
-  // Award 10 pts when marking done — once per habit per day
+  let redemption = null;
+
+  // Award points when marking done — once per habit per day
   if (done) {
+    // Miss-streak BEFORE this completion decides comeback reward.
+    const missBefore = computeMissStreak(req.user.id, habit);
+    const momentum   = activeMomentum(req.user.id);
+    const basePts    = momentum ? Math.round(10 * momentum.multiplier) : 10;
+
     const alreadyAwarded = db.prepare(
       `SELECT 1 FROM points_log WHERE user_id=? AND source='habit' AND source_id=? AND ${sqlDateOf('created_at')}=${SQL_NOW}`
     ).get(req.user.id, req.params.habitId);
     if (!alreadyAwarded) {
-      awardPoints(req.user.id, 'habit', 'complete', 10, parseInt(req.params.habitId), habit.name);
+      awardPoints(req.user.id, 'habit', 'complete', basePts, parseInt(req.params.habitId), habit.name);
       applySkillXP(req.user.id, 'habit', ['discipline', habit.category, habit.name]);
+    }
+
+    // Comeback: clearing a habit that was 3+ days missed → redemption + momentum
+    if (missBefore >= MISS_THRESHOLD) {
+      const today = localDate();
+      const alreadyRedeemed = db.prepare(
+        `SELECT 1 FROM habit_penalties WHERE user_id=? AND habit_id=? AND date=? AND kind='redemption' LIMIT 1`
+      ).get(req.user.id, req.params.habitId, today);
+      if (!alreadyRedeemed) {
+        const bonus = redemptionFor(missBefore);
+        try {
+          db.prepare(
+            `INSERT INTO habit_penalties (user_id, habit_id, date, kind, miss_streak, points)
+             VALUES (?, ?, ?, 'redemption', ?, ?)`
+          ).run(req.user.id, parseInt(req.params.habitId), today, missBefore, bonus);
+          awardPoints(req.user.id, 'habit_penalty', 'redemption', bonus, parseInt(req.params.habitId), habit.name);
+          const buff = grantMomentum(req.user.id);
+          redemption = { points: bonus, missStreak: missBefore, momentumUntil: buff?.expires_at || null };
+        } catch (e) {
+          if (!/UNIQUE/i.test(e.message)) console.error('[habits] redemption insert:', e.message);
+        }
+      }
     }
   }
 
-  res.json(log);
+  res.json({ ...log, redemption });
+});
+
+// GET /enforcement — current habit violations (applies pending daily penalties) + momentum
+router.get('/enforcement', (req, res) => {
+  const violations = runEnforcement(req.user.id);
+  const mo = activeMomentum(req.user.id);
+  res.json({
+    violations,
+    momentum: mo ? { multiplier: mo.multiplier, expiresAt: mo.expires_at } : null,
+  });
 });
 
 // GET /streaks — per-habit current streak

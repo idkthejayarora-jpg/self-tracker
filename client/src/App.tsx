@@ -4,6 +4,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { useReminders } from './hooks/useReminders';
 import Layout from './components/Layout';
 import UrgentTasksModal from './components/UrgentTasksModal';
+import HabitLockdownModal from './components/HabitLockdownModal';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
@@ -35,6 +36,7 @@ function AppRoutes() {
   return (
     <>
     {user && <UrgentTasksModal />}
+    {user && <HabitLockdownModal />}
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
