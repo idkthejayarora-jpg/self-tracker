@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Trash2, ChevronLeft, ChevronRight, Salad, Check, Undo2 } from 'lucide-react';
+import { Trash2, ChevronLeft, ChevronRight, Salad, Check, Undo2, Mic } from 'lucide-react';
 import { format, parseISO, addDays, subDays } from 'date-fns';
 import api from '../lib/api';
+import { useVoiceInput } from '../hooks/useVoiceInput';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -66,11 +67,12 @@ export default function Diet() {
 
   // ── Submit ─────────────────────────────────────────────────────────────────
 
-  async function submitLog() {
-    if (!text.trim() || logging) return;
+  async function submitLog(override?: string) {
+    const payload = (override ?? text).trim();
+    if (!payload || logging) return;
     setLogging(true); setErr(''); setResult(null);
     try {
-      const r = await api.post('/diet/quick-log', { text: text.trim(), date });
+      const r = await api.post('/diet/quick-log', { text: payload, date });
       setResult(r.data);
       setUndoIds(r.data.insertedIds || []);
       setText('');
@@ -79,6 +81,16 @@ export default function Diet() {
       setErr(e?.response?.data?.error || e?.message || 'Failed to log');
     } finally { setLogging(false); }
   }
+
+  // ── Voice logging — speak the food, it transcribes + logs automatically ──────
+  const voice = useVoiceInput({
+    onFinal: (spoken) => {
+      // Merge with any typed text, show it, then auto-log
+      const merged = (text ? text + ' ' : '') + spoken;
+      setText(merged);
+      submitLog(merged);
+    },
+  });
 
   async function undoLog() {
     if (!undoIds.length) return;
@@ -224,25 +236,71 @@ export default function Diet() {
             <div className="flex items-center gap-2">
               <div className="w-0.5 h-4 rounded-full" style={{ background: ACCENT }} />
               <span className="text-[10px] font-black tracking-[0.22em] font-mono" style={{ color: ACCENT, opacity: 0.7 }}>
-                LOG_FOOD://
+                {voice.listening ? 'LISTENING…' : 'LOG_FOOD://'}
               </span>
+
+              {/* Voice mic button */}
+              {voice.supported && (
+                <div className="relative ml-auto">
+                  {voice.listening && (
+                    <>
+                      <span className="mic-ring" />
+                      <span className="mic-ring mic-ring-2" />
+                      <span className="mic-ring mic-ring-3" />
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => voice.listening ? voice.stop() : voice.start()}
+                    title={voice.listening ? 'Stop' : 'Speak your meal'}
+                    className={`tap relative z-10 w-9 h-9 rounded-xl flex items-center justify-center ${voice.listening ? 'mic-listening' : ''}`}
+                    style={{
+                      background: voice.listening ? 'rgba(239,68,68,0.9)' : `${ACCENT}1a`,
+                      color: voice.listening ? '#fff' : ACCENT,
+                      border: `1px solid ${voice.listening ? 'rgba(239,68,68,0.6)' : ACCENT + '40'}`,
+                    }}>
+                    <Mic size={16} />
+                  </button>
+                </div>
+              )}
             </div>
 
-            <textarea
-              ref={textRef}
-              rows={3}
-              value={text}
-              onChange={e => { setText(e.target.value); setResult(null); setErr(''); }}
-              onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitLog(); }}
-              placeholder={'2 rotis and dahi for lunch\nprotein shake for breakfast\nchicken rice 200g dinner'}
-              className="w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none resize-none font-mono leading-relaxed"
-              style={{
-                background: 'var(--s3)',
-                color: 'var(--t-body)',
-                border: `1px solid ${ACCENT}20`,
-                lineHeight: 1.7,
-              }}
-            />
+            <div className="relative">
+              <textarea
+                ref={textRef}
+                rows={3}
+                value={text}
+                onChange={e => { setText(e.target.value); setResult(null); setErr(''); }}
+                onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitLog(); }}
+                placeholder={voice.supported
+                  ? 'Tap the mic and say it — or type:\n"2 rotis and dahi for lunch"\n"protein shake for breakfast"'
+                  : '2 rotis and dahi for lunch\nprotein shake for breakfast\nchicken rice 200g dinner'}
+                className="w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none resize-none font-mono leading-relaxed"
+                style={{
+                  background: 'var(--s3)',
+                  color: 'var(--t-body)',
+                  border: `1px solid ${voice.listening ? 'rgba(239,68,68,0.45)' : ACCENT + '20'}`,
+                  lineHeight: 1.7,
+                  transition: 'border-color 0.25s',
+                }}
+              />
+
+              {/* Live listening overlay — waveform + interim transcript */}
+              {voice.listening && (
+                <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 px-3 py-2 rounded-b-xl scale-in"
+                  style={{ background: 'linear-gradient(0deg, rgba(239,68,68,0.16), transparent)' }}>
+                  <div className="flex items-end gap-[2px] h-4">
+                    {[0, 1, 2, 3, 4, 5, 6].map(i => (
+                      <span key={i} className="waveform-bar"
+                        style={{ height: '100%', background: '#f87171', animationDelay: `${i * 0.09}s` }} />
+                    ))}
+                  </div>
+                  <span className="text-[11px] font-mono truncate flex-1" style={{ color: '#fca5a5' }}>
+                    {voice.interim || 'say your meal…'}
+                  </span>
+                </div>
+              )}
+            </div>
 
             {err && (
               <p className="text-xs font-mono" style={{ color: '#f87171' }}>{err}</p>
@@ -287,7 +345,7 @@ export default function Diet() {
                 ⌘↵ to submit
               </p>
               <button
-                onClick={submitLog}
+                onClick={() => submitLog()}
                 disabled={!text.trim() || logging}
                 className="tap px-5 py-2 rounded-xl text-sm font-black disabled:opacity-40"
                 style={{ background: logging ? `${ACCENT}60` : ACCENT, color: '#000' }}>
