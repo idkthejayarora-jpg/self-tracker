@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Send, Plus, X, Check, Settings2 } from 'lucide-react';
 import api from '../lib/api';
+import AxisConsole from '../components/AxisConsole';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -278,7 +279,11 @@ export default function LifeProgress() {
       {/* ── SPLIT: chat (left) + sectors (right) ── */}
       <div className="flex flex-col lg:flex-row gap-5" style={{ alignItems: 'flex-start' }}>
 
-        {/* ── CHAT PANEL ── */}
+        {/* ── AXIS VOICE CONSOLE (JARVIS-style) ── */}
+        <AxisConsole onFinished={(secs) => setSectors(secs as Sector[])} />
+
+        {/* legacy text chat — superseded by the voice console, kept out of render */}
+        {false && (
         <div className="flex flex-col rounded-2xl overflow-hidden flex-1 min-w-0"
           style={{ background: 'var(--s1)', border: '1px solid var(--b)', minHeight: 520 }}>
 
@@ -430,6 +435,7 @@ export default function LifeProgress() {
             <p className="text-[9px] mt-1.5 px-1" style={{ color: 'var(--t-faint)' }}>↵ send · shift+↵ newline</p>
           </div>
         </div>
+        )}
 
         {/* ── SECTOR GRID ── */}
         <div style={{ width: '100%', maxWidth: 340, flexShrink: 0 }}>

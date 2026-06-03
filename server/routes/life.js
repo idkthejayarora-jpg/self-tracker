@@ -5,6 +5,8 @@ const { SQL_OFF } = require('../utils/dateUtils');
 const { parseAmbitions, generateSummary } = require('../utils/ambitionsParser');
 const { extractSectors } = require('../utils/sectorDetector');
 const { analyzeUserData, getRecommendations, generateReply } = require('../utils/lifeManager');
+const { greeting, buildConcerns, generateClosing } = require('../utils/axisInterview');
+const { awardPoints } = require('../utils/pointsUtils');
 
 // Ensure life_ambitions table exists
 try {
@@ -478,6 +480,57 @@ router.get('/chat/history', (req, res) => {
   try { history = JSON.parse(row?.conversation_json || '[]'); } catch (_) {}
   const sectors = getSectorFills(uid);
   res.json({ history, sectors });
+});
+
+// ── AXIS voice interview ──────────────────────────────────────────
+// Brief: greeting + the data-aware "genuine concern" questions to open with.
+router.get('/axis/brief', (req, res) => {
+  const uid = req.user.id;
+  const profile = db.prepare('SELECT character_name FROM me_profile WHERE user_id=?').get(uid);
+  const name = (profile?.character_name || '').trim().split(/\s+/)[0] || '';
+  res.json({
+    greeting: greeting(name),
+    concerns: buildConcerns(uid),
+  });
+});
+
+// Finish: store the Q&A transcript, produce AXIS's closing reflection, award
+// a small debrief bonus, and return refreshed sectors.
+router.post('/axis/finish', (req, res) => {
+  const uid = req.user.id;
+  const transcript = Array.isArray(req.body?.transcript) ? req.body.transcript : [];
+
+  const reflection = generateClosing(uid, transcript);
+
+  // Persist the debrief into the conversation history so it shows on the page.
+  const row = db.prepare('SELECT conversation_json, raw_text FROM life_ambitions WHERE user_id=?').get(uid);
+  let history = [];
+  try { history = JSON.parse(row?.conversation_json || '[]'); } catch (_) {}
+  const stamp = new Date().toISOString();
+  for (const t of transcript) {
+    if (t.q) history.push({ role: 'manager', content: t.q, ts: stamp, kind: 'axis_q' });
+    if (t.a) history.push({ role: 'user', content: t.a, ts: stamp, kind: 'axis_a' });
+  }
+  history.push({ role: 'manager', content: reflection, ts: stamp, kind: 'axis_reflection' });
+  if (history.length > 60) history = history.slice(-60);
+
+  db.prepare(`
+    INSERT INTO life_ambitions (user_id, raw_text, conversation_json, updated_at)
+    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(user_id) DO UPDATE SET
+      conversation_json = excluded.conversation_json,
+      updated_at        = CURRENT_TIMESTAMP
+  `).run(uid, row?.raw_text || '', JSON.stringify(history));
+
+  // Reward the debrief once per day.
+  const already = db.prepare(
+    `SELECT 1 FROM points_log WHERE user_id=? AND source='axis' AND action='debrief' AND DATE(created_at)=DATE('now') LIMIT 1`
+  ).get(uid);
+  if (!already && transcript.some(t => t.a && t.a.trim())) {
+    awardPoints(uid, 'axis', 'debrief', 15, null, 'Daily AXIS debrief');
+  }
+
+  res.json({ reflection, sectors: getSectorFills(uid) });
 });
 
 // ── Missed Logs ────────────────────────────────────────────────

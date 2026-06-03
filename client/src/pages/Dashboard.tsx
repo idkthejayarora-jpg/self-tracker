@@ -985,11 +985,13 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* ═══════════════════════════════════════ DAILY CHECK-IN TERMINAL */}
+      {/* Daily check-in has moved to AXIS — Life Path → voice debrief */}
+      {false && (
       <div>
         <SysLabel icon={MessageSquare} text="Intel Report" color="#6366f1" />
         <DailyCheckin onCheckinDone={load} />
       </div>
+      )}
 
       {/* ═══════════════════════════════════════ COMPLETION BANNER */}
       {pct === 100 && stats.totalTasks > 0 && (
