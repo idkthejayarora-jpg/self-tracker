@@ -109,8 +109,17 @@ function CustomSelect({
       if (!panelRef.current?.contains(e.target as Node) && !triggerRef.current?.contains(e.target as Node))
         setOpen(false);
     };
+    // Close on scroll/resize too — the fixed-position panel would otherwise
+    // float away from its trigger (a visible "glitch").
+    const dismiss = () => setOpen(false);
     document.addEventListener('mousedown', close);
-    return () => document.removeEventListener('mousedown', close);
+    window.addEventListener('scroll', dismiss, true);
+    window.addEventListener('resize', dismiss);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      window.removeEventListener('scroll', dismiss, true);
+      window.removeEventListener('resize', dismiss);
+    };
   }, [open]);
 
   return (
@@ -209,11 +218,9 @@ function IdeaCard({
   const [saving,   setSaving]   = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Scroll the expanded content into view so user doesn't have to hunt for it
+  // Reset edit mode whenever the card collapses. (No auto-scroll — it caused
+  // the page to jerk on every tap; the card expands in place where tapped.)
   useEffect(() => {
-    if (expanded && cardRef.current) {
-      setTimeout(() => cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
-    }
     if (!expanded) setEditing(false);
   }, [expanded]);
 
