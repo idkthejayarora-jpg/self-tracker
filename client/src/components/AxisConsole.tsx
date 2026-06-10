@@ -272,7 +272,7 @@ export default function AxisConsole({ onFinished }: { onFinished?: (sectors: unk
         ) : (
           <button onClick={begin}
             className="tap flex items-center gap-2 text-sm font-black px-6 py-3 rounded-2xl"
-            style={{ background: AXIS_COLOR, color: '#fff', boxShadow: `0 0 24px ${AXIS_COLOR}55` }}>
+            style={{ background: AXIS_COLOR, color: '#fff', boxShadow: 'none' }}>
             <Mic size={16} /> {phase === 'done' ? 'Run another debrief' : 'Begin debrief'}
           </button>
         )}

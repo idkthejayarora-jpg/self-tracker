@@ -62,7 +62,7 @@ function MissionCard({ task, onComplete }: { task: Task; onComplete: (id: number
     <div className="mission-card group">
       {/* Priority indicator */}
       <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
-        <div className="w-1 h-8 rounded-full shrink-0" style={{ background: p.color, boxShadow: `0 0 5px ${p.color}60` }} />
+        <div className="w-1 h-8 rounded-full shrink-0" style={{ background: p.color, boxShadow: 'none' }} />
         <PIcon size={11} style={{ color: p.color }} />
       </div>
       <div className="flex-1 min-w-0">
@@ -222,7 +222,7 @@ function RankPanel({ pts }: { pts: PointsSummary }) {
       </div>
       {/* XP progress bar */}
       <div className="xp-track mb-1.5">
-        <div className="xp-fill bar-fill" style={{ width: `${pts.progressPct}%`, background: color, boxShadow: `0 0 8px ${color}60` }} />
+        <div className="xp-fill bar-fill" style={{ width: `${pts.progressPct}%`, background: color, boxShadow: 'none' }} />
       </div>
       <div className="flex justify-between mb-3">
         <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>{pts.progressPct}% to next level</span>
@@ -246,7 +246,7 @@ function RankPanel({ pts }: { pts: PointsSummary }) {
               height: '100%',
               width: `${lifeScore}%`,
               background: lifeColor,
-              boxShadow: `0 0 6px ${lifeColor}80`,
+              boxShadow: 'none',
               borderRadius: 99,
               transition: 'width 0.8s ease',
             }} />
@@ -341,15 +341,15 @@ export default function Dashboard() {
           <div style={{
             position: 'absolute', inset: 0, borderRadius: '50%',
             border: '1px solid #d9775730',
-            boxShadow: '0 0 8px #d9775720',
+            boxShadow: 'none',
           }} />
           <div style={{
             position: 'absolute', top: '50%', left: '50%',
             width: 35, height: 1.5,
-            background: 'linear-gradient(90deg, #d97757, transparent)',
+            background: '#d97757',
             transformOrigin: 'left center',
             animation: 'radar-rotate 3s linear infinite',
-            boxShadow: '0 0 6px #d97757',
+            boxShadow: 'none',
           }} />
           <div style={{ position: 'absolute', inset: 10, borderRadius: '50%', border: '1px solid #d9775718' }} />
           <div style={{ position: 'absolute', inset: 20, borderRadius: '50%', border: '1px solid #d9775710' }} />
@@ -366,12 +366,12 @@ export default function Dashboard() {
         {/* Content */}
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.35em]" style={{ color: '#d97757', opacity: 0.6, textShadow: '0 0 8px #d97757' }}>SYS://</span>
+            <span className="text-[9px] font-black tracking-[0.35em]" style={{ color: '#d97757', opacity: 0.6, textShadow: 'none' }}>SYS://</span>
             <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">COMMAND_CENTER</span>
             <span className="cursor-blink font-mono" style={{ color: '#d97757', fontSize: 11 }}>▌</span>
           </div>
           <h1 className="text-3xl font-black tracking-tight text-white leading-none"
-            style={{ textShadow: '0 0 30px #d9775740' }}>
+            style={{ textShadow: 'none' }}>
             COMMAND CENTER
           </h1>
           <p className="font-mono text-[11px] mt-1" style={{ color: '#d97757', opacity: 0.5 }}>
@@ -381,7 +381,7 @@ export default function Dashboard() {
           </p>
           {/* Neon bottom edge */}
           <div className="absolute bottom-0 left-0 right-0 h-px"
-            style={{ background: 'linear-gradient(90deg, transparent, #d9775750, transparent)' }} />
+            style={{ background: '#d9775750' }} />
         </div>
       </div>
 
@@ -486,7 +486,7 @@ export default function Dashboard() {
             <div key={s.label} className="streak-node card-hover glow-card"
               style={{ animationDelay: `${i * 50}ms`, '--gc': `${s.color}55` } as React.CSSProperties}>
               <s.icon size={13} style={{ color: s.color, marginBottom: 4 }} />
-              <p className="text-2xl font-black font-mono tabular-nums" style={{ color: s.color, textShadow: `0 0 10px ${s.color}60` }}>
+              <p className="text-2xl font-black font-mono tabular-nums" style={{ color: s.color, textShadow: 'none' }}>
                 {s.value}
               </p>
               <p className="text-[9px] font-bold tracking-wider uppercase mt-0.5" style={{ color: 'var(--t-faint)' }}>{s.label}</p>

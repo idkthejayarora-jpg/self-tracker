@@ -171,7 +171,7 @@ function CustomSelect({
             overflowY: 'auto',
           }}>
           {/* neon top line */}
-          <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${accentColor}55, transparent)` }} />
+          <div style={{ height: 1, background: `${accentColor}55` }} />
           <div style={{ padding: '4px 0' }}>
             {options.map((opt, i) => {
               const isSel = opt.value === value;
@@ -620,7 +620,7 @@ export default function Content() {
         style={{ background: 'var(--hero-bg)', border: `1px solid ${ACCENT}25`, minHeight: 110, zIndex: 1 }}>
         {/* Scanlines */}
         <div className="absolute inset-0 pointer-events-none"
-          style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 3px, ${ACCENT}03 3px, ${ACCENT}03 4px)` }} />
+          style={{ backgroundImage: 'none' }} />
         {/* HUD corners */}
         {[['top-0 left-0', 'borderTop borderLeft'], ['top-0 right-0', 'borderTop borderRight'],
           ['bottom-0 left-0', 'borderBottom borderLeft'], ['bottom-0 right-0', 'borderBottom borderRight']
@@ -635,11 +635,11 @@ export default function Content() {
         ))}
         {/* Top neon bar */}
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}60, transparent)`, boxShadow: `0 0 8px ${ACCENT}` }} />
+          style={{ background: `${ACCENT}60`, boxShadow: 'none' }} />
         {/* REC indicator — top right */}
         <div className="absolute top-3 right-4 flex items-center gap-1.5 pointer-events-none">
           <span className="w-1.5 h-1.5 rounded-full"
-            style={{ background: ACCENT, animation: 'neon-pulse 1.2s ease-in-out infinite', boxShadow: `0 0 6px ${ACCENT}` }} />
+            style={{ background: ACCENT, animation: 'neon-pulse 1.2s ease-in-out infinite', boxShadow: 'none' }} />
           <span className="text-[8px] font-mono font-black tracking-widest" style={{ color: ACCENT, opacity: 0.7 }}>REC</span>
         </div>
         {/* Content */}
@@ -650,7 +650,7 @@ export default function Content() {
             <span className="cursor-blink font-mono" style={{ color: ACCENT, fontSize: 11 }}>▌</span>
           </div>
           <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: `0 0 30px ${ACCENT}50` }}>
+            style={{ textShadow: 'none' }}>
             CONTENT STUDIO
           </h1>
           <p className="font-mono text-[10px] mt-1" style={{ color: ACCENT, opacity: 0.5 }}>
@@ -658,7 +658,7 @@ export default function Content() {
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}40, transparent)` }} />
+          style={{ background: `${ACCENT}40` }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
@@ -770,14 +770,14 @@ export default function Content() {
           {/* Dry-spell warning */}
           {stats && stats.daysSinceLastPost !== null && stats.daysSinceLastPost >= 7 && (
             <div className="relative overflow-hidden rounded-xl px-4 py-3 flex items-start gap-3"
-              style={{ background: 'linear-gradient(135deg, rgb(127 29 29 / 0.5), rgb(153 27 27 / 0.3))',
-                border: '1px solid rgb(239 68 68 / 0.35)', boxShadow: '0 0 18px rgb(239 68 68 / 0.12)' }}>
+              style={{ background: 'rgba(92,42,34,0.45)',
+                border: '1px solid rgb(239 68 68 / 0.35)', boxShadow: 'none' }}>
               {/* warning neon top bar */}
               <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-                style={{ background: 'linear-gradient(90deg, transparent, #cd524080, transparent)' }} />
+                style={{ background: '#cd524080' }} />
               <AlertTriangle size={15} style={{ color: '#e07b62', flexShrink: 0, marginTop: 1 }} />
               <div>
-                <p className="text-sm font-black tracking-[0.1em]" style={{ color: '#e8a18f', textShadow: '0 0 10px #cd524050' }}>
+                <p className="text-sm font-black tracking-[0.1em]" style={{ color: '#e8a18f', textShadow: 'none' }}>
                   {stats.daysSinceLastPost}D SIGNAL BLACKOUT
                 </p>
                 <p className="text-[11px] mt-0.5 font-mono" style={{ color: 'rgb(239 68 68 / 0.6)' }}>
@@ -793,14 +793,14 @@ export default function Content() {
           {/* Calendar card — full cyberpunk */}
           <div className="relative overflow-hidden rounded-2xl"
             style={{ background: 'var(--hero-bg)', border: `1px solid ${ACCENT}20`,
-              boxShadow: `0 0 30px ${ACCENT}08` }}>
+              boxShadow: 'none' }}>
             {/* Scanlines */}
             <div className="absolute inset-0 pointer-events-none"
-              style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 3px, ${ACCENT}02 3px, ${ACCENT}02 4px)` }} />
+              style={{ backgroundImage: 'none' }} />
             {/* Top neon bar */}
             <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-              style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}50, transparent)`,
-                boxShadow: `0 0 6px ${ACCENT}` }} />
+              style={{ background: `${ACCENT}50`,
+                boxShadow: 'none' }} />
             {/* HUD corners */}
             {([
               ['top-0 left-0',     { borderTop: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` }],
@@ -822,7 +822,7 @@ export default function Content() {
                 </button>
                 <div className="text-center">
                   <p className="font-black text-sm tracking-[0.12em] font-mono"
-                    style={{ color: 'var(--t-head)', textShadow: `0 0 12px ${ACCENT}30` }}>
+                    style={{ color: 'var(--t-head)', textShadow: 'none' }}>
                     {new Date(calYear, calMonthNum - 1)
                       .toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
                       .toUpperCase()}
@@ -840,7 +840,7 @@ export default function Content() {
 
               {/* Thin separator */}
               <div className="my-3" style={{ height: 1,
-                background: `linear-gradient(90deg, transparent, ${ACCENT}25, transparent)` }} />
+                background: `${ACCENT}25` }} />
 
               {/* Day headers */}
               <div className="grid grid-cols-7 gap-1 mb-2">
@@ -879,17 +879,17 @@ export default function Content() {
                           : hasContent
                           ? '1px solid rgba(255,255,255,0.07)'
                           : '1px solid transparent',
-                        boxShadow: isSelected ? `0 0 8px ${ACCENT}30` : undefined,
+                        boxShadow: undefined,
                       }}>
                       <span className="text-xs font-mono font-bold" style={{
                         color: isSelected ? ACCENT : isToday ? 'white' : 'var(--t-muted)',
-                        textShadow: isToday || isSelected ? `0 0 8px ${ACCENT}60` : undefined,
+                        textShadow: undefined,
                       }}>{day}</span>
                       <div className="flex flex-wrap justify-center gap-0.5 mt-0.5" style={{ minHeight: 5 }}>
                         {dayIdeas.slice(0, 3).map((idea, j) => (
                           <div key={j} className="w-1 h-1 rounded-full"
                             style={{ background: idea.niche_color || ACCENT,
-                              boxShadow: `0 0 3px ${idea.niche_color || ACCENT}` }} />
+                              boxShadow: 'none' }} />
                         ))}
                         {dayIdeas.length > 3 && (
                           <div className="w-1 h-1 rounded-full" style={{ background: 'var(--t-faint)' }} />
@@ -902,7 +902,7 @@ export default function Content() {
             </div>
             {/* Bottom neon bar */}
             <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-              style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}25, transparent)` }} />
+              style={{ background: `${ACCENT}25` }} />
           </div>
 
           {/* Selected day drawer */}
@@ -911,7 +911,7 @@ export default function Content() {
               style={{ background: 'var(--s1)', border: `1px solid ${ACCENT}20` }}>
               {/* Top neon bar */}
               <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-                style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}40, transparent)` }} />
+                style={{ background: `${ACCENT}40` }} />
               <div className="px-4 py-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
@@ -919,7 +919,7 @@ export default function Content() {
                       DATE://
                     </p>
                     <p className="text-sm font-black font-mono tracking-wide"
-                      style={{ color: 'var(--t-head)', textShadow: `0 0 10px ${ACCENT}30` }}>
+                      style={{ color: 'var(--t-head)', textShadow: 'none' }}>
                       {fmtDate(calDay).toUpperCase()}
                     </p>
                   </div>

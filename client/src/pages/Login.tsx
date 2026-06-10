@@ -110,8 +110,8 @@ export default function Login() {
         {/* Portal scan line */}
         <div style={{
           position: 'absolute', left: 0, right: 0, height: 2,
-          background: 'linear-gradient(90deg, transparent, #d9775760, transparent)',
-          boxShadow: '0 0 12px #d97757',
+          background: '#d9775760',
+          boxShadow: 'none',
           animation: 'portal-scan 4s linear infinite',
         }} />
         {/* Corner decorations */}
@@ -123,7 +123,7 @@ export default function Login() {
         <div style={{
           position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
           width: 600, height: 600, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(217,119,87,0.06) 0%, transparent 70%)',
+          background: 'transparent',
         }} />
       </div>
 
@@ -159,7 +159,7 @@ export default function Login() {
         </div>
 
         {/* Form card */}
-        <div className="card px-5 py-5" style={{ position: 'relative', zIndex: 1, border: '1px solid #d9775730', boxShadow: '0 0 40px #d9775715' }}>
+        <div className="card px-5 py-5" style={{ position: 'relative', zIndex: 1, border: '1px solid #d9775730', boxShadow: 'none' }}>
 
           {/* ── Sign in / Register ── */}
           {(mode === 'login' || mode === 'register') && (

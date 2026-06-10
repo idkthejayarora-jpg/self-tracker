@@ -98,10 +98,10 @@ function HUD({ color = '#c4a085', size = 14, opacity = 0.6 }: { color?: string; 
 function NeonDivider({ label, color = '#c4a085' }: { label: string; color?: string }) {
   return (
     <div className="flex items-center gap-2">
-      <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, ${color}50, transparent)` }} />
+      <div className="h-px flex-1" style={{ background: `${color}35` }} />
       <span className="text-[9px] font-black tracking-[0.3em]"
-        style={{ color, opacity: 0.6, textShadow: `0 0 8px ${color}` }}>{label}</span>
-      <div className="h-px flex-1" style={{ background: `linear-gradient(270deg, ${color}50, transparent)` }} />
+        style={{ color, opacity: 0.6, textShadow: 'none' }}>{label}</span>
+      <div className="h-px flex-1" style={{ background: `${color}35` }} />
     </div>
   );
 }
@@ -189,7 +189,7 @@ export default function Journal() {
 
         {/* Neon top edge */}
         <div className="absolute top-0 left-0 right-0 h-px"
-          style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)`, boxShadow: `0 0 12px ${accent}` }} />
+          style={{ background: `${accent}`, boxShadow: 'none' }} />
 
         <HUD color={accent} size={16} opacity={0.8} />
 
@@ -199,17 +199,17 @@ export default function Journal() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[9px] font-black tracking-[0.35em] cyber-flicker"
-                  style={{ color: accent, textShadow: `0 0 10px ${accent}` }}>SYS://</span>
+                  style={{ color: accent, textShadow: 'none' }}>SYS://</span>
                 <span className="text-[9px] font-mono text-white opacity-40 tracking-widest">NEURAL_LOG v2.7</span>
                 <span className="cursor-blink font-mono" style={{ color: accent, fontSize: 12 }}>▌</span>
               </div>
               <h1 className="text-3xl font-black tracking-tight leading-none"
-                style={{ color: '#fff', textShadow: `0 0 30px ${accent}60, 0 2px 4px rgba(0,0,0,0.8)` }}>
+                style={{ color: '#fff', textShadow: 'none' }}>
                 JOURNAL
               </h1>
               <div className="flex items-center gap-2 mt-1">
                 <span className="font-mono text-[11px]"
-                  style={{ color: accent, textShadow: `0 0 8px ${accent}` }}>
+                  style={{ color: accent, textShadow: 'none' }}>
                   [{isToday ? 'LIVE' : 'ARCHIVE'}]
                 </span>
                 <span className="font-mono text-[10px] text-white opacity-30">
@@ -241,7 +241,7 @@ export default function Journal() {
 
         {/* Bottom neon edge */}
         <div className="absolute bottom-0 left-0 right-0 h-px"
-          style={{ background: `linear-gradient(90deg, transparent, ${accent}50, transparent)` }} />
+          style={{ background: `${accent}50` }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
@@ -275,7 +275,7 @@ export default function Journal() {
           <button onClick={() => setDate(new Date().toISOString().slice(0, 10))}
             className="tap text-[10px] font-black tracking-widest px-3 py-1.5 rounded-lg"
             style={{ background: `${accent}10`, color: accent, border: `1px solid ${accent}30`,
-              textShadow: `0 0 8px ${accent}`, boxShadow: `0 0 12px ${accent}20` }}>
+              textShadow: 'none', boxShadow: 'none' }}>
             &gt;&gt; NOW
           </button>
         )}
@@ -295,7 +295,7 @@ export default function Journal() {
         <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{ zIndex: 0 }}>
           <div style={{
             position: 'absolute', inset: 0,
-            backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 3px, ${accent}03 3px, ${accent}03 4px)`,
+            backgroundImage: 'none',
           }} />
         </div>
 
@@ -340,8 +340,8 @@ export default function Journal() {
             <div className="relative">
               {focused && (
                 <div className="absolute top-0 left-6 right-6 h-px pointer-events-none"
-                  style={{ background: `linear-gradient(90deg, transparent, ${accent}80, transparent)`,
-                    boxShadow: `0 0 8px ${accent}60` }} />
+                  style={{ background: `${accent}80`,
+                    boxShadow: 'none' }} />
               )}
               <textarea
                 value={content}
@@ -365,7 +365,7 @@ export default function Journal() {
                   className="tap absolute top-2.5 right-2.5 p-1.5 rounded-lg transition-all"
                   style={listening
                     ? { background: '#c2553d15', color: '#c2553d', border: '1px solid #c2553d50',
-                        boxShadow: '0 0 16px #c2553d60', animation: 'neon-pulse 0.9s ease-in-out infinite' }
+                        boxShadow: 'none', animation: 'neon-pulse 0.9s ease-in-out infinite' }
                     : { background: '#0f0f0f', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.06)' }}>
                   {listening ? <MicOff size={14} /> : <Mic size={14} />}
                 </button>
@@ -374,8 +374,8 @@ export default function Journal() {
             {listening && (
               <div className="flex items-center gap-2 mt-1.5">
                 <span className="w-1.5 h-1.5 rounded-full shrink-0"
-                  style={{ background: '#c2553d', boxShadow: '0 0 8px #c2553d', animation: 'neon-pulse 0.7s ease-in-out infinite' }} />
-                <span className="text-[10px] font-mono" style={{ color: '#c2553d', textShadow: '0 0 8px #c2553d' }}>
+                  style={{ background: '#c2553d', boxShadow: 'none', animation: 'neon-pulse 0.7s ease-in-out infinite' }} />
+                <span className="text-[10px] font-mono" style={{ color: '#c2553d', textShadow: 'none' }}>
                   REC:ACTIVE — neural audio capture running
                 </span>
               </div>
@@ -420,9 +420,9 @@ export default function Journal() {
               className="tap flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-[11px] tracking-widest transition-all disabled:opacity-30"
               style={saved
                 ? { background: '#cf8a3e10', color: '#cf8a3e', border: '1px solid #cf8a3e40',
-                    boxShadow: '0 0 20px #cf8a3e30', textShadow: '0 0 8px #cf8a3e' }
+                    boxShadow: 'none', textShadow: 'none' }
                 : { background: `${accent}10`, color: accent, border: `1px solid ${accent}35`,
-                    boxShadow: `0 0 16px ${accent}20`, textShadow: `0 0 8px ${accent}` }}>
+                    boxShadow: 'none', textShadow: 'none' }}>
               {saved
                 ? <><CheckCircle2 size={14} /> UPLOADED</>
                 : saving
@@ -451,7 +451,7 @@ export default function Journal() {
                   style={{ background: '#080808', border: '1px solid rgba(255,255,255,0.04)' }}>
                   {/* Left neon stripe on hover */}
                   <div className="absolute left-0 top-0 bottom-0 w-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ background: em?.color ?? '#c4a085', boxShadow: `0 0 10px ${em?.color ?? '#c4a085'}` }} />
+                    style={{ background: em?.color ?? '#c4a085', boxShadow: 'none' }} />
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-[9px]" style={{ color: '#c4a085', opacity: 0.4 }}>
@@ -463,7 +463,7 @@ export default function Journal() {
                     </div>
                     <div className="flex items-center gap-2">
                       {em && <span className="text-[8px] font-black tracking-widest"
-                        style={{ color: em.color, textShadow: `0 0 6px ${em.color}` }}>{em.code}</span>}
+                        style={{ color: em.color, textShadow: 'none' }}>{em.code}</span>}
                       {em && <span className="w-3 h-3 rounded-full inline-block" style={{ background: em.color }} />}
                     </div>
                   </div>

@@ -50,8 +50,8 @@ export default function AxisOrb({
         style={{
           width: size * 0.62,
           height: size * 0.62,
-          background: `radial-gradient(circle at 35% 30%, ${color}ee, ${color}66 45%, ${color}18 75%, transparent 100%)`,
-          boxShadow: `0 0 60px ${color}55, 0 0 120px ${color}22, inset 0 0 40px ${color}40`,
+          background: `${color}cc`,
+          boxShadow: 'none',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
 
@@ -86,7 +86,7 @@ export default function AxisOrb({
         )}
 
         {state === 'idle' && (
-          <span className="font-black tracking-[0.3em]" style={{ color: '#fff', fontSize: size * 0.09, opacity: 0.85, textShadow: `0 0 16px ${color}` }}>
+          <span className="font-black tracking-[0.3em]" style={{ color: '#fff', fontSize: size * 0.09, opacity: 0.85, textShadow: 'none' }}>
             AXIS
           </span>
         )}

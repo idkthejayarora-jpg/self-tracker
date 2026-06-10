@@ -138,7 +138,7 @@ export default function Habits() {
           <div className="w-3 h-3 rounded-full absolute" style={{
             top: -6, left: -6,
             background: '#f0abfc',
-            boxShadow: '0 0 12px #f0abfc, 0 0 24px #d4a27f',
+            boxShadow: 'none',
           }} />
         </div>
         {/* HUD corners */}
@@ -152,7 +152,7 @@ export default function Habits() {
           style={{ width: 12, height: 12, borderBottom: '1.5px solid #d4a27f', borderRight: '1.5px solid #d4a27f', opacity: 0.6 }} />
         {/* Top neon edge */}
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #d4a27f60, transparent)', boxShadow: '0 0 8px #d4a27f' }} />
+          style={{ background: '#d4a27f60', boxShadow: 'none' }} />
         {/* Content */}
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
@@ -161,7 +161,7 @@ export default function Habits() {
             <span className="cursor-blink font-mono" style={{ color: '#f0abfc', fontSize: 11 }}>▌</span>
           </div>
           <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: '0 0 30px #d4a27f50' }}>
+            style={{ textShadow: 'none' }}>
             BEHAVIORAL MATRIX
           </h1>
           <p className="font-mono text-[10px] mt-1" style={{ color: '#d4a27f', opacity: 0.5 }}>
@@ -170,7 +170,7 @@ export default function Habits() {
         </div>
         {/* Bottom neon edge */}
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #d4a27f40, transparent)' }} />
+          style={{ background: '#d4a27f40' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
@@ -211,7 +211,7 @@ export default function Habits() {
       {/* Momentum buff badge */}
       {momentum && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl scale-in"
-          style={{ background: 'rgba(207,138,62,0.10)', border: '1px solid rgba(207,138,62,0.4)', boxShadow: '0 0 18px rgba(207,138,62,0.15)' }}>
+          style={{ background: 'rgba(207,138,62,0.10)', border: '1px solid rgba(207,138,62,0.4)', boxShadow: 'none' }}>
           <Zap size={14} color="#cf8a3e" className="glow-pulse" />
           <span className="text-xs font-black tracking-wide" style={{ color: '#cf8a3e' }}>
             MOMENTUM ×{momentum.multiplier}
@@ -302,7 +302,7 @@ export default function Habits() {
               <div key={h.id} className="card px-4 py-3 flex items-center gap-3"
                 style={viol ? {
                   borderColor: 'rgba(205,82,64,0.55)',
-                  boxShadow: '0 0 18px rgba(205,82,64,0.18)',
+                  boxShadow: 'none',
                   animation: 'glow-pulse 2s ease-in-out infinite',
                 } : undefined}>
                 {/* Done toggle */}

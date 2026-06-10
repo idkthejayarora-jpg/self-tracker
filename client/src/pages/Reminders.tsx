@@ -121,7 +121,7 @@ export default function Reminders() {
           ))}
           <div className="w-3 h-3 rounded-full absolute" style={{
             top: -6, left: -6, background: '#e0b27c',
-            boxShadow: '0 0 10px #e0b27c, 0 0 20px #d9a066',
+            boxShadow: 'none',
           }} />
         </div>
         <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #e0b27c', borderLeft: '1.5px solid #e0b27c', opacity: 0.7 }} />
@@ -129,14 +129,14 @@ export default function Reminders() {
         <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #e0b27c', borderLeft: '1.5px solid #e0b27c', opacity: 0.7 }} />
         <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #e0b27c', borderRight: '1.5px solid #e0b27c', opacity: 0.7 }} />
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #e0b27c70, transparent)', boxShadow: '0 0 8px #e0b27c' }} />
+          style={{ background: '#e0b27c70', boxShadow: 'none' }} />
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#e0b27c', opacity: 0.6 }}>SIG://</span>
             <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">BROADCAST_INCOMING</span>
             <span className="cursor-blink font-mono" style={{ color: '#e0b27c', fontSize: 11 }}>▌</span>
           </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: '0 0 30px #e0b27c40' }}>
+          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: 'none' }}>
             INCOMING SIGNALS
           </h1>
           <p className="font-mono text-[10px] mt-1" style={{ color: '#e0b27c', opacity: 0.5 }}>
@@ -144,7 +144,7 @@ export default function Reminders() {
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #e0b27c30, transparent)' }} />
+          style={{ background: '#e0b27c30' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>

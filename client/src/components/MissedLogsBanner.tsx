@@ -81,10 +81,10 @@ export default function MissedLogsBanner() {
       className="fixed top-0 left-0 right-0 z-50"
       style={{
         background: maxDays >= 7
-          ? 'linear-gradient(90deg, #7f1d1d, #991b1b)'
+          ? '#5c2a22'
           : maxDays >= 4
-          ? 'linear-gradient(90deg, #78350f, #92400e)'
-          : 'linear-gradient(90deg, #1e1b4b, #3a2a22)',
+          ? '#54381c'
+          : '#3a2a22',
         borderBottom: `2px solid ${maxDays >= 7 ? '#cd5240' : maxDays >= 4 ? '#d9a066' : '#d97757'}`,
         boxShadow: `0 4px 24px ${maxDays >= 7 ? '#cd524040' : maxDays >= 4 ? '#d9a06640' : '#d9775740'}`,
       }}>

@@ -184,12 +184,12 @@ export default function Tasks() {
         style={{ background: 'var(--hero-bg)', border: '1px solid #d9775720' }}>
         {/* Scanlines */}
         <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{
-          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, #d9775703 3px, #d9775703 4px)',
+          backgroundImage: 'none',
         }} />
         {/* Top neon bar */}
         <div className="absolute top-0 left-0 right-0 h-px" style={{
-          background: 'linear-gradient(90deg, transparent, #d9775760, transparent)',
-          boxShadow: '0 0 8px #d97757',
+          background: '#d9775760',
+          boxShadow: 'none',
         }} />
         {/* Content */}
         <div className="relative z-10 px-5 py-4">
@@ -207,7 +207,7 @@ export default function Tasks() {
           <p className="font-mono text-[11px] mb-1" style={{ color: '#d97757', opacity: 0.5 }}>root@system:~$</p>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black font-mono tracking-tight"
-              style={{ color: '#d97757', textShadow: '0 0 20px #d9775760' }}>
+              style={{ color: '#d97757', textShadow: 'none' }}>
               ./MISSION_QUEUE
             </h1>
             <span className="cursor-blink font-mono text-2xl" style={{ color: '#d97757' }}>_</span>

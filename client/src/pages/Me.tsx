@@ -135,7 +135,7 @@ function BrandOfSacrifice({ color }: { color: string }) {
         height: 'auto',
         color,
         overflow: 'visible',
-        filter: `drop-shadow(0 0 16px ${color}) drop-shadow(0 0 48px ${color}44) drop-shadow(0 0 96px ${color}20)`,
+        filter: 'none',
       }}
       aria-hidden="true">
       <g stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="miter" fill="none">
@@ -230,9 +230,14 @@ export default function Me() {
   const [claimError, setClaimError] = useState<string | null>(null);
 
   // Rank card color — syncs with sidebar via localStorage
-  const [customRankColor, setCustomRankColor] = useState<string | null>(
-    () => localStorage.getItem('rank_card_color')
-  );
+  const [customRankColor, setCustomRankColor] = useState<string | null>(() => {
+    const saved = localStorage.getItem('rank_card_color');
+    if (saved && !/^#(d977|c255|e08b|d9a0|d4a2|cf8a|b576|b337|e8a8|a97e|a5a2|f5f3)/i.test(saved)) {
+      localStorage.removeItem('rank_card_color');
+      return null;
+    }
+    return saved;
+  });
   const [showRankPalette, setShowRankPalette] = useState(false);
 
   const RANK_PALETTE_ME = [
@@ -456,7 +461,7 @@ export default function Me() {
           style={{
             background: isLight
               ? 'linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.08) 40%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.08) 60%, transparent 100%)'
-              : 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 40%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.18) 60%, transparent 100%)',
+              : 'none',
             animation: 'scan-line 7s linear infinite',
           }} />
       </div>
@@ -466,11 +471,11 @@ export default function Me() {
         style={{
           minHeight: 360,
           background: isLight
-            ? `radial-gradient(ellipse at 50% -5%, ${rankGlow} 0%, #f0eee6 55%, #e8e4d8 100%)`
-            : `radial-gradient(ellipse at 50% -5%, ${rankGlow} 0%, #1f1c19 55%, #161412 100%)`,
+            ? '#ebe7da'
+            : '#1f1c19',
           boxShadow: isLight
-            ? `0 0 60px ${rankGlow}, 0 0 120px ${rankGlow}40, inset 0 1px 0 rgba(255,255,255,0.80), 0 20px 60px rgba(0,0,0,0.12)`
-            : `0 0 80px ${rankGlow}, 0 0 160px ${rankGlow}40, inset 0 1px 0 rgba(255,255,255,0.10), 0 30px 80px rgba(0,0,0,0.6)`,
+            ? '0 20px 60px rgba(0,0,0,0.12)'
+            : '0 30px 80px rgba(0,0,0,0.5)',
           border: isLight ? `1px solid rgba(0,0,0,0.08)` : `1px solid rgba(255,255,255,0.10)`,
           backdropFilter: 'blur(0px)',
           zIndex: 1,
@@ -529,7 +534,7 @@ export default function Me() {
                 {rank} RANK
               </button>
               <span className="font-mono text-[11px] font-bold tabular-nums"
-                style={{ color: rankSolid, textShadow: `0 0 10px ${rankSolid}80` }}>
+                style={{ color: rankSolid, textShadow: 'none' }}>
                 {totalPoints.toLocaleString()} PTS
               </span>
             </div>
@@ -556,7 +561,7 @@ export default function Me() {
                         transform: rankSolid === c ? 'scale(1.3)' : undefined,
                         outline: rankSolid === c ? `2px solid ${c}` : '2px solid transparent',
                         outlineOffset: 2,
-                        boxShadow: rankSolid === c ? `0 0 10px ${c}` : undefined,
+                        boxShadow: rankSolid === c ? `0 0 0 2px var(--s1), 0 0 0 3.5px ${c}` : undefined,
                       }} />
                   ))}
                 </div>
@@ -583,13 +588,13 @@ export default function Me() {
             {/* Total merit bar */}
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--t-muted)' }}>MERIT SCORE</span>
-              <span className="font-black font-mono text-sm tabular-nums" style={{ color: rankSolid, textShadow: `0 0 8px ${rankSolid}80` }}>
+              <span className="font-black font-mono text-sm tabular-nums" style={{ color: rankSolid, textShadow: 'none' }}>
                 {animatedMerit}<span className="text-[10px] font-normal opacity-50">/100</span>
               </span>
             </div>
             <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
               <div className="h-full rounded-full transition-all duration-700 bar-fill"
-                style={{ width: `${meritScore}%`, background: rankSolid, boxShadow: `0 0 8px ${rankSolid}` }} />
+                style={{ width: `${meritScore}%`, background: rankSolid, boxShadow: 'none' }} />
             </div>
             {/* Breakdown — 5 components: Stats/Streaks/Skills/Claims/Pts */}
             <div className="grid grid-cols-5 gap-1.5 pt-1">
@@ -635,7 +640,7 @@ export default function Me() {
                 width: 96, height: 96,
                 border: `2px solid ${rankSolid}`,
                 opacity: 0.4,
-                boxShadow: `0 0 14px ${rankSolid}60`,
+                boxShadow: 'none',
               }} />
             <div className="relative z-10" style={{ fontSize: 52, lineHeight: 1, padding: 4 }}>
               {profile.avatar_emoji || '⚔️'}
@@ -700,7 +705,7 @@ export default function Me() {
                 <div className="flex items-center justify-between">
                   <s.Icon size={16} style={{ color: s.color }} />
                   <span className="text-3xl font-black tabular-nums font-mono"
-                    style={{ color: s.color, textShadow: `0 0 12px ${s.color}80` }}>{val}</span>
+                    style={{ color: s.color, textShadow: 'none' }}>{val}</span>
                 </div>
                 <div>
                   <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
@@ -708,7 +713,7 @@ export default function Me() {
                       style={{
                         width: `${val}%`,
                         background: s.color,
-                        boxShadow: `0 0 8px ${s.color}`,
+                        boxShadow: 'none',
                       }} />
                   </div>
                   <p className="text-[10px] mt-1 font-bold tracking-[0.12em] uppercase"
@@ -842,7 +847,7 @@ export default function Me() {
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <span className="text-[10px] font-black px-2 py-1 rounded-md"
-                        style={{ background: '#d9775712', color: '#d97757', border: '1px solid #d9775740', textShadow: '0 0 8px #d9775780' }}>
+                        style={{ background: '#d9775712', color: '#d97757', border: '1px solid #d9775740', textShadow: 'none' }}>
                         LVL {skill.level}
                       </span>
                       <button onClick={() => levelUpSkill(skill.id)}
@@ -878,7 +883,7 @@ export default function Me() {
                         style={{
                           width: `${skill.xp}%`,
                           background: `linear-gradient(90deg, rgb(var(--accent-rgb)/0.8), rgb(var(--accent-rgb)))`,
-                          boxShadow: `0 0 6px rgb(var(--accent-rgb)/0.6)`,
+                          boxShadow: 'none',
                         }} />
                       {skill.xp > 0 && (
                         <div className="xp-shimmer-bar absolute inset-0 rounded-full" style={{ mixBlendMode: 'screen' }} />
@@ -1032,7 +1037,7 @@ export default function Me() {
                                 background: '#d9a06618',
                                 color: '#d9a066',
                                 border: '1px solid #d9a06650',
-                                textShadow: '0 0 8px #d9a06680',
+                                textShadow: 'none',
                               }}>
                               ✓ CLAIMED
                             </span>
@@ -1271,7 +1276,7 @@ export default function Me() {
                         style={{
                           width: `${mentor.progress}%`,
                           background: 'rgb(var(--accent-rgb))',
-                          boxShadow: '0 0 8px rgb(var(--accent-rgb)/0.7)',
+                          boxShadow: 'none',
                         }} />
                       {mentor.progress > 0 && (
                         <div className="xp-shimmer-bar absolute inset-0 rounded-full" style={{ mixBlendMode: 'screen' }} />
@@ -1345,7 +1350,7 @@ export default function Me() {
                         </p>
                       </div>
                       <span className="text-sm font-black font-mono tabular-nums shrink-0"
-                        style={{ color, textShadow: `0 0 8px ${color}80` }}>
+                        style={{ color, textShadow: 'none' }}>
                         +{p.points}
                       </span>
                     </div>

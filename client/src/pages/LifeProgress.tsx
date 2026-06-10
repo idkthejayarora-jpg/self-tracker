@@ -259,7 +259,7 @@ export default function LifeProgress() {
         <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #e59a7f', borderLeft:  '1.5px solid #e59a7f', opacity: 0.6 }} />
         <div className="absolute bottom-0 right-0 pointer-events-none"style={{ width: 14, height: 14, borderBottom: '1.5px solid #e59a7f', borderRight: '1.5px solid #e59a7f', opacity: 0.6 }} />
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #e59a7f80, transparent)', boxShadow: '0 0 12px #e59a7f' }} />
+          style={{ background: '#e59a7f80', boxShadow: 'none' }} />
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#e59a7f', opacity: 0.7 }}>AXIS://</span>
@@ -267,13 +267,13 @@ export default function LifeProgress() {
             <span className="cursor-blink font-mono" style={{ color: '#e59a7f', fontSize: 11 }}>▌</span>
           </div>
           <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: '0 0 40px #e59a7f60' }}>LIFE PATH</h1>
+            style={{ textShadow: 'none' }}>LIFE PATH</h1>
           <p className="font-mono text-[10px] mt-1" style={{ color: '#e59a7f', opacity: 0.5 }}>
             // WRITE YOUR GOALS — AXIS BUILDS YOUR PLAN
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #e59a7f40, transparent)' }} />
+          style={{ background: '#e59a7f40' }} />
       </div>
 
       {/* ── SPLIT: chat (left) + sectors (right) ── */}
@@ -474,10 +474,8 @@ export default function LifeProgress() {
                       <div aria-hidden style={{
                         position: 'absolute', bottom: 0, left: 0, right: 0,
                         height: `${fill}%`,
-                        background: `linear-gradient(to top,
-                          ${sector.color}${Math.round(fillOpacity(fill) * 255).toString(16).padStart(2,'0')},
-                          ${sector.color}${Math.round(fillOpacity(fill) * 0.45 * 255).toString(16).padStart(2,'0')})`,
-                        transition: 'height 1.2s cubic-bezier(0.34,1.2,0.64,1)',
+                        background: `${sector.color}${Math.round(fillOpacity(fill) * 0.7 * 255).toString(16).padStart(2,'0')}`,
+                        transition: 'height 1s steps(10, end)',
                         pointerEvents: 'none',
                       }} />
 

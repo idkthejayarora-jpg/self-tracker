@@ -99,21 +99,21 @@ export default function SocialDetox() {
         </div>
         {/* Diagonal warning stripe */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(194,85,61,0.02) 20px, rgba(194,85,61,0.02) 22px)',
+          backgroundImage: 'none',
         }} />
         <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #c2553d', borderLeft: '1.5px solid #c2553d', opacity: 0.7 }} />
         <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #c2553d', borderRight: '1.5px solid #c2553d', opacity: 0.7 }} />
         <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #c2553d', borderLeft: '1.5px solid #c2553d', opacity: 0.7 }} />
         <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #c2553d', borderRight: '1.5px solid #c2553d', opacity: 0.7 }} />
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #c2553d80, transparent)', boxShadow: '0 0 8px #c2553d' }} />
+          style={{ background: '#c2553d80', boxShadow: 'none' }} />
         <div className="relative z-10 px-5 py-5" style={{ animation: 'glitch-block 8s step-end 2s infinite' }}>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#c2553d', opacity: 0.7 }}>BLOCK://</span>
             <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">FIREWALL_ACTIVE</span>
             <span className="cursor-blink font-mono" style={{ color: '#c2553d', fontSize: 11 }}>▌</span>
           </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: '0 0 30px #c2553d50' }}>
+          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: 'none' }}>
             DIGITAL DETOX
           </h1>
           <p className="font-mono text-[10px] mt-1" style={{ color: '#e59a7f', opacity: 0.6 }}>
@@ -121,7 +121,7 @@ export default function SocialDetox() {
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #c2553d30, transparent)' }} />
+          style={{ background: '#c2553d30' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>

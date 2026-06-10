@@ -255,7 +255,7 @@ export default function Workout() {
         <div className="absolute inset-0 pointer-events-none flex gap-8 px-8" style={{ opacity: 0.15 }}>
           {[0,200,400,600,800,1000,1200,1400].map(d => (
             <div key={d} style={{
-              width: 2, flex: '0 0 2px', background: 'linear-gradient(to top, #d97757, transparent)',
+              width: 2, flex: '0 0 2px', background: '#d9775760',
               animation: `heat-shimmer 1.8s ease-in-out ${d}ms infinite`,
             }} />
           ))}
@@ -266,7 +266,7 @@ export default function Workout() {
             <div key={i} className="absolute rounded-full" style={{
               width: 3, height: 3,
               background: i % 2 === 0 ? '#d97757' : '#ff8c00',
-              boxShadow: `0 0 6px ${i % 2 === 0 ? '#d97757' : '#ff8c00'}`,
+              boxShadow: 'none',
               left: `${15 + i * 14}%`,
               bottom: 16,
               animation: `ember-float ${1.5 + i * 0.3}s ease-out ${i * 400}ms infinite`,
@@ -280,7 +280,7 @@ export default function Workout() {
         <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #d97757', borderRight: '1.5px solid #d97757', opacity: 0.7 }} />
         {/* Top lava edge */}
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #d97757, transparent)', boxShadow: '0 0 12px #d97757' }} />
+          style={{ background: '#d97757', boxShadow: 'none' }} />
         {/* Content */}
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
@@ -288,7 +288,7 @@ export default function Workout() {
             <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">IRON_PROTOCOL</span>
             <span className="cursor-blink font-mono" style={{ color: '#d97757', fontSize: 11 }}>▌</span>
           </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none" style={{ color: '#fff', textShadow: '0 0 40px #d9775760, 0 0 80px #d9775730' }}>
+          <h1 className="text-3xl font-black tracking-tight leading-none" style={{ color: '#fff', textShadow: 'none' }}>
             THE FORGE
           </h1>
           <p className="font-mono text-[10px] mt-1" style={{ color: '#d97757', opacity: 0.5 }}>
@@ -296,7 +296,7 @@ export default function Workout() {
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #d9775740, transparent)' }} />
+          style={{ background: '#d9775740' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>

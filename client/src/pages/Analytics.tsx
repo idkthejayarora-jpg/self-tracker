@@ -50,11 +50,11 @@ function HudCard({ children, accent = ACCENT, className = '' }: {
   return (
     <div className={`relative overflow-hidden rounded-2xl ${className}`}
       style={{ background: 'var(--hero-bg)', border: `1px solid ${accent}18`,
-        boxShadow: `0 0 24px ${accent}07` }}>
+        boxShadow: 'none' }}>
       <div className="absolute inset-0 pointer-events-none"
-        style={{ backgroundImage: `repeating-linear-gradient(0deg,transparent,transparent 3px,${accent}02 3px,${accent}02 4px)` }} />
+        style={{ backgroundImage: 'none' }} />
       <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-        style={{ background: `linear-gradient(90deg,transparent,${accent}55,transparent)`, boxShadow: `0 0 5px ${accent}` }} />
+        style={{ background: `${accent}55`, boxShadow: 'none' }} />
       {([['top-0 left-0',{borderTop:`1.5px solid ${accent}`,borderLeft:`1.5px solid ${accent}`}],
          ['top-0 right-0',{borderTop:`1.5px solid ${accent}`,borderRight:`1.5px solid ${accent}`}],
          ['bottom-0 left-0',{borderBottom:`1.5px solid ${accent}`,borderLeft:`1.5px solid ${accent}`}],
@@ -64,7 +64,7 @@ function HudCard({ children, accent = ACCENT, className = '' }: {
           style={{ width: 10, height: 10, opacity: 0.45, ...s }} />
       ))}
       <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-        style={{ background: `linear-gradient(90deg,transparent,${accent}22,transparent)` }} />
+        style={{ background: `${accent}22` }} />
       <div className="relative z-10">{children}</div>
     </div>
   );
@@ -74,7 +74,7 @@ function SectionLabel({ text, accent = ACCENT }: { text: string; accent?: string
   return (
     <div className="flex items-center gap-2 mb-3">
       <div className="w-0.5 h-4 rounded-full flex-shrink-0"
-        style={{ background: accent, boxShadow: `0 0 6px ${accent}` }} />
+        style={{ background: accent, boxShadow: 'none' }} />
       <span className="text-[10px] font-black tracking-[0.22em] font-mono uppercase"
         style={{ color: accent, opacity: 0.65 }}>{text}</span>
     </div>
@@ -85,7 +85,7 @@ function Tooltip2({ active, payload, label, accent = ACCENT }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div style={{ background: 'rgba(0,0,0,0.93)', border: `1px solid ${accent}30`,
-      borderRadius: 8, padding: '7px 11px', fontSize: 11, boxShadow: `0 0 14px ${accent}18` }}>
+      borderRadius: 8, padding: '7px 11px', fontSize: 11, boxShadow: 'none' }}>
       <p style={{ color: accent, fontFamily: 'monospace', fontWeight: 900,
         letterSpacing: '0.1em', marginBottom: 3, opacity: 0.8 }}>{label}</p>
       {payload.map((p: any, i: number) => (
@@ -115,7 +115,7 @@ function RangePicker({ value, onChange }: { value: number; onChange: (v: number)
           className="tap px-3 py-1.5 rounded-lg text-[11px] font-black font-mono tracking-widest"
           style={value === r.days
             ? { background: `${ACCENT}20`, color: ACCENT, border: `1px solid ${ACCENT}40`,
-                boxShadow: `0 0 8px ${ACCENT}20` }
+                boxShadow: 'none' }
             : { background: 'var(--s3)', color: 'var(--t-faint)', border: '1px solid transparent' }}
           onClick={() => onChange(r.days)}>
           {r.label}
@@ -133,7 +133,7 @@ function DataParticles() {
       {[...Array(12)].map((_, i) => (
         <div key={i} className="absolute w-px"
           style={{ left: `${8 + i * 7.5}%`, top: 0, bottom: 0,
-            background: `linear-gradient(to bottom,transparent,${ACCENT},transparent)`,
+            background: `${ACCENT}`,
             animation: `data-scroll ${2 + (i % 3) * 0.8}s linear ${i * 200}ms infinite` }} />
       ))}
     </div>
@@ -160,7 +160,7 @@ function RankCard({ me }: { me: MeSummary | null }) {
               style={{ color: tier.color, opacity: 0.55 }}>HUNTER_RANK://</p>
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-black font-mono leading-none"
-                style={{ color: tier.color, textShadow: `0 0 24px ${tier.color}60` }}>
+                style={{ color: tier.color, textShadow: 'none' }}>
                 {me.rank}
               </span>
               <span className="text-xs font-bold tracking-wide" style={{ color: 'var(--t-muted)' }}>
@@ -170,7 +170,7 @@ function RankCard({ me }: { me: MeSummary | null }) {
           </div>
           <div className="text-right">
             <p className="text-2xl font-black font-mono leading-none"
-              style={{ color: 'var(--t-head)', textShadow: `0 0 14px ${tier.color}40` }}>
+              style={{ color: 'var(--t-head)', textShadow: 'none' }}>
               {me.meritScore}
               <span className="text-sm font-normal opacity-40">/100</span>
             </p>
@@ -188,8 +188,8 @@ function RankCard({ me }: { me: MeSummary | null }) {
           </div>
           <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
             <div className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${tier.color}80, ${tier.color})`,
-                boxShadow: `0 0 8px ${tier.color}60` }} />
+              style={{ width: `${pct}%`, background: tier.color,
+                boxShadow: 'none' }} />
           </div>
           <p className="text-[9px] font-mono mt-0.5 text-right" style={{ color: tier.color, opacity: 0.6 }}>
             {pct}% to next rank
@@ -350,7 +350,7 @@ function JournalHeatmap({ data }: { data: DailyData[] }) {
                   backgroundColor: d.mood != null ? MOOD_COLORS[d.mood] : 'var(--s3)',
                   opacity: d.mood != null ? (isHov ? 1 : 0.75) : (isHov ? 0.5 : 0.2),
                   transform: isHov ? 'scale(1.5)' : undefined,
-                  boxShadow: isHov && d.mood != null ? `0 0 7px ${MOOD_COLORS[d.mood!]}` : undefined,
+                  boxShadow: isHov && d.mood != null ? `0 0 0 2px ${MOOD_COLORS[d.mood!]}40` : undefined,
                   transition: 'transform 0.1s,opacity 0.1s', zIndex: isHov ? 10 : undefined, position: 'relative',
                 }} />
             );
@@ -443,7 +443,7 @@ export default function Analytics() {
         <div className="absolute bottom-0 right-0 pointer-events-none"
           style={{ width: 14, height: 14, borderBottom: '1.5px solid #c4a085', borderRight: '1.5px solid #c4a085', opacity: 0.6 }} />
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg,transparent,#c4a08580,transparent)', boxShadow: '0 0 8px #c4a085' }} />
+          style={{ background: '#c4a08580', boxShadow: 'none' }} />
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: ACCENT, opacity: 0.6 }}>ORACLE://</span>
@@ -451,13 +451,13 @@ export default function Analytics() {
             <span className="cursor-blink font-mono" style={{ color: ACCENT, fontSize: 11 }}>▌</span>
           </div>
           <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: '0 0 30px #c4a08540' }}>ORACLE CORE</h1>
+            style={{ textShadow: 'none' }}>ORACLE CORE</h1>
           <p className="font-mono text-[10px] mt-1" style={{ color: ACCENT, opacity: 0.45 }}>
             // daily signal analysis — behavioral pattern recognition
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg,transparent,#c4a08525,transparent)' }} />
+          style={{ background: '#c4a08525' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }} className="space-y-4">
@@ -484,7 +484,7 @@ export default function Analytics() {
             <p className="text-[9px] font-black tracking-[0.2em] font-mono mb-1" style={{ color: '#d9a066', opacity: 0.55 }}>TASK RATE</p>
             <p className="text-3xl font-black font-mono leading-none"
               style={{ color: completionRate >= 70 ? '#cf8a3e' : completionRate >= 40 ? '#d9a066' : '#cd5240',
-                textShadow: '0 0 14px currentColor' }}>
+                textShadow: 'none' }}>
               {completionRate}<span className="text-base opacity-40">%</span>
             </p>
             <p className="text-[10px] font-mono mt-1" style={{ color: 'var(--t-faint)' }}>
@@ -613,7 +613,7 @@ export default function Analytics() {
                 <span key={l} className="flex items-center gap-1.5 text-[10px] font-mono"
                   style={{ color: 'var(--t-faint)' }}>
                   <span className="w-4 h-0.5 rounded-full inline-block"
-                    style={{ background: c, boxShadow: `0 0 4px ${c}` }} />{l}
+                    style={{ background: c, boxShadow: 'none' }} />{l}
                 </span>
               ))}
             </div>

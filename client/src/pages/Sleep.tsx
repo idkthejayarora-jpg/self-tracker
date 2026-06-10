@@ -173,7 +173,7 @@ export default function Sleep() {
         {/* Nebula glow spot */}
         <div className="absolute pointer-events-none" style={{
           right: -20, top: -20, width: 150, height: 150, borderRadius: '50%',
-          background: 'radial-gradient(circle, #d4a27f15 0%, transparent 70%)',
+          background: 'transparent',
           filter: 'blur(20px)',
         }} />
         {/* HUD corners */}
@@ -183,7 +183,7 @@ export default function Sleep() {
         <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #d4a27f', borderRight: '1.5px solid #d4a27f', opacity: 0.7 }} />
         {/* Top violet edge */}
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #d4a27f80, transparent)', boxShadow: '0 0 10px #d4a27f' }} />
+          style={{ background: '#d4a27f80', boxShadow: 'none' }} />
         {/* Content */}
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
@@ -192,7 +192,7 @@ export default function Sleep() {
             <span className="cursor-blink font-mono" style={{ color: '#d4a27f', fontSize: 11 }}>▌</span>
           </div>
           <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: '0 0 40px #d4a27f50' }}>
+            style={{ textShadow: 'none' }}>
             HYPERSLEEP ARCHIVE
           </h1>
           <p className="font-mono text-[10px] mt-1" style={{ color: '#d4a27f', opacity: 0.5 }}>
@@ -200,7 +200,7 @@ export default function Sleep() {
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #d4a27f30, transparent)' }} />
+          style={{ background: '#d4a27f30' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>

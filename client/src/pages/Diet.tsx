@@ -138,9 +138,9 @@ export default function Diet() {
         style={{ background: 'var(--hero-bg)', border: `1px solid ${ACCENT}25`, minHeight: 96, zIndex: 1 }}>
         {/* Scanlines */}
         <div className="absolute inset-0 pointer-events-none"
-          style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 3px, ${ACCENT}02 3px, ${ACCENT}02 4px)` }} />
+          style={{ backgroundImage: 'none' }} />
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}80, transparent)` }} />
+          style={{ background: `${ACCENT}80` }} />
         {/* HUD corners */}
         {([['top-0 left-0', { borderTop: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` }],
            ['top-0 right-0', { borderTop: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}` }],
@@ -156,7 +156,7 @@ export default function Diet() {
               <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: ACCENT, opacity: 0.6 }}>LAB://</span>
               <span className="cursor-blink font-mono" style={{ color: ACCENT, fontSize: 11 }}>▌</span>
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-white" style={{ textShadow: `0 0 30px ${ACCENT}40` }}>
+            <h1 className="text-2xl font-black tracking-tight text-white" style={{ textShadow: 'none' }}>
               BIOLAB
             </h1>
             <p className="font-mono text-[10px] mt-0.5" style={{ color: ACCENT, opacity: 0.45 }}>
@@ -166,7 +166,7 @@ export default function Diet() {
           <Salad size={30} style={{ color: ACCENT, opacity: 0.2 }} />
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}30, transparent)` }} />
+          style={{ background: `${ACCENT}30` }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }} className="space-y-5">
@@ -231,7 +231,7 @@ export default function Diet() {
         <div className="relative overflow-hidden rounded-2xl"
           style={{ background: 'var(--hero-bg)', border: `1px solid ${ACCENT}20` }}>
           <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-            style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}50, transparent)` }} />
+            style={{ background: `${ACCENT}50` }} />
           <div className="relative z-10 px-4 py-4 space-y-3">
             <div className="flex items-center gap-2">
               <div className="w-0.5 h-4 rounded-full" style={{ background: ACCENT }} />
@@ -288,7 +288,7 @@ export default function Diet() {
               {/* Live listening overlay — waveform + interim transcript */}
               {voice.listening && (
                 <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 px-3 py-2 rounded-b-xl scale-in"
-                  style={{ background: 'linear-gradient(0deg, rgba(205,82,64,0.16), transparent)' }}>
+                  style={{ background: 'rgba(205,82,64,0.10)' }}>
                   <div className="flex items-end gap-[2px] h-4">
                     {[0, 1, 2, 3, 4, 5, 6].map(i => (
                       <span key={i} className="waveform-bar"

@@ -97,14 +97,14 @@ export default function HabitLockdownModal() {
         style={{
           background: 'rgba(26,20,18,0.96)',
           border: `1px solid ${ACCENT}55`,
-          boxShadow: `0 0 60px ${ACCENT}40, 0 24px 64px rgba(0,0,0,0.7)`,
+          boxShadow: 'none',
         }}>
         {/* Scanlines */}
         <div className="absolute inset-0 pointer-events-none"
-          style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 3px, ${ACCENT}08 3px, ${ACCENT}08 4px)` }} />
+          style={{ backgroundImage: 'none' }} />
         {/* Top neon bar */}
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: `linear-gradient(90deg, transparent, ${ACCENT}, transparent)`, boxShadow: `0 0 10px ${ACCENT}` }} />
+          style={{ background: `${ACCENT}`, boxShadow: 'none' }} />
 
         <div className="relative z-10 px-5 py-5 space-y-4">
           {/* Header */}

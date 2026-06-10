@@ -187,7 +187,7 @@ function SidebarClock() {
       <p className="text-[9px] font-black tracking-[0.14em]" style={{ color: 'var(--t-faint)' }}>{day} · {date}</p>
       <div className="mt-2 h-[2px] rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
         <div className="h-full rounded-full bar-fill"
-          style={{ width: `${minPct}%`, background: 'rgb(var(--accent-rgb) / 0.7)', boxShadow: '0 0 5px rgb(var(--accent-rgb) / 0.5)' }} />
+          style={{ width: `${minPct}%`, background: 'rgb(var(--accent-rgb) / 0.7)', boxShadow: 'none' }} />
       </div>
     </div>
   );
@@ -224,9 +224,15 @@ export default function Layout() {
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   // Custom rank card / gradient color
-  const [customRankColor, setCustomRankColor] = useState<string | null>(
-    () => localStorage.getItem('rank_card_color')
-  );
+  const [customRankColor, setCustomRankColor] = useState<string | null>(() => {
+    const saved = localStorage.getItem('rank_card_color');
+    // colors saved under the old neon palette get discarded so the warm rank color takes over
+    if (saved && !RANK_PALETTE.includes(saved) && saved !== '#f5f3ec') {
+      localStorage.removeItem('rank_card_color');
+      return null;
+    }
+    return saved;
+  });
   const [showRankPalette, setShowRankPalette] = useState(false);
 
   function handleLogoClick() { logoInputRef.current?.click(); }
@@ -328,7 +334,7 @@ export default function Layout() {
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             border: `1px solid ${rankColor}30`,
-            boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 20px ${rankColor}15`,
+            boxShadow: `0 4px 20px ${rankColor}15`,
             transition: 'background 0.4s, border-color 0.4s, box-shadow 0.4s',
           }}>
           <div className="flex items-center gap-2 mb-2">
@@ -391,7 +397,7 @@ export default function Layout() {
             </div>
             <div className="xp-track">
               <div className="xp-fill bar-fill"
-                style={{ width: `${me?.meritScore ?? 0}%`, background: rankColor, boxShadow: `0 0 8px ${rankColor}90`, transition: 'background 0.4s, box-shadow 0.4s' }} />
+                style={{ width: `${me?.meritScore ?? 0}%`, background: rankColor, boxShadow: 'none', transition: 'background 0.4s, box-shadow 0.4s' }} />
             </div>
           </div>
 
@@ -415,7 +421,7 @@ export default function Layout() {
                       transform: rankColor === c ? 'scale(1.3)' : undefined,
                       outline: rankColor === c ? `2px solid ${c}` : '2px solid transparent',
                       outlineOffset: 2,
-                      boxShadow: rankColor === c ? `0 0 8px ${c}` : undefined,
+                      boxShadow: rankColor === c ? `0 0 0 2px var(--s1), 0 0 0 3.5px ${c}` : undefined,
                     }} />
                 ))}
               </div>
