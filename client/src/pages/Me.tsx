@@ -24,17 +24,6 @@ function useCountUp(target: number, duration = 900) {
   return value;
 }
 
-// ── Rank glow config ──────────────────────────────────────────────────────────
-const RANK_GLOW: Record<string, string> = {
-  E:    'rgba(132,129,111,0.25)',
-  D:    'rgba(169,126,95,0.3)',
-  C:    'rgba(207,138,62,0.3)',
-  B:    'rgba(212,162,127,0.35)',
-  A:    'rgba(217,119,87,0.35)',
-  S:    'rgba(205,82,64,0.4)',
-  'S+': 'rgba(217,160,102,0.5)',
-  '∞':  'rgba(232,168,124,0.6)',
-};
 
 const RANK_SOLID: Record<string, string> = {
   E:    '#84816f',
@@ -427,7 +416,6 @@ export default function Me() {
   const { profile, rank, rankClass, rankColor, rankLabel, rankDesc, meritScore, meritBreakdown, nextRank, totalPoints, stats, skills, claims, mentors } = data;
   const activeClaims = claims.filter(c => c.status === 'active');
   const claimedList  = claims.filter(c => c.status === 'claimed');
-  const rankGlow     = RANK_GLOW[rank] ?? 'transparent';
   const autoSolid    = RANK_SOLID[rank] ?? rankColor;
   // Custom color from palette picker (shared with sidebar via localStorage)
   const rankSolid    = customRankColor ?? autoSolid;
