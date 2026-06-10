@@ -74,11 +74,21 @@ export default function Jay() {
   voiceOnRef.current = voiceOn;
 
   const voices = useSpeechVoices();
+  const autoVoice = pickJayVoice(voices);
   const jayVoice = voiceURI
-    ? (voices.find(v => v.voiceURI === voiceURI) ?? pickJayVoice(voices))
-    : pickJayVoice(voices);
+    ? (voices.find(v => v.voiceURI === voiceURI) ?? autoVoice)
+    : autoVoice;
   const jayVoiceRef = useRef(jayVoice);
   jayVoiceRef.current = jayVoice;
+
+  // Saved voice URIs go stale when the browser updates its voice list —
+  // fall back to Auto instead of a select pointing at nothing.
+  useEffect(() => {
+    if (voiceURI && voices.length && !voices.some(v => v.voiceURI === voiceURI)) {
+      setVoiceURI('');
+      localStorage.removeItem('jay_voice_uri');
+    }
+  }, [voices, voiceURI]);
 
   // ── speak a Jay line, then (in voice mode) hand the mic back ────────────────
   const sayRef = useRef<(text: string, after?: () => void) => void>(() => {});
@@ -466,12 +476,15 @@ export default function Jay() {
                 Jay's voice
               </p>
               <select
-                value={jayVoice?.voiceURI || ''}
+                value={voiceURI}
                 onChange={e => { setVoiceURI(e.target.value); localStorage.setItem('jay_voice_uri', e.target.value); }}
                 className="w-full text-[11px] rounded-lg px-2 py-1.5"
                 style={{ background: 'var(--s2)', border: '1px solid var(--b)', color: 'var(--t-body)' }}>
+                <option value="">Auto — best available{autoVoice ? ` (${autoVoice.name.replace(/\(.*?\)/g, '').trim()})` : ''}</option>
                 {voices.map(v => (
-                  <option key={v.voiceURI} value={v.voiceURI}>{v.name.replace(/\(.*?\)/g, '').trim()}</option>
+                  <option key={v.voiceURI} value={v.voiceURI}>
+                    {/premium|enhanced|neural/i.test(v.name) ? '★ ' : ''}{v.name.replace(/\(.*?\)/g, '').trim()}{v.localService ? '' : ' · online'}
+                  </option>
                 ))}
               </select>
               <p className="text-[9.5px] mt-1.5 leading-snug" style={{ color: 'var(--t-faint)' }}>
