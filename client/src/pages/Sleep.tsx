@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import type { SleepLog } from '../types';
 
 const QUALITY_LABEL = ['', 'Terrible', 'Poor', 'Okay', 'Good', 'Great'];
-const QUALITY_COLOR = ['', '#cd5240', '#d97757', '#d9a066', '#6f9d5c', '#629a90'];
+const QUALITY_COLOR = ['', '#cd5240', '#d97757', '#d9a066', '#cf8a3e', '#d9a066'];
 
 function fmtDuration(minutes?: number | null) {
   if (!minutes) return '--';
@@ -149,7 +149,7 @@ export default function Sleep() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 anim-page"
-      style={{ '--accent-rgb': '138 123 168' } as React.CSSProperties}>
+      style={{ '--accent-rgb': '229 154 127' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
@@ -229,8 +229,8 @@ export default function Sleep() {
         <div className="grid grid-cols-3 gap-2">
           {[
             { label: 'Avg Duration', val: fmtDuration(stats.avgDuration), color: '#d97757' },
-            { label: 'Avg Quality', val: stats.avgQuality ? `${stats.avgQuality}/5` : '--', color: '#8a7ba8' },
-            { label: 'Sleep Debt', val: stats.sleepDebt > 0 ? `${fmtDuration(stats.sleepDebt)}` : 'None', color: stats.sleepDebt > 60 ? '#cd5240' : '#6f9d5c' },
+            { label: 'Avg Quality', val: stats.avgQuality ? `${stats.avgQuality}/5` : '--', color: '#e59a7f' },
+            { label: 'Sleep Debt', val: stats.sleepDebt > 0 ? `${fmtDuration(stats.sleepDebt)}` : 'None', color: stats.sleepDebt > 60 ? '#cd5240' : '#cf8a3e' },
           ].map(({ label, val, color }) => (
             <div key={label} className="card px-3 py-3">
               <p className="text-[10px] font-medium mb-1" style={{ color: '#57544a' }}>{label}</p>

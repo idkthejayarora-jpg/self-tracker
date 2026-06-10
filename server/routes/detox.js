@@ -13,7 +13,7 @@ router.get('/apps', (req, res) => {
 });
 
 router.post('/apps', (req, res) => {
-  const { name, icon='📱', color='#6366f1', daily_limit_minutes=0 } = req.body;
+  const { name, icon='📱', color='#d97757', daily_limit_minutes=0 } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Name required' });
   const r = db.prepare(`INSERT INTO detox_apps (user_id,name,icon,color,daily_limit_minutes) VALUES (?,?,?,?,?)`).run(req.user.id, name.trim(), icon, color, daily_limit_minutes);
   res.status(201).json(db.prepare('SELECT * FROM detox_apps WHERE id=?').get(r.lastInsertRowid));

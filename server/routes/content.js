@@ -22,7 +22,7 @@ router.get('/niches', (req, res) => {
 });
 
 router.post('/niches', (req, res) => {
-  const { name, color = '#6366f1', icon = '', sort_order = 0 } = req.body;
+  const { name, color = '#d97757', icon = '', sort_order = 0 } = req.body;
   if (!name) return res.status(400).json({ error: 'Name required' });
   const r = db.prepare(
     'INSERT INTO content_niches (user_id, name, color, icon, sort_order) VALUES (?,?,?,?,?)'

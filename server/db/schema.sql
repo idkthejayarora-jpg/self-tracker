@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS life_areas (
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   icon TEXT DEFAULT '🎯',
-  color TEXT DEFAULT '#6366f1',
+  color TEXT DEFAULT '#d97757',
   vision TEXT,
   progress INTEGER DEFAULT 0 CHECK(progress BETWEEN 0 AND 100),
   sort_order INTEGER DEFAULT 0,
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS detox_apps (
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   icon TEXT DEFAULT '📱',
-  color TEXT DEFAULT '#6366f1',
+  color TEXT DEFAULT '#d97757',
   daily_limit_minutes INTEGER DEFAULT 0,
   sort_order INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -168,7 +168,7 @@ CREATE TABLE IF NOT EXISTS habits (
   name TEXT NOT NULL,
   icon TEXT DEFAULT '✅',
   category TEXT DEFAULT 'discipline' CHECK(category IN ('discipline','physical','mental','health','other')),
-  color TEXT DEFAULT '#6366f1',
+  color TEXT DEFAULT '#d97757',
   sort_order INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -256,7 +256,7 @@ CREATE TABLE IF NOT EXISTS finance_goals (
   target_amount REAL NOT NULL,
   saved_amount REAL DEFAULT 0,
   deadline DATE,
-  color TEXT DEFAULT '#22c55e',
+  color TEXT DEFAULT '#d9a066',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -332,7 +332,7 @@ CREATE TABLE IF NOT EXISTS workout_plan_days (
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   icon TEXT DEFAULT '💪',
-  color TEXT DEFAULT '#ff4500',
+  color TEXT DEFAULT '#d97757',
   sort_order INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -358,7 +358,7 @@ CREATE TABLE IF NOT EXISTS content_niches (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name       TEXT NOT NULL,
-  color      TEXT DEFAULT '#6366f1',
+  color      TEXT DEFAULT '#d97757',
   icon       TEXT DEFAULT '🎯',
   sort_order INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP

@@ -18,12 +18,12 @@ const PRIORITY: Record<string, { color: string; icon: any; label: string }> = {
   urgent: { color: '#c2553d', icon: AlertTriangle, label: 'URGENT' },
   high:   { color: '#d97757', icon: ArrowUp,       label: 'HIGH'   },
   medium: { color: '#d9a066', icon: Minus,         label: 'MED'    },
-  low:    { color: '#6f9d5c', icon: ChevDown,      label: 'LOW'    },
+  low:    { color: '#cf8a3e', icon: ChevDown,      label: 'LOW'    },
 };
 
 const MOOD_LABEL = ['', 'Terrible', 'Bad', 'Okay', 'Good', 'Great'];
-const MOOD_COLOR = ['', '#cd5240', '#d97757', '#d9a066', '#6f9d5c', '#629a90'];
-const LEVEL_COLORS = ['','#d97757','#6a8bad','#6f9d5c','#d97757','#cd5240','#8a7ba8'];
+const MOOD_COLOR = ['', '#cd5240', '#d97757', '#d9a066', '#cf8a3e', '#d9a066'];
+const LEVEL_COLORS = ['','#d97757','#a97e5f','#cf8a3e','#d97757','#cd5240','#e59a7f'];
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -84,7 +84,7 @@ function MissionCard({ task, onComplete }: { task: Task; onComplete: (id: number
         onClick={complete}
         disabled={completing}
         className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center tap opacity-0 group-hover:opacity-100 transition-all"
-        style={{ background: '#6f9d5c15', border: '1px solid #6f9d5c30', color: '#6f9d5c' }}
+        style={{ background: '#cf8a3e15', border: '1px solid #cf8a3e30', color: '#cf8a3e' }}
         title="Complete mission">
         {completing
           ? <span className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin" />
@@ -123,13 +123,13 @@ function SnapshotSection({ snap }: { snap: DashboardSnapshot }) {
       sub: snap.lastWorkout ? (snap.lastWorkout.name ?? snap.lastWorkout.date) : 'No session',
     },
     {
-      to: '/diet', icon: Coffee, color: '#6f9d5c',
+      to: '/diet', icon: Coffee, color: '#cf8a3e',
       label: 'Calories',
       primary: snap.todayCalories != null ? `${snap.todayCalories}` : '—',
       sub: snap.todayCalories != null ? `${snap.todayProtein ?? 0}g protein` : 'Not logged',
     },
     {
-      to: '/body', icon: Activity, color: '#629a90',
+      to: '/body', icon: Activity, color: '#d9a066',
       label: 'Body',
       primary: snap.latestBody?.weight_kg != null ? `${snap.latestBody.weight_kg}kg` : '—',
       sub: snap.latestBody?.body_fat_pct != null ? `${snap.latestBody.body_fat_pct}% fat` : snap.latestBody?.date ?? 'No data',
@@ -182,9 +182,9 @@ function RankPanel({ pts }: { pts: PointsSummary }) {
   }, []);
 
   const lifeColor = lifeScore === null ? '#d97757'
-    : lifeScore >= 70 ? '#6f9d5c'
+    : lifeScore >= 70 ? '#cf8a3e'
     : lifeScore >= 40 ? '#d9a066'
-    : '#8a7ba8';
+    : '#e59a7f';
 
   return (
     <div className="cmd-card border-glow-anim px-5 py-4 relative overflow-hidden">
@@ -265,7 +265,7 @@ const ACTIONS = [
   { to: '/tasks',   icon: Plus,     label: 'New Mission',   color: '#d97757' },
   { to: '/workout', icon: Dumbbell, label: 'Log Training',  color: '#cd5240' },
   { to: '/sleep',   icon: Moon,     label: 'Log Sleep',     color: '#e59a7f' },
-  { to: '/journal', icon: BookOpen, label: 'Write Entry',   color: '#8a7ba8' },
+  { to: '/journal', icon: BookOpen, label: 'Write Entry',   color: '#e59a7f' },
   { to: '/habits',  icon: Target,   label: 'Check Habits',  color: '#d97757' },
   { to: '/finance', icon: Wallet,   label: 'Log Finance',   color: '#d9a066' },
 ];
@@ -319,7 +319,7 @@ export default function Dashboard() {
   const streakData = [
     { label: 'Overall', value: streaks.overall?.current ?? 0, best: streaks.overall?.longest ?? 0, color: '#d97757', icon: Flame },
     { label: 'Tasks',   value: streaks.tasks?.current   ?? 0, best: streaks.tasks?.longest   ?? 0, color: '#d97757', icon: CheckSquare },
-    { label: 'Journal', value: streaks.journal?.current ?? 0, best: streaks.journal?.longest ?? 0, color: '#8a7ba8', icon: BookOpen },
+    { label: 'Journal', value: streaks.journal?.current ?? 0, best: streaks.journal?.longest ?? 0, color: '#e59a7f', icon: BookOpen },
     { label: 'Workout', value: streaks.workout?.current ?? 0, best: streaks.workout?.longest ?? 0, color: '#cd5240', icon: Dumbbell },
     { label: 'Sleep',   value: streaks.sleep?.current   ?? 0, best: streaks.sleep?.longest   ?? 0, color: '#e59a7f', icon: Moon },
   ];
@@ -409,7 +409,7 @@ export default function Dashboard() {
             </h1>
             <p className="text-sm mt-1" style={{ color: 'var(--t-faint)' }}>
               {pct === 100 && stats.totalTasks > 0
-                ? <span className="flex items-center gap-1.5"><Award size={12} style={{ color: '#6f9d5c' }} /><span style={{ color: '#6f9d5c' }}>All missions cleared</span></span>
+                ? <span className="flex items-center gap-1.5"><Award size={12} style={{ color: '#cf8a3e' }} /><span style={{ color: '#cf8a3e' }}>All missions cleared</span></span>
                 : remaining > 0
                 ? `${remaining} active mission${remaining !== 1 ? 's' : ''} pending`
                 : 'No missions yet — add something to conquer'}
@@ -443,8 +443,8 @@ export default function Dashboard() {
           </div>
           {activeMissions.length === 0 ? (
             <div className="px-4 pb-4 flex flex-col items-center gap-2 py-6">
-              <CheckCircle2 size={28} style={{ color: '#6f9d5c', opacity: 0.5 }} />
-              <p className="text-sm font-semibold" style={{ color: '#6f9d5c' }}>All clear, operative</p>
+              <CheckCircle2 size={28} style={{ color: '#cf8a3e', opacity: 0.5 }} />
+              <p className="text-sm font-semibold" style={{ color: '#cf8a3e' }}>All clear, operative</p>
               <Link to="/tasks"
                 className="flex items-center gap-1 text-[11px] font-bold tap px-3 py-1.5 rounded-lg"
                 style={{ background: 'rgb(var(--accent-rgb) / 0.1)', color: 'rgb(var(--accent-rgb-light))', textDecoration: 'none', border: '1px solid rgb(var(--accent-rgb) / 0.2)' }}>
@@ -502,7 +502,7 @@ export default function Dashboard() {
       {/* ═══════════════════════════════════════ JOURNAL */}
       <div className="cmd-card overflow-hidden">
         <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-          <SysLabel icon={BookOpen} text="Today's Journal" color="#8a7ba8" />
+          <SysLabel icon={BookOpen} text="Today's Journal" color="#e59a7f" />
           <Link to="/journal"
             className="flex items-center gap-1 text-[11px] font-bold tap"
             style={{ color: 'rgb(var(--accent-rgb-light))', textDecoration: 'none' }}>
@@ -538,10 +538,10 @@ export default function Dashboard() {
       {/* ═══════════════════════════════════════ COMPLETION BANNER */}
       {pct === 100 && stats.totalTasks > 0 && (
         <div className="cmd-card px-5 py-4 text-center"
-          style={{ borderColor: '#6f9d5c25', background: 'linear-gradient(135deg, var(--s1) 0%, #052010 100%)' }}>
+          style={{ borderColor: '#cf8a3e25', background: 'linear-gradient(135deg, var(--s1) 0%, #052010 100%)' }}>
           <div className="flex items-center justify-center gap-2 mb-1">
-            <Award size={20} style={{ color: '#6f9d5c' }} />
-            <p className="text-sm font-black" style={{ color: '#6f9d5c' }}>All missions cleared for today</p>
+            <Award size={20} style={{ color: '#cf8a3e' }} />
+            <p className="text-sm font-black" style={{ color: '#cf8a3e' }}>All missions cleared for today</p>
           </div>
           <p className="text-[11px]" style={{ color: 'var(--t-faint)' }}>Outstanding work, operative.</p>
         </div>

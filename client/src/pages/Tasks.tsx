@@ -8,7 +8,7 @@ const PRIORITY_COLOR: Record<string, { bg: string; text: string; border: string 
   urgent: { bg: '#c2553d22', text: '#c2553d', border: '#c2553d44' },
   high:   { bg: '#d9775722', text: '#d97757', border: '#d9775744' },
   medium: { bg: '#d9a06622', text: '#d9a066', border: '#d9a06644' },
-  low:    { bg: '#6f9d5c22', text: '#6f9d5c', border: '#6f9d5c44' },
+  low:    { bg: '#cf8a3e22', text: '#cf8a3e', border: '#cf8a3e44' },
 };
 
 const STATUS_LABELS: Record<TaskStatus, string> = {
@@ -168,13 +168,13 @@ export default function Tasks() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 anim-page"
-      style={{ '--accent-rgb': '111 157 92' } as React.CSSProperties}>
+      style={{ '--accent-rgb': '207 138 62' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(111,157,92,0.06) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(207,138,62,0.06) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }} />
       </div>
@@ -197,7 +197,7 @@ export default function Tasks() {
           <div className="flex items-center gap-2 mb-3">
             <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#ff5f56' }} />
             <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#ffbd2e' }} />
-            <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#27c93f' }} />
+            <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#d9a066' }} />
             <span className="text-[9px] font-mono ml-2 opacity-30 text-white">mission_queue.exe — bash</span>
             <span className="ml-auto flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#ff5f56', animation: 'neon-pulse 1.2s ease-in-out infinite' }} />

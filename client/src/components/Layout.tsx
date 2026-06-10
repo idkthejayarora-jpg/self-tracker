@@ -15,21 +15,21 @@ const NAV = [
   { to: '/tasks',     icon: CheckSquare,     label: 'Missions',   color: '#c2553d' },
   { to: '/habits',    icon: Target,          label: 'Habits',     color: '#d97757' },
   { to: '/workout',   icon: Dumbbell,        label: 'Training',   color: '#b3372e' },
-  { to: '/sleep',     icon: Moon,            label: 'Sleep',      color: '#8a7ba8' },
+  { to: '/sleep',     icon: Moon,            label: 'Sleep',      color: '#e59a7f' },
   { to: '/journal',   icon: BookOpen,        label: 'Journal',    color: '#d4a27f' },
   { to: '/finance',   icon: Wallet,          label: 'Finance',    color: '#d9a066' },
-  { to: '/diet',      icon: Salad,           label: 'Nutrition',  color: '#788c5d' },
-  { to: '/body',      icon: Activity,        label: 'Body',       color: '#629a90' },
+  { to: '/diet',      icon: Salad,           label: 'Nutrition',  color: '#b5764f' },
+  { to: '/body',      icon: Activity,        label: 'Body',       color: '#d9a066' },
   { to: '/life',      icon: Sparkles,        label: 'Life Path',  color: '#c2553d' },
-  { to: '/analytics', icon: BarChart2,       label: 'Intel',      color: '#629a90' },
+  { to: '/analytics', icon: BarChart2,       label: 'Intel',      color: '#d9a066' },
   { to: '/reminders', icon: Bell,            label: 'Alerts',     color: '#d97757' },
-  { to: '/detox',     icon: ShieldOff,       label: 'Detox',      color: '#788c5d' },
+  { to: '/detox',     icon: ShieldOff,       label: 'Detox',      color: '#b5764f' },
   { to: '/content',   icon: Video,           label: 'Creator',    color: '#d4a27f' },
 ];
 
 const RANK_COLORS: Record<string, string> = {
-  E: '#8e8b80', D: '#629a90', C: '#788c5d', B: '#8a7ba8',
-  A: '#d97757', S: '#c2553d', 'S+': '#d9a066', '∞': '#e59a7f',
+  E: '#a59785', D: '#b98a64', C: '#cf8a3e', B: '#d4a27f',
+  A: '#d97757', S: '#c2553d', 'S+': '#e08b4e', '∞': '#e8a87c',
 };
 
 // Class tier config — drives the faint class pill shown above the rank badge
@@ -42,16 +42,16 @@ const CLASS_META: Record<string, { label: string; color: string }> = {
 // Palette for custom rank card / gradient color
 const RANK_PALETTE = [
   '#d97757', // terracotta
-  '#c2553d', // burnt red
+  '#c2553d', // burnt rust
+  '#e08b4e', // flame amber
   '#d9a066', // kraft gold
   '#d4a27f', // kraft
-  '#788c5d', // olive
-  '#629a90', // sage
-  '#8a7ba8', // muted violet
+  '#cf8a3e', // ochre
+  '#b5764f', // sienna
   '#b3372e', // brick
-  '#e59a7f', // peach
+  '#e8a87c', // peach
+  '#a97e5f', // clay
   '#a5a293', // stone
-  '#6a8bad', // slate blue
   '#f5f3ec', // ivory
 ];
 
@@ -122,10 +122,10 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
         {success ? (
           <div className="text-center py-4 space-y-3">
             <div className="w-12 h-12 rounded-full mx-auto flex items-center justify-center mb-3"
-              style={{ background: '#6f9d5c18', border: '1px solid #6f9d5c30' }}>
-              <Shield size={20} style={{ color: '#6f9d5c' }} />
+              style={{ background: '#cf8a3e18', border: '1px solid #cf8a3e30' }}>
+              <Shield size={20} style={{ color: '#cf8a3e' }} />
             </div>
-            <p className="text-sm font-bold" style={{ color: '#6f9d5c' }}>Password updated!</p>
+            <p className="text-sm font-bold" style={{ color: '#cf8a3e' }}>Password updated!</p>
             <button onClick={onClose}
               className="w-full py-2.5 rounded-xl text-sm font-bold text-white tap"
               style={{ background: 'rgb(var(--accent-rgb))' }}>Done</button>

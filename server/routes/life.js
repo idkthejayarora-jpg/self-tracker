@@ -34,14 +34,14 @@ function seedDefaultAreas(userId) {
   if (existing) return;
 
   const defaults = [
-    { name: 'Health & Fitness', icon: '💪', color: '#22c55e', sort_order: 0 },
-    { name: 'Career & Work',    icon: '💼', color: '#0ea5e9', sort_order: 1 },
-    { name: 'Relationships',    icon: '❤️',  color: '#f43f5e', sort_order: 2 },
-    { name: 'Finance',          icon: '💰', color: '#f59e0b', sort_order: 3 },
-    { name: 'Learning',         icon: '📚', color: '#a855f7', sort_order: 4 },
-    { name: 'Personal Growth',  icon: '🌱', color: '#14b8a6', sort_order: 5 },
-    { name: 'Fun & Hobbies',    icon: '🎮', color: '#f97316', sort_order: 6 },
-    { name: 'Spirituality',     icon: '🧘', color: '#8b5cf6', sort_order: 7 },
+    { name: 'Health & Fitness', icon: '💪', color: '#cf8a3e', sort_order: 0 },
+    { name: 'Career & Work',    icon: '💼', color: '#a97e5f', sort_order: 1 },
+    { name: 'Relationships',    icon: '❤️',  color: '#c2553d', sort_order: 2 },
+    { name: 'Finance',          icon: '💰', color: '#d9a066', sort_order: 3 },
+    { name: 'Learning',         icon: '📚', color: '#e8a87c', sort_order: 4 },
+    { name: 'Personal Growth',  icon: '🌱', color: '#b5764f', sort_order: 5 },
+    { name: 'Fun & Hobbies',    icon: '🎮', color: '#d97757', sort_order: 6 },
+    { name: 'Spirituality',     icon: '🧘', color: '#d4a27f', sort_order: 7 },
   ];
 
   const insert = db.prepare('INSERT INTO life_areas (user_id, name, icon, color, sort_order) VALUES (?, ?, ?, ?, ?)');
@@ -171,7 +171,7 @@ router.post('/areas', (req, res) => {
   if (!name) return res.status(400).json({ error: 'Name required' });
   const maxOrder = db.prepare('SELECT MAX(sort_order) as m FROM life_areas WHERE user_id = ?').get(req.user.id);
   const r = db.prepare('INSERT INTO life_areas (user_id, name, icon, color, vision, sort_order) VALUES (?, ?, ?, ?, ?, ?)').run(
-    req.user.id, name, icon || '🎯', color || '#6366f1', vision || null, (maxOrder.m ?? -1) + 1
+    req.user.id, name, icon || '🎯', color || '#d97757', vision || null, (maxOrder.m ?? -1) + 1
   );
   res.status(201).json(db.prepare('SELECT * FROM life_areas WHERE id = ?').get(r.lastInsertRowid));
 });

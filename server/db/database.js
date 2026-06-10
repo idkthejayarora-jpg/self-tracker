@@ -105,4 +105,31 @@ try {
   console.error('[migration] streaks CHECK expand failed:', e.message);
 }
 
+
+// ── Paper-theme color remap ───────────────────────────────────────────────────
+// One-time idempotent remap: rows created under the old neon palette get
+// rewritten to the warm Anthropic ember palette. Safe to run on every boot.
+try {
+  const COLOR_REMAP = {
+    '#6366f1': '#d97757', '#3b82f6': '#b5764f', '#0ea5e9': '#a97e5f',
+    '#06b6d4': '#a97e5f', '#14b8a6': '#b5764f', '#22c55e': '#cf8a3e',
+    '#84cc16': '#cf8a3e', '#10b981': '#cf8a3e', '#f43f5e': '#c2553d',
+    '#ec4899': '#c2553d', '#d946ef': '#e8a87c', '#a855f7': '#e8a87c',
+    '#8b5cf6': '#d4a27f', '#a78bfa': '#e8a87c', '#ef4444': '#b3372e',
+    '#f97316': '#d97757', '#f59e0b': '#d9a066', '#eab308': '#d9a066',
+    '#ff4500': '#d97757', '#39ff14': '#cf8a3e', '#00f5ff': '#a97e5f',
+  };
+  const COLOR_TABLES = ['life_areas', 'detox_apps', 'habits', 'finance_goals', 'workout_plan_days', 'content_niches'];
+  for (const table of COLOR_TABLES) {
+    const stmt = db.prepare(`UPDATE ${table} SET color = ? WHERE color = ? COLLATE NOCASE`);
+    let total = 0;
+    for (const [oldC, newC] of Object.entries(COLOR_REMAP)) {
+      total += stmt.run(newC, oldC).changes;
+    }
+    if (total) console.log(`[migration] Warmed ${total} ${table} colors to paper palette`);
+  }
+} catch (e) {
+  console.error('[migration] paper color remap failed:', e.message);
+}
+
 module.exports = db;

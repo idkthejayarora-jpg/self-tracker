@@ -29,14 +29,14 @@ router.use(authMiddleware);
 // └─────────────────────────────────────────────────────────────────────────┘
 
 const RANK_TIERS = [
-  { rank: '∞',  cls: 'King',    min: 90, color: '#93c5fd', label: 'Absolute Ruler',   desc: 'Beyond all ranks — the infinite threshold' },
-  { rank: 'S+', cls: 'King',    min: 75, color: '#e2c97e', label: 'Shadow Monarch',   desc: 'King-class power — one step from infinity' },
-  { rank: 'S',  cls: 'General', min: 65, color: '#ef4444', label: 'Supreme General',  desc: 'Commands every front — peak of General class' },
-  { rank: 'A',  cls: 'General', min: 50, color: '#f97316', label: 'Battle Commander', desc: 'Hardened across all disciplines' },
-  { rank: 'B',  cls: 'Soldier', min: 35, color: '#a855f7', label: 'Elite Soldier',    desc: 'Top of Soldier ranks — promotion is close' },
-  { rank: 'C',  cls: 'Soldier', min: 25, color: '#22c55e', label: 'Veteran Soldier',  desc: 'Real foundations built — seasoned fighter' },
-  { rank: 'D',  cls: 'Soldier', min: 15, color: '#3b82f6', label: 'Foot Soldier',     desc: 'On the path — earning every point' },
-  { rank: 'E',  cls: 'Soldier', min:  0, color: '#6b7280', label: 'Raw Recruit',      desc: 'The journey begins — Soldier class' },
+  { rank: '∞',  cls: 'King',    min: 90, color: '#e8a87c', label: 'Absolute Ruler',   desc: 'Beyond all ranks — the infinite threshold' },
+  { rank: 'S+', cls: 'King',    min: 75, color: '#e08b4e', label: 'Shadow Monarch',   desc: 'King-class power — one step from infinity' },
+  { rank: 'S',  cls: 'General', min: 65, color: '#c2553d', label: 'Supreme General',  desc: 'Commands every front — peak of General class' },
+  { rank: 'A',  cls: 'General', min: 50, color: '#d97757', label: 'Battle Commander', desc: 'Hardened across all disciplines' },
+  { rank: 'B',  cls: 'Soldier', min: 35, color: '#d4a27f', label: 'Elite Soldier',    desc: 'Top of Soldier ranks — promotion is close' },
+  { rank: 'C',  cls: 'Soldier', min: 25, color: '#cf8a3e', label: 'Veteran Soldier',  desc: 'Real foundations built — seasoned fighter' },
+  { rank: 'D',  cls: 'Soldier', min: 15, color: '#b98a64', label: 'Foot Soldier',     desc: 'On the path — earning every point' },
+  { rank: 'E',  cls: 'Soldier', min:  0, color: '#a59785', label: 'Raw Recruit',      desc: 'The journey begins — Soldier class' },
 ];
 
 function computeMeritScore(stats, skills, claims, totalPoints, maxCurrentStreak) {

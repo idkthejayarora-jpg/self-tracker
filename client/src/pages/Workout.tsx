@@ -54,7 +54,7 @@ function ExerciseProgress({ exercise, onClose }: { exercise: Exercise; onClose: 
               <YAxis tick={{ fill: '#84816f', fontSize: 11 }} unit=" kg" />
               <Tooltip contentStyle={{ backgroundColor: '#232120', border: '1px solid #3d3935', borderRadius: 8 }}
                 formatter={(v) => [`${v} kg`, 'Max weight']} />
-              <Line type="monotone" dataKey="max_weight" stroke="#629a90" strokeWidth={2} dot={{ fill: '#629a90', r: 4 }} />
+              <Line type="monotone" dataKey="max_weight" stroke="#d9a066" strokeWidth={2} dot={{ fill: '#d9a066', r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
         )}
@@ -563,7 +563,7 @@ export default function Workout() {
                       ✓ Found {parsedPlan.length} training day{parsedPlan.length !== 1 ? 's' : ''}
                     </p>
                     {planCreateMsg && (
-                      <span className="text-[11px] font-semibold" style={{ color: '#6f9d5c' }}>{planCreateMsg}</span>
+                      <span className="text-[11px] font-semibold" style={{ color: '#cf8a3e' }}>{planCreateMsg}</span>
                     )}
                   </div>
 

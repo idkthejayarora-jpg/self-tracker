@@ -36,7 +36,7 @@ function TickerTape() {
       <div style={{ display: 'flex', gap: 24, animation: 'ticker-scroll 18s linear infinite', whiteSpace: 'nowrap' }}>
         {items.map((item, i) => (
           <span key={i} className="text-[9px] font-black font-mono tracking-widest"
-            style={{ color: item.includes('+') ? '#7cb8a8' : item.includes('%') ? '#8fa9c4' : '#ff003c',
+            style={{ color: item.includes('+') ? '#cf8a3e' : item.includes('%') ? '#c4a085' : '#ff003c',
               textShadow: `0 0 6px currentColor` }}>
             ▶ {item}
           </span>
@@ -59,7 +59,7 @@ export default function Finance() {
   const [entryErr, setEntryErr] = useState('');
 
   const [showGoal, setShowGoal] = useState(false);
-  const [goalForm, setGoalForm] = useState({ name: '', target_amount: '', saved_amount: '', deadline: '', color: '#6f9d5c' });
+  const [goalForm, setGoalForm] = useState({ name: '', target_amount: '', saved_amount: '', deadline: '', color: '#cf8a3e' });
   const [savingGoal, setSavingGoal] = useState(false);
   const [goalErr, setGoalErr] = useState('');
   const [loadErr, setLoadErr] = useState('');
@@ -125,7 +125,7 @@ export default function Finance() {
         deadline: goalForm.deadline || null,
         color: goalForm.color,
       });
-      setGoalForm({ name: '', target_amount: '', saved_amount: '', deadline: '', color: '#6f9d5c' });
+      setGoalForm({ name: '', target_amount: '', saved_amount: '', deadline: '', color: '#cf8a3e' });
       setShowGoal(false);
       await load();
     } catch (err: any) {
@@ -170,48 +170,48 @@ export default function Finance() {
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(124,184,168,0.06) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(207,138,62,0.06) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }} />
       </div>
 
       {/* ── ASSET NEXUS HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #7cb8a820' }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #cf8a3e20' }}>
         {/* Financial grid */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: 'linear-gradient(rgba(124,184,168,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(124,184,168,0.03) 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(rgba(207,138,62,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(207,138,62,0.03) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }} />
         {/* HUD corners */}
-        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #7cb8a8', borderLeft: '1.5px solid #7cb8a8', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #7cb8a8', borderRight: '1.5px solid #7cb8a8', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #7cb8a8', borderLeft: '1.5px solid #7cb8a8', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #7cb8a8', borderRight: '1.5px solid #7cb8a8', opacity: 0.7 }} />
+        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #cf8a3e', borderLeft: '1.5px solid #cf8a3e', opacity: 0.7 }} />
+        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #cf8a3e', borderRight: '1.5px solid #cf8a3e', opacity: 0.7 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #cf8a3e', borderLeft: '1.5px solid #cf8a3e', opacity: 0.7 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #cf8a3e', borderRight: '1.5px solid #cf8a3e', opacity: 0.7 }} />
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #7cb8a880, transparent)', boxShadow: '0 0 10px #7cb8a8' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, #cf8a3e80, transparent)', boxShadow: '0 0 10px #cf8a3e' }} />
         {/* Main content */}
         <div className="relative z-10 px-5 pt-5 pb-3">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#7cb8a8', opacity: 0.6 }}>MKT://</span>
+                <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#cf8a3e', opacity: 0.6 }}>MKT://</span>
                 <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">ASSET_NEXUS</span>
-                <span className="cursor-blink font-mono" style={{ color: '#7cb8a8', fontSize: 11 }}>▌</span>
+                <span className="cursor-blink font-mono" style={{ color: '#cf8a3e', fontSize: 11 }}>▌</span>
               </div>
               <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-                style={{ textShadow: '0 0 40px #7cb8a840' }}>
+                style={{ textShadow: '0 0 40px #cf8a3e40' }}>
                 ASSET NEXUS
               </h1>
-              <p className="font-mono text-[10px] mt-1" style={{ color: '#7cb8a8', opacity: 0.5 }}>
+              <p className="font-mono text-[10px] mt-1" style={{ color: '#cf8a3e', opacity: 0.5 }}>
                 // financial intelligence — wealth tracking protocol
               </p>
             </div>
             {/* Live indicator */}
             <div className="flex flex-col items-center gap-1 shrink-0">
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full" style={{ background: '#7cb8a8', boxShadow: '0 0 8px #7cb8a8', animation: 'neon-pulse 1.5s ease-in-out infinite' }} />
-                <span className="text-[9px] font-black tracking-widest" style={{ color: '#7cb8a8' }}>LIVE</span>
+                <span className="w-2 h-2 rounded-full" style={{ background: '#cf8a3e', boxShadow: '0 0 8px #cf8a3e', animation: 'neon-pulse 1.5s ease-in-out infinite' }} />
+                <span className="text-[9px] font-black tracking-widest" style={{ color: '#cf8a3e' }}>LIVE</span>
               </div>
               <span className="text-[8px] font-mono opacity-30 text-white">MARKET OPEN</span>
             </div>
@@ -219,7 +219,7 @@ export default function Finance() {
         </div>
         {/* Ticker tape */}
         <div className="relative z-10 px-2 pb-2">
-          <div style={{ borderTop: '1px solid rgba(124,184,168,0.1)', paddingTop: 6 }}>
+          <div style={{ borderTop: '1px solid rgba(207,138,62,0.1)', paddingTop: 6 }}>
             <TickerTape />
           </div>
         </div>
@@ -251,7 +251,7 @@ export default function Finance() {
         </button>
         <button type="button" onClick={() => { setEntryForm(emptyEntry('income')); setEntryErr(''); setShowEntry(true); }}
           className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold tap"
-          style={{ background: 'rgb(34 197 94 / 0.1)', color: '#8fbb7e' }}>
+          style={{ background: 'rgb(34 197 94 / 0.1)', color: '#d9a066' }}>
           <TrendingUp size={14} /> Add Income
         </button>
       </div>
@@ -266,7 +266,7 @@ export default function Finance() {
                 className="flex-1 py-1.5 rounded-lg text-xs font-semibold capitalize tap"
                 style={{
                   background: entryForm.type === t ? (t === 'income' ? 'rgb(34 197 94 / 0.12)' : 'rgb(239 68 68 / 0.12)') : 'var(--s3)',
-                  color: entryForm.type === t ? (t === 'income' ? '#8fbb7e' : '#e07b62') : '#757163',
+                  color: entryForm.type === t ? (t === 'income' ? '#d9a066' : '#e07b62') : '#757163',
                 }}>
                 {t}
               </button>
@@ -332,7 +332,7 @@ export default function Finance() {
         <div className="grid grid-cols-3 gap-2">
           <div className="card px-3 py-3">
             <p className="text-[10px] font-medium mb-1" style={{ color: 'rgb(var(--accent-rgb))', opacity: 0.7 }}>Income</p>
-            <p className="text-base font-bold" style={{ color: '#6f9d5c' }}>₹{fmt(summary.income)}</p>
+            <p className="text-base font-bold" style={{ color: '#cf8a3e' }}>₹{fmt(summary.income)}</p>
           </div>
           <div className="card px-3 py-3">
             <p className="text-[10px] font-medium mb-1" style={{ color: '#57544a' }}>Expenses</p>
@@ -340,7 +340,7 @@ export default function Finance() {
           </div>
           <div className="card px-3 py-3">
             <p className="text-[10px] font-medium mb-1" style={{ color: '#57544a' }}>Net</p>
-            <p className="text-base font-bold" style={{ color: summary.net >= 0 ? '#6f9d5c' : '#cd5240' }}>
+            <p className="text-base font-bold" style={{ color: summary.net >= 0 ? '#cf8a3e' : '#cd5240' }}>
               {summary.net >= 0 ? '+' : ''}₹{fmt(summary.net)}
             </p>
           </div>
@@ -362,7 +362,7 @@ export default function Finance() {
                 {catChartData.map((_, i) => <Cell key={i} fill="#cd5240" fillOpacity={0.7} />)}
               </Bar>
               <Bar dataKey="income" name="Income" radius={[0, 4, 4, 0]}>
-                {catChartData.map((_, i) => <Cell key={i} fill="#6f9d5c" fillOpacity={0.7} />)}
+                {catChartData.map((_, i) => <Cell key={i} fill="#cf8a3e" fillOpacity={0.7} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -382,7 +382,7 @@ export default function Finance() {
                     <span className="text-[10px] px-1.5 py-0.5 rounded-full capitalize font-medium"
                       style={{
                         background: e.type === 'income' ? 'rgb(34 197 94 / 0.1)' : 'rgb(239 68 68 / 0.1)',
-                        color: e.type === 'income' ? '#8fbb7e' : '#e07b62',
+                        color: e.type === 'income' ? '#d9a066' : '#e07b62',
                       }}>
                       {e.type}
                     </span>
@@ -391,7 +391,7 @@ export default function Finance() {
                     {format(new Date(e.date + 'T12:00:00'), 'd MMM')}{e.note ? ` · ${e.note}` : ''}
                   </p>
                 </div>
-                <p className="text-sm font-bold shrink-0" style={{ color: e.type === 'income' ? '#6f9d5c' : '#cd5240' }}>
+                <p className="text-sm font-bold shrink-0" style={{ color: e.type === 'income' ? '#cf8a3e' : '#cd5240' }}>
                   {e.type === 'income' ? '+' : '-'}₹{fmt(e.amount)}
                 </p>
                 <button onClick={() => delEntry(e.id)} className="tap" style={{ color: '#57544a' }}>

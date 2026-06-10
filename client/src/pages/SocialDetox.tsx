@@ -22,7 +22,7 @@ const APP_PRESETS = [
   { name: 'Snapchat',  icon: '👻', color: '#fffc00' },
   { name: 'WhatsApp',  icon: '💬', color: '#25d366' },
 ];
-const COLORS = ['#d97757','#8a7ba8','#c2553d','#c2553d','#d97757','#d9a066','#6f9d5c','#629a90','#629a90','#e1306c'];
+const COLORS = ['#d97757','#e59a7f','#c2553d','#c2553d','#d97757','#d9a066','#cf8a3e','#d9a066','#d9a066','#e1306c'];
 
 export default function SocialDetox() {
   const [apps, setApps]       = useState<DetoxApp[]>([]);
@@ -92,7 +92,7 @@ export default function SocialDetox() {
               position: 'absolute',
               left: `${i * 17}%`, top: `${20 + (i%3)*20}%`,
               width: 40, height: 6,
-              background: i%2===0 ? '#c2553d' : '#8a7ba8',
+              background: i%2===0 ? '#c2553d' : '#e59a7f',
               animation: `glitch-block 5s step-end ${i*700}ms infinite`,
             }} />
           ))}
@@ -116,7 +116,7 @@ export default function SocialDetox() {
           <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: '0 0 30px #c2553d50' }}>
             DIGITAL DETOX
           </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#8a7ba8', opacity: 0.6 }}>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#e59a7f', opacity: 0.6 }}>
             // neural firewall engaged — signal blocking protocol
           </p>
         </div>
@@ -139,16 +139,16 @@ export default function SocialDetox() {
         <div className="card px-4 py-4">
           <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-2">
-              <Shield size={14} style={{ color: score === 100 ? '#6f9d5c' : score >= 60 ? '#d9a066' : '#cd5240' }} />
+              <Shield size={14} style={{ color: score === 100 ? '#cf8a3e' : score >= 60 ? '#d9a066' : '#cd5240' }} />
               <span className="text-sm font-semibold text-head">Today's Detox Score</span>
             </div>
-            <span className="text-xl font-bold" style={{ color: score === 100 ? '#6f9d5c' : score >= 60 ? '#d9a066' : '#cd5240' }}>
+            <span className="text-xl font-bold" style={{ color: score === 100 ? '#cf8a3e' : score >= 60 ? '#d9a066' : '#cd5240' }}>
               {score}%
             </span>
           </div>
           <div className="h-1.5 rounded-full w-full" style={{ background: 'var(--s3)' }}>
             <div className="h-1.5 rounded-full bar-fill"
-              style={{ width: `${score}%`, background: score === 100 ? '#6f9d5c' : score >= 60 ? '#d9a066' : '#cd5240' }} />
+              style={{ width: `${score}%`, background: score === 100 ? '#cf8a3e' : score >= 60 ? '#d9a066' : '#cd5240' }} />
           </div>
           <p className="text-[11px] mt-2" style={{ color: '#57544a' }}>
             {cleanCount}/{apps.length} apps clean today
@@ -245,9 +245,9 @@ export default function SocialDetox() {
                   <button onClick={() => checkIn(app.id, 'clean')}
                     className="tap flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
                     style={{
-                      background: isClean ? '#6f9d5c22' : 'var(--s2)',
-                      color: isClean ? '#6f9d5c' : '#757163',
-                      border: `1px solid ${isClean ? '#6f9d5c44' : 'var(--b)'}`,
+                      background: isClean ? '#cf8a3e22' : 'var(--s2)',
+                      color: isClean ? '#cf8a3e' : '#757163',
+                      border: `1px solid ${isClean ? '#cf8a3e44' : 'var(--b)'}`,
                     }}>
                     <Check size={11} /> Clean
                   </button>

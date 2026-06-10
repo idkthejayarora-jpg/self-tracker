@@ -173,7 +173,7 @@ router.get('/plan/days', (req, res) => {
 });
 
 router.post('/plan/days', (req, res) => {
-  const { name, icon='💪', color='#ff4500' } = req.body;
+  const { name, icon='💪', color='#d97757' } = req.body;
   if (!name) return res.status(400).json({ error: 'Name required' });
   const maxOrder = db.prepare('SELECT MAX(sort_order) as m FROM workout_plan_days WHERE user_id=?').get(req.user.id);
   const r = db.prepare('INSERT INTO workout_plan_days (user_id,name,icon,color,sort_order) VALUES (?,?,?,?,?)').run(req.user.id, name, icon, color, (maxOrder?.m ?? -1) + 1);
@@ -309,15 +309,15 @@ router.post('/quick-log', (req, res) => {
 // ── PDF plan parser ───────────────────────────────────────────
 function dayMeta(name) {
   const n = name.toLowerCase();
-  if (/back|pull|row|deadlift/.test(n))           return { icon: '🔙', color: '#3b82f6' };
-  if (/chest|push|bench|press/.test(n))           return { icon: '🏋️', color: '#f97316' };
-  if (/leg|squat|lunge|hamstring|quad/.test(n))   return { icon: '🦵', color: '#22c55e' };
-  if (/shoulder|delt|overhead/.test(n))           return { icon: '💪', color: '#a855f7' };
-  if (/arm|bicep|tricep|curl/.test(n))            return { icon: '💪', color: '#ec4899' };
-  if (/cardio|run|hiit|cycle/.test(n))            return { icon: '🏃', color: '#ef4444' };
-  if (/core|abs|plank/.test(n))                   return { icon: '🎯', color: '#f59e0b' };
-  if (/full.?body|total/.test(n))                 return { icon: '⚡', color: '#06b6d4' };
-  return { icon: '💪', color: '#ff4500' };
+  if (/back|pull|row|deadlift/.test(n))           return { icon: '🔙', color: '#b5764f' };
+  if (/chest|push|bench|press/.test(n))           return { icon: '🏋️', color: '#d97757' };
+  if (/leg|squat|lunge|hamstring|quad/.test(n))   return { icon: '🦵', color: '#cf8a3e' };
+  if (/shoulder|delt|overhead/.test(n))           return { icon: '💪', color: '#e8a87c' };
+  if (/arm|bicep|tricep|curl/.test(n))            return { icon: '💪', color: '#c2553d' };
+  if (/cardio|run|hiit|cycle/.test(n))            return { icon: '🏃', color: '#b3372e' };
+  if (/core|abs|plank/.test(n))                   return { icon: '🎯', color: '#d9a066' };
+  if (/full.?body|total/.test(n))                 return { icon: '⚡', color: '#a97e5f' };
+  return { icon: '💪', color: '#d97757' };
 }
 
 function parsePlanText(text) {

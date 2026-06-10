@@ -2,7 +2,7 @@ export type OrbState = 'idle' | 'speaking' | 'listening' | 'thinking';
 
 // The JARVIS-style orb. Big animated circle that reacts to conversation state.
 export default function AxisOrb({
-  state, color = '#82b4ab', size = 240, onTap,
+  state, color = '#d9a066', size = 240, onTap,
 }: {
   state: OrbState;
   color?: string;

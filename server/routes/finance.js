@@ -65,7 +65,7 @@ router.get('/goals', (req, res) => {
 
 // POST /goals
 router.post('/goals', (req, res) => {
-  const { name, target_amount, saved_amount = 0, deadline, color = '#22c55e' } = req.body;
+  const { name, target_amount, saved_amount = 0, deadline, color = '#d9a066' } = req.body;
   if (!name || !target_amount) return res.status(400).json({ error: 'name and target_amount required' });
   const result = db.prepare(
     'INSERT INTO finance_goals (user_id, name, target_amount, saved_amount, deadline, color) VALUES (?, ?, ?, ?, ?, ?)'

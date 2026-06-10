@@ -27,24 +27,24 @@ function useCountUp(target: number, duration = 900) {
 // ── Rank glow config ──────────────────────────────────────────────────────────
 const RANK_GLOW: Record<string, string> = {
   E:    'rgba(132,129,111,0.25)',
-  D:    'rgba(106,139,173,0.3)',
-  C:    'rgba(111,157,92,0.3)',
-  B:    'rgba(138,123,168,0.35)',
+  D:    'rgba(169,126,95,0.3)',
+  C:    'rgba(207,138,62,0.3)',
+  B:    'rgba(212,162,127,0.35)',
   A:    'rgba(217,119,87,0.35)',
   S:    'rgba(205,82,64,0.4)',
   'S+': 'rgba(217,160,102,0.5)',
-  '∞':  'rgba(170,191,212,0.6)',
+  '∞':  'rgba(232,168,124,0.6)',
 };
 
 const RANK_SOLID: Record<string, string> = {
   E:    '#84816f',
-  D:    '#6a8bad',
-  C:    '#6f9d5c',
-  B:    '#8a7ba8',
+  D:    '#a97e5f',
+  C:    '#cf8a3e',
+  B:    '#d4a27f',
   A:    '#d97757',
   S:    '#cd5240',
   'S+': '#d9a066',
-  '∞':  '#aabfd4',
+  '∞':  '#e8a87c',
 };
 
 // Class tier display config
@@ -57,10 +57,10 @@ const CLASS_CONFIG: Record<string, { label: string; sublabel: string; color: str
 // ── Stat config (7 stats — Creativity added) ─────────────────────────────────
 const STAT_CONFIG = [
   { key: 'strength',   label: 'STRENGTH',   Icon: Dumbbell,  color: '#cd5240', hint: 'Workouts this month'   },
-  { key: 'vitality',   label: 'VITALITY',   Icon: Heart,     color: '#6f9d5c', hint: 'Sleep quality (7 days)' },
+  { key: 'vitality',   label: 'VITALITY',   Icon: Heart,     color: '#cf8a3e', hint: 'Sleep quality (7 days)' },
   { key: 'discipline', label: 'DISCIPLINE', Icon: Target,    color: '#d97757', hint: 'Habit rate this week'   },
   { key: 'focus',      label: 'FOCUS',      Icon: Eye,       color: '#d97757', hint: 'Tasks done this month'  },
-  { key: 'endurance',  label: 'ENDURANCE',  Icon: Activity,  color: '#8a7ba8', hint: 'Longest streak ever'    },
+  { key: 'endurance',  label: 'ENDURANCE',  Icon: Activity,  color: '#e59a7f', hint: 'Longest streak ever'    },
   { key: 'wealth',     label: 'WEALTH',     Icon: Wallet,    color: '#d9a066', hint: 'Finance net (half weight)' },
   { key: 'creativity', label: 'CREATIVITY', Icon: Video,     color: '#c2553d', hint: 'Posts this month'       },
 ];
@@ -80,9 +80,9 @@ const SOURCE_ICONS: Record<string, React.ComponentType<{ size?: number; color?: 
   claim:      Star,
 };
 const SOURCE_COLORS: Record<string, string> = {
-  task: '#6f9d5c', habit: '#d97757', sleep: '#e59a7f', journal: '#8a7ba8',
-  workout: '#cd5240', diet: '#6f9d5c', body: '#629a90',
-  content: '#c2553d', milestone: '#d9a066', area_done: '#d9a066', claim: '#8a7ba8',
+  task: '#cf8a3e', habit: '#d97757', sleep: '#e59a7f', journal: '#e59a7f',
+  workout: '#cd5240', diet: '#cf8a3e', body: '#d9a066',
+  content: '#c2553d', milestone: '#d9a066', area_done: '#d9a066', claim: '#e59a7f',
 };
 
 // Relative-time formatter (short, no library)
@@ -101,7 +101,7 @@ function relTime(iso: string): string {
 const CLAIM_TYPE_COLOR: Record<string, string> = {
   quest: '#d97757',
   achievement: '#d97757',
-  legacy: '#8a7ba8',
+  legacy: '#e59a7f',
 };
 
 // ── Tiny helpers ──────────────────────────────────────────────────────────────
@@ -236,9 +236,9 @@ export default function Me() {
   const [showRankPalette, setShowRankPalette] = useState(false);
 
   const RANK_PALETTE_ME = [
-    '#d9a066','#cd5240','#d97757','#8a7ba8','#6f9d5c',
-    '#6a8bad','#c2553d','#629a90','#d9a066','#788c5d',
-    '#d97757','#ffffff',
+    '#d97757','#c2553d','#e08b4e','#d9a066','#d4a27f',
+    '#cf8a3e','#b5764f','#b3372e','#e8a87c','#a97e5f',
+    '#a5a293','#f5f3ec',
   ];
 
   function applyRankColorMe(hex: string) {
@@ -466,8 +466,8 @@ export default function Me() {
         style={{
           minHeight: 360,
           background: isLight
-            ? `radial-gradient(ellipse at 50% -5%, ${rankGlow} 0%, #f0f2f7 55%, #e4e8f0 100%)`
-            : `radial-gradient(ellipse at 50% -5%, ${rankGlow} 0%, #090b10 55%, #030508 100%)`,
+            ? `radial-gradient(ellipse at 50% -5%, ${rankGlow} 0%, #f0eee6 55%, #e8e4d8 100%)`
+            : `radial-gradient(ellipse at 50% -5%, ${rankGlow} 0%, #1f1c19 55%, #161412 100%)`,
           boxShadow: isLight
             ? `0 0 60px ${rankGlow}, 0 0 120px ${rankGlow}40, inset 0 1px 0 rgba(255,255,255,0.80), 0 20px 60px rgba(0,0,0,0.12)`
             : `0 0 80px ${rankGlow}, 0 0 160px ${rankGlow}40, inset 0 1px 0 rgba(255,255,255,0.10), 0 30px 80px rgba(0,0,0,0.6)`,
@@ -847,8 +847,8 @@ export default function Me() {
                       </span>
                       <button onClick={() => levelUpSkill(skill.id)}
                         className="w-8 h-8 rounded flex items-center justify-center tap opacity-25 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
-                        style={{ background: '#6f9d5c18', border: '1px solid #6f9d5c30' }} title="Level up">
-                        <ChevronUp size={13} style={{ color: '#6f9d5c' }} />
+                        style={{ background: '#cf8a3e18', border: '1px solid #cf8a3e30' }} title="Level up">
+                        <ChevronUp size={13} style={{ color: '#cf8a3e' }} />
                       </button>
                       <button onClick={() => { setEditingSkillId(skill.id); setShowSkillForm(false); }}
                         className="w-8 h-8 rounded flex items-center justify-center tap opacity-25 group-hover:opacity-100 transition-opacity"
@@ -1162,13 +1162,13 @@ export default function Me() {
           {mentors.map(mentor => (
             <div key={mentor.id}
               className="glass glow-card rounded-2xl group relative overflow-hidden"
-              style={{ '--gc': 'rgba(138,123,168,0.4)' } as React.CSSProperties}>
+              style={{ '--gc': 'rgba(229,154,127,0.4)' } as React.CSSProperties}>
 
               {/* ── Edit form ── */}
               {editingMentorId === mentor.id ? (
                 <form onSubmit={e => saveMentorEdit(e, mentor.id)} className="px-4 py-4 space-y-2 scale-in">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-black tracking-widest" style={{ color: '#8a7ba8' }}>EDITING MENTOR</span>
+                    <span className="text-[10px] font-black tracking-widest" style={{ color: '#e59a7f' }}>EDITING MENTOR</span>
                     <div className="h-px flex-1" style={{ background: 'var(--b)' }} />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -1222,7 +1222,7 @@ export default function Me() {
                         <p className="text-sm font-bold text-head">{mentor.name}</p>
                         <div className="flex items-center gap-1 flex-wrap mt-0.5">
                           {mentor.era && <Chip label={mentor.era} color="#d97757" />}
-                          {mentor.domain && <Chip label={mentor.domain} color="#8a7ba8" />}
+                          {mentor.domain && <Chip label={mentor.domain} color="#e59a7f" />}
                         </div>
                       </div>
                     </div>
@@ -1231,7 +1231,7 @@ export default function Me() {
                         onClick={() => { setEditingMentorId(mentor.id); setShowMentorForm(false); }}
                         className="w-8 h-8 flex items-center justify-center rounded tap opacity-25 group-hover:opacity-100 transition-opacity"
                         style={{ background: 'var(--s3)' }} title="Edit mentor">
-                        <Pencil size={11} style={{ color: '#8a7ba8' }} />
+                        <Pencil size={11} style={{ color: '#e59a7f' }} />
                       </button>
                       <button onClick={() => deleteMentor(mentor.id)}
                         className="w-8 h-8 flex items-center justify-center rounded tap opacity-25 group-hover:opacity-100 transition-opacity"

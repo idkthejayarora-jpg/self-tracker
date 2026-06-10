@@ -10,36 +10,19 @@ export interface AccentPreset {
 }
 
 export const ACCENT_PRESETS: AccentPreset[] = [
-  // Anthropic paper palette
+  // Anthropic ember palette — every accent stays in the warm orange family
   { id: 'claude',  label: 'Claude',   main: '#d97757', dark: '#bd5d3f', light: '#e59a7f' },
+  { id: 'rust',    label: 'Rust',     main: '#c2553d', dark: '#a3402c', light: '#d97b62' },
+  { id: 'flame',   label: 'Flame',    main: '#e08b4e', dark: '#c26f33', light: '#eba872' },
   { id: 'kraft',   label: 'Kraft',    main: '#d4a27f', dark: '#b58057', light: '#e3bd9e' },
-  { id: 'olive',   label: 'Olive',    main: '#788c5d', dark: '#5f7247', light: '#94a87a' },
-  { id: 'sage',    label: 'Sage',     main: '#629a90', dark: '#4a7d74', light: '#82b4ab' },
-  // Blues
-  { id: 'sky',     label: 'Sky',      main: '#0ea5e9', dark: '#0284c7', light: '#38bdf8' },
-  { id: 'indigo',  label: 'Indigo',   main: '#6366f1', dark: '#4f46e5', light: '#818cf8' },
-  { id: 'blue',    label: 'Blue',     main: '#3b82f6', dark: '#2563eb', light: '#60a5fa' },
-  // Purples
-  { id: 'violet',  label: 'Violet',   main: '#8b5cf6', dark: '#7c3aed', light: '#a78bfa' },
-  { id: 'pink',    label: 'Pink',     main: '#ec4899', dark: '#db2777', light: '#f472b6' },
-  { id: 'fuchsia', label: 'Fuchsia',  main: '#d946ef', dark: '#c026d3', light: '#e879f9' },
-  // Reds & Oranges
-  { id: 'rose',    label: 'Rose',     main: '#f43f5e', dark: '#e11d48', light: '#fb7185' },
-  { id: 'orange',  label: 'Orange',   main: '#f97316', dark: '#ea580c', light: '#fb923c' },
-  { id: 'amber',   label: 'Amber',    main: '#f59e0b', dark: '#d97706', light: '#fbbf24' },
-  { id: 'gold',    label: 'Gold',     main: '#C9A84C', dark: '#A8872A', light: '#DCB24F' },
-  { id: 'coral',   label: 'Coral',    main: '#FF6B6B', dark: '#e05555', light: '#ff8f8f' },
-  // Greens
-  { id: 'lime',    label: 'Lime',     main: '#84cc16', dark: '#65a30d', light: '#a3e635' },
-  { id: 'green',   label: 'Green',    main: '#22c55e', dark: '#16a34a', light: '#4ade80' },
-  { id: 'teal',    label: 'Teal',     main: '#14b8a6', dark: '#0d9488', light: '#2dd4bf' },
-  { id: 'emerald', label: 'Emerald',  main: '#10b981', dark: '#059669', light: '#34d399' },
-  { id: 'cyan',    label: 'Cyan',     main: '#06b6d4', dark: '#0891b2', light: '#22d3ee' },
-  // Neutrals
-  { id: 'slate',   label: 'Slate',    main: '#94a3b8', dark: '#64748b', light: '#cbd5e1' },
-  { id: 'red',     label: 'Red',      main: '#ef4444', dark: '#dc2626', light: '#f87171' },
-  { id: 'yellow',  label: 'Yellow',   main: '#eab308', dark: '#ca8a04', light: '#facc15' },
-  { id: 'purple',  label: 'Purple',   main: '#a855f7', dark: '#9333ea', light: '#c084fc' },
+  { id: 'gold',    label: 'Gold',     main: '#d9a066', dark: '#b97f44', light: '#e6ba8c' },
+  { id: 'ochre',   label: 'Ochre',    main: '#cf8a3e', dark: '#ab6e2a', light: '#dfa765' },
+  { id: 'sienna',  label: 'Sienna',   main: '#b5764f', dark: '#945c3a', light: '#cb9573' },
+  { id: 'brick',   label: 'Brick',    main: '#b3372e', dark: '#922a22', light: '#cd5a4f' },
+  { id: 'peach',   label: 'Peach',    main: '#e8a87c', dark: '#cc8657', light: '#f2c4a2' },
+  { id: 'clay',    label: 'Clay',     main: '#a97e5f', dark: '#8a6347', light: '#c09b7f' },
+  { id: 'stone',   label: 'Stone',    main: '#a5a293', dark: '#85826f', light: '#bfbcae' },
+  { id: 'ivory',   label: 'Ivory',    main: '#e3ddcb', dark: '#c4bca3', light: '#f5f3ec' },
 ];
 
 export type ThemeMode = 'dark' | 'light';

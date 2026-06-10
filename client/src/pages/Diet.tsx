@@ -15,7 +15,7 @@ interface FoodLog {
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 type MealType = typeof MEAL_TYPES[number];
 
-const ACCENT = '#82b4ab';
+const ACCENT = '#d9a066';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -111,7 +111,7 @@ export default function Diet() {
     { cal: 0, p: 0, c: 0, f: 0 }
   );
   const calPct   = Math.min(100, Math.round((totals.cal / calorieGoal) * 100));
-  const calColor = calPct > 110 ? '#c2553d' : calPct > 85 ? '#6f9d5c' : '#d9a066';
+  const calColor = calPct > 110 ? '#c2553d' : calPct > 85 ? '#cf8a3e' : '#d9a066';
 
   const byMeal = MEAL_TYPES.reduce<Record<MealType, FoodLog[]>>((acc, t) => {
     acc[t] = log.filter(e => e.meal_type === t);
@@ -122,13 +122,13 @@ export default function Diet() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 anim-page pb-16"
-      style={{ '--accent-rgb': '120 140 93', '--accent-rgb-light': ACCENT } as React.CSSProperties}>
+      style={{ '--accent-rgb': '181 118 79', '--accent-rgb-light': ACCENT } as React.CSSProperties}>
 
       {/* Dot grid */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: `radial-gradient(circle, rgba(130,180,171,0.05) 1px, transparent 1px)`,
+          backgroundImage: `radial-gradient(circle, rgba(217,160,102,0.05) 1px, transparent 1px)`,
           backgroundSize: '24px 24px',
         }} />
       </div>
@@ -206,7 +206,7 @@ export default function Diet() {
             {/* P / C / F */}
             <div className="flex gap-5 text-right">
               {[
-                { label: 'P', val: totals.p, color: '#8fa9c4' },
+                { label: 'P', val: totals.p, color: '#c4a085' },
                 { label: 'C', val: totals.c, color: ACCENT },
                 { label: 'F', val: totals.f, color: '#e0b27c' },
               ].map(({ label, val, color }) => (
@@ -395,7 +395,7 @@ export default function Diet() {
                     </p>
                     <p className="text-[11px] font-mono mt-1 flex flex-wrap gap-x-2" style={{ color: 'var(--t-faint)' }}>
                       {e.calories > 0 && <span style={{ color: '#d9a066' }}>{e.calories} kcal</span>}
-                      {e.protein_g > 0 && <span style={{ color: '#8fa9c4' }}>{e.protein_g}g P</span>}
+                      {e.protein_g > 0 && <span style={{ color: '#c4a085' }}>{e.protein_g}g P</span>}
                       {e.carbs_g   > 0 && <span style={{ color: ACCENT }}>{e.carbs_g}g C</span>}
                       {e.fat_g     > 0 && <span style={{ color: '#e0b27c' }}>{e.fat_g}g F</span>}
                     </p>

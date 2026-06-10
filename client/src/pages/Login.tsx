@@ -197,7 +197,7 @@ export default function Login() {
               )}
               {success && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
-                  style={{ background: 'rgb(34 197 94 / 0.08)', color: '#8fbb7e', border: '1px solid rgb(34 197 94 / 0.2)' }}>
+                  style={{ background: 'rgb(34 197 94 / 0.08)', color: '#d9a066', border: '1px solid rgb(34 197 94 / 0.2)' }}>
                   <CheckCircle2 size={13} className="shrink-0" />{success}
                 </div>
               )}
@@ -269,7 +269,7 @@ export default function Login() {
               )}
               {success && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
-                  style={{ background: 'rgb(34 197 94 / 0.08)', color: '#8fbb7e', border: '1px solid rgb(34 197 94 / 0.2)' }}>
+                  style={{ background: 'rgb(34 197 94 / 0.08)', color: '#d9a066', border: '1px solid rgb(34 197 94 / 0.2)' }}>
                   <CheckCircle2 size={13} className="shrink-0" />{success}
                 </div>
               )}

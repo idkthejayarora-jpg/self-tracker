@@ -19,7 +19,7 @@ router.get('/', (req, res) => {
 
 // POST / — create habit
 router.post('/', (req, res) => {
-  const { name, icon = '✅', category = 'discipline', color = '#6366f1', sort_order = 0 } = req.body;
+  const { name, icon = '✅', category = 'discipline', color = '#d97757', sort_order = 0 } = req.body;
   if (!name) return res.status(400).json({ error: 'Name required' });
   const result = db.prepare(
     'INSERT INTO habits (user_id, name, icon, category, color, sort_order) VALUES (?, ?, ?, ?, ?, ?)'

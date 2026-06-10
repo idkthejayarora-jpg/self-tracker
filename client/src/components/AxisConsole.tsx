@@ -5,7 +5,7 @@ import AxisOrb, { type OrbState } from './AxisOrb';
 import { useVoiceInput } from '../hooks/useVoiceInput';
 import { useSpeechVoices, pickBestVoice, speak, stopSpeaking } from '../lib/voice';
 
-const AXIS_COLOR = '#8a7ba8';
+const AXIS_COLOR = '#e59a7f';
 
 interface Concern { id: string; topic: string; question: string; }
 interface QA { q: string; a: string; }

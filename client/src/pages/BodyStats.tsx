@@ -19,7 +19,7 @@ const FIELDS: { key: keyof BodyStat; label: string; unit: string }[] = [
 function Trend({ curr, prev }: { curr?: number | null; prev?: number | null }) {
   if (curr == null || prev == null) return <Minus size={12} style={{ color: '#57544a' }} />;
   if (curr > prev) return <TrendingUp size={12} style={{ color: '#d97757' }} />;
-  if (curr < prev) return <TrendingDown size={12} style={{ color: '#6f9d5c' }} />;
+  if (curr < prev) return <TrendingDown size={12} style={{ color: '#cf8a3e' }} />;
   return <Minus size={12} style={{ color: '#57544a' }} />;
 }
 
@@ -36,7 +36,7 @@ function EKGLine() {
       <svg viewBox="0 0 400 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
         <polyline
           points="0,20 40,20 55,20 65,5 75,28 85,15 95,20 140,20 155,20 165,2 175,28 185,14 195,20 240,20 255,20 265,4 275,28 285,15 295,20 340,20 355,20 365,3 375,28 385,15 400,20"
-          fill="none" stroke="#82b4ab" strokeWidth="1.5"
+          fill="none" stroke="#d9a066" strokeWidth="1.5"
           strokeDasharray="200" style={{ animation: 'ekg-sweep 2.5s linear infinite' }}
         />
       </svg>
@@ -107,46 +107,46 @@ export default function BodyStats() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 anim-page"
-      style={{ '--accent-rgb': '98 154 144' } as React.CSSProperties}>
+      style={{ '--accent-rgb': '217 160 102' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(130,180,171,0.06) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(217,160,102,0.06) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }} />
       </div>
 
       {/* ── MEDICAL SCANNER HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #82b4ab25', minHeight: 110 }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #d9a06625', minHeight: 110 }}>
         <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: 'radial-gradient(circle, #82b4ab06 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, #d9a06606 1px, transparent 1px)',
           backgroundSize: '18px 18px',
         }} />
         <EKGLine />
-        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #82b4ab', borderLeft: '1.5px solid #82b4ab', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #82b4ab', borderRight: '1.5px solid #82b4ab', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #82b4ab', borderLeft: '1.5px solid #82b4ab', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #82b4ab', borderRight: '1.5px solid #82b4ab', opacity: 0.7 }} />
+        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #d9a066', borderLeft: '1.5px solid #d9a066', opacity: 0.7 }} />
+        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #d9a066', borderRight: '1.5px solid #d9a066', opacity: 0.7 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #d9a066', borderLeft: '1.5px solid #d9a066', opacity: 0.7 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #d9a066', borderRight: '1.5px solid #d9a066', opacity: 0.7 }} />
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #82b4ab70, transparent)', boxShadow: '0 0 8px #82b4ab' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, #d9a06670, transparent)', boxShadow: '0 0 8px #d9a066' }} />
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#82b4ab', opacity: 0.6 }}>MED://</span>
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#d9a066', opacity: 0.6 }}>MED://</span>
             <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">BIOMETRIC_SCAN</span>
-            <span className="cursor-blink font-mono" style={{ color: '#82b4ab', fontSize: 11 }}>▌</span>
+            <span className="cursor-blink font-mono" style={{ color: '#d9a066', fontSize: 11 }}>▌</span>
           </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: '0 0 30px #82b4ab40' }}>
+          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: '0 0 30px #d9a06640' }}>
             BIOMETRIC SCAN
           </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#82b4ab', opacity: 0.5 }}>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#d9a066', opacity: 0.5 }}>
             // full body analysis — vitals monitoring active
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #82b4ab30, transparent)' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, #d9a06630, transparent)' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
@@ -260,7 +260,7 @@ export default function BodyStats() {
               />
               <Line type="monotone" dataKey="weight" stroke="rgb(var(--accent-rgb))" strokeWidth={2} dot={false} name="Weight (kg)" />
               {chartData.some(d => d.fat != null) && (
-                <Line type="monotone" dataKey="fat" stroke="#8a7ba8" strokeWidth={2} dot={false} name="Body fat %" />
+                <Line type="monotone" dataKey="fat" stroke="#e59a7f" strokeWidth={2} dot={false} name="Body fat %" />
               )}
             </LineChart>
           </ResponsiveContainer>

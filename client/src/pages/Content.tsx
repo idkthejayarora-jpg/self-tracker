@@ -41,7 +41,7 @@ const STATUS_META: Record<Idea['status'], { label: string; icon: React.ReactNode
   idea:     { label: 'Idea',     icon: <Lightbulb size={12} />,    color: '#e59a7f' },
   scripted: { label: 'Scripted', icon: <PenLine size={12} />,      color: '#d9a066' },
   filmed:   { label: 'Filmed',   icon: <Film size={12} />,         color: '#d97757' },
-  posted:   { label: 'Posted',   icon: <CheckCircle2 size={12} />, color: '#6f9d5c' },
+  posted:   { label: 'Posted',   icon: <CheckCircle2 size={12} />, color: '#cf8a3e' },
   archived: { label: 'Archived', icon: <Archive size={12} />,      color: '#57544a' },
 };
 
@@ -50,8 +50,8 @@ const TYPE_LABELS: Record<Idea['content_type'], string> = {
 };
 
 const NICHE_COLORS = [
-  '#d97757','#c2553d','#d9a066','#6f9d5c','#629a90',
-  '#cd5240','#8a7ba8','#d97757','#788c5d','#629a90',
+  '#d97757','#c2553d','#d9a066','#cf8a3e','#d9a066',
+  '#cd5240','#e59a7f','#d97757','#b5764f','#d9a066',
 ];
 
 const ACCENT = '#c2553d';
@@ -333,7 +333,7 @@ function IdeaCard({
             )}
             {idea.posted_at && (
               <span className="text-[11px] px-2.5 py-1.5 rounded-xl font-bold"
-                style={{ background: '#6f9d5c18', color: '#6f9d5c' }}>
+                style={{ background: '#cf8a3e18', color: '#cf8a3e' }}>
                 ✓ {fmtDate(idea.posted_at)}
               </span>
             )}

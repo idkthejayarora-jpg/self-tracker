@@ -64,8 +64,8 @@
   /* ── Kraft gold / sage (badge + secondary accents) ── */
   --gold:     #d9a066;
   --gold-rgb: 217 160 102;
-  --cyan:     #629a90;
-  --cyan-rgb: 98 154 144;
+  --cyan:     #d9a066;
+  --cyan-rgb: 217 160 102;
 
   /* ── Page hero bg (used by per-page headers) ── */
   --hero-bg: #1b1a18;
@@ -114,7 +114,7 @@
     inset: 0;
     z-index: 2147483647;
     pointer-events: none;
-    opacity: 0.05;
+    opacity: 0.07;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size: 160px 160px;
   }
@@ -188,7 +188,8 @@ input:focus, textarea:focus, select:focus {
   .card {
     background: var(--gl-bg);
     border: 1px solid var(--gl-border);
-    border-radius: var(--r-card);
+    /* hand-cut paper edge — slightly irregular corners */
+    border-radius: 17px 14px 18px 15px / 15px 18px 14px 17px;
     box-shadow: var(--gl-shadow);
     transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
   }
@@ -202,8 +203,11 @@ input:focus, textarea:focus, select:focus {
   .card-raised {
     background: var(--s2);
     border: 1px solid var(--gl-border-h);
-    border-radius: var(--r-card);
+    border-radius: 17px 14px 18px 15px / 15px 18px 14px 17px;
     box-shadow: var(--gl-shadow);
+    /* stitched inner edge — paper-craft seam */
+    outline: 1px dashed rgb(var(--accent-rgb) / 0.18);
+    outline-offset: -6px;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
 
@@ -211,7 +215,7 @@ input:focus, textarea:focus, select:focus {
   .cmd-card {
     background: var(--gl-bg);
     border: 1px solid var(--gl-border);
-    border-radius: 18px;
+    border-radius: 19px 15px 20px 16px / 16px 20px 15px 19px;
     box-shadow: var(--gl-shadow);
     transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
   }
@@ -450,6 +454,7 @@ html.light .text-red-400   { color: #b3372e !important; }
    ═══════════════════════════════════════════════════════════════════ */
 
 .tap {
+  transition-timing-function: steps(2, end) !important;
   transition: transform 0.14s cubic-bezier(0.34,1.6,0.64,1), opacity 0.1s;
   cursor: pointer;
 }
@@ -468,8 +473,8 @@ html.light .text-red-400   { color: #b3372e !important; }
 .bar-fill { transition: width 0.7s cubic-bezier(0.34,1.1,0.64,1); position: relative; }
 
 /* Card lift */
-.card-hover { transition: transform 0.22s cubic-bezier(0.34,1.2,0.64,1), box-shadow 0.22s; }
-.card-hover:hover { transform: translateY(-3px); }
+.card-hover { transition: transform 0.18s steps(3, end), box-shadow 0.18s steps(3, end); }
+.card-hover:hover { transform: translateY(-3px) rotate(-0.35deg); }
 
 /* Nav */
 .nav-item { transition: background 0.15s, color 0.15s; }
@@ -486,6 +491,14 @@ html.light .text-red-400   { color: #b3372e !important; }
 /* ═══════════════════════════════════════════════════════════════════
    ANIMATION KEYFRAMES (unchanged)
    ═══════════════════════════════════════════════════════════════════ */
+
+/* Stop-motion paper drop: discrete frames, hand-placed wobble that settles */
+@keyframes paper-in {
+  0%   { opacity: 0; transform: translateY(12px) rotate(-0.9deg) scale(0.985); }
+  40%  { opacity: 1; transform: translateY(3px)  rotate(0.5deg)  scale(1.004); }
+  70%  { transform: translateY(-1px) rotate(-0.25deg) scale(1); }
+  100% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+}
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(14px) scale(0.98); }
@@ -616,9 +629,9 @@ html.light .text-red-400   { color: #b3372e !important; }
   98%  { opacity: 1;   }
 }
 @keyframes rgb-shift {
-  0%   { text-shadow: -2px 0 rgba(217,119,87,0.8), 2px 0 rgba(98,154,144,0.8); }
-  50%  { text-shadow:  2px 0 rgba(217,119,87,0.8), -2px 0 rgba(98,154,144,0.8); }
-  100% { text-shadow: -2px 0 rgba(217,119,87,0.8), 2px 0 rgba(98,154,144,0.8); }
+  0%   { text-shadow: -2px 0 rgba(217,119,87,0.8), 2px 0 rgba(217,160,102,0.8); }
+  50%  { text-shadow:  2px 0 rgba(217,119,87,0.8), -2px 0 rgba(217,160,102,0.8); }
+  100% { text-shadow: -2px 0 rgba(217,119,87,0.8), 2px 0 rgba(217,160,102,0.8); }
 }
 @keyframes sacred-spin {
   from { transform: rotate(0deg); }
@@ -634,7 +647,7 @@ html.light .text-red-400   { color: #b3372e !important; }
 }
 
 /* ── Animation utility classes ── */
-.anim-page > * { animation: fadeUp 0.35s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-page > * { animation: paper-in 0.45s steps(5, end) both; }
 .anim-page > *:nth-child(1)  { animation-delay: 0.00s; }
 .anim-page > *:nth-child(2)  { animation-delay: 0.04s; }
 .anim-page > *:nth-child(3)  { animation-delay: 0.08s; }

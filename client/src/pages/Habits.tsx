@@ -9,8 +9,8 @@ const CATEGORIES = ['all', 'discipline', 'physical', 'mental', 'health', 'other'
 const CAT_COLOR: Record<string, string> = {
   discipline: '#d97757',
   physical:   '#d97757',
-  mental:     '#8a7ba8',
-  health:     '#6f9d5c',
+  mental:     '#e59a7f',
+  health:     '#cf8a3e',
   other:      '#757163',
 };
 
@@ -211,12 +211,12 @@ export default function Habits() {
       {/* Momentum buff badge */}
       {momentum && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl scale-in"
-          style={{ background: 'rgba(111,157,92,0.10)', border: '1px solid rgba(111,157,92,0.4)', boxShadow: '0 0 18px rgba(111,157,92,0.15)' }}>
-          <Zap size={14} color="#6f9d5c" className="glow-pulse" />
-          <span className="text-xs font-black tracking-wide" style={{ color: '#6f9d5c' }}>
+          style={{ background: 'rgba(207,138,62,0.10)', border: '1px solid rgba(207,138,62,0.4)', boxShadow: '0 0 18px rgba(207,138,62,0.15)' }}>
+          <Zap size={14} color="#cf8a3e" className="glow-pulse" />
+          <span className="text-xs font-black tracking-wide" style={{ color: '#cf8a3e' }}>
             MOMENTUM ×{momentum.multiplier}
           </span>
-          <span className="text-[11px] font-mono" style={{ color: '#6f9d5c', opacity: 0.7 }}>
+          <span className="text-[11px] font-mono" style={{ color: '#cf8a3e', opacity: 0.7 }}>
             · habit points doubled — keep the streak alive
           </span>
         </div>

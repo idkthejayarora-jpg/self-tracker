@@ -124,11 +124,11 @@ export default function HabitLockdownModal() {
           {/* Reward burst */}
           {reward && (
             <div className="rounded-xl px-4 py-3 scale-in text-center"
-              style={{ background: 'rgba(111,157,92,0.12)', border: '1px solid rgba(111,157,92,0.4)' }}>
-              <p className="text-sm font-black tracking-wide flex items-center justify-center gap-1.5" style={{ color: '#6f9d5c' }}>
+              style={{ background: 'rgba(207,138,62,0.12)', border: '1px solid rgba(207,138,62,0.4)' }}>
+              <p className="text-sm font-black tracking-wide flex items-center justify-center gap-1.5" style={{ color: '#cf8a3e' }}>
                 <Zap size={14} /> COMEBACK · +{reward.points} PTS
               </p>
-              <p className="text-[11px] font-mono mt-0.5" style={{ color: '#6f9d5c', opacity: 0.8 }}>
+              <p className="text-[11px] font-mono mt-0.5" style={{ color: '#cf8a3e', opacity: 0.8 }}>
                 MOMENTUM ×2 active for 24h — habit points doubled
               </p>
             </div>
@@ -150,7 +150,7 @@ export default function HabitLockdownModal() {
                   onClick={() => doItNow(v)}
                   disabled={busyId === v.habit_id}
                   className="tap shrink-0 flex items-center gap-1.5 text-[11px] font-black px-3 py-2 rounded-lg"
-                  style={{ background: '#6f9d5c', color: '#04140a', opacity: busyId === v.habit_id ? 0.5 : 1 }}>
+                  style={{ background: '#cf8a3e', color: '#04140a', opacity: busyId === v.habit_id ? 0.5 : 1 }}>
                   <Check size={13} /> {busyId === v.habit_id ? '...' : 'DO IT NOW'}
                 </button>
               </div>
