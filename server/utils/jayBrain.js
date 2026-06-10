@@ -19,6 +19,15 @@ function aiEnabled() {
   return !!process.env.ANTHROPIC_API_KEY;
 }
 
+// ElevenLabs human voice — active when a key is set. With the v3 model the
+// brain also writes delivery tags ([sighs], [exhales]) into his replies.
+function humanVoiceEnabled() {
+  return !!process.env.ELEVENLABS_API_KEY;
+}
+function voiceTagsEnabled() {
+  return humanVoiceEnabled() && /v3/.test(process.env.ELEVENLABS_MODEL || '');
+}
+
 // Lazy client — only constructed when a key exists
 let _client = null;
 function getClient() {
@@ -279,6 +288,10 @@ ARC OF THE CONVERSATION:
 Cover the day naturally — how they're doing, sleep, food, training/movement, what got done, what's on their mind. Don't interrogate; let one answer lead to the next topic. If they go off-script (vent about something, share a win), follow them — that's the good stuff, it goes in the journal.
 After you've covered most of the day (usually 5–8 exchanges), wrap up like a friend signing off: one genuine observation about their day, maybe one small nudge for tomorrow. On that closing turn set done=true. If they say they're done ("that's it", "gotta go"), close immediately — warm, quick, done=true.
 
+${voiceTagsEnabled() ? `
+DELIVERY TAGS:
+Your reply is spoken by a voice engine that understands bracketed delivery tags. Use them SPARSELY — at most one per reply, only where a real person would actually do it: [sighs], [exhales], [laughs softly], [pauses]. Tags go only in the reply, never in the journal or anywhere in the sheet.
+` : ''}
 Return JSON: { reply, done, sheet }. The reply is ONLY your spoken words.`;
 }
 
@@ -697,4 +710,7 @@ function commitSheet(userId, sheet) {
   return filled;
 }
 
-module.exports = { aiEnabled, converse, commitSheet, buildSnapshot, greeting };
+module.exports = {
+  aiEnabled, humanVoiceEnabled, voiceTagsEnabled,
+  converse, commitSheet, buildSnapshot, greeting,
+};

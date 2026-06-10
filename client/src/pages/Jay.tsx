@@ -56,6 +56,7 @@ export default function Jay() {
   const [done, setDone] = useState(false);
   const [filled, setFilled] = useState<string[] | null>(null);
   const [aiLive, setAiLive] = useState<boolean | null>(null);
+  const [humanVoice, setHumanVoice] = useState(false);
   const [input, setInput] = useState('');
   const [voiceOn, setVoiceOn] = useState(() => localStorage.getItem('jay_voice_on') !== '0');
   const [voiceURI, setVoiceURI] = useState(() => localStorage.getItem('jay_voice_uri') || '');
@@ -63,6 +64,9 @@ export default function Jay() {
   const msgsRef = useRef<Msg[]>([]);
   msgsRef.current = msgs;
   const committedRef = useRef(false);
+  const humanVoiceRef = useRef(false);
+  humanVoiceRef.current = humanVoice;
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const voiceModeRef = useRef(false); // user's last input was spoken → keep the loop going
   const interactedRef = useRef(false); // browsers block TTS before first gesture
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -85,15 +89,42 @@ export default function Jay() {
   const voiceRef = useRef(voice);
   voiceRef.current = voice;
 
+  // Silence both engines — browser TTS and the ElevenLabs audio element
+  const stopAll = useCallback(() => {
+    stopSpeaking();
+    const a = audioRef.current;
+    if (a) { a.onended = null; a.pause(); a.removeAttribute('src'); }
+    setSpeaking(false);
+  }, []);
+
   const say = useCallback((text: string, after?: () => void) => {
     if (!voiceOnRef.current || !interactedRef.current) { after?.(); return; }
+
+    const browserSpeak = () => {
+      setSpeaking(true);
+      speak(text, {
+        voice: jayVoiceRef.current,
+        rate: 0.98,
+        onEnd: () => { setSpeaking(false); after?.(); },
+      });
+    };
+
+    if (!humanVoiceRef.current) { browserSpeak(); return; }
+
+    // Human voice: fetch ElevenLabs audio from our server, fall back to
+    // browser TTS if the engine is down or out of credits.
     setSpeaking(true);
-    speak(text, {
-      voice: jayVoiceRef.current,
-      rate: 0.98,
-      onEnd: () => { setSpeaking(false); after?.(); },
-    });
-  }, []);
+    api.post('/jay/speak', { text }, { responseType: 'blob' })
+      .then(r => {
+        const url = URL.createObjectURL(r.data as Blob);
+        const a = audioRef.current ?? new Audio();
+        audioRef.current = a;
+        a.onended = () => { URL.revokeObjectURL(url); setSpeaking(false); after?.(); };
+        a.src = url;
+        return a.play();
+      })
+      .catch(() => { stopAll(); browserSpeak(); });
+  }, [stopAll]);
   sayRef.current = say;
 
   // ── conversation turn ────────────────────────────────────────────────────────
@@ -101,8 +132,7 @@ export default function Jay() {
     const text = raw.trim();
     if (!text || committedRef.current) return;
     interactedRef.current = true;
-    stopSpeaking();
-    setSpeaking(false);
+    stopAll();
     setInput('');
 
     const withUser: Msg[] = [...msgsRef.current, { role: 'user', text }];
@@ -150,18 +180,19 @@ export default function Jay() {
   const boot = useCallback(async () => {
     committedRef.current = false;
     voiceModeRef.current = false;
-    stopSpeaking();
+    stopAll();
     setMsgs([]); setSheet({}); setDone(false); setFilled(null); setThinking(false);
     try {
       const r = await api.get('/jay/state');
       setAiLive(!!r.data.ai);
+      setHumanVoice(!!r.data.humanVoice);
       setMsgs([{ role: 'jay', text: r.data.greeting }]);
     } catch {
       setMsgs([{ role: 'jay', text: "Hey. Talk to me — how's the day going?" }]);
     }
   }, []);
   useEffect(() => { void boot(); }, [boot]);
-  useEffect(() => () => stopSpeaking(), []);
+  useEffect(() => () => stopAll(), [stopAll]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -185,7 +216,7 @@ export default function Jay() {
   function toggleMic() {
     interactedRef.current = true;
     if (voice.listening) { voice.stop(); return; }
-    stopSpeaking(); setSpeaking(false);
+    stopAll();
     voiceModeRef.current = true;
     voice.start();
   }
@@ -211,7 +242,7 @@ export default function Jay() {
               {aiLive ? 'Live' : 'Basic mode'}
             </span>
           )}
-          <button onClick={() => { const v = !voiceOn; setVoiceOn(v); localStorage.setItem('jay_voice_on', v ? '1' : '0'); if (!v) { stopSpeaking(); setSpeaking(false); } }}
+          <button onClick={() => { const v = !voiceOn; setVoiceOn(v); localStorage.setItem('jay_voice_on', v ? '1' : '0'); if (!v) stopAll(); }}
             title={voiceOn ? 'Mute Jay' : 'Unmute Jay'}
             className="tap w-8 h-8 rounded-xl flex items-center justify-center"
             style={{ background: 'var(--s2)', border: '1px solid var(--b)', color: voiceOn ? JAY : 'var(--t-faint)' }}>
@@ -248,7 +279,7 @@ export default function Jay() {
                     borderRadius: '16px 4px 14px 16px',
                     color: 'var(--t-body)',
                   }}>
-                  {m.text}
+                  {m.role === 'jay' ? m.text.replace(/\[[^\]]+\]\s*/g, '') : m.text}
                 </div>
               </div>
             ))}
@@ -418,8 +449,18 @@ export default function Jay() {
             </button>
           )}
 
-          {/* Voice picker */}
-          {voices.length > 0 && (
+          {/* Voice engine */}
+          {humanVoice && (
+            <div className="pt-2" style={{ borderTop: '1px solid var(--b)' }}>
+              <p className="text-[9px] font-bold tracking-[0.14em] uppercase mb-1" style={{ color: 'var(--t-faint)' }}>
+                Jay's voice
+              </p>
+              <p className="text-[11px] flex items-center gap-1.5" style={{ color: '#cf8a3e' }}>
+                <Check size={11} /> Human voice active — ElevenLabs
+              </p>
+            </div>
+          )}
+          {!humanVoice && voices.length > 0 && (
             <div className="pt-2" style={{ borderTop: '1px solid var(--b)' }}>
               <p className="text-[9px] font-bold tracking-[0.14em] uppercase mb-1" style={{ color: 'var(--t-faint)' }}>
                 Jay's voice
