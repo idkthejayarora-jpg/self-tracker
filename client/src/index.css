@@ -706,6 +706,10 @@ html.light .text-red-400   { color: #b3372e !important; }
 .axis-ripple-3  { animation-delay: 1.6s; }
 .axis-eq-bar    { width: 4px; border-radius: 99px; transform-origin: center; animation: axis-speak 0.5s steps(3) infinite; }
 
+/* Jay "thinking" dots — stop-motion blink */
+@keyframes dot-pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+.dot-pulse { animation: dot-pulse 0.9s steps(2) infinite; }
+
 .xp-shimmer-bar { /* gloss removed — flat paper bar */ }
 
 /* Shimmer overlay */

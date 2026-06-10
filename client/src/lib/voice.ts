@@ -41,6 +41,35 @@ export function pickBestVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVo
   );
 }
 
+// Jay speaks with a male-leaning natural voice when one exists; otherwise the
+// best available voice. Premium/Enhanced voices (downloadable in macOS/iOS
+// settings) always win.
+export function pickJayVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
+  if (!voices.length) return null;
+  return (
+    voices.find(v => /premium/i.test(v.name) && /(evan|nathan|tom|oliver|aaron|daniel)/i.test(v.name)) ||
+    voices.find(v => /enhanced/i.test(v.name) && /(evan|nathan|tom|oliver|aaron|daniel|alex)/i.test(v.name)) ||
+    voices.find(v => /premium/i.test(v.name)) ||
+    voices.find(v => /enhanced|neural/i.test(v.name)) ||
+    voices.find(v => /siri.*(male|voice 1|aaron)/i.test(v.name)) ||
+    voices.find(v => /microsoft.*(guy|davis|jason|ryan|tony).*online/i.test(v.name)) ||
+    voices.find(v => /google uk english male/i.test(v.name)) ||
+    voices.find(v => /\b(alex|daniel|tom|aaron|fred)\b/i.test(v.name)) ||
+    pickBestVoice(voices)
+  );
+}
+
+// Strip anything that isn't spoken language — markdown, emoji, list bullets —
+// so TTS never reads "asterisk asterisk" or chokes on symbols.
+export function cleanForSpeech(text: string): string {
+  return text
+    .replace(/[*_`#~]/g, '')
+    .replace(/^[-•]\s+/gm, '')
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export interface SpeakOpts {
   voice?: SpeechSynthesisVoice | null;
   rate?: number;
@@ -69,7 +98,7 @@ export function speak(text: string, opts: SpeakOpts = {}) {
   if (typeof window === 'undefined' || !window.speechSynthesis) { onEnd?.(); return; }
   window.speechSynthesis.cancel();
   const session = ++speakSession;
-  const groups = breathGroups(text);
+  const groups = breathGroups(cleanForSpeech(text));
   if (!groups.length) { onEnd?.(); return; }
 
   let started = false;

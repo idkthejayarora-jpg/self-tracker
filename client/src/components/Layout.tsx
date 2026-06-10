@@ -4,14 +4,16 @@ import {
   LayoutDashboard, CheckSquare, BookOpen, Bell, BarChart2,
   Dumbbell, Sparkles, LogOut, Sun, Moon, Palette, X, Salad, KeyRound,
   ShieldOff, Target, Activity, Wallet, Swords, Zap, Shield, ImagePlus, Video,
+  AudioLines,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, ACCENT_PRESETS } from '../contexts/ThemeContext';
 import api from '../lib/api';
 
 const NAV = [
+  { to: '/',          icon: AudioLines,      label: 'Jay',        color: '#e59a7f' },
   { to: '/me',        icon: Swords,          label: 'Character',  color: '#d9a066' },
-  { to: '/',          icon: LayoutDashboard, label: 'Command',    color: '#d97757' },
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Command',    color: '#d97757' },
   { to: '/tasks',     icon: CheckSquare,     label: 'Missions',   color: '#c2553d' },
   { to: '/habits',    icon: Target,          label: 'Habits',     color: '#d97757' },
   { to: '/workout',   icon: Dumbbell,        label: 'Training',   color: '#b3372e' },

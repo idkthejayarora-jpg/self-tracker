@@ -6,6 +6,7 @@ import Layout from './components/Layout';
 import UrgentTasksModal from './components/UrgentTasksModal';
 import HabitLockdownModal from './components/HabitLockdownModal';
 import Login from './pages/Login';
+import Jay from './pages/Jay';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import Journal from './pages/Journal';
@@ -40,7 +41,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-        <Route index element={<Dashboard />} />
+        <Route index element={<Jay />} />
+        <Route path="dashboard" element={<Dashboard />} />
         <Route path="tasks" element={<Tasks />} />
         <Route path="journal" element={<Journal />} />
         <Route path="workout" element={<Workout />} />
