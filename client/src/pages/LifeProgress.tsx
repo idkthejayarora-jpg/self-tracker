@@ -248,7 +248,7 @@ export default function LifeProgress() {
       {/* ── HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl"
         style={{
-          background: 'linear-gradient(180deg, #1a0a2e 0%, var(--hero-bg) 65%)',
+          background: 'var(--hero-bg)',
           border: '1px solid #e59a7f30',
           minHeight: 100,
         }}>
@@ -262,14 +262,14 @@ export default function LifeProgress() {
           style={{ background: '#e59a7f80', boxShadow: 'none' }} />
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#e59a7f', opacity: 0.7 }}>AXIS://</span>
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#e59a7f', opacity: 0.7 }}>JAY://</span>
             <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">LIFE_MANAGER</span>
             <span className="cursor-blink font-mono" style={{ color: '#e59a7f', fontSize: 11 }}>▌</span>
           </div>
           <h1 className="text-3xl font-black tracking-tight leading-none text-white"
             style={{ textShadow: 'none' }}>LIFE PATH</h1>
           <p className="font-mono text-[10px] mt-1" style={{ color: '#e59a7f', opacity: 0.5 }}>
-            // WRITE YOUR GOALS — AXIS BUILDS YOUR PLAN
+            // WRITE YOUR GOALS — JAY BUILDS YOUR PLAN
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
@@ -279,7 +279,7 @@ export default function LifeProgress() {
       {/* ── SPLIT: chat (left) + sectors (right) ── */}
       <div className="flex flex-col lg:flex-row gap-5" style={{ alignItems: 'flex-start' }}>
 
-        {/* ── AXIS VOICE CONSOLE (JARVIS-style) ── */}
+        {/* ── JAY VOICE CONSOLE ── */}
         <AxisConsole onFinished={(secs) => setSectors(secs as Sector[])} />
 
         {/* legacy text chat — superseded by the voice console, kept out of render */}
@@ -290,7 +290,7 @@ export default function LifeProgress() {
           {/* Chat header bar */}
           <div className="px-4 py-3 flex items-center gap-2"
             style={{ borderBottom: '1px solid var(--b)', background: 'var(--s2)' }}>
-            <span className="text-sm font-black tracking-widest" style={{ color: '#e59a7f' }}>AXIS</span>
+            <span className="text-sm font-black tracking-widest" style={{ color: '#e59a7f' }}>JAY</span>
             <span className="cursor-blink font-mono text-xs" style={{ color: '#e59a7f' }}>▌</span>
             <span className="text-xs ml-auto" style={{ color: 'var(--t-faint)' }}>your life manager</span>
           </div>
@@ -301,9 +301,9 @@ export default function LifeProgress() {
             {loaded && !hasHistory && !sending && (
               <div className="flex flex-col items-center justify-center text-center py-12 space-y-3">
                 <p className="text-4xl" style={{ opacity: 0.2 }}>⚡</p>
-                <p className="text-sm font-semibold" style={{ color: 'var(--t-muted)' }}>Tell AXIS what you're working toward</p>
+                <p className="text-sm font-semibold" style={{ color: 'var(--t-muted)' }}>Tell Jay what you're working toward</p>
                 <p className="text-xs max-w-xs leading-relaxed" style={{ color: 'var(--t-faint)' }}>
-                  Write freely — goals, plans, struggles. AXIS reads your data and queues tasks that actually move things forward.
+                  Write freely — goals, plans, struggles. Jay reads your data and queues tasks that actually move things forward.
                 </p>
               </div>
             )}
@@ -325,7 +325,7 @@ export default function LifeProgress() {
                       }}>
                       {isManager && (
                         <span className="text-[9px] font-black tracking-widest block mb-1.5" style={{ color: '#e59a7f', opacity: 0.7 }}>
-                          AXIS //
+                          Jay —
                         </span>
                       )}
                       {msg.content}
@@ -393,7 +393,7 @@ export default function LifeProgress() {
               <div className="flex justify-start">
                 <div className="rounded-2xl px-4 py-3 text-xs font-mono"
                   style={{ background: 'var(--s2)', borderLeft: '2px solid #e59a7f60', color: '#e59a7f' }}>
-                  <span className="opacity-60">AXIS //</span>
+                  <span className="opacity-60">Jay —</span>
                   <span className="ml-2 animate-pulse">analyzing...</span>
                 </div>
               </div>
@@ -410,7 +410,7 @@ export default function LifeProgress() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-                placeholder="Tell AXIS what you want to work on…"
+                placeholder="Tell Jay what you want to work on…"
                 rows={2}
                 className="flex-1 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none"
                 style={{

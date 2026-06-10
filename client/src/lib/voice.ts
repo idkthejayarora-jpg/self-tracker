@@ -16,14 +16,17 @@ export function useSpeechVoices() {
   return voices;
 }
 
-// Pick the most human-sounding available English voice. Premium/"online"
-// neural voices (Siri-quality, downloaded in OS settings) are preferred —
-// the more the user has installed, the more human AXIS sounds.
+// Pick the most human-sounding available English voice. Premium/Enhanced
+// neural voices (Siri-quality, downloaded in OS settings) come first — if the
+// user installs one (System Settings → Accessibility → Spoken Content →
+// System Voice → Manage Voices), Jay automatically sounds like a person.
 export function pickBestVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
   if (!voices.length) return null;
   return (
-    // macOS premium / Siri-quality neural voices
-    voices.find(v => /(^|\s)(ava|zoe|evan|nathan|joelle|samantha).*(premium|enhanced|neural)/i.test(v.name)) ||
+    // Any premium/enhanced neural voice, best first
+    voices.find(v => /premium/i.test(v.name)) ||
+    voices.find(v => /enhanced/i.test(v.name) && /(ava|zoe|evan|nathan|joelle|samantha|tom|allison|susan)/i.test(v.name)) ||
+    voices.find(v => /enhanced|neural/i.test(v.name)) ||
     voices.find(v => /siri/i.test(v.name)) ||
     // Microsoft online neural
     voices.find(v => /microsoft.*(aria|jenny|guy|davis|jason|tony|sonia|ryan).*online/i.test(v.name)) ||
@@ -46,22 +49,57 @@ export interface SpeakOpts {
   onStart?: () => void;
 }
 
-// Speak text with a calm, measured JARVIS-like delivery by default.
+// Split text into natural breath groups: sentences, plus long-pause breaks
+// at em dashes and ellipses, the way a person actually phrases things.
+function breathGroups(text: string): string[] {
+  return text
+    .replace(/\s+/g, ' ')
+    .split(/(?<=[.!?])\s+|\s+—\s+|…\s*/)
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+let speakSession = 0;
+
+// Human delivery: speak in breath groups with real pauses between them, at a
+// natural conversational rate with a tiny per-phrase drift so it never drones
+// at one frozen pitch the way default TTS does.
 export function speak(text: string, opts: SpeakOpts = {}) {
-  const { voice = null, rate = 0.96, pitch = 0.92, onEnd, onStart } = opts;
+  const { voice = null, rate = 1.0, pitch = 1.0, onEnd, onStart } = opts;
   if (typeof window === 'undefined' || !window.speechSynthesis) { onEnd?.(); return; }
   window.speechSynthesis.cancel();
-  const utt = new SpeechSynthesisUtterance(text);
-  utt.lang = 'en-US';
-  utt.rate = rate;
-  utt.pitch = pitch;
-  utt.volume = 1.0;
-  if (voice) utt.voice = voice;
-  if (onStart) utt.onstart = onStart;
-  if (onEnd) utt.onend = onEnd;
-  window.speechSynthesis.speak(utt);
+  const session = ++speakSession;
+  const groups = breathGroups(text);
+  if (!groups.length) { onEnd?.(); return; }
+
+  let started = false;
+  const speakNext = (i: number) => {
+    if (session !== speakSession) return; // superseded by a newer call / stop
+    if (i >= groups.length) { onEnd?.(); return; }
+    const utt = new SpeechSynthesisUtterance(groups[i]);
+    utt.lang = 'en-US';
+    // gentle drift: questions lift slightly, statements settle
+    const isQuestion = /\?$/.test(groups[i]);
+    utt.rate   = rate  + (Math.random() * 0.06 - 0.03);
+    utt.pitch  = pitch + (isQuestion ? 0.04 : 0) + (Math.random() * 0.04 - 0.02);
+    utt.volume = 1.0;
+    if (voice) utt.voice = voice;
+    if (!started && onStart) { utt.onstart = () => { started = true; onStart(); }; }
+    const proceed = () => {
+      if (session !== speakSession) return;
+      // breath pause: longer after a full stop, brief after a dash break
+      const punct = /[.!?]$/.test(groups[i]) ? 320 : 160;
+      const jitter = Math.random() * 120;
+      window.setTimeout(() => speakNext(i + 1), punct + jitter);
+    };
+    utt.onend = proceed;
+    utt.onerror = proceed;
+    window.speechSynthesis.speak(utt);
+  };
+  speakNext(0);
 }
 
 export function stopSpeaking() {
+  speakSession++; // invalidate any in-flight breath-group chain
   if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
 }

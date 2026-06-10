@@ -31,41 +31,6 @@ const emptyForm = () => ({
   bedtime: '', wake_time: '', quality: 3, notes: '',
 });
 
-function StarField() {
-  const ref = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const c = ref.current; if (!c) return;
-    const ctx = c.getContext('2d'); if (!ctx) return;
-    const W = c.offsetWidth || 600; const H = 130;
-    c.width = W; c.height = H;
-    const stars = Array.from({ length: 80 }, () => ({
-      x: Math.random() * W, y: Math.random() * H,
-      r: Math.random() * 1.5 + 0.3,
-      speed: Math.random() * 0.3 + 0.05,
-      phase: Math.random() * Math.PI * 2,
-    }));
-    let raf: number;
-    function draw() {
-      ctx!.clearRect(0, 0, W, H);
-      const t = Date.now() / 1000;
-      stars.forEach(s => {
-        const alpha = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
-        ctx!.beginPath();
-        ctx!.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        const color = Math.random() > 0.9 ? '#f0abfc' : (Math.random() > 0.7 ? '#d4a27f' : '#ffffff');
-        ctx!.fillStyle = color;
-        ctx!.globalAlpha = alpha;
-        ctx!.fill();
-      });
-      ctx!.globalAlpha = 1;
-      raf = requestAnimationFrame(draw);
-    }
-    draw();
-    return () => cancelAnimationFrame(raf);
-  }, []);
-  return <canvas ref={ref} style={{ width: '100%', height: 130, display: 'block' }} />;
-}
-
 export default function Sleep() {
   const [logs, setLogs] = useState<SleepLog[]>([]);
   const [stats, setStats] = useState<{ avgDuration: number | null; avgQuality: number | null; sleepDebt: number; count: number } | null>(null);
@@ -151,64 +116,25 @@ export default function Sleep() {
     <div className="max-w-2xl mx-auto space-y-5 anim-page"
       style={{ '--accent-rgb': '229 154 127' } as React.CSSProperties}>
 
-      {/* Cyberpunk body overlay */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(212,162,127,0.06) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }} />
-      </div>
-
-      {/* ── DEEP SPACE HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #d4a27f25', minHeight: 130 }}>
-        {/* Starfield */}
-        <div className="absolute inset-0 pointer-events-none">
-          <StarField />
-        </div>
-        {/* Dark bottom vignette */}
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%)' }} />
-        {/* Nebula glow spot */}
-        <div className="absolute pointer-events-none" style={{
-          right: -20, top: -20, width: 150, height: 150, borderRadius: '50%',
-          background: 'transparent',
-          filter: 'blur(20px)',
-        }} />
-        {/* HUD corners */}
-        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #d4a27f', borderLeft: '1.5px solid #d4a27f', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #d4a27f', borderRight: '1.5px solid #d4a27f', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #d4a27f', borderLeft: '1.5px solid #d4a27f', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #d4a27f', borderRight: '1.5px solid #d4a27f', opacity: 0.7 }} />
-        {/* Top violet edge */}
-        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: '#d4a27f80', boxShadow: 'none' }} />
-        {/* Content */}
-        <div className="relative z-10 px-5 py-5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#d4a27f', opacity: 0.6 }}>VOID://</span>
-            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">HYPERSLEEP_ARCHIVE</span>
-            <span className="cursor-blink font-mono" style={{ color: '#d4a27f', fontSize: 11 }}>▌</span>
+      {/* ── Header — paper title page ── */}
+      <div className="relative overflow-hidden rounded-2xl px-5 py-6 mb-4"
+        style={{ background: 'var(--hero-bg)', border: '1px solid var(--b)' }}>
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold tracking-[0.18em] uppercase mb-1.5"
+              style={{ color: 'var(--t-faint)' }}>Rest &amp; recovery</p>
+            <h1 className="text-3xl leading-none" style={{ color: 'var(--t-head)' }}>Sleep</h1>
+            <p className="text-xs mt-2" style={{ color: 'var(--t-dim)' }}>
+              {stats && stats.avgDuration ? `Averaging ${fmtDuration(stats.avgDuration)} a night this week` : 'Log last night to start the record'}
+            </p>
           </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: 'none' }}>
-            HYPERSLEEP ARCHIVE
-          </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#d4a27f', opacity: 0.5 }}>
-            // rest cycle analysis — neural recovery metrics
-          </p>
+          <Moon size={30} strokeWidth={1.5} style={{ color: 'var(--t-faint)', marginBottom: 4 }} />
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: '#d4a27f30' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm" style={{ color: 'var(--t-dim)' }}>
-          {stats && stats.avgDuration ? `Avg ${fmtDuration(stats.avgDuration)} / night this week` : 'Track your sleep'}
-        </p>
+      <div className="flex items-center justify-end">
         <button type="button" onClick={() => { setShowForm(s => !s); setFormErr(''); }}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold tap"
           style={{ background: `rgb(var(--accent-rgb) / 0.12)`, color: `rgb(var(--accent-rgb-light))` }}>
@@ -264,7 +190,7 @@ export default function Sleep() {
           {autoDuration !== null && (
             <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg" style={{ background: 'var(--s3)' }}>
               <Clock size={13} style={{ color: 'var(--t-dim)' }} />
-              <span className="text-xs" style={{ color: '#a5a293' }}>Duration: <strong style={{ color: '#f4f4f5' }}>{fmtDuration(autoDuration)}</strong></span>
+              <span className="text-xs" style={{ color: '#a5a293' }}>Duration: <strong style={{ color: 'var(--t-head)' }}>{fmtDuration(autoDuration)}</strong></span>
             </div>
           )}
           <div>
@@ -312,7 +238,7 @@ export default function Sleep() {
       {/* Chart */}
       {chartData.length > 1 && (
         <div className="card px-4 py-4">
-          <p className="text-xs font-semibold mb-3" style={{ color: 'rgb(var(--accent-rgb))', letterSpacing: '0.05em' }}>// SLEEP DURATION (hrs)</p>
+          <p className="text-xs font-semibold mb-3" style={{ color: 'rgb(var(--accent-rgb))', letterSpacing: '0.05em' }}>Sleep duration (hours)</p>
           <ResponsiveContainer width="100%" height={140}>
             <BarChart data={chartData} barSize={20}>
               <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#57544a' }} />
@@ -332,7 +258,7 @@ export default function Sleep() {
       {/* Log list — grouped by date */}
       {logs.length > 0 ? (
         <div className="card px-4 py-4">
-          <p className="text-xs font-semibold mb-3" style={{ color: 'rgb(var(--accent-rgb))', letterSpacing: '0.05em' }}>// HISTORY</p>
+          <p className="text-xs font-semibold mb-3" style={{ color: 'rgb(var(--accent-rgb))', letterSpacing: '0.05em' }}>History</p>
           <div className="space-y-0">
             {groupedDates.map(date => {
               const entries = byDate.get(date)!;

@@ -494,7 +494,7 @@ router.get('/axis/brief', (req, res) => {
   });
 });
 
-// Finish: store the Q&A transcript, produce AXIS's closing reflection, award
+// Finish: store the Q&A transcript, produce Jay's closing reflection, award
 // a small debrief bonus, and return refreshed sectors.
 router.post('/axis/finish', (req, res) => {
   const uid = req.user.id;
@@ -527,7 +527,7 @@ router.post('/axis/finish', (req, res) => {
     `SELECT 1 FROM points_log WHERE user_id=? AND source='axis' AND action='debrief' AND DATE(created_at)=DATE('now') LIMIT 1`
   ).get(uid);
   if (!already && transcript.some(t => t.a && t.a.trim())) {
-    awardPoints(uid, 'axis', 'debrief', 15, null, 'Daily AXIS debrief');
+    awardPoints(uid, 'axis', 'debrief', 15, null, 'Daily debrief with Jay');
   }
 
   res.json({ reflection, sectors: getSectorFills(uid) });

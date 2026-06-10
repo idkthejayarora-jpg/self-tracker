@@ -87,7 +87,7 @@ export default function AxisOrb({
 
         {state === 'idle' && (
           <span className="font-black tracking-[0.3em]" style={{ color: '#fff', fontSize: size * 0.09, opacity: 0.85, textShadow: 'none' }}>
-            AXIS
+            JAY
           </span>
         )}
       </div>
