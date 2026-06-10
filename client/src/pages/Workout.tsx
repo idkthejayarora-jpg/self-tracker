@@ -49,12 +49,12 @@ function ExerciseProgress({ exercise, onClose }: { exercise: Exercise; onClose: 
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 10 }} tickFormatter={d => d.slice(5)} />
-              <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} unit=" kg" />
-              <Tooltip contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8 }}
+              <CartesianGrid strokeDasharray="3 3" stroke="#3d3935" />
+              <XAxis dataKey="date" tick={{ fill: '#84816f', fontSize: 10 }} tickFormatter={d => d.slice(5)} />
+              <YAxis tick={{ fill: '#84816f', fontSize: 11 }} unit=" kg" />
+              <Tooltip contentStyle={{ backgroundColor: '#232120', border: '1px solid #3d3935', borderRadius: 8 }}
                 formatter={(v) => [`${v} kg`, 'Max weight']} />
-              <Line type="monotone" dataKey="max_weight" stroke="#0ea5e9" strokeWidth={2} dot={{ fill: '#0ea5e9', r: 4 }} />
+              <Line type="monotone" dataKey="max_weight" stroke="#629a90" strokeWidth={2} dot={{ fill: '#629a90', r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
         )}
@@ -237,25 +237,25 @@ export default function Workout() {
 
   return (
     <div className="space-y-4"
-      style={{ '--accent-rgb': '255 69 0' } as React.CSSProperties}>
+      style={{ '--accent-rgb': '179 55 46' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(255,69,0,0.06) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(217,119,87,0.06) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }} />
       </div>
 
       {/* ── FORGE HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'linear-gradient(180deg, #1a0800 0%, var(--hero-bg) 60%)', border: '1px solid #ff450030', minHeight: 120 }}>
+        style={{ background: 'linear-gradient(180deg, #1a0800 0%, var(--hero-bg) 60%)', border: '1px solid #d9775730', minHeight: 120 }}>
         {/* Heat shimmer columns */}
         <div className="absolute inset-0 pointer-events-none flex gap-8 px-8" style={{ opacity: 0.15 }}>
           {[0,200,400,600,800,1000,1200,1400].map(d => (
             <div key={d} style={{
-              width: 2, flex: '0 0 2px', background: 'linear-gradient(to top, #ff4500, transparent)',
+              width: 2, flex: '0 0 2px', background: 'linear-gradient(to top, #d97757, transparent)',
               animation: `heat-shimmer 1.8s ease-in-out ${d}ms infinite`,
             }} />
           ))}
@@ -265,8 +265,8 @@ export default function Workout() {
           {[...Array(6)].map((_,i) => (
             <div key={i} className="absolute rounded-full" style={{
               width: 3, height: 3,
-              background: i % 2 === 0 ? '#ff4500' : '#ff8c00',
-              boxShadow: `0 0 6px ${i % 2 === 0 ? '#ff4500' : '#ff8c00'}`,
+              background: i % 2 === 0 ? '#d97757' : '#ff8c00',
+              boxShadow: `0 0 6px ${i % 2 === 0 ? '#d97757' : '#ff8c00'}`,
               left: `${15 + i * 14}%`,
               bottom: 16,
               animation: `ember-float ${1.5 + i * 0.3}s ease-out ${i * 400}ms infinite`,
@@ -274,29 +274,29 @@ export default function Workout() {
           ))}
         </div>
         {/* HUD corners in orange */}
-        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #ff4500', borderLeft: '1.5px solid #ff4500', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #ff4500', borderRight: '1.5px solid #ff4500', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #ff4500', borderLeft: '1.5px solid #ff4500', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #ff4500', borderRight: '1.5px solid #ff4500', opacity: 0.7 }} />
+        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #d97757', borderLeft: '1.5px solid #d97757', opacity: 0.7 }} />
+        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #d97757', borderRight: '1.5px solid #d97757', opacity: 0.7 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #d97757', borderLeft: '1.5px solid #d97757', opacity: 0.7 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #d97757', borderRight: '1.5px solid #d97757', opacity: 0.7 }} />
         {/* Top lava edge */}
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #ff4500, transparent)', boxShadow: '0 0 12px #ff4500' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, #d97757, transparent)', boxShadow: '0 0 12px #d97757' }} />
         {/* Content */}
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#ff4500', opacity: 0.7 }}>FORGE://</span>
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#d97757', opacity: 0.7 }}>FORGE://</span>
             <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">IRON_PROTOCOL</span>
-            <span className="cursor-blink font-mono" style={{ color: '#ff4500', fontSize: 11 }}>▌</span>
+            <span className="cursor-blink font-mono" style={{ color: '#d97757', fontSize: 11 }}>▌</span>
           </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none" style={{ color: '#fff', textShadow: '0 0 40px #ff450060, 0 0 80px #ff450030' }}>
+          <h1 className="text-3xl font-black tracking-tight leading-none" style={{ color: '#fff', textShadow: '0 0 40px #d9775760, 0 0 80px #d9775730' }}>
             THE FORGE
           </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#ff4500', opacity: 0.5 }}>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#d97757', opacity: 0.5 }}>
             // STRENGTH PROTOCOL ACTIVE — forge your limits
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #ff450040, transparent)' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, #d9775740, transparent)' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
@@ -345,7 +345,7 @@ export default function Workout() {
                 </div>
               </div>
               {sessionErr && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs" style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs" style={{ background: 'rgb(239 68 68 / 0.1)', color: '#e07b62' }}>
                   <AlertCircle size={13} />{sessionErr}
                 </div>
               )}
@@ -361,10 +361,10 @@ export default function Workout() {
 
           {/* Quick-log panel */}
           <div className="card px-4 py-4 space-y-3"
-            style={{ borderColor: 'rgb(255 69 0 / 0.2)', background: 'linear-gradient(135deg, var(--s1) 0%, rgba(255,69,0,0.03) 100%)' }}>
+            style={{ borderColor: 'rgb(255 69 0 / 0.2)', background: 'linear-gradient(135deg, var(--s1) 0%, rgba(217,119,87,0.03) 100%)' }}>
             <div className="flex items-center gap-2">
-              <Zap size={10} style={{ color: '#ff4500' }} />
-              <span className="text-[10px] font-black tracking-[0.2em]" style={{ color: '#ff4500' }}>QUICK LOG</span>
+              <Zap size={10} style={{ color: '#d97757' }} />
+              <span className="text-[10px] font-black tracking-[0.2em]" style={{ color: '#d97757' }}>QUICK LOG</span>
               <span className="text-[10px] font-mono opacity-40 text-white">// speak your workout</span>
             </div>
             <textarea
@@ -377,7 +377,7 @@ export default function Workout() {
               style={{ background: 'var(--s3)', color: 'var(--t-body)', border: '1px solid rgb(255 69 0 / 0.2)' }}
             />
             {quickErr && (
-              <p className="text-xs" style={{ color: '#f87171' }}>{quickErr}</p>
+              <p className="text-xs" style={{ color: '#e07b62' }}>{quickErr}</p>
             )}
             {quickResult && (
               <div className="rounded-xl px-3 py-3 space-y-2"
@@ -392,7 +392,7 @@ export default function Workout() {
                   ))}
                   {quickResult.cardioMinutes > 0 && (
                     <span className="text-[11px] px-2 py-0.5 rounded-full"
-                      style={{ background: 'var(--s3)', color: '#ef4444' }}>
+                      style={{ background: 'var(--s3)', color: '#cd5240' }}>
                       {quickResult.cardioMinutes}min cardio
                     </span>
                   )}
@@ -478,7 +478,7 @@ export default function Workout() {
                             className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-white text-sm focus:outline-none" />
                         </div>
                         {setErr && (
-                          <div className="flex items-center gap-1.5 text-xs" style={{ color: '#f87171' }}>
+                          <div className="flex items-center gap-1.5 text-xs" style={{ color: '#e07b62' }}>
                             <AlertCircle size={12} />{setErr}
                           </div>
                         )}
@@ -563,7 +563,7 @@ export default function Workout() {
                       ✓ Found {parsedPlan.length} training day{parsedPlan.length !== 1 ? 's' : ''}
                     </p>
                     {planCreateMsg && (
-                      <span className="text-[11px] font-semibold" style={{ color: '#22c55e' }}>{planCreateMsg}</span>
+                      <span className="text-[11px] font-semibold" style={{ color: '#6f9d5c' }}>{planCreateMsg}</span>
                     )}
                   </div>
 
@@ -652,7 +652,7 @@ export default function Workout() {
               {/* No days parsed but text available */}
               {!planLoading && parsedPlan.length === 0 && pdfText && (
                 <div className="space-y-2">
-                  <p className="text-[11px]" style={{ color: '#f87171' }}>
+                  <p className="text-[11px]" style={{ color: '#e07b62' }}>
                     ⚠ Couldn't auto-detect training days. Review the text below and add days manually.
                   </p>
                   <textarea value={pdfText} onChange={e => setPdfText(e.target.value)}
@@ -671,7 +671,7 @@ export default function Workout() {
             <form onSubmit={async e => {
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
-              const r = await api.post<PlanDay>('/workout/plan/days', { name: fd.get('name'), icon: '', color: fd.get('color') || '#ff4500' });
+              const r = await api.post<PlanDay>('/workout/plan/days', { name: fd.get('name'), icon: '', color: fd.get('color') || '#d97757' });
               setPlanDays(d => [...d, r.data]);
               (e.target as HTMLFormElement).reset();
               setShowAddDay(false);
@@ -683,7 +683,7 @@ export default function Workout() {
               </div>
               <div className="flex items-center gap-2">
                 <label className="text-[10px]" style={{ color: 'var(--t-faint)' }}>Color:</label>
-                <input name="color" type="color" defaultValue="#ff4500" className="w-8 h-7 rounded cursor-pointer border-0" />
+                <input name="color" type="color" defaultValue="#d97757" className="w-8 h-7 rounded cursor-pointer border-0" />
                 <button type="submit" className="ml-auto px-3 py-1.5 rounded-xl text-xs font-semibold tap text-white"
                   style={{ background: 'rgb(var(--accent-rgb))' }}>Add</button>
                 <button type="button" onClick={() => setShowAddDay(false)}
@@ -732,7 +732,7 @@ export default function Workout() {
                     }}
                       className="w-9 h-9 rounded-lg flex items-center justify-center tap opacity-25 group-hover:opacity-100"
                       style={{ background: 'var(--s3)' }}>
-                      <Trash2 size={13} style={{ color: '#ef4444' }} />
+                      <Trash2 size={13} style={{ color: '#cd5240' }} />
                     </button>
                   </div>
                 </div>
@@ -835,7 +835,7 @@ export default function Workout() {
                 ))}
               </div>
               {exerciseErr && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs" style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs" style={{ background: 'rgb(239 68 68 / 0.1)', color: '#e07b62' }}>
                   <AlertCircle size={13} />{exerciseErr}
                 </div>
               )}
@@ -897,11 +897,11 @@ export default function Workout() {
               <h3 className="text-sm font-semibold text-white mb-4">Sessions per week</h3>
               <ResponsiveContainer width="100%" height={180}>
                 <LineChart data={stats.weekly}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="week" tick={{ fill: '#6b7280', fontSize: 10 }} />
-                  <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} allowDecimals={false} />
-                  <Tooltip contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8 }} />
-                  <Line type="monotone" dataKey="sessions" stroke="#f97316" strokeWidth={2} dot={{ fill: '#f97316', r: 4 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#3d3935" />
+                  <XAxis dataKey="week" tick={{ fill: '#84816f', fontSize: 10 }} />
+                  <YAxis tick={{ fill: '#84816f', fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip contentStyle={{ backgroundColor: '#232120', border: '1px solid #3d3935', borderRadius: 8 }} />
+                  <Line type="monotone" dataKey="sessions" stroke="#d97757" strokeWidth={2} dot={{ fill: '#d97757', r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import type { SleepLog } from '../types';
 
 const QUALITY_LABEL = ['', 'Terrible', 'Poor', 'Okay', 'Good', 'Great'];
-const QUALITY_COLOR = ['', '#ef4444', '#f97316', '#eab308', '#22c55e', '#10b981'];
+const QUALITY_COLOR = ['', '#cd5240', '#d97757', '#d9a066', '#6f9d5c', '#629a90'];
 
 function fmtDuration(minutes?: number | null) {
   if (!minutes) return '--';
@@ -52,7 +52,7 @@ function StarField() {
         const alpha = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
         ctx!.beginPath();
         ctx!.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        const color = Math.random() > 0.9 ? '#f0abfc' : (Math.random() > 0.7 ? '#a78bfa' : '#ffffff');
+        const color = Math.random() > 0.9 ? '#f0abfc' : (Math.random() > 0.7 ? '#d4a27f' : '#ffffff');
         ctx!.fillStyle = color;
         ctx!.globalAlpha = alpha;
         ctx!.fill();
@@ -149,20 +149,20 @@ export default function Sleep() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 anim-page"
-      style={{ '--accent-rgb': '167 139 250' } as React.CSSProperties}>
+      style={{ '--accent-rgb': '138 123 168' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(167,139,250,0.06) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(212,162,127,0.06) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }} />
       </div>
 
       {/* ── DEEP SPACE HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #a78bfa25', minHeight: 130 }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #d4a27f25', minHeight: 130 }}>
         {/* Starfield */}
         <div className="absolute inset-0 pointer-events-none">
           <StarField />
@@ -173,34 +173,34 @@ export default function Sleep() {
         {/* Nebula glow spot */}
         <div className="absolute pointer-events-none" style={{
           right: -20, top: -20, width: 150, height: 150, borderRadius: '50%',
-          background: 'radial-gradient(circle, #a78bfa15 0%, transparent 70%)',
+          background: 'radial-gradient(circle, #d4a27f15 0%, transparent 70%)',
           filter: 'blur(20px)',
         }} />
         {/* HUD corners */}
-        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #a78bfa', borderLeft: '1.5px solid #a78bfa', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #a78bfa', borderRight: '1.5px solid #a78bfa', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #a78bfa', borderLeft: '1.5px solid #a78bfa', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #a78bfa', borderRight: '1.5px solid #a78bfa', opacity: 0.7 }} />
+        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #d4a27f', borderLeft: '1.5px solid #d4a27f', opacity: 0.7 }} />
+        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #d4a27f', borderRight: '1.5px solid #d4a27f', opacity: 0.7 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #d4a27f', borderLeft: '1.5px solid #d4a27f', opacity: 0.7 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #d4a27f', borderRight: '1.5px solid #d4a27f', opacity: 0.7 }} />
         {/* Top violet edge */}
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #a78bfa80, transparent)', boxShadow: '0 0 10px #a78bfa' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, #d4a27f80, transparent)', boxShadow: '0 0 10px #d4a27f' }} />
         {/* Content */}
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#a78bfa', opacity: 0.6 }}>VOID://</span>
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#d4a27f', opacity: 0.6 }}>VOID://</span>
             <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">HYPERSLEEP_ARCHIVE</span>
-            <span className="cursor-blink font-mono" style={{ color: '#a78bfa', fontSize: 11 }}>▌</span>
+            <span className="cursor-blink font-mono" style={{ color: '#d4a27f', fontSize: 11 }}>▌</span>
           </div>
           <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: '0 0 40px #a78bfa50' }}>
+            style={{ textShadow: '0 0 40px #d4a27f50' }}>
             HYPERSLEEP ARCHIVE
           </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#a78bfa', opacity: 0.5 }}>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#d4a27f', opacity: 0.5 }}>
             // rest cycle analysis — neural recovery metrics
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #a78bfa30, transparent)' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, #d4a27f30, transparent)' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
@@ -218,7 +218,7 @@ export default function Sleep() {
 
       {loadErr && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs"
-          style={{ background: 'rgb(239 68 68 / 0.08)', color: '#f87171', border: '1px solid rgb(239 68 68 / 0.2)' }}>
+          style={{ background: 'rgb(239 68 68 / 0.08)', color: '#e07b62', border: '1px solid rgb(239 68 68 / 0.2)' }}>
           <AlertCircle size={13} />
           {loadErr} — <button type="button" onClick={load} className="underline tap">retry</button>
         </div>
@@ -228,12 +228,12 @@ export default function Sleep() {
       {stats && stats.count > 0 && (
         <div className="grid grid-cols-3 gap-2">
           {[
-            { label: 'Avg Duration', val: fmtDuration(stats.avgDuration), color: '#6366f1' },
-            { label: 'Avg Quality', val: stats.avgQuality ? `${stats.avgQuality}/5` : '--', color: '#a855f7' },
-            { label: 'Sleep Debt', val: stats.sleepDebt > 0 ? `${fmtDuration(stats.sleepDebt)}` : 'None', color: stats.sleepDebt > 60 ? '#ef4444' : '#22c55e' },
+            { label: 'Avg Duration', val: fmtDuration(stats.avgDuration), color: '#d97757' },
+            { label: 'Avg Quality', val: stats.avgQuality ? `${stats.avgQuality}/5` : '--', color: '#8a7ba8' },
+            { label: 'Sleep Debt', val: stats.sleepDebt > 0 ? `${fmtDuration(stats.sleepDebt)}` : 'None', color: stats.sleepDebt > 60 ? '#cd5240' : '#6f9d5c' },
           ].map(({ label, val, color }) => (
             <div key={label} className="card px-3 py-3">
-              <p className="text-[10px] font-medium mb-1" style={{ color: '#52525b' }}>{label}</p>
+              <p className="text-[10px] font-medium mb-1" style={{ color: '#57544a' }}>{label}</p>
               <p className="text-lg font-bold" style={{ color }}>{val}</p>
             </div>
           ))}
@@ -264,7 +264,7 @@ export default function Sleep() {
           {autoDuration !== null && (
             <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg" style={{ background: 'var(--s3)' }}>
               <Clock size={13} style={{ color: 'var(--t-dim)' }} />
-              <span className="text-xs" style={{ color: '#a1a1aa' }}>Duration: <strong style={{ color: '#f4f4f5' }}>{fmtDuration(autoDuration)}</strong></span>
+              <span className="text-xs" style={{ color: '#a5a293' }}>Duration: <strong style={{ color: '#f4f4f5' }}>{fmtDuration(autoDuration)}</strong></span>
             </div>
           )}
           <div>
@@ -276,7 +276,7 @@ export default function Sleep() {
                   className="flex-1 py-1.5 rounded-lg text-xs font-semibold tap"
                   style={{
                     background: form.quality === q ? QUALITY_COLOR[q] + '22' : 'var(--s3)',
-                    color: form.quality === q ? QUALITY_COLOR[q] : '#71717a',
+                    color: form.quality === q ? QUALITY_COLOR[q] : '#757163',
                     border: `1px solid ${form.quality === q ? QUALITY_COLOR[q] + '44' : 'transparent'}`,
                   }}>
                   <Star size={11} className="inline mb-0.5 mr-0.5" />{q}
@@ -292,7 +292,7 @@ export default function Sleep() {
           </div>
           {formErr && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
-              style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+              style={{ background: 'rgb(239 68 68 / 0.1)', color: '#e07b62' }}>
               <AlertCircle size={13} />{formErr}
             </div>
           )}
@@ -315,17 +315,17 @@ export default function Sleep() {
           <p className="text-xs font-semibold mb-3" style={{ color: 'rgb(var(--accent-rgb))', letterSpacing: '0.05em' }}>// SLEEP DURATION (hrs)</p>
           <ResponsiveContainer width="100%" height={140}>
             <BarChart data={chartData} barSize={20}>
-              <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#52525b' }} />
-              <YAxis domain={[0, 12]} tick={{ fontSize: 10, fill: '#52525b' }} />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#57544a' }} />
+              <YAxis domain={[0, 12]} tick={{ fontSize: 10, fill: '#57544a' }} />
               <Tooltip
                 contentStyle={{ background: 'var(--s2)', border: '1px solid var(--b)', borderRadius: 8, fontSize: 12 }}
                 formatter={(v: any) => [`${v}h`, 'Sleep']}
               />
-              <ReferenceLine y={7} stroke="#52525b" strokeDasharray="4 2" />
+              <ReferenceLine y={7} stroke="#57544a" strokeDasharray="4 2" />
               <Bar dataKey="hours" radius={[4, 4, 0, 0]} fill="rgb(var(--accent-rgb))" />
             </BarChart>
           </ResponsiveContainer>
-          <p className="text-[10px] mt-1 text-center" style={{ color: '#52525b' }}>Dashed line = 7h goal</p>
+          <p className="text-[10px] mt-1 text-center" style={{ color: '#57544a' }}>Dashed line = 7h goal</p>
         </div>
       )}
 
@@ -394,9 +394,9 @@ export default function Sleep() {
         </div>
       ) : !showForm && (
         <div className="card py-12 text-center">
-          <Moon size={28} style={{ color: '#52525b', margin: '0 auto 8px' }} />
+          <Moon size={28} style={{ color: '#57544a', margin: '0 auto 8px' }} />
           <p className="text-sm font-medium" style={{ color: 'var(--t-dim)' }}>No sleep logs yet</p>
-          <p className="text-xs mt-1" style={{ color: '#52525b' }}>Tap "Log" to add last night's sleep</p>
+          <p className="text-xs mt-1" style={{ color: '#57544a' }}>Tap "Log" to add last night's sleep</p>
         </div>
       )}
 

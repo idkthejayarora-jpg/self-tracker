@@ -10,6 +10,11 @@ export interface AccentPreset {
 }
 
 export const ACCENT_PRESETS: AccentPreset[] = [
+  // Anthropic paper palette
+  { id: 'claude',  label: 'Claude',   main: '#d97757', dark: '#bd5d3f', light: '#e59a7f' },
+  { id: 'kraft',   label: 'Kraft',    main: '#d4a27f', dark: '#b58057', light: '#e3bd9e' },
+  { id: 'olive',   label: 'Olive',    main: '#788c5d', dark: '#5f7247', light: '#94a87a' },
+  { id: 'sage',    label: 'Sage',     main: '#629a90', dark: '#4a7d74', light: '#82b4ab' },
   // Blues
   { id: 'sky',     label: 'Sky',      main: '#0ea5e9', dark: '#0284c7', light: '#38bdf8' },
   { id: 'indigo',  label: 'Indigo',   main: '#6366f1', dark: '#4f46e5', light: '#818cf8' },
@@ -67,14 +72,16 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue>(null!);
 
-const DEFAULT_ACCENT = ACCENT_PRESETS.find(p => p.id === 'sky')!;
+const DEFAULT_ACCENT = ACCENT_PRESETS.find(p => p.id === 'claude')!;
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>(() =>
     (localStorage.getItem('st_theme') as ThemeMode) || 'dark'
   );
   const [accent, setAccentState] = useState<AccentPreset>(() => {
-    const saved = localStorage.getItem('st_accent');
+    // v2 key: existing saved accents from the old glass theme are ignored
+    // once, so everyone lands on the new Claude default after the redesign.
+    const saved = localStorage.getItem('st_accent_v2');
     return ACCENT_PRESETS.find(p => p.id === saved) || DEFAULT_ACCENT;
   });
 
@@ -92,7 +99,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // Apply accent on mount and change
   useEffect(() => {
     applyAccent(accent);
-    localStorage.setItem('st_accent', accent.id);
+    localStorage.setItem('st_accent_v2', accent.id);
   }, [accent]);
 
   const toggleMode = useCallback(() => {

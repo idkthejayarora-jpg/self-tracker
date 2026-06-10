@@ -26,43 +26,43 @@ function useCountUp(target: number, duration = 900) {
 
 // ── Rank glow config ──────────────────────────────────────────────────────────
 const RANK_GLOW: Record<string, string> = {
-  E:    'rgba(107,114,128,0.25)',
-  D:    'rgba(59,130,246,0.3)',
-  C:    'rgba(34,197,94,0.3)',
-  B:    'rgba(168,85,247,0.35)',
-  A:    'rgba(249,115,22,0.35)',
-  S:    'rgba(239,68,68,0.4)',
-  'S+': 'rgba(226,201,126,0.5)',
-  '∞':  'rgba(147,197,253,0.6)',
+  E:    'rgba(132,129,111,0.25)',
+  D:    'rgba(106,139,173,0.3)',
+  C:    'rgba(111,157,92,0.3)',
+  B:    'rgba(138,123,168,0.35)',
+  A:    'rgba(217,119,87,0.35)',
+  S:    'rgba(205,82,64,0.4)',
+  'S+': 'rgba(217,160,102,0.5)',
+  '∞':  'rgba(170,191,212,0.6)',
 };
 
 const RANK_SOLID: Record<string, string> = {
-  E:    '#6b7280',
-  D:    '#3b82f6',
-  C:    '#22c55e',
-  B:    '#a855f7',
-  A:    '#f97316',
-  S:    '#ef4444',
-  'S+': '#e2c97e',
-  '∞':  '#93c5fd',
+  E:    '#84816f',
+  D:    '#6a8bad',
+  C:    '#6f9d5c',
+  B:    '#8a7ba8',
+  A:    '#d97757',
+  S:    '#cd5240',
+  'S+': '#d9a066',
+  '∞':  '#aabfd4',
 };
 
 // Class tier display config
 const CLASS_CONFIG: Record<string, { label: string; sublabel: string; color: string; bgColor: string }> = {
-  Soldier: { label: 'SOLDIER CLASS',  sublabel: '4 ranks · Ground tier',            color: '#94a3b8', bgColor: 'rgba(148,163,184,0.08)' },
-  General: { label: 'GENERAL CLASS',  sublabel: '2 ranks · Command tier',           color: '#fb923c', bgColor: 'rgba(251,146,60,0.10)'  },
-  King:    { label: 'KING CLASS',     sublabel: '2 ranks · Apex tier',              color: '#fbbf24', bgColor: 'rgba(251,191,36,0.10)'  },
+  Soldier: { label: 'SOLDIER CLASS',  sublabel: '4 ranks · Ground tier',            color: '#a5a293', bgColor: 'rgba(165,162,147,0.08)' },
+  General: { label: 'GENERAL CLASS',  sublabel: '2 ranks · Command tier',           color: '#e59a7f', bgColor: 'rgba(229,154,127,0.10)'  },
+  King:    { label: 'KING CLASS',     sublabel: '2 ranks · Apex tier',              color: '#e0b27c', bgColor: 'rgba(224,178,124,0.10)'  },
 };
 
 // ── Stat config (7 stats — Creativity added) ─────────────────────────────────
 const STAT_CONFIG = [
-  { key: 'strength',   label: 'STRENGTH',   Icon: Dumbbell,  color: '#ef4444', hint: 'Workouts this month'   },
-  { key: 'vitality',   label: 'VITALITY',   Icon: Heart,     color: '#22c55e', hint: 'Sleep quality (7 days)' },
-  { key: 'discipline', label: 'DISCIPLINE', Icon: Target,    color: '#f97316', hint: 'Habit rate this week'   },
-  { key: 'focus',      label: 'FOCUS',      Icon: Eye,       color: '#6366f1', hint: 'Tasks done this month'  },
-  { key: 'endurance',  label: 'ENDURANCE',  Icon: Activity,  color: '#a855f7', hint: 'Longest streak ever'    },
-  { key: 'wealth',     label: 'WEALTH',     Icon: Wallet,    color: '#f59e0b', hint: 'Finance net (half weight)' },
-  { key: 'creativity', label: 'CREATIVITY', Icon: Video,     color: '#ec4899', hint: 'Posts this month'       },
+  { key: 'strength',   label: 'STRENGTH',   Icon: Dumbbell,  color: '#cd5240', hint: 'Workouts this month'   },
+  { key: 'vitality',   label: 'VITALITY',   Icon: Heart,     color: '#6f9d5c', hint: 'Sleep quality (7 days)' },
+  { key: 'discipline', label: 'DISCIPLINE', Icon: Target,    color: '#d97757', hint: 'Habit rate this week'   },
+  { key: 'focus',      label: 'FOCUS',      Icon: Eye,       color: '#d97757', hint: 'Tasks done this month'  },
+  { key: 'endurance',  label: 'ENDURANCE',  Icon: Activity,  color: '#8a7ba8', hint: 'Longest streak ever'    },
+  { key: 'wealth',     label: 'WEALTH',     Icon: Wallet,    color: '#d9a066', hint: 'Finance net (half weight)' },
+  { key: 'creativity', label: 'CREATIVITY', Icon: Video,     color: '#c2553d', hint: 'Posts this month'       },
 ];
 
 // ── Point-source → Lucide icon map (for Points History) ──────────────────────
@@ -80,9 +80,9 @@ const SOURCE_ICONS: Record<string, React.ComponentType<{ size?: number; color?: 
   claim:      Star,
 };
 const SOURCE_COLORS: Record<string, string> = {
-  task: '#22c55e', habit: '#f97316', sleep: '#818cf8', journal: '#a855f7',
-  workout: '#ef4444', diet: '#22c55e', body: '#06b6d4',
-  content: '#ec4899', milestone: '#f59e0b', area_done: '#e2c97e', claim: '#a855f7',
+  task: '#6f9d5c', habit: '#d97757', sleep: '#e59a7f', journal: '#8a7ba8',
+  workout: '#cd5240', diet: '#6f9d5c', body: '#629a90',
+  content: '#c2553d', milestone: '#d9a066', area_done: '#d9a066', claim: '#8a7ba8',
 };
 
 // Relative-time formatter (short, no library)
@@ -99,9 +99,9 @@ function relTime(iso: string): string {
 }
 
 const CLAIM_TYPE_COLOR: Record<string, string> = {
-  quest: '#6366f1',
-  achievement: '#f97316',
-  legacy: '#a855f7',
+  quest: '#d97757',
+  achievement: '#d97757',
+  legacy: '#8a7ba8',
 };
 
 // ── Tiny helpers ──────────────────────────────────────────────────────────────
@@ -236,9 +236,9 @@ export default function Me() {
   const [showRankPalette, setShowRankPalette] = useState(false);
 
   const RANK_PALETTE_ME = [
-    '#e2c97e','#ef4444','#f97316','#a855f7','#22c55e',
-    '#3b82f6','#ec4899','#06b6d4','#f59e0b','#84cc16',
-    '#6366f1','#ffffff',
+    '#d9a066','#cd5240','#d97757','#8a7ba8','#6f9d5c',
+    '#6a8bad','#c2553d','#629a90','#d9a066','#788c5d',
+    '#d97757','#ffffff',
   ];
 
   function applyRankColorMe(hex: string) {
@@ -538,7 +538,7 @@ export default function Me() {
             {showRankPalette && (
               <div className="scale-in rounded-2xl p-3 mt-1"
                 style={{
-                  background: 'rgba(8,12,22,0.92)',
+                  background: 'rgba(27,26,24,0.92)',
                   backdropFilter: 'blur(28px)',
                   WebkitBackdropFilter: 'blur(28px)',
                   border: `1px solid ${rankSolid}30`,
@@ -594,11 +594,11 @@ export default function Me() {
             {/* Breakdown — 5 components: Stats/Streaks/Skills/Claims/Pts */}
             <div className="grid grid-cols-5 gap-1.5 pt-1">
               {([
-                { label: 'STATS',   val: meritBreakdown.statScore,   max: 45, color: '#ef4444' },
-                { label: 'STREAK',  val: meritBreakdown.streakScore, max: 15, color: '#f97316' },
-                { label: 'SKILLS',  val: meritBreakdown.skillScore,  max: 15, color: '#39ff14' },
-                { label: 'CLAIMS',  val: meritBreakdown.claimScore,  max: 10, color: '#6366f1' },
-                { label: 'PTS',     val: meritBreakdown.ptsScore,    max: 15, color: '#f59e0b' },
+                { label: 'STATS',   val: meritBreakdown.statScore,   max: 45, color: '#cd5240' },
+                { label: 'STREAK',  val: meritBreakdown.streakScore, max: 15, color: '#d97757' },
+                { label: 'SKILLS',  val: meritBreakdown.skillScore,  max: 15, color: '#d97757' },
+                { label: 'CLAIMS',  val: meritBreakdown.claimScore,  max: 10, color: '#d97757' },
+                { label: 'PTS',     val: meritBreakdown.ptsScore,    max: 15, color: '#d9a066' },
               ]).map(b => (
                 <div key={b.label} className="flex flex-col items-center gap-0.5">
                   <span className="text-[9px] tracking-wider font-semibold" style={{ color: 'var(--t-muted)' }}>{b.label}</span>
@@ -784,7 +784,7 @@ export default function Me() {
           {skills.map(skill => (
             <div key={skill.id}
               className="glass glow-card rounded-2xl overflow-hidden group transition-all duration-200"
-              style={{ borderLeft: `3px solid rgb(var(--accent-rgb)/0.6)`, '--gc': 'rgba(99,102,241,0.45)' } as React.CSSProperties}>
+              style={{ borderLeft: `3px solid rgb(var(--accent-rgb)/0.6)`, '--gc': 'rgba(217,119,87,0.45)' } as React.CSSProperties}>
 
               {/* ── Edit form (shown when editing) ── */}
               {editingSkillId === skill.id ? (
@@ -842,13 +842,13 @@ export default function Me() {
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <span className="text-[10px] font-black px-2 py-1 rounded-md"
-                        style={{ background: '#39ff1412', color: '#39ff14', border: '1px solid #39ff1440', textShadow: '0 0 8px #39ff1480' }}>
+                        style={{ background: '#d9775712', color: '#d97757', border: '1px solid #d9775740', textShadow: '0 0 8px #d9775780' }}>
                         LVL {skill.level}
                       </span>
                       <button onClick={() => levelUpSkill(skill.id)}
                         className="w-8 h-8 rounded flex items-center justify-center tap opacity-25 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
-                        style={{ background: '#22c55e18', border: '1px solid #22c55e30' }} title="Level up">
-                        <ChevronUp size={13} style={{ color: '#22c55e' }} />
+                        style={{ background: '#6f9d5c18', border: '1px solid #6f9d5c30' }} title="Level up">
+                        <ChevronUp size={13} style={{ color: '#6f9d5c' }} />
                       </button>
                       <button onClick={() => { setEditingSkillId(skill.id); setShowSkillForm(false); }}
                         className="w-8 h-8 rounded flex items-center justify-center tap opacity-25 group-hover:opacity-100 transition-opacity"
@@ -858,7 +858,7 @@ export default function Me() {
                       <button onClick={() => deleteSkill(skill.id)}
                         className="w-8 h-8 rounded flex items-center justify-center tap opacity-25 group-hover:opacity-100 transition-opacity"
                         style={{ background: 'var(--s3)' }}>
-                        <X size={11} style={{ color: '#ef4444' }} />
+                        <X size={11} style={{ color: '#cd5240' }} />
                       </button>
                     </div>
                   </div>
@@ -967,7 +967,7 @@ export default function Me() {
 
         <div className="space-y-2">
           {(claimsTab === 'active' ? activeClaims : claimedList).map(claim => {
-            const tc = CLAIM_TYPE_COLOR[claim.claim_type] ?? '#6366f1';
+            const tc = CLAIM_TYPE_COLOR[claim.claim_type] ?? '#d97757';
             const isOverdue = claim.deadline && claim.deadline < new Date().toISOString().slice(0, 10);
             return (
               <div key={claim.id}
@@ -1029,10 +1029,10 @@ export default function Me() {
                           {claim.status === 'claimed' && (
                             <span className="text-[10px] font-black px-2 py-0.5 rounded-full"
                               style={{
-                                background: '#f59e0b18',
-                                color: '#f59e0b',
-                                border: '1px solid #f59e0b50',
-                                textShadow: '0 0 8px #f59e0b80',
+                                background: '#d9a06618',
+                                color: '#d9a066',
+                                border: '1px solid #d9a06650',
+                                textShadow: '0 0 8px #d9a06680',
                               }}>
                               ✓ CLAIMED
                             </span>
@@ -1043,12 +1043,12 @@ export default function Me() {
                         )}
                         <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                           {claim.deadline && (
-                            <span className="text-[10px]" style={{ color: isOverdue ? '#ef4444' : 'var(--t-faint)' }}>
+                            <span className="text-[10px]" style={{ color: isOverdue ? '#cd5240' : 'var(--t-faint)' }}>
                               {isOverdue ? '⚠ ' : ''}⏳ {claim.deadline}
                             </span>
                           )}
                           {claim.reward_text && (
-                            <span className="text-[10px] flex items-center gap-1" style={{ color: '#f59e0b' }}>
+                            <span className="text-[10px] flex items-center gap-1" style={{ color: '#d9a066' }}>
                               <Trophy size={9} /> {claim.reward_text}
                             </span>
                           )}
@@ -1162,13 +1162,13 @@ export default function Me() {
           {mentors.map(mentor => (
             <div key={mentor.id}
               className="glass glow-card rounded-2xl group relative overflow-hidden"
-              style={{ '--gc': 'rgba(168,85,247,0.4)' } as React.CSSProperties}>
+              style={{ '--gc': 'rgba(138,123,168,0.4)' } as React.CSSProperties}>
 
               {/* ── Edit form ── */}
               {editingMentorId === mentor.id ? (
                 <form onSubmit={e => saveMentorEdit(e, mentor.id)} className="px-4 py-4 space-y-2 scale-in">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-black tracking-widest" style={{ color: '#a855f7' }}>EDITING MENTOR</span>
+                    <span className="text-[10px] font-black tracking-widest" style={{ color: '#8a7ba8' }}>EDITING MENTOR</span>
                     <div className="h-px flex-1" style={{ background: 'var(--b)' }} />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -1221,8 +1221,8 @@ export default function Me() {
                       <div>
                         <p className="text-sm font-bold text-head">{mentor.name}</p>
                         <div className="flex items-center gap-1 flex-wrap mt-0.5">
-                          {mentor.era && <Chip label={mentor.era} color="#6366f1" />}
-                          {mentor.domain && <Chip label={mentor.domain} color="#a855f7" />}
+                          {mentor.era && <Chip label={mentor.era} color="#d97757" />}
+                          {mentor.domain && <Chip label={mentor.domain} color="#8a7ba8" />}
                         </div>
                       </div>
                     </div>
@@ -1231,7 +1231,7 @@ export default function Me() {
                         onClick={() => { setEditingMentorId(mentor.id); setShowMentorForm(false); }}
                         className="w-8 h-8 flex items-center justify-center rounded tap opacity-25 group-hover:opacity-100 transition-opacity"
                         style={{ background: 'var(--s3)' }} title="Edit mentor">
-                        <Pencil size={11} style={{ color: '#a855f7' }} />
+                        <Pencil size={11} style={{ color: '#8a7ba8' }} />
                       </button>
                       <button onClick={() => deleteMentor(mentor.id)}
                         className="w-8 h-8 flex items-center justify-center rounded tap opacity-25 group-hover:opacity-100 transition-opacity"
@@ -1296,7 +1296,7 @@ export default function Me() {
         <div className="glass flex items-center justify-between mb-3 rounded-xl px-3 py-2">
           <SectionHeader title="POINTS LEDGER" sub="— recent merit transactions" />
           <span className="flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-1 rounded-lg"
-            style={{ background: 'rgb(245 158 11 / 0.1)', color: '#f59e0b', border: '1px solid rgb(245 158 11 / 0.3)' }}>
+            style={{ background: 'rgb(245 158 11 / 0.1)', color: '#d9a066', border: '1px solid rgb(245 158 11 / 0.3)' }}>
             <History size={10} /> {pointsLog.length}
           </span>
         </div>
@@ -1310,18 +1310,18 @@ export default function Me() {
             {/* HUD corner brackets */}
             <div className="relative">
               <div className="absolute top-1 left-1 w-3 h-3 pointer-events-none"
-                style={{ borderTop: '1.5px solid #f59e0b', borderLeft: '1.5px solid #f59e0b', opacity: 0.4 }} />
+                style={{ borderTop: '1.5px solid #d9a066', borderLeft: '1.5px solid #d9a066', opacity: 0.4 }} />
               <div className="absolute top-1 right-1 w-3 h-3 pointer-events-none"
-                style={{ borderTop: '1.5px solid #f59e0b', borderRight: '1.5px solid #f59e0b', opacity: 0.4 }} />
+                style={{ borderTop: '1.5px solid #d9a066', borderRight: '1.5px solid #d9a066', opacity: 0.4 }} />
               <div className="absolute bottom-1 left-1 w-3 h-3 pointer-events-none"
-                style={{ borderBottom: '1.5px solid #f59e0b', borderLeft: '1.5px solid #f59e0b', opacity: 0.4 }} />
+                style={{ borderBottom: '1.5px solid #d9a066', borderLeft: '1.5px solid #d9a066', opacity: 0.4 }} />
               <div className="absolute bottom-1 right-1 w-3 h-3 pointer-events-none"
-                style={{ borderBottom: '1.5px solid #f59e0b', borderRight: '1.5px solid #f59e0b', opacity: 0.4 }} />
+                style={{ borderBottom: '1.5px solid #d9a066', borderRight: '1.5px solid #d9a066', opacity: 0.4 }} />
 
               <div className="max-h-80 overflow-y-auto px-3 py-2 hide-scroll" style={{ scrollBehavior: 'smooth' }}>
                 {pointsLog.map((p, i) => {
                   const Icon = SOURCE_ICONS[p.source] || Flame;
-                  const color = SOURCE_COLORS[p.source] || '#94a3b8';
+                  const color = SOURCE_COLORS[p.source] || '#a5a293';
                   return (
                     <div key={p.id}
                       className="flex items-center gap-3 py-2 fade-in"
@@ -1362,13 +1362,13 @@ export default function Me() {
         <div className="fixed bottom-6 right-6 z-50 slide-up max-w-xs">
           <div className="rounded-xl px-4 py-3 flex items-start gap-2"
             style={{
-              background: 'rgba(239,68,68,0.12)',
-              border: '1px solid rgba(239,68,68,0.4)',
+              background: 'rgba(205,82,64,0.12)',
+              border: '1px solid rgba(205,82,64,0.4)',
               backdropFilter: 'blur(8px)',
-              boxShadow: '0 8px 32px rgba(239,68,68,0.25)',
+              boxShadow: '0 8px 32px rgba(205,82,64,0.25)',
             }}>
-            <X size={14} style={{ color: '#f87171', marginTop: 2 }} />
-            <p className="text-xs font-semibold" style={{ color: '#fca5a5' }}>{claimError}</p>
+            <X size={14} style={{ color: '#e07b62', marginTop: 2 }} />
+            <p className="text-xs font-semibold" style={{ color: '#e8a18f' }}>{claimError}</p>
           </div>
         </div>
       )}

@@ -10,49 +10,49 @@ import { useTheme, ACCENT_PRESETS } from '../contexts/ThemeContext';
 import api from '../lib/api';
 
 const NAV = [
-  { to: '/me',        icon: Swords,          label: 'Character',  color: '#e2c97e' },
-  { to: '/',          icon: LayoutDashboard, label: 'Command',    color: '#6366f1' },
-  { to: '/tasks',     icon: CheckSquare,     label: 'Missions',   color: '#818cf8' },
-  { to: '/habits',    icon: Target,          label: 'Habits',     color: '#f97316' },
-  { to: '/workout',   icon: Dumbbell,        label: 'Training',   color: '#ef4444' },
-  { to: '/sleep',     icon: Moon,            label: 'Sleep',      color: '#818cf8' },
-  { to: '/journal',   icon: BookOpen,        label: 'Journal',    color: '#a855f7' },
-  { to: '/finance',   icon: Wallet,          label: 'Finance',    color: '#f59e0b' },
-  { to: '/diet',      icon: Salad,           label: 'Nutrition',  color: '#22c55e' },
-  { to: '/body',      icon: Activity,        label: 'Body',       color: '#06b6d4' },
-  { to: '/life',      icon: Sparkles,        label: 'Life Path',  color: '#ec4899' },
-  { to: '/analytics', icon: BarChart2,       label: 'Intel',      color: '#06b6d4' },
-  { to: '/reminders', icon: Bell,            label: 'Alerts',     color: '#f97316' },
-  { to: '/detox',     icon: ShieldOff,       label: 'Detox',      color: '#84cc16' },
-  { to: '/content',   icon: Video,           label: 'Creator',    color: '#ec4899' },
+  { to: '/me',        icon: Swords,          label: 'Character',  color: '#d9a066' },
+  { to: '/',          icon: LayoutDashboard, label: 'Command',    color: '#d97757' },
+  { to: '/tasks',     icon: CheckSquare,     label: 'Missions',   color: '#c2553d' },
+  { to: '/habits',    icon: Target,          label: 'Habits',     color: '#d97757' },
+  { to: '/workout',   icon: Dumbbell,        label: 'Training',   color: '#b3372e' },
+  { to: '/sleep',     icon: Moon,            label: 'Sleep',      color: '#8a7ba8' },
+  { to: '/journal',   icon: BookOpen,        label: 'Journal',    color: '#d4a27f' },
+  { to: '/finance',   icon: Wallet,          label: 'Finance',    color: '#d9a066' },
+  { to: '/diet',      icon: Salad,           label: 'Nutrition',  color: '#788c5d' },
+  { to: '/body',      icon: Activity,        label: 'Body',       color: '#629a90' },
+  { to: '/life',      icon: Sparkles,        label: 'Life Path',  color: '#c2553d' },
+  { to: '/analytics', icon: BarChart2,       label: 'Intel',      color: '#629a90' },
+  { to: '/reminders', icon: Bell,            label: 'Alerts',     color: '#d97757' },
+  { to: '/detox',     icon: ShieldOff,       label: 'Detox',      color: '#788c5d' },
+  { to: '/content',   icon: Video,           label: 'Creator',    color: '#d4a27f' },
 ];
 
 const RANK_COLORS: Record<string, string> = {
-  E: '#6b7280', D: '#3b82f6', C: '#22c55e', B: '#a855f7',
-  A: '#f97316', S: '#ef4444', 'S+': '#e2c97e', '∞': '#93c5fd',
+  E: '#8e8b80', D: '#629a90', C: '#788c5d', B: '#8a7ba8',
+  A: '#d97757', S: '#c2553d', 'S+': '#d9a066', '∞': '#e59a7f',
 };
 
 // Class tier config — drives the faint class pill shown above the rank badge
 const CLASS_META: Record<string, { label: string; color: string }> = {
-  Soldier: { label: 'SOLDIER',  color: '#94a3b8' },
-  General: { label: 'GENERAL',  color: '#fb923c' },
-  King:    { label: 'KING',     color: '#fbbf24' },
+  Soldier: { label: 'SOLDIER',  color: '#a5a293' },
+  General: { label: 'GENERAL',  color: '#d97757' },
+  King:    { label: 'KING',     color: '#d9a066' },
 };
 
 // Palette for custom rank card / gradient color
 const RANK_PALETTE = [
-  '#e2c97e', // gold
-  '#ef4444', // red
-  '#f97316', // orange
-  '#a855f7', // purple
-  '#22c55e', // green
-  '#3b82f6', // blue
-  '#ec4899', // pink
-  '#06b6d4', // cyan
-  '#f59e0b', // amber
-  '#84cc16', // lime
-  '#6366f1', // indigo
-  '#ffffff',  // white
+  '#d97757', // terracotta
+  '#c2553d', // burnt red
+  '#d9a066', // kraft gold
+  '#d4a27f', // kraft
+  '#788c5d', // olive
+  '#629a90', // sage
+  '#8a7ba8', // muted violet
+  '#b3372e', // brick
+  '#e59a7f', // peach
+  '#a5a293', // stone
+  '#6a8bad', // slate blue
+  '#f5f3ec', // ivory
 ];
 
 function hexToRgb(hex: string): string {
@@ -102,11 +102,9 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
       style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}>
       <div className="scale-in p-5 w-full max-w-sm space-y-4 rounded-2xl"
         style={{
-          background: 'rgba(255,255,255,0.09)',
-          backdropFilter: 'blur(40px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(200%)',
-          border: '1px solid rgba(255,255,255,0.16)',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), 0 24px 64px rgba(0,0,0,0.6)',
+          background: 'var(--s2)',
+          border: '1px solid var(--bh)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.45)',
         }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -124,10 +122,10 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
         {success ? (
           <div className="text-center py-4 space-y-3">
             <div className="w-12 h-12 rounded-full mx-auto flex items-center justify-center mb-3"
-              style={{ background: '#22c55e18', border: '1px solid #22c55e30' }}>
-              <Shield size={20} style={{ color: '#22c55e' }} />
+              style={{ background: '#6f9d5c18', border: '1px solid #6f9d5c30' }}>
+              <Shield size={20} style={{ color: '#6f9d5c' }} />
             </div>
-            <p className="text-sm font-bold" style={{ color: '#22c55e' }}>Password updated!</p>
+            <p className="text-sm font-bold" style={{ color: '#6f9d5c' }}>Password updated!</p>
             <button onClick={onClose}
               className="w-full py-2.5 rounded-xl text-sm font-bold text-white tap"
               style={{ background: 'rgb(var(--accent-rgb))' }}>Done</button>
@@ -143,7 +141,7 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
                 onChange={e => set(e.target.value)} required
                 className="w-full rounded-xl px-3 py-2.5 text-sm" />
             ))}
-            {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
+            {error && <p className="text-xs" style={{ color: '#e07b62' }}>{error}</p>}
             <button type="submit" disabled={loading}
               className="w-full py-2.5 rounded-xl text-sm font-bold disabled:opacity-40 text-white tap"
               style={{ background: 'rgb(var(--accent-rgb))' }}>
@@ -252,7 +250,7 @@ export default function Layout() {
   }, []);
 
   // Effective rank color — custom overrides auto; falls back to indigo on load
-  const autoRankColor = me ? (RANK_COLORS[me.rank] ?? '#6366f1') : '#6366f1';
+  const autoRankColor = me ? (RANK_COLORS[me.rank] ?? '#d97757') : '#d97757';
   const rankColor     = customRankColor ?? autoRankColor;
 
   // Keep --rank-rgb CSS variable in sync → drives the body gradient orbs
@@ -289,11 +287,8 @@ export default function Layout() {
       <aside className="hidden md:flex flex-col py-4 px-2 shrink-0"
         style={{
           width: 228,
-          background: 'rgba(255,255,255,0.05)',
-          backdropFilter: 'blur(40px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(200%)',
-          borderRight: '1px solid rgba(255,255,255,0.09)',
-          boxShadow: 'inset -1px 0 0 rgba(255,255,255,0.06)',
+          background: 'var(--side-bg)',
+          borderRight: '1px solid var(--b)',
           position: 'sticky', top: 0, height: '100vh', overflowY: 'auto',
         }}>
 
@@ -304,7 +299,7 @@ export default function Layout() {
             onClick={handleLogoClick}
             title="Click to swap logo"
             className="shrink-0 rounded-full overflow-hidden relative group cursor-pointer"
-            style={{ width: 36, height: 36, background: '#e3dfda', boxShadow: '0 0 0 2px rgba(255,255,255,0.10)', flexShrink: 0 }}>
+            style={{ width: 36, height: 36, background: '#e3dfda', boxShadow: '0 0 0 2px var(--b)', flexShrink: 0 }}>
             <img src={customLogo ?? '/logo.png'} alt="logo" className="w-full h-full object-cover" style={{ objectPosition: 'center top' }} />
             {/* Camera overlay — always faintly visible, bright on hover */}
             <div className="absolute inset-0 flex items-center justify-center transition-all duration-200"
@@ -404,11 +399,9 @@ export default function Layout() {
           {showRankPalette && (
             <div className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl p-3 scale-in"
               style={{
-                background: 'rgba(10,15,30,0.92)',
-                backdropFilter: 'blur(24px)',
-                WebkitBackdropFilter: 'blur(24px)',
-                border: '1px solid rgba(255,255,255,0.14)',
-                boxShadow: `0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px ${rankColor}20`,
+                background: 'var(--s2)',
+                border: '1px solid var(--bh)',
+                boxShadow: `0 12px 40px rgba(0,0,0,0.35), 0 0 0 1px ${rankColor}20`,
               }}>
               <p className="text-[9px] font-black tracking-[0.18em] mb-2.5" style={{ color: 'var(--t-faint)' }}>
                 RANK COLOR
@@ -429,7 +422,7 @@ export default function Layout() {
               {customRankColor && (
                 <button onClick={resetRankColor}
                   className="w-full text-[10px] py-1 rounded-lg tap text-center"
-                  style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--t-faint)' }}>
+                  style={{ background: 'var(--hov)', color: 'var(--t-faint)' }}>
                   Reset to rank default
                 </button>
               )}
@@ -455,13 +448,13 @@ export default function Layout() {
                 fontWeight: isActive ? 600 : 500,
                 color: isActive ? color : 'var(--t-faint)',
                 background: isActive
-                  ? `rgba(255,255,255,0.08)`
+                  ? 'var(--hov)'
                   : 'transparent',
                 border: isActive
-                  ? `1px solid rgba(255,255,255,0.13)`
+                  ? '1px solid var(--hov-b)'
                   : '1px solid transparent',
                 boxShadow: isActive
-                  ? `inset 0 1px 0 rgba(255,255,255,0.14), 0 2px 8px rgba(0,0,0,0.2)`
+                  ? '0 1px 4px rgba(0,0,0,0.12)'
                   : 'none',
                 textDecoration: 'none',
                 transition: 'all 0.18s cubic-bezier(0.34,1.2,0.64,1)',
@@ -469,8 +462,8 @@ export default function Layout() {
               onMouseEnter={e => {
                 if (e.currentTarget.getAttribute('aria-current') !== 'page') {
                   e.currentTarget.style.color = 'var(--t-body)';
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
-                  e.currentTarget.style.border = '1px solid rgba(255,255,255,0.09)';
+                  e.currentTarget.style.background = 'var(--hov)';
+                  e.currentTarget.style.border = '1px solid var(--hov-b)';
                 }
               }}
               onMouseLeave={e => {
@@ -501,8 +494,8 @@ export default function Layout() {
               style={{ color: 'var(--t-faint)', border: '1px solid transparent' }}
               onMouseEnter={e => {
                 (e.currentTarget as HTMLElement).style.color = 'var(--t-head)';
-                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)';
-                (e.currentTarget as HTMLElement).style.border = '1px solid rgba(255,255,255,0.10)';
+                (e.currentTarget as HTMLElement).style.background = 'var(--hov)';
+                (e.currentTarget as HTMLElement).style.border = '1px solid var(--hov-b)';
               }}
               onMouseLeave={e => {
                 (e.currentTarget as HTMLElement).style.color = 'var(--t-faint)';
@@ -519,8 +512,8 @@ export default function Layout() {
             style={{ color: 'var(--t-faint)', border: '1px solid transparent' }}
             onMouseEnter={e => {
               (e.currentTarget as HTMLElement).style.color = 'var(--t-head)';
-              (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)';
-              (e.currentTarget as HTMLElement).style.border = '1px solid rgba(255,255,255,0.10)';
+              (e.currentTarget as HTMLElement).style.background = 'var(--hov)';
+              (e.currentTarget as HTMLElement).style.border = '1px solid var(--hov-b)';
             }}
             onMouseLeave={e => {
               (e.currentTarget as HTMLElement).style.color = 'var(--t-faint)';
@@ -534,11 +527,9 @@ export default function Layout() {
           {showTheme && (
             <div className="rounded-xl p-3 space-y-2"
               style={{
-                background: 'rgba(255,255,255,0.08)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255,255,255,0.14)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.14), 0 4px 16px rgba(0,0,0,0.3)',
+                background: 'var(--s2)',
+                border: '1px solid var(--bh)',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
               }}>
               <div className="flex items-center justify-between">
                 <span className="sys-label">Accent Color</span>
@@ -559,9 +550,9 @@ export default function Layout() {
             className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150"
             style={{ color: 'var(--t-faint)', border: '1px solid transparent' }}
             onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.color = '#f87171';
-              (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.10)';
-              (e.currentTarget as HTMLElement).style.border = '1px solid rgba(239,68,68,0.16)';
+              (e.currentTarget as HTMLElement).style.color = '#e07b62';
+              (e.currentTarget as HTMLElement).style.background = 'rgba(205,82,64,0.10)';
+              (e.currentTarget as HTMLElement).style.border = '1px solid rgba(205,82,64,0.16)';
             }}
             onMouseLeave={e => {
               (e.currentTarget as HTMLElement).style.color = 'var(--t-faint)';
@@ -577,17 +568,15 @@ export default function Layout() {
       <aside className="md:hidden fixed left-0 top-0 bottom-0 z-50 flex flex-col items-center"
         style={{
           width: 'var(--sidebar-w)',
-          background: 'rgba(255,255,255,0.05)',
-          backdropFilter: 'blur(32px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(32px) saturate(200%)',
-          borderRight: '1px solid rgba(255,255,255,0.09)',
+          background: 'var(--side-bg)',
+          borderRight: '1px solid var(--b)',
         }}>
 
         {/* Logo (mobile) — click to upload */}
         <div className="shrink-0 pt-3 pb-1">
           <div onClick={handleLogoClick} title="Change logo"
             className="rounded-full overflow-hidden relative group cursor-pointer"
-            style={{ width: 34, height: 34, background: '#e3dfda', boxShadow: '0 0 0 2px rgba(255,255,255,0.08)' }}>
+            style={{ width: 34, height: 34, background: '#e3dfda', boxShadow: '0 0 0 2px var(--b)' }}>
             <img src={customLogo ?? '/logo.png'} alt="logo" className="w-full h-full object-cover" style={{ objectPosition: 'center top' }} />
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
               style={{ background: 'rgba(0,0,0,0.55)' }}>
@@ -643,11 +632,9 @@ export default function Layout() {
         <div className="md:hidden fixed z-40 scale-in"
           style={{
             left: 'calc(var(--sidebar-w) + 8px)', bottom: '80px',
-            background: 'rgba(255,255,255,0.09)',
-            backdropFilter: 'blur(28px) saturate(200%)',
-            WebkitBackdropFilter: 'blur(28px) saturate(200%)',
-            border: '1px solid rgba(255,255,255,0.16)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.16), 0 8px 32px rgba(0,0,0,0.4)',
+            background: 'var(--s2)',
+            border: '1px solid var(--bh)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
             borderRadius: 16, padding: 12, minWidth: 160,
           }}>
           <div className="flex items-center justify-between mb-2">
@@ -670,10 +657,8 @@ export default function Layout() {
         {/* Mobile top header */}
         <header className="md:hidden flex items-center justify-between px-3 py-2.5"
           style={{
-            background: 'rgba(255,255,255,0.05)',
-            backdropFilter: 'blur(24px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-            borderBottom: '1px solid rgba(255,255,255,0.09)',
+            background: 'var(--side-bg)',
+            borderBottom: '1px solid var(--b)',
           }}>
           <div className="flex items-center gap-2">
             <div className="flex flex-col items-start">

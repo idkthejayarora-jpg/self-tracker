@@ -15,7 +15,7 @@ interface FoodLog {
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 type MealType = typeof MEAL_TYPES[number];
 
-const ACCENT = '#34d399';
+const ACCENT = '#82b4ab';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -111,7 +111,7 @@ export default function Diet() {
     { cal: 0, p: 0, c: 0, f: 0 }
   );
   const calPct   = Math.min(100, Math.round((totals.cal / calorieGoal) * 100));
-  const calColor = calPct > 110 ? '#f43f5e' : calPct > 85 ? '#22c55e' : '#f59e0b';
+  const calColor = calPct > 110 ? '#c2553d' : calPct > 85 ? '#6f9d5c' : '#d9a066';
 
   const byMeal = MEAL_TYPES.reduce<Record<MealType, FoodLog[]>>((acc, t) => {
     acc[t] = log.filter(e => e.meal_type === t);
@@ -122,13 +122,13 @@ export default function Diet() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 anim-page pb-16"
-      style={{ '--accent-rgb': '52 211 153', '--accent-rgb-light': ACCENT } as React.CSSProperties}>
+      style={{ '--accent-rgb': '120 140 93', '--accent-rgb-light': ACCENT } as React.CSSProperties}>
 
       {/* Dot grid */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: `radial-gradient(circle, rgba(52,211,153,0.05) 1px, transparent 1px)`,
+          backgroundImage: `radial-gradient(circle, rgba(130,180,171,0.05) 1px, transparent 1px)`,
           backgroundSize: '24px 24px',
         }} />
       </div>
@@ -206,9 +206,9 @@ export default function Diet() {
             {/* P / C / F */}
             <div className="flex gap-5 text-right">
               {[
-                { label: 'P', val: totals.p, color: '#60a5fa' },
+                { label: 'P', val: totals.p, color: '#8fa9c4' },
                 { label: 'C', val: totals.c, color: ACCENT },
-                { label: 'F', val: totals.f, color: '#fbbf24' },
+                { label: 'F', val: totals.f, color: '#e0b27c' },
               ].map(({ label, val, color }) => (
                 <div key={label} className="flex flex-col items-center">
                   <span className="text-lg font-bold leading-none" style={{ color }}>{Math.round(val)}</span>
@@ -255,9 +255,9 @@ export default function Diet() {
                     title={voice.listening ? 'Stop' : 'Speak your meal'}
                     className={`tap relative z-10 w-9 h-9 rounded-xl flex items-center justify-center ${voice.listening ? 'mic-listening' : ''}`}
                     style={{
-                      background: voice.listening ? 'rgba(239,68,68,0.9)' : `${ACCENT}1a`,
+                      background: voice.listening ? 'rgba(205,82,64,0.9)' : `${ACCENT}1a`,
                       color: voice.listening ? '#fff' : ACCENT,
-                      border: `1px solid ${voice.listening ? 'rgba(239,68,68,0.6)' : ACCENT + '40'}`,
+                      border: `1px solid ${voice.listening ? 'rgba(205,82,64,0.6)' : ACCENT + '40'}`,
                     }}>
                     <Mic size={16} />
                   </button>
@@ -279,7 +279,7 @@ export default function Diet() {
                 style={{
                   background: 'var(--s3)',
                   color: 'var(--t-body)',
-                  border: `1px solid ${voice.listening ? 'rgba(239,68,68,0.45)' : ACCENT + '20'}`,
+                  border: `1px solid ${voice.listening ? 'rgba(205,82,64,0.45)' : ACCENT + '20'}`,
                   lineHeight: 1.7,
                   transition: 'border-color 0.25s',
                 }}
@@ -288,14 +288,14 @@ export default function Diet() {
               {/* Live listening overlay — waveform + interim transcript */}
               {voice.listening && (
                 <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 px-3 py-2 rounded-b-xl scale-in"
-                  style={{ background: 'linear-gradient(0deg, rgba(239,68,68,0.16), transparent)' }}>
+                  style={{ background: 'linear-gradient(0deg, rgba(205,82,64,0.16), transparent)' }}>
                   <div className="flex items-end gap-[2px] h-4">
                     {[0, 1, 2, 3, 4, 5, 6].map(i => (
                       <span key={i} className="waveform-bar"
-                        style={{ height: '100%', background: '#f87171', animationDelay: `${i * 0.09}s` }} />
+                        style={{ height: '100%', background: '#e07b62', animationDelay: `${i * 0.09}s` }} />
                     ))}
                   </div>
-                  <span className="text-[11px] font-mono truncate flex-1" style={{ color: '#fca5a5' }}>
+                  <span className="text-[11px] font-mono truncate flex-1" style={{ color: '#e8a18f' }}>
                     {voice.interim || 'say your meal…'}
                   </span>
                 </div>
@@ -303,7 +303,7 @@ export default function Diet() {
             </div>
 
             {err && (
-              <p className="text-xs font-mono" style={{ color: '#f87171' }}>{err}</p>
+              <p className="text-xs font-mono" style={{ color: '#e07b62' }}>{err}</p>
             )}
 
             {/* Result feedback */}
@@ -321,13 +321,13 @@ export default function Diet() {
                       )}
                       {e.source === 'db' && (
                         <span className="text-[9px] font-black px-1 py-0.5 rounded"
-                          style={{ background: '#f59e0b20', color: '#f59e0b' }}>~avg</span>
+                          style={{ background: '#d9a06620', color: '#d9a066' }}>~avg</span>
                       )}
                     </div>
                   ))}
                 </div>
                 {result.unmatched.length > 0 && (
-                  <p className="text-[11px] font-mono" style={{ color: '#f59e0b' }}>
+                  <p className="text-[11px] font-mono" style={{ color: '#d9a066' }}>
                     Unknown: {result.unmatched.join(', ')}
                     <span style={{ color: 'var(--t-faint)' }}> — logged with 0 macros</span>
                   </p>
@@ -394,10 +394,10 @@ export default function Diet() {
                       {e.name}
                     </p>
                     <p className="text-[11px] font-mono mt-1 flex flex-wrap gap-x-2" style={{ color: 'var(--t-faint)' }}>
-                      {e.calories > 0 && <span style={{ color: '#f59e0b' }}>{e.calories} kcal</span>}
-                      {e.protein_g > 0 && <span style={{ color: '#60a5fa' }}>{e.protein_g}g P</span>}
+                      {e.calories > 0 && <span style={{ color: '#d9a066' }}>{e.calories} kcal</span>}
+                      {e.protein_g > 0 && <span style={{ color: '#8fa9c4' }}>{e.protein_g}g P</span>}
                       {e.carbs_g   > 0 && <span style={{ color: ACCENT }}>{e.carbs_g}g C</span>}
-                      {e.fat_g     > 0 && <span style={{ color: '#fbbf24' }}>{e.fat_g}g F</span>}
+                      {e.fat_g     > 0 && <span style={{ color: '#e0b27c' }}>{e.fat_g}g F</span>}
                     </p>
                   </div>
                   <button onClick={() => deleteEntry(e.id)}

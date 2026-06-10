@@ -36,7 +36,7 @@ function TickerTape() {
       <div style={{ display: 'flex', gap: 24, animation: 'ticker-scroll 18s linear infinite', whiteSpace: 'nowrap' }}>
         {items.map((item, i) => (
           <span key={i} className="text-[9px] font-black font-mono tracking-widest"
-            style={{ color: item.includes('+') ? '#00ff9f' : item.includes('%') ? '#00f5ff' : '#ff003c',
+            style={{ color: item.includes('+') ? '#7cb8a8' : item.includes('%') ? '#8fa9c4' : '#ff003c',
               textShadow: `0 0 6px currentColor` }}>
             ▶ {item}
           </span>
@@ -59,7 +59,7 @@ export default function Finance() {
   const [entryErr, setEntryErr] = useState('');
 
   const [showGoal, setShowGoal] = useState(false);
-  const [goalForm, setGoalForm] = useState({ name: '', target_amount: '', saved_amount: '', deadline: '', color: '#22c55e' });
+  const [goalForm, setGoalForm] = useState({ name: '', target_amount: '', saved_amount: '', deadline: '', color: '#6f9d5c' });
   const [savingGoal, setSavingGoal] = useState(false);
   const [goalErr, setGoalErr] = useState('');
   const [loadErr, setLoadErr] = useState('');
@@ -125,7 +125,7 @@ export default function Finance() {
         deadline: goalForm.deadline || null,
         color: goalForm.color,
       });
-      setGoalForm({ name: '', target_amount: '', saved_amount: '', deadline: '', color: '#22c55e' });
+      setGoalForm({ name: '', target_amount: '', saved_amount: '', deadline: '', color: '#6f9d5c' });
       setShowGoal(false);
       await load();
     } catch (err: any) {
@@ -164,54 +164,54 @@ export default function Finance() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 anim-page"
-      style={{ '--accent-rgb': '0 255 159' } as React.CSSProperties}>
+      style={{ '--accent-rgb': '217 160 102' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(0,255,159,0.06) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(124,184,168,0.06) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }} />
       </div>
 
       {/* ── ASSET NEXUS HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #00ff9f20' }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #7cb8a820' }}>
         {/* Financial grid */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: 'linear-gradient(rgba(0,255,159,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,159,0.03) 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(rgba(124,184,168,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(124,184,168,0.03) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }} />
         {/* HUD corners */}
-        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #00ff9f', borderLeft: '1.5px solid #00ff9f', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #00ff9f', borderRight: '1.5px solid #00ff9f', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #00ff9f', borderLeft: '1.5px solid #00ff9f', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #00ff9f', borderRight: '1.5px solid #00ff9f', opacity: 0.7 }} />
+        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #7cb8a8', borderLeft: '1.5px solid #7cb8a8', opacity: 0.7 }} />
+        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #7cb8a8', borderRight: '1.5px solid #7cb8a8', opacity: 0.7 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #7cb8a8', borderLeft: '1.5px solid #7cb8a8', opacity: 0.7 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #7cb8a8', borderRight: '1.5px solid #7cb8a8', opacity: 0.7 }} />
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #00ff9f80, transparent)', boxShadow: '0 0 10px #00ff9f' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, #7cb8a880, transparent)', boxShadow: '0 0 10px #7cb8a8' }} />
         {/* Main content */}
         <div className="relative z-10 px-5 pt-5 pb-3">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#00ff9f', opacity: 0.6 }}>MKT://</span>
+                <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#7cb8a8', opacity: 0.6 }}>MKT://</span>
                 <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">ASSET_NEXUS</span>
-                <span className="cursor-blink font-mono" style={{ color: '#00ff9f', fontSize: 11 }}>▌</span>
+                <span className="cursor-blink font-mono" style={{ color: '#7cb8a8', fontSize: 11 }}>▌</span>
               </div>
               <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-                style={{ textShadow: '0 0 40px #00ff9f40' }}>
+                style={{ textShadow: '0 0 40px #7cb8a840' }}>
                 ASSET NEXUS
               </h1>
-              <p className="font-mono text-[10px] mt-1" style={{ color: '#00ff9f', opacity: 0.5 }}>
+              <p className="font-mono text-[10px] mt-1" style={{ color: '#7cb8a8', opacity: 0.5 }}>
                 // financial intelligence — wealth tracking protocol
               </p>
             </div>
             {/* Live indicator */}
             <div className="flex flex-col items-center gap-1 shrink-0">
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full" style={{ background: '#00ff9f', boxShadow: '0 0 8px #00ff9f', animation: 'neon-pulse 1.5s ease-in-out infinite' }} />
-                <span className="text-[9px] font-black tracking-widest" style={{ color: '#00ff9f' }}>LIVE</span>
+                <span className="w-2 h-2 rounded-full" style={{ background: '#7cb8a8', boxShadow: '0 0 8px #7cb8a8', animation: 'neon-pulse 1.5s ease-in-out infinite' }} />
+                <span className="text-[9px] font-black tracking-widest" style={{ color: '#7cb8a8' }}>LIVE</span>
               </div>
               <span className="text-[8px] font-mono opacity-30 text-white">MARKET OPEN</span>
             </div>
@@ -219,7 +219,7 @@ export default function Finance() {
         </div>
         {/* Ticker tape */}
         <div className="relative z-10 px-2 pb-2">
-          <div style={{ borderTop: '1px solid rgba(0,255,159,0.1)', paddingTop: 6 }}>
+          <div style={{ borderTop: '1px solid rgba(124,184,168,0.1)', paddingTop: 6 }}>
             <TickerTape />
           </div>
         </div>
@@ -236,7 +236,7 @@ export default function Finance() {
 
       {loadErr && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs"
-          style={{ background: 'rgb(239 68 68 / 0.08)', color: '#f87171', border: '1px solid rgb(239 68 68 / 0.2)' }}>
+          style={{ background: 'rgb(239 68 68 / 0.08)', color: '#e07b62', border: '1px solid rgb(239 68 68 / 0.2)' }}>
           <AlertCircle size={13} />
           {loadErr} — <button type="button" onClick={load} className="underline tap">retry</button>
         </div>
@@ -246,12 +246,12 @@ export default function Finance() {
       <div className="flex gap-2">
         <button type="button" onClick={() => { setEntryForm(emptyEntry('expense')); setEntryErr(''); setShowEntry(true); }}
           className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold tap"
-          style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+          style={{ background: 'rgb(239 68 68 / 0.1)', color: '#e07b62' }}>
           <TrendingDown size={14} /> Add Expense
         </button>
         <button type="button" onClick={() => { setEntryForm(emptyEntry('income')); setEntryErr(''); setShowEntry(true); }}
           className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold tap"
-          style={{ background: 'rgb(34 197 94 / 0.1)', color: '#4ade80' }}>
+          style={{ background: 'rgb(34 197 94 / 0.1)', color: '#8fbb7e' }}>
           <TrendingUp size={14} /> Add Income
         </button>
       </div>
@@ -266,7 +266,7 @@ export default function Finance() {
                 className="flex-1 py-1.5 rounded-lg text-xs font-semibold capitalize tap"
                 style={{
                   background: entryForm.type === t ? (t === 'income' ? 'rgb(34 197 94 / 0.12)' : 'rgb(239 68 68 / 0.12)') : 'var(--s3)',
-                  color: entryForm.type === t ? (t === 'income' ? '#4ade80' : '#f87171') : '#71717a',
+                  color: entryForm.type === t ? (t === 'income' ? '#8fbb7e' : '#e07b62') : '#757163',
                 }}>
                 {t}
               </button>
@@ -295,7 +295,7 @@ export default function Finance() {
                   className="px-2.5 py-1 rounded-full text-xs font-medium capitalize tap"
                   style={{
                     background: entryForm.category === cat ? `rgb(var(--accent-rgb) / 0.12)` : 'var(--s3)',
-                    color: entryForm.category === cat ? `rgb(var(--accent-rgb-light))` : '#71717a',
+                    color: entryForm.category === cat ? `rgb(var(--accent-rgb-light))` : '#757163',
                   }}>
                   {cat}
                 </button>
@@ -310,7 +310,7 @@ export default function Finance() {
           </div>
           {entryErr && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
-              style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+              style={{ background: 'rgb(239 68 68 / 0.1)', color: '#e07b62' }}>
               <AlertCircle size={13} />{entryErr}
             </div>
           )}
@@ -332,15 +332,15 @@ export default function Finance() {
         <div className="grid grid-cols-3 gap-2">
           <div className="card px-3 py-3">
             <p className="text-[10px] font-medium mb-1" style={{ color: 'rgb(var(--accent-rgb))', opacity: 0.7 }}>Income</p>
-            <p className="text-base font-bold" style={{ color: '#22c55e' }}>₹{fmt(summary.income)}</p>
+            <p className="text-base font-bold" style={{ color: '#6f9d5c' }}>₹{fmt(summary.income)}</p>
           </div>
           <div className="card px-3 py-3">
-            <p className="text-[10px] font-medium mb-1" style={{ color: '#52525b' }}>Expenses</p>
-            <p className="text-base font-bold" style={{ color: '#ef4444' }}>₹{fmt(summary.expenses)}</p>
+            <p className="text-[10px] font-medium mb-1" style={{ color: '#57544a' }}>Expenses</p>
+            <p className="text-base font-bold" style={{ color: '#cd5240' }}>₹{fmt(summary.expenses)}</p>
           </div>
           <div className="card px-3 py-3">
-            <p className="text-[10px] font-medium mb-1" style={{ color: '#52525b' }}>Net</p>
-            <p className="text-base font-bold" style={{ color: summary.net >= 0 ? '#22c55e' : '#ef4444' }}>
+            <p className="text-[10px] font-medium mb-1" style={{ color: '#57544a' }}>Net</p>
+            <p className="text-base font-bold" style={{ color: summary.net >= 0 ? '#6f9d5c' : '#cd5240' }}>
               {summary.net >= 0 ? '+' : ''}₹{fmt(summary.net)}
             </p>
           </div>
@@ -350,19 +350,19 @@ export default function Finance() {
       {/* Category chart */}
       {catChartData.length > 0 && (
         <div className="card px-4 py-4">
-          <p className="text-xs font-semibold mb-3" style={{ color: '#52525b', letterSpacing: '0.05em' }}>BY CATEGORY</p>
+          <p className="text-xs font-semibold mb-3" style={{ color: '#57544a', letterSpacing: '0.05em' }}>BY CATEGORY</p>
           <ResponsiveContainer width="100%" height={catChartData.length * 28 + 10} minHeight={80}>
             <BarChart data={catChartData} layout="vertical" barSize={10}>
-              <XAxis type="number" tick={{ fontSize: 10, fill: '#52525b' }} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: '#a1a1aa' }} width={70} />
+              <XAxis type="number" tick={{ fontSize: 10, fill: '#57544a' }} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: '#a5a293' }} width={70} />
               <Tooltip
                 contentStyle={{ background: 'var(--s2)', border: '1px solid var(--b)', borderRadius: 8, fontSize: 12 }}
               />
               <Bar dataKey="expense" name="Expense" radius={[0, 4, 4, 0]}>
-                {catChartData.map((_, i) => <Cell key={i} fill="#ef4444" fillOpacity={0.7} />)}
+                {catChartData.map((_, i) => <Cell key={i} fill="#cd5240" fillOpacity={0.7} />)}
               </Bar>
               <Bar dataKey="income" name="Income" radius={[0, 4, 4, 0]}>
-                {catChartData.map((_, i) => <Cell key={i} fill="#22c55e" fillOpacity={0.7} />)}
+                {catChartData.map((_, i) => <Cell key={i} fill="#6f9d5c" fillOpacity={0.7} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -372,7 +372,7 @@ export default function Finance() {
       {/* Entries */}
       {entries.length > 0 && (
         <div className="card px-4 py-4">
-          <p className="text-xs font-semibold mb-3" style={{ color: '#52525b', letterSpacing: '0.05em' }}>TRANSACTIONS</p>
+          <p className="text-xs font-semibold mb-3" style={{ color: '#57544a', letterSpacing: '0.05em' }}>TRANSACTIONS</p>
           <div className="space-y-0">
             {entries.map(e => (
               <div key={e.id} className="flex items-center gap-3 py-2.5" style={{ borderBottom: '1px solid var(--b)' }}>
@@ -382,7 +382,7 @@ export default function Finance() {
                     <span className="text-[10px] px-1.5 py-0.5 rounded-full capitalize font-medium"
                       style={{
                         background: e.type === 'income' ? 'rgb(34 197 94 / 0.1)' : 'rgb(239 68 68 / 0.1)',
-                        color: e.type === 'income' ? '#4ade80' : '#f87171',
+                        color: e.type === 'income' ? '#8fbb7e' : '#e07b62',
                       }}>
                       {e.type}
                     </span>
@@ -391,10 +391,10 @@ export default function Finance() {
                     {format(new Date(e.date + 'T12:00:00'), 'd MMM')}{e.note ? ` · ${e.note}` : ''}
                   </p>
                 </div>
-                <p className="text-sm font-bold shrink-0" style={{ color: e.type === 'income' ? '#22c55e' : '#ef4444' }}>
+                <p className="text-sm font-bold shrink-0" style={{ color: e.type === 'income' ? '#6f9d5c' : '#cd5240' }}>
                   {e.type === 'income' ? '+' : '-'}₹{fmt(e.amount)}
                 </p>
-                <button onClick={() => delEntry(e.id)} className="tap" style={{ color: '#52525b' }}>
+                <button onClick={() => delEntry(e.id)} className="tap" style={{ color: '#57544a' }}>
                   <Trash2 size={13} />
                 </button>
               </div>
@@ -406,7 +406,7 @@ export default function Finance() {
       {/* Savings Goals */}
       <div className="card px-4 py-4">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-semibold" style={{ color: '#52525b', letterSpacing: '0.05em' }}>SAVINGS GOALS</p>
+          <p className="text-xs font-semibold" style={{ color: '#57544a', letterSpacing: '0.05em' }}>SAVINGS GOALS</p>
           <button onClick={() => setShowGoal(s => !s)}
             className="flex items-center gap-1 text-[11px] font-semibold tap"
             style={{ color: `rgb(var(--accent-rgb-light))` }}>
@@ -440,7 +440,7 @@ export default function Finance() {
             </div>
             {goalErr && (
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
-                style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+                style={{ background: 'rgb(239 68 68 / 0.1)', color: '#e07b62' }}>
                 <AlertCircle size={13} />{goalErr}
               </div>
             )}
@@ -458,7 +458,7 @@ export default function Finance() {
         )}
 
         {goals.length === 0 && !showGoal && (
-          <p className="text-sm text-center py-4" style={{ color: '#52525b' }}>No goals yet</p>
+          <p className="text-sm text-center py-4" style={{ color: '#57544a' }}>No goals yet</p>
         )}
 
         <div className="space-y-3">
@@ -478,7 +478,7 @@ export default function Finance() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold" style={{ color: g.color }}>{pct}%</span>
-                    <button onClick={() => delGoal(g.id)} className="tap" style={{ color: '#52525b' }}>
+                    <button onClick={() => delGoal(g.id)} className="tap" style={{ color: '#57544a' }}>
                       <Trash2 size={12} />
                     </button>
                   </div>
@@ -503,7 +503,7 @@ export default function Finance() {
 
       {entries.length === 0 && !showEntry && summary?.income === 0 && summary?.expenses === 0 && (
         <div className="card py-12 text-center">
-          <Wallet size={28} style={{ color: '#52525b', margin: '0 auto 8px' }} />
+          <Wallet size={28} style={{ color: '#57544a', margin: '0 auto 8px' }} />
           <p className="text-sm font-medium" style={{ color: 'var(--t-dim)' }}>No transactions for {monthLabel}</p>
         </div>
       )}

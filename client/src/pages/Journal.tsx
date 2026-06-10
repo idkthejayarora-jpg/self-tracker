@@ -42,8 +42,8 @@ const MOODS = [
   { value: 1, label: 'CRITICAL',  color: '#ff003c', code: 'ERR_FATAL'   },
   { value: 2, label: 'DEGRADED',  color: '#ff6600', code: 'PERF_LOW'    },
   { value: 3, label: 'NOMINAL',   color: '#ffe000', code: 'STANDBY'     },
-  { value: 4, label: 'OPTIMAL',   color: '#00ff9f', code: 'SYS_ONLINE'  },
-  { value: 5, label: 'OVERCLOCK', color: '#00f5ff', code: 'MAX_OUTPUT'  },
+  { value: 4, label: 'OPTIMAL',   color: '#7cb8a8', code: 'SYS_ONLINE'  },
+  { value: 5, label: 'OVERCLOCK', color: '#8fa9c4', code: 'MAX_OUTPUT'  },
 ];
 
 // ── Cyber Rain Canvas ─────────────────────────────────────────────────────────
@@ -66,7 +66,7 @@ function CyberRain({ height = 120 }: { height?: number }) {
       drops.forEach((y, i) => {
         const ch = chars[Math.floor(Math.random() * chars.length)];
         const bright = y < 20;
-        ctx!.fillStyle = bright ? '#ffffff' : (Math.random() > 0.5 ? '#00f5ff' : '#00ff9f');
+        ctx!.fillStyle = bright ? '#ffffff' : (Math.random() > 0.5 ? '#8fa9c4' : '#7cb8a8');
         ctx!.font = bright ? 'bold 11px monospace' : '10px monospace';
         ctx!.globalAlpha = bright ? 0.9 : 0.35;
         ctx!.fillText(ch, i * 14, y);
@@ -82,7 +82,7 @@ function CyberRain({ height = 120 }: { height?: number }) {
 }
 
 // ── HUD corner brackets ────────────────────────────────────────────────────────
-function HUD({ color = '#00f5ff', size = 14, opacity = 0.6 }: { color?: string; size?: number; opacity?: number }) {
+function HUD({ color = '#8fa9c4', size = 14, opacity = 0.6 }: { color?: string; size?: number; opacity?: number }) {
   const s = `${size}px`, b = `1.5px solid ${color}`;
   return (
     <>
@@ -95,7 +95,7 @@ function HUD({ color = '#00f5ff', size = 14, opacity = 0.6 }: { color?: string; 
 }
 
 // ── Neon divider ──────────────────────────────────────────────────────────────
-function NeonDivider({ label, color = '#00f5ff' }: { label: string; color?: string }) {
+function NeonDivider({ label, color = '#8fa9c4' }: { label: string; color?: string }) {
   return (
     <div className="flex items-center gap-2">
       <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, ${color}50, transparent)` }} />
@@ -159,17 +159,17 @@ export default function Journal() {
   };
   const isToday  = date === new Date().toISOString().slice(0, 10);
   const moodData = MOODS.find(m => m.value === mood);
-  const accent   = moodData?.color ?? '#00f5ff';
+  const accent   = moodData?.color ?? '#8fa9c4';
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 anim-page pb-10 px-1 sm:px-0"
-      style={{ '--accent-rgb': '0 245 255' } as React.CSSProperties}>
+      style={{ '--accent-rgb': '212 162 127' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(0,245,255,0.06) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(143,169,196,0.06) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }} />
       </div>
@@ -354,7 +354,7 @@ export default function Journal() {
                 style={{
                   background: '#050505',
                   color: '#e2e8f0',
-                  border: `1.5px solid ${listening ? '#ff009060' : focused ? accent + '45' : 'rgba(255,255,255,0.04)'}`,
+                  border: `1.5px solid ${listening ? '#c2553d60' : focused ? accent + '45' : 'rgba(255,255,255,0.04)'}`,
                   paddingRight: supported ? '2.75rem' : '0.75rem',
                   caretColor: accent,
                   boxShadow: focused ? `inset 0 0 30px ${accent}06` : 'none',
@@ -364,8 +364,8 @@ export default function Journal() {
                 <button type="button" onClick={listening ? stop : start}
                   className="tap absolute top-2.5 right-2.5 p-1.5 rounded-lg transition-all"
                   style={listening
-                    ? { background: '#ff009015', color: '#ff0090', border: '1px solid #ff009050',
-                        boxShadow: '0 0 16px #ff009060', animation: 'neon-pulse 0.9s ease-in-out infinite' }
+                    ? { background: '#c2553d15', color: '#c2553d', border: '1px solid #c2553d50',
+                        boxShadow: '0 0 16px #c2553d60', animation: 'neon-pulse 0.9s ease-in-out infinite' }
                     : { background: '#0f0f0f', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.06)' }}>
                   {listening ? <MicOff size={14} /> : <Mic size={14} />}
                 </button>
@@ -374,8 +374,8 @@ export default function Journal() {
             {listening && (
               <div className="flex items-center gap-2 mt-1.5">
                 <span className="w-1.5 h-1.5 rounded-full shrink-0"
-                  style={{ background: '#ff0090', boxShadow: '0 0 8px #ff0090', animation: 'neon-pulse 0.7s ease-in-out infinite' }} />
-                <span className="text-[10px] font-mono" style={{ color: '#ff0090', textShadow: '0 0 8px #ff0090' }}>
+                  style={{ background: '#c2553d', boxShadow: '0 0 8px #c2553d', animation: 'neon-pulse 0.7s ease-in-out infinite' }} />
+                <span className="text-[10px] font-mono" style={{ color: '#c2553d', textShadow: '0 0 8px #c2553d' }}>
                   REC:ACTIVE — neural audio capture running
                 </span>
               </div>
@@ -419,8 +419,8 @@ export default function Journal() {
             <button onClick={save} disabled={saving || !content.trim()}
               className="tap flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-[11px] tracking-widest transition-all disabled:opacity-30"
               style={saved
-                ? { background: '#00ff9f10', color: '#00ff9f', border: '1px solid #00ff9f40',
-                    boxShadow: '0 0 20px #00ff9f30', textShadow: '0 0 8px #00ff9f' }
+                ? { background: '#7cb8a810', color: '#7cb8a8', border: '1px solid #7cb8a840',
+                    boxShadow: '0 0 20px #7cb8a830', textShadow: '0 0 8px #7cb8a8' }
                 : { background: `${accent}10`, color: accent, border: `1px solid ${accent}35`,
                     boxShadow: `0 0 16px ${accent}20`, textShadow: `0 0 8px ${accent}` }}>
               {saved
@@ -441,7 +441,7 @@ export default function Journal() {
       {/* ════════════════════════════════════ MEMORY ARCHIVE */}
       {recent.filter(e => e.date !== date).length > 0 && (
         <div>
-          <NeonDivider label="// MEMORY_ARCHIVE" color="#00f5ff" />
+          <NeonDivider label="// MEMORY_ARCHIVE" color="#8fa9c4" />
           <div className="space-y-1.5 mt-2">
             {recent.filter(e => e.date !== date).slice(0, 5).map((e, i) => {
               const em = MOODS.find(m => m.value === e.mood);
@@ -451,10 +451,10 @@ export default function Journal() {
                   style={{ background: '#080808', border: '1px solid rgba(255,255,255,0.04)' }}>
                   {/* Left neon stripe on hover */}
                   <div className="absolute left-0 top-0 bottom-0 w-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ background: em?.color ?? '#00f5ff', boxShadow: `0 0 10px ${em?.color ?? '#00f5ff'}` }} />
+                    style={{ background: em?.color ?? '#8fa9c4', boxShadow: `0 0 10px ${em?.color ?? '#8fa9c4'}` }} />
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[9px]" style={{ color: '#00f5ff', opacity: 0.4 }}>
+                      <span className="font-mono text-[9px]" style={{ color: '#8fa9c4', opacity: 0.4 }}>
                         {String(i + 1).padStart(2, '0')}
                       </span>
                       <span className="text-xs font-mono font-bold text-white">

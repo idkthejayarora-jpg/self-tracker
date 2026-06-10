@@ -15,15 +15,15 @@ import { format } from 'date-fns';
 
 /* ── Priority config ── */
 const PRIORITY: Record<string, { color: string; icon: any; label: string }> = {
-  urgent: { color: '#f43f5e', icon: AlertTriangle, label: 'URGENT' },
-  high:   { color: '#f97316', icon: ArrowUp,       label: 'HIGH'   },
-  medium: { color: '#eab308', icon: Minus,         label: 'MED'    },
-  low:    { color: '#22c55e', icon: ChevDown,      label: 'LOW'    },
+  urgent: { color: '#c2553d', icon: AlertTriangle, label: 'URGENT' },
+  high:   { color: '#d97757', icon: ArrowUp,       label: 'HIGH'   },
+  medium: { color: '#d9a066', icon: Minus,         label: 'MED'    },
+  low:    { color: '#6f9d5c', icon: ChevDown,      label: 'LOW'    },
 };
 
 const MOOD_LABEL = ['', 'Terrible', 'Bad', 'Okay', 'Good', 'Great'];
-const MOOD_COLOR = ['', '#ef4444', '#f97316', '#eab308', '#22c55e', '#10b981'];
-const LEVEL_COLORS = ['','#6366f1','#3b82f6','#22c55e','#f97316','#ef4444','#a855f7'];
+const MOOD_COLOR = ['', '#cd5240', '#d97757', '#d9a066', '#6f9d5c', '#629a90'];
+const LEVEL_COLORS = ['','#d97757','#6a8bad','#6f9d5c','#d97757','#cd5240','#8a7ba8'];
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -72,7 +72,7 @@ function MissionCard({ task, onComplete }: { task: Task; onComplete: (id: number
             style={{ background: `${p.color}18`, color: p.color }}>{p.label}</span>
           {task.due_date && (
             <span className="text-[10px] flex items-center gap-1"
-              style={{ color: isOverdue ? '#f87171' : 'var(--t-faint)' }}>
+              style={{ color: isOverdue ? '#e07b62' : 'var(--t-faint)' }}>
               {isOverdue && <AlertTriangle size={8} />}
               {task.due_date}
             </span>
@@ -84,7 +84,7 @@ function MissionCard({ task, onComplete }: { task: Task; onComplete: (id: number
         onClick={complete}
         disabled={completing}
         className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center tap opacity-0 group-hover:opacity-100 transition-all"
-        style={{ background: '#22c55e15', border: '1px solid #22c55e30', color: '#22c55e' }}
+        style={{ background: '#6f9d5c15', border: '1px solid #6f9d5c30', color: '#6f9d5c' }}
         title="Complete mission">
         {completing
           ? <span className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin" />
@@ -105,37 +105,37 @@ function fmtDuration(mins: number | null | undefined) {
 function SnapshotSection({ snap }: { snap: DashboardSnapshot }) {
   const cards = [
     {
-      to: '/habits', icon: Target, color: '#f97316',
+      to: '/habits', icon: Target, color: '#d97757',
       label: 'Habits',
       primary: snap.habitsTotal > 0 ? `${snap.habitsDone}/${snap.habitsTotal}` : '—',
       sub: snap.habitsTotal > 0 ? `${Math.round((snap.habitsDone / snap.habitsTotal) * 100)}% done` : 'None set',
     },
     {
-      to: '/sleep', icon: Moon, color: '#818cf8',
+      to: '/sleep', icon: Moon, color: '#e59a7f',
       label: 'Sleep',
       primary: fmtDuration(snap.lastSleep?.duration_minutes) ?? '—',
       sub: snap.lastSleep?.quality ? `Quality ${snap.lastSleep.quality}/5` : snap.lastSleep?.date ?? 'Not logged',
     },
     {
-      to: '/workout', icon: Dumbbell, color: '#ef4444',
+      to: '/workout', icon: Dumbbell, color: '#cd5240',
       label: 'Workout',
       primary: snap.lastWorkout ? 'Done' : '—',
       sub: snap.lastWorkout ? (snap.lastWorkout.name ?? snap.lastWorkout.date) : 'No session',
     },
     {
-      to: '/diet', icon: Coffee, color: '#22c55e',
+      to: '/diet', icon: Coffee, color: '#6f9d5c',
       label: 'Calories',
       primary: snap.todayCalories != null ? `${snap.todayCalories}` : '—',
       sub: snap.todayCalories != null ? `${snap.todayProtein ?? 0}g protein` : 'Not logged',
     },
     {
-      to: '/body', icon: Activity, color: '#06b6d4',
+      to: '/body', icon: Activity, color: '#629a90',
       label: 'Body',
       primary: snap.latestBody?.weight_kg != null ? `${snap.latestBody.weight_kg}kg` : '—',
       sub: snap.latestBody?.body_fat_pct != null ? `${snap.latestBody.body_fat_pct}% fat` : snap.latestBody?.date ?? 'No data',
     },
     {
-      to: '/finance', icon: Wallet, color: '#f59e0b',
+      to: '/finance', icon: Wallet, color: '#d9a066',
       label: 'Finance',
       primary: snap.financeIncome != null || snap.financeExpenses != null
         ? `${(snap.financeIncome ?? 0) - (snap.financeExpenses ?? 0) >= 0 ? '+' : ''}${Math.round(((snap.financeIncome ?? 0) - (snap.financeExpenses ?? 0)) * 10) / 10}`
@@ -165,7 +165,7 @@ function SnapshotSection({ snap }: { snap: DashboardSnapshot }) {
 
 /* ── Rank/XP panel ── */
 function RankPanel({ pts }: { pts: PointsSummary }) {
-  const color = LEVEL_COLORS[pts.level] ?? '#6366f1';
+  const color = LEVEL_COLORS[pts.level] ?? '#d97757';
   const [lifeScore, setLifeScore] = useState<number | null>(null);
 
   useEffect(() => {
@@ -181,10 +181,10 @@ function RankPanel({ pts }: { pts: PointsSummary }) {
     return () => clearInterval(id);
   }, []);
 
-  const lifeColor = lifeScore === null ? '#6366f1'
-    : lifeScore >= 70 ? '#22c55e'
-    : lifeScore >= 40 ? '#f59e0b'
-    : '#a855f7';
+  const lifeColor = lifeScore === null ? '#d97757'
+    : lifeScore >= 70 ? '#6f9d5c'
+    : lifeScore >= 40 ? '#d9a066'
+    : '#8a7ba8';
 
   return (
     <div className="cmd-card border-glow-anim px-5 py-4 relative overflow-hidden">
@@ -207,8 +207,8 @@ function RankPanel({ pts }: { pts: PointsSummary }) {
             <p className="text-[11px]" style={{ color: 'var(--t-faint)' }}>
               {pts.today > 0 ? (
                 <span className="flex items-center gap-1">
-                  <Zap size={10} style={{ color: '#f59e0b' }} />
-                  <span style={{ color: '#f59e0b', fontWeight: 700 }}>+{pts.today} XP</span>
+                  <Zap size={10} style={{ color: '#d9a066' }} />
+                  <span style={{ color: '#d9a066', fontWeight: 700 }}>+{pts.today} XP</span>
                   <span>earned today</span>
                 </span>
               ) : 'Complete tasks, habits & logs to earn XP'}
@@ -262,12 +262,12 @@ function RankPanel({ pts }: { pts: PointsSummary }) {
 
 /* ── Quick actions ── */
 const ACTIONS = [
-  { to: '/tasks',   icon: Plus,     label: 'New Mission',   color: '#6366f1' },
-  { to: '/workout', icon: Dumbbell, label: 'Log Training',  color: '#ef4444' },
-  { to: '/sleep',   icon: Moon,     label: 'Log Sleep',     color: '#818cf8' },
-  { to: '/journal', icon: BookOpen, label: 'Write Entry',   color: '#a855f7' },
-  { to: '/habits',  icon: Target,   label: 'Check Habits',  color: '#f97316' },
-  { to: '/finance', icon: Wallet,   label: 'Log Finance',   color: '#f59e0b' },
+  { to: '/tasks',   icon: Plus,     label: 'New Mission',   color: '#d97757' },
+  { to: '/workout', icon: Dumbbell, label: 'Log Training',  color: '#cd5240' },
+  { to: '/sleep',   icon: Moon,     label: 'Log Sleep',     color: '#e59a7f' },
+  { to: '/journal', icon: BookOpen, label: 'Write Entry',   color: '#8a7ba8' },
+  { to: '/habits',  icon: Target,   label: 'Check Habits',  color: '#d97757' },
+  { to: '/finance', icon: Wallet,   label: 'Log Finance',   color: '#d9a066' },
 ];
 
 /* ══════════════════════════════════════════════════════════════
@@ -317,71 +317,71 @@ export default function Dashboard() {
     .slice(0, 6);
 
   const streakData = [
-    { label: 'Overall', value: streaks.overall?.current ?? 0, best: streaks.overall?.longest ?? 0, color: '#f97316', icon: Flame },
-    { label: 'Tasks',   value: streaks.tasks?.current   ?? 0, best: streaks.tasks?.longest   ?? 0, color: '#6366f1', icon: CheckSquare },
-    { label: 'Journal', value: streaks.journal?.current ?? 0, best: streaks.journal?.longest ?? 0, color: '#a855f7', icon: BookOpen },
-    { label: 'Workout', value: streaks.workout?.current ?? 0, best: streaks.workout?.longest ?? 0, color: '#ef4444', icon: Dumbbell },
-    { label: 'Sleep',   value: streaks.sleep?.current   ?? 0, best: streaks.sleep?.longest   ?? 0, color: '#818cf8', icon: Moon },
+    { label: 'Overall', value: streaks.overall?.current ?? 0, best: streaks.overall?.longest ?? 0, color: '#d97757', icon: Flame },
+    { label: 'Tasks',   value: streaks.tasks?.current   ?? 0, best: streaks.tasks?.longest   ?? 0, color: '#d97757', icon: CheckSquare },
+    { label: 'Journal', value: streaks.journal?.current ?? 0, best: streaks.journal?.longest ?? 0, color: '#8a7ba8', icon: BookOpen },
+    { label: 'Workout', value: streaks.workout?.current ?? 0, best: streaks.workout?.longest ?? 0, color: '#cd5240', icon: Dumbbell },
+    { label: 'Sleep',   value: streaks.sleep?.current   ?? 0, best: streaks.sleep?.longest   ?? 0, color: '#e59a7f', icon: Moon },
   ];
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 anim-page pb-10"
-      style={{ '--accent-rgb': '57 255 20' } as React.CSSProperties}>
+      style={{ '--accent-rgb': '217 119 87' } as React.CSSProperties}>
 
       {/* ── WAR ROOM HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-5"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #39ff1425', minHeight: 120 }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #d9775725', minHeight: 120 }}>
         {/* Tactical grid */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: 'radial-gradient(circle, #39ff1408 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, #d9775708 1px, transparent 1px)',
           backgroundSize: '22px 22px',
         }} />
         {/* Radar arc */}
         <div className="absolute top-3 right-3 pointer-events-none" style={{ width: 70, height: 70 }}>
           <div style={{
             position: 'absolute', inset: 0, borderRadius: '50%',
-            border: '1px solid #39ff1430',
-            boxShadow: '0 0 8px #39ff1420',
+            border: '1px solid #d9775730',
+            boxShadow: '0 0 8px #d9775720',
           }} />
           <div style={{
             position: 'absolute', top: '50%', left: '50%',
             width: 35, height: 1.5,
-            background: 'linear-gradient(90deg, #39ff14, transparent)',
+            background: 'linear-gradient(90deg, #d97757, transparent)',
             transformOrigin: 'left center',
             animation: 'radar-rotate 3s linear infinite',
-            boxShadow: '0 0 6px #39ff14',
+            boxShadow: '0 0 6px #d97757',
           }} />
-          <div style={{ position: 'absolute', inset: 10, borderRadius: '50%', border: '1px solid #39ff1418' }} />
-          <div style={{ position: 'absolute', inset: 20, borderRadius: '50%', border: '1px solid #39ff1410' }} />
+          <div style={{ position: 'absolute', inset: 10, borderRadius: '50%', border: '1px solid #d9775718' }} />
+          <div style={{ position: 'absolute', inset: 20, borderRadius: '50%', border: '1px solid #d9775710' }} />
         </div>
         {/* HUD corners */}
         <div className="absolute top-0 left-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderTop: '1.5px solid #39ff14', borderLeft: '1.5px solid #39ff14', opacity: 0.7 }} />
+          style={{ width: 14, height: 14, borderTop: '1.5px solid #d97757', borderLeft: '1.5px solid #d97757', opacity: 0.7 }} />
         <div className="absolute top-0 right-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderTop: '1.5px solid #39ff14', borderRight: '1.5px solid #39ff14', opacity: 0.7 }} />
+          style={{ width: 14, height: 14, borderTop: '1.5px solid #d97757', borderRight: '1.5px solid #d97757', opacity: 0.7 }} />
         <div className="absolute bottom-0 left-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderBottom: '1.5px solid #39ff14', borderLeft: '1.5px solid #39ff14', opacity: 0.7 }} />
+          style={{ width: 14, height: 14, borderBottom: '1.5px solid #d97757', borderLeft: '1.5px solid #d97757', opacity: 0.7 }} />
         <div className="absolute bottom-0 right-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderBottom: '1.5px solid #39ff14', borderRight: '1.5px solid #39ff14', opacity: 0.7 }} />
+          style={{ width: 14, height: 14, borderBottom: '1.5px solid #d97757', borderRight: '1.5px solid #d97757', opacity: 0.7 }} />
         {/* Content */}
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.35em]" style={{ color: '#39ff14', opacity: 0.6, textShadow: '0 0 8px #39ff14' }}>SYS://</span>
+            <span className="text-[9px] font-black tracking-[0.35em]" style={{ color: '#d97757', opacity: 0.6, textShadow: '0 0 8px #d97757' }}>SYS://</span>
             <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">COMMAND_CENTER</span>
-            <span className="cursor-blink font-mono" style={{ color: '#39ff14', fontSize: 11 }}>▌</span>
+            <span className="cursor-blink font-mono" style={{ color: '#d97757', fontSize: 11 }}>▌</span>
           </div>
           <h1 className="text-3xl font-black tracking-tight text-white leading-none"
-            style={{ textShadow: '0 0 30px #39ff1440' }}>
+            style={{ textShadow: '0 0 30px #d9775740' }}>
             COMMAND CENTER
           </h1>
-          <p className="font-mono text-[11px] mt-1" style={{ color: '#39ff14', opacity: 0.5 }}>
+          <p className="font-mono text-[11px] mt-1" style={{ color: '#d97757', opacity: 0.5 }}>
             {'// MISSION CONTROL — GOOD '}
             {new Date().getHours() < 12 ? 'MORNING' : new Date().getHours() < 17 ? 'AFTERNOON' : 'EVENING'}
             {', OPERATOR'}
           </p>
           {/* Neon bottom edge */}
           <div className="absolute bottom-0 left-0 right-0 h-px"
-            style={{ background: 'linear-gradient(90deg, transparent, #39ff1450, transparent)' }} />
+            style={{ background: 'linear-gradient(90deg, transparent, #d9775750, transparent)' }} />
         </div>
       </div>
 
@@ -389,7 +389,7 @@ export default function Dashboard() {
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(57,255,20,0.06) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(217,119,87,0.06) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }} />
       </div>
@@ -409,7 +409,7 @@ export default function Dashboard() {
             </h1>
             <p className="text-sm mt-1" style={{ color: 'var(--t-faint)' }}>
               {pct === 100 && stats.totalTasks > 0
-                ? <span className="flex items-center gap-1.5"><Award size={12} style={{ color: '#22c55e' }} /><span style={{ color: '#22c55e' }}>All missions cleared</span></span>
+                ? <span className="flex items-center gap-1.5"><Award size={12} style={{ color: '#6f9d5c' }} /><span style={{ color: '#6f9d5c' }}>All missions cleared</span></span>
                 : remaining > 0
                 ? `${remaining} active mission${remaining !== 1 ? 's' : ''} pending`
                 : 'No missions yet — add something to conquer'}
@@ -417,9 +417,9 @@ export default function Dashboard() {
           </div>
           {data.points && data.points.today > 0 && (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full shrink-0 badge-pop"
-              style={{ background: '#f59e0b18', border: '1px solid #f59e0b35' }}>
-              <Zap size={11} style={{ color: '#f59e0b' }} />
-              <span className="text-xs font-black" style={{ color: '#f59e0b' }}>+{data.points.today} XP</span>
+              style={{ background: '#d9a06618', border: '1px solid #d9a06635' }}>
+              <Zap size={11} style={{ color: '#d9a066' }} />
+              <span className="text-xs font-black" style={{ color: '#d9a066' }}>+{data.points.today} XP</span>
             </div>
           )}
         </div>
@@ -443,8 +443,8 @@ export default function Dashboard() {
           </div>
           {activeMissions.length === 0 ? (
             <div className="px-4 pb-4 flex flex-col items-center gap-2 py-6">
-              <CheckCircle2 size={28} style={{ color: '#22c55e', opacity: 0.5 }} />
-              <p className="text-sm font-semibold" style={{ color: '#22c55e' }}>All clear, operative</p>
+              <CheckCircle2 size={28} style={{ color: '#6f9d5c', opacity: 0.5 }} />
+              <p className="text-sm font-semibold" style={{ color: '#6f9d5c' }}>All clear, operative</p>
               <Link to="/tasks"
                 className="flex items-center gap-1 text-[11px] font-bold tap px-3 py-1.5 rounded-lg"
                 style={{ background: 'rgb(var(--accent-rgb) / 0.1)', color: 'rgb(var(--accent-rgb-light))', textDecoration: 'none', border: '1px solid rgb(var(--accent-rgb) / 0.2)' }}>
@@ -460,7 +460,7 @@ export default function Dashboard() {
 
         {/* Quick actions */}
         <div>
-          <SysLabel icon={Zap} text="Quick Actions" color="#f59e0b" />
+          <SysLabel icon={Zap} text="Quick Actions" color="#d9a066" />
           <div className="grid grid-cols-3 gap-3">
             {ACTIONS.map(a => (
               <Link key={a.to} to={a.to} className="action-tile icon-bounce-hover"
@@ -480,7 +480,7 @@ export default function Dashboard() {
 
       {/* ═══════════════════════════════════════ STREAK INTEL */}
       <div>
-        <SysLabel icon={TrendingUp} text="// Streak Intel" color="#f97316" />
+        <SysLabel icon={TrendingUp} text="// Streak Intel" color="#d97757" />
         <div className="flex gap-3 overflow-x-auto pb-1 hide-scroll">
           {streakData.map((s, i) => (
             <div key={s.label} className="streak-node card-hover glow-card"
@@ -502,7 +502,7 @@ export default function Dashboard() {
       {/* ═══════════════════════════════════════ JOURNAL */}
       <div className="cmd-card overflow-hidden">
         <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-          <SysLabel icon={BookOpen} text="Today's Journal" color="#a855f7" />
+          <SysLabel icon={BookOpen} text="Today's Journal" color="#8a7ba8" />
           <Link to="/journal"
             className="flex items-center gap-1 text-[11px] font-bold tap"
             style={{ color: 'rgb(var(--accent-rgb-light))', textDecoration: 'none' }}>
@@ -538,10 +538,10 @@ export default function Dashboard() {
       {/* ═══════════════════════════════════════ COMPLETION BANNER */}
       {pct === 100 && stats.totalTasks > 0 && (
         <div className="cmd-card px-5 py-4 text-center"
-          style={{ borderColor: '#22c55e25', background: 'linear-gradient(135deg, var(--s1) 0%, #052010 100%)' }}>
+          style={{ borderColor: '#6f9d5c25', background: 'linear-gradient(135deg, var(--s1) 0%, #052010 100%)' }}>
           <div className="flex items-center justify-center gap-2 mb-1">
-            <Award size={20} style={{ color: '#22c55e' }} />
-            <p className="text-sm font-black" style={{ color: '#22c55e' }}>All missions cleared for today</p>
+            <Award size={20} style={{ color: '#6f9d5c' }} />
+            <p className="text-sm font-black" style={{ color: '#6f9d5c' }}>All missions cleared for today</p>
           </div>
           <p className="text-[11px]" style={{ color: 'var(--t-faint)' }}>Outstanding work, operative.</p>
         </div>

@@ -51,18 +51,18 @@ function useFillAnimate(sectors: Sector[]) {
 // ── Priority badge ────────────────────────────────────────────────────────────
 
 const PRIORITY_COLORS: Record<string, string> = {
-  low:    '#6366f1',
-  medium: '#f59e0b',
-  high:   '#ef4444',
+  low:    '#d97757',
+  medium: '#d9a066',
+  high:   '#cd5240',
 };
 
 function PriorityBadge({ p }: { p: string }) {
   return (
     <span className="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded-full"
       style={{
-        background: `${PRIORITY_COLORS[p] ?? '#6366f1'}20`,
-        color: PRIORITY_COLORS[p] ?? '#6366f1',
-        border: `1px solid ${PRIORITY_COLORS[p] ?? '#6366f1'}40`,
+        background: `${PRIORITY_COLORS[p] ?? '#d97757'}20`,
+        color: PRIORITY_COLORS[p] ?? '#d97757',
+        border: `1px solid ${PRIORITY_COLORS[p] ?? '#d97757'}40`,
       }}>
       {p}
     </span>
@@ -243,37 +243,37 @@ export default function LifeProgress() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 anim-page pb-10"
-      style={{ '--accent-rgb': '168 85 247' } as React.CSSProperties}>
+      style={{ '--accent-rgb': '138 123 168' } as React.CSSProperties}>
 
       {/* ── HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl"
         style={{
           background: 'linear-gradient(180deg, #1a0a2e 0%, var(--hero-bg) 65%)',
-          border: '1px solid #a855f730',
+          border: '1px solid #8a7ba830',
           minHeight: 100,
         }}>
         <div className="absolute inset-0 pointer-events-none"
-          style={{ backgroundImage: 'radial-gradient(circle, #a855f710 1px, transparent 1px)', backgroundSize: '22px 22px' }} />
-        <div className="absolute top-0 left-0 pointer-events-none"    style={{ width: 14, height: 14, borderTop: '1.5px solid #a855f7', borderLeft:  '1.5px solid #a855f7', opacity: 0.6 }} />
-        <div className="absolute top-0 right-0 pointer-events-none"   style={{ width: 14, height: 14, borderTop: '1.5px solid #a855f7', borderRight: '1.5px solid #a855f7', opacity: 0.6 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #a855f7', borderLeft:  '1.5px solid #a855f7', opacity: 0.6 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none"style={{ width: 14, height: 14, borderBottom: '1.5px solid #a855f7', borderRight: '1.5px solid #a855f7', opacity: 0.6 }} />
+          style={{ backgroundImage: 'radial-gradient(circle, #8a7ba810 1px, transparent 1px)', backgroundSize: '22px 22px' }} />
+        <div className="absolute top-0 left-0 pointer-events-none"    style={{ width: 14, height: 14, borderTop: '1.5px solid #8a7ba8', borderLeft:  '1.5px solid #8a7ba8', opacity: 0.6 }} />
+        <div className="absolute top-0 right-0 pointer-events-none"   style={{ width: 14, height: 14, borderTop: '1.5px solid #8a7ba8', borderRight: '1.5px solid #8a7ba8', opacity: 0.6 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #8a7ba8', borderLeft:  '1.5px solid #8a7ba8', opacity: 0.6 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none"style={{ width: 14, height: 14, borderBottom: '1.5px solid #8a7ba8', borderRight: '1.5px solid #8a7ba8', opacity: 0.6 }} />
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #a855f780, transparent)', boxShadow: '0 0 12px #a855f7' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, #8a7ba880, transparent)', boxShadow: '0 0 12px #8a7ba8' }} />
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#a855f7', opacity: 0.7 }}>AXIS://</span>
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#8a7ba8', opacity: 0.7 }}>AXIS://</span>
             <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">LIFE_MANAGER</span>
-            <span className="cursor-blink font-mono" style={{ color: '#a855f7', fontSize: 11 }}>▌</span>
+            <span className="cursor-blink font-mono" style={{ color: '#8a7ba8', fontSize: 11 }}>▌</span>
           </div>
           <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: '0 0 40px #a855f760' }}>LIFE PATH</h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#a855f7', opacity: 0.5 }}>
+            style={{ textShadow: '0 0 40px #8a7ba860' }}>LIFE PATH</h1>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#8a7ba8', opacity: 0.5 }}>
             // WRITE YOUR GOALS — AXIS BUILDS YOUR PLAN
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #a855f740, transparent)' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, #8a7ba840, transparent)' }} />
       </div>
 
       {/* ── SPLIT: chat (left) + sectors (right) ── */}
@@ -290,8 +290,8 @@ export default function LifeProgress() {
           {/* Chat header bar */}
           <div className="px-4 py-3 flex items-center gap-2"
             style={{ borderBottom: '1px solid var(--b)', background: 'var(--s2)' }}>
-            <span className="text-sm font-black tracking-widest" style={{ color: '#a855f7' }}>AXIS</span>
-            <span className="cursor-blink font-mono text-xs" style={{ color: '#a855f7' }}>▌</span>
+            <span className="text-sm font-black tracking-widest" style={{ color: '#8a7ba8' }}>AXIS</span>
+            <span className="cursor-blink font-mono text-xs" style={{ color: '#8a7ba8' }}>▌</span>
             <span className="text-xs ml-auto" style={{ color: 'var(--t-faint)' }}>your life manager</span>
           </div>
 
@@ -318,13 +318,13 @@ export default function LifeProgress() {
                     <div className="rounded-2xl px-4 py-3 leading-relaxed"
                       style={{
                         background: isManager ? 'var(--s2)' : 'var(--s3)',
-                        borderLeft: isManager ? '2px solid #a855f760' : 'none',
+                        borderLeft: isManager ? '2px solid #8a7ba860' : 'none',
                         color: 'var(--t-body)',
                         fontFamily: isManager ? 'monospace' : 'inherit',
                         fontSize: isManager ? 12 : 13,
                       }}>
                       {isManager && (
-                        <span className="text-[9px] font-black tracking-widest block mb-1.5" style={{ color: '#a855f7', opacity: 0.7 }}>
+                        <span className="text-[9px] font-black tracking-widest block mb-1.5" style={{ color: '#8a7ba8', opacity: 0.7 }}>
                           AXIS //
                         </span>
                       )}
@@ -343,13 +343,13 @@ export default function LifeProgress() {
                             <div key={key}
                               className="rounded-xl px-3 py-2.5 flex items-start gap-2"
                               style={{
-                                background: isDone ? '#16a34a18' : 'var(--s1)',
-                                border: `1px solid ${isDone ? '#16a34a40' : 'var(--b)'}`,
+                                background: isDone ? '#58804818' : 'var(--s1)',
+                                border: `1px solid ${isDone ? '#58804840' : 'var(--b)'}`,
                                 opacity: isDone ? 0.7 : 1,
                                 transition: 'all 0.25s',
                               }}>
                               <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold" style={{ color: isDone ? '#4ade80' : 'var(--t-head)' }}>
+                                <p className="text-xs font-semibold" style={{ color: isDone ? '#8fbb7e' : 'var(--t-head)' }}>
                                   {isDone && '✓ '}{rec.title}
                                 </p>
                                 <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -364,7 +364,7 @@ export default function LifeProgress() {
                                 <div className="flex items-center gap-1 shrink-0">
                                   <button onClick={() => acceptRec(rec, key)}
                                     className="text-[10px] font-bold px-2 py-1 rounded-lg tap text-white"
-                                    style={{ background: '#16a34a' }}>
+                                    style={{ background: '#588048' }}>
                                     ✓ Add
                                   </button>
                                   <button onClick={() => setSkipped(prev => new Set(prev).add(key))}
@@ -392,7 +392,7 @@ export default function LifeProgress() {
             {sending && (
               <div className="flex justify-start">
                 <div className="rounded-2xl px-4 py-3 text-xs font-mono"
-                  style={{ background: 'var(--s2)', borderLeft: '2px solid #a855f760', color: '#a855f7' }}>
+                  style={{ background: 'var(--s2)', borderLeft: '2px solid #8a7ba860', color: '#8a7ba8' }}>
                   <span className="opacity-60">AXIS //</span>
                   <span className="ml-2 animate-pulse">analyzing...</span>
                 </div>
@@ -421,7 +421,7 @@ export default function LifeProgress() {
                   lineHeight: 1.5,
                   transition: 'border-color 0.2s',
                 }}
-                onFocus={e => { e.currentTarget.style.borderColor = '#a855f760'; }}
+                onFocus={e => { e.currentTarget.style.borderColor = '#8a7ba860'; }}
                 onBlur={e => { e.currentTarget.style.borderColor = 'var(--b)'; }}
               />
               <button onClick={send} disabled={!input.trim() || sending}
@@ -518,7 +518,7 @@ export default function LifeProgress() {
                                 </button>
                                 <button onClick={() => deleteSector(sector.id)}
                                   className="w-6 h-6 rounded-md flex items-center justify-center tap"
-                                  style={{ background: 'var(--s3)', color: '#f87171' }}
+                                  style={{ background: 'var(--s3)', color: '#e07b62' }}
                                   title="Delete sector">
                                   <X size={10} />
                                 </button>

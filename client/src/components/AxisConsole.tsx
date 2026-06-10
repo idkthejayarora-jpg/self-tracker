@@ -5,7 +5,7 @@ import AxisOrb, { type OrbState } from './AxisOrb';
 import { useVoiceInput } from '../hooks/useVoiceInput';
 import { useSpeechVoices, pickBestVoice, speak, stopSpeaking } from '../lib/voice';
 
-const AXIS_COLOR = '#a855f7';
+const AXIS_COLOR = '#8a7ba8';
 
 interface Concern { id: string; topic: string; question: string; }
 interface QA { q: string; a: string; }
@@ -265,7 +265,7 @@ export default function AxisConsole({ onFinished }: { onFinished?: (sectors: unk
             </button>
             <button onClick={stopAll}
               className="tap flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl"
-              style={{ background: 'rgb(239 68 68 / 0.12)', color: '#f87171' }}>
+              style={{ background: 'rgb(239 68 68 / 0.12)', color: '#e07b62' }}>
               <Square size={12} /> End
             </button>
           </div>

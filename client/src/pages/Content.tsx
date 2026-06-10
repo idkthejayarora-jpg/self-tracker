@@ -38,11 +38,11 @@ interface Stats {
 const STATUS_ORDER: Idea['status'][] = ['idea', 'scripted', 'filmed', 'posted', 'archived'];
 
 const STATUS_META: Record<Idea['status'], { label: string; icon: React.ReactNode; color: string }> = {
-  idea:     { label: 'Idea',     icon: <Lightbulb size={12} />,    color: '#818cf8' },
-  scripted: { label: 'Scripted', icon: <PenLine size={12} />,      color: '#f59e0b' },
-  filmed:   { label: 'Filmed',   icon: <Film size={12} />,         color: '#f97316' },
-  posted:   { label: 'Posted',   icon: <CheckCircle2 size={12} />, color: '#22c55e' },
-  archived: { label: 'Archived', icon: <Archive size={12} />,      color: '#52525b' },
+  idea:     { label: 'Idea',     icon: <Lightbulb size={12} />,    color: '#e59a7f' },
+  scripted: { label: 'Scripted', icon: <PenLine size={12} />,      color: '#d9a066' },
+  filmed:   { label: 'Filmed',   icon: <Film size={12} />,         color: '#d97757' },
+  posted:   { label: 'Posted',   icon: <CheckCircle2 size={12} />, color: '#6f9d5c' },
+  archived: { label: 'Archived', icon: <Archive size={12} />,      color: '#57544a' },
 };
 
 const TYPE_LABELS: Record<Idea['content_type'], string> = {
@@ -50,11 +50,11 @@ const TYPE_LABELS: Record<Idea['content_type'], string> = {
 };
 
 const NICHE_COLORS = [
-  '#6366f1','#ec4899','#f59e0b','#22c55e','#06b6d4',
-  '#ef4444','#a855f7','#f97316','#84cc16','#14b8a6',
+  '#d97757','#c2553d','#d9a066','#6f9d5c','#629a90',
+  '#cd5240','#8a7ba8','#d97757','#788c5d','#629a90',
 ];
 
-const ACCENT = '#ec4899';
+const ACCENT = '#c2553d';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -333,7 +333,7 @@ function IdeaCard({
             )}
             {idea.posted_at && (
               <span className="text-[11px] px-2.5 py-1.5 rounded-xl font-bold"
-                style={{ background: '#22c55e18', color: '#22c55e' }}>
+                style={{ background: '#6f9d5c18', color: '#6f9d5c' }}>
                 ✓ {fmtDate(idea.posted_at)}
               </span>
             )}
@@ -375,7 +375,7 @@ function IdeaCard({
               )}
               <button onClick={() => onDelete(idea.id)}
                 className="tap flex items-center justify-center gap-1.5 text-xs px-3 py-2.5 rounded-xl font-medium flex-1"
-                style={{ background: 'rgb(239 68 68 / 0.08)', color: '#f87171' }}>
+                style={{ background: 'rgb(239 68 68 / 0.08)', color: '#e07b62' }}>
                 <Trash2 size={12} /> Delete
               </button>
             </div>
@@ -600,7 +600,7 @@ export default function Content() {
 
   return (
     <div className="anim-page max-w-2xl mx-auto space-y-6 pb-12"
-      style={{ '--accent-rgb': '236 72 153' } as React.CSSProperties}>
+      style={{ '--accent-rgb': '194 85 61' } as React.CSSProperties}>
 
       {/* Focus trap — prevents mobile keyboard auto-opening on page load */}
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
@@ -610,7 +610,7 @@ export default function Content() {
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: `radial-gradient(circle, rgba(236,72,153,0.06) 1px, transparent 1px)`,
+          backgroundImage: `radial-gradient(circle, rgba(194,85,61,0.06) 1px, transparent 1px)`,
           backgroundSize: '24px 24px',
         }} />
       </div>
@@ -774,15 +774,15 @@ export default function Content() {
                 border: '1px solid rgb(239 68 68 / 0.35)', boxShadow: '0 0 18px rgb(239 68 68 / 0.12)' }}>
               {/* warning neon top bar */}
               <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-                style={{ background: 'linear-gradient(90deg, transparent, #ef444480, transparent)' }} />
-              <AlertTriangle size={15} style={{ color: '#f87171', flexShrink: 0, marginTop: 1 }} />
+                style={{ background: 'linear-gradient(90deg, transparent, #cd524080, transparent)' }} />
+              <AlertTriangle size={15} style={{ color: '#e07b62', flexShrink: 0, marginTop: 1 }} />
               <div>
-                <p className="text-sm font-black tracking-[0.1em]" style={{ color: '#fca5a5', textShadow: '0 0 10px #ef444450' }}>
+                <p className="text-sm font-black tracking-[0.1em]" style={{ color: '#e8a18f', textShadow: '0 0 10px #cd524050' }}>
                   {stats.daysSinceLastPost}D SIGNAL BLACKOUT
                 </p>
                 <p className="text-[11px] mt-0.5 font-mono" style={{ color: 'rgb(239 68 68 / 0.6)' }}>
                   last_post=
-                  <span style={{ color: '#fca5a5' }}>
+                  <span style={{ color: '#e8a18f' }}>
                     {stats.lastPostDate ? fmtDate(stats.lastPostDate) : 'null'}
                   </span>
                 </p>
@@ -1021,7 +1021,7 @@ export default function Content() {
                           style={{ background: 'var(--s3)', color: 'var(--t-muted)' }}>Edit</button>
                         <button onClick={() => deleteNiche(n.id)}
                           className="tap w-7 h-7 rounded-lg flex items-center justify-center"
-                          style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+                          style={{ background: 'rgb(239 68 68 / 0.1)', color: '#e07b62' }}>
                           <Trash2 size={12} />
                         </button>
                       </div>
@@ -1039,10 +1039,10 @@ export default function Content() {
           {/* Stat tiles */}
           <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-3">
             {[
-              { label: 'POST STREAK', value: `${stats.postingStreak}w`, sub: 'consecutive weeks', color: '#f97316' },
+              { label: 'POST STREAK', value: `${stats.postingStreak}w`, sub: 'consecutive weeks', color: '#d97757' },
               { label: 'LAST POST',   value: stats.daysSinceLastPost !== null ? `${stats.daysSinceLastPost}d` : '--',
                 sub: stats.lastPostDate ? fmtDate(stats.lastPostDate) : 'Never posted', color: ACCENT },
-              { label: 'PIPELINE',    value: String(stats.inPipeline), sub: 'ideas in flight', color: '#818cf8' },
+              { label: 'PIPELINE',    value: String(stats.inPipeline), sub: 'ideas in flight', color: '#e59a7f' },
             ].map(tile => (
               <div key={tile.label} className="card flex min-[360px]:flex-col items-center min-[360px]:items-center justify-between min-[360px]:justify-start py-3 min-[360px]:py-4 px-4 min-[360px]:px-2 text-left min-[360px]:text-center gap-3 min-[360px]:gap-0">
                 <span className="text-[10px] font-black tracking-[0.15em]"

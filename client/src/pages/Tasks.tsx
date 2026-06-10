@@ -5,10 +5,10 @@ import { useSync } from '../hooks/useSync';
 import type { Task, TaskPriority, TaskStatus } from '../types';
 
 const PRIORITY_COLOR: Record<string, { bg: string; text: string; border: string }> = {
-  urgent: { bg: '#f43f5e22', text: '#f43f5e', border: '#f43f5e44' },
-  high:   { bg: '#f9731622', text: '#f97316', border: '#f9731644' },
-  medium: { bg: '#eab30822', text: '#eab308', border: '#eab30844' },
-  low:    { bg: '#22c55e22', text: '#22c55e', border: '#22c55e44' },
+  urgent: { bg: '#c2553d22', text: '#c2553d', border: '#c2553d44' },
+  high:   { bg: '#d9775722', text: '#d97757', border: '#d9775744' },
+  medium: { bg: '#d9a06622', text: '#d9a066', border: '#d9a06644' },
+  low:    { bg: '#6f9d5c22', text: '#6f9d5c', border: '#6f9d5c44' },
 };
 
 const STATUS_LABELS: Record<TaskStatus, string> = {
@@ -168,28 +168,28 @@ export default function Tasks() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 anim-page"
-      style={{ '--accent-rgb': '34 197 94' } as React.CSSProperties}>
+      style={{ '--accent-rgb': '111 157 92' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(34,197,94,0.06) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(111,157,92,0.06) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }} />
       </div>
 
       {/* ── TERMINAL HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #39ff1420' }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #d9775720' }}>
         {/* Scanlines */}
         <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{
-          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, #39ff1403 3px, #39ff1403 4px)',
+          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, #d9775703 3px, #d9775703 4px)',
         }} />
         {/* Top neon bar */}
         <div className="absolute top-0 left-0 right-0 h-px" style={{
-          background: 'linear-gradient(90deg, transparent, #39ff1460, transparent)',
-          boxShadow: '0 0 8px #39ff14',
+          background: 'linear-gradient(90deg, transparent, #d9775760, transparent)',
+          boxShadow: '0 0 8px #d97757',
         }} />
         {/* Content */}
         <div className="relative z-10 px-5 py-4">
@@ -204,15 +204,15 @@ export default function Tasks() {
               <span className="text-[8px] font-mono" style={{ color: '#ff5f56', opacity: 0.7 }}>REC</span>
             </span>
           </div>
-          <p className="font-mono text-[11px] mb-1" style={{ color: '#39ff14', opacity: 0.5 }}>root@system:~$</p>
+          <p className="font-mono text-[11px] mb-1" style={{ color: '#d97757', opacity: 0.5 }}>root@system:~$</p>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black font-mono tracking-tight"
-              style={{ color: '#39ff14', textShadow: '0 0 20px #39ff1460' }}>
+              style={{ color: '#d97757', textShadow: '0 0 20px #d9775760' }}>
               ./MISSION_QUEUE
             </h1>
-            <span className="cursor-blink font-mono text-2xl" style={{ color: '#39ff14' }}>_</span>
+            <span className="cursor-blink font-mono text-2xl" style={{ color: '#d97757' }}>_</span>
           </div>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#39ff14', opacity: 0.4 }}>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#d97757', opacity: 0.4 }}>
             {'// executing task management protocol...'}
           </p>
         </div>
@@ -236,7 +236,7 @@ export default function Tasks() {
 
           {formErr && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
-              style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+              style={{ background: 'rgb(239 68 68 / 0.1)', color: '#e07b62' }}>
               <AlertCircle size={13} />
               {formErr}
             </div>
@@ -346,9 +346,9 @@ export default function Tasks() {
           onClick={() => setQueueView(v => !v)}
           className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold tap"
           style={{
-            background: queueView ? '#f59e0b22' : 'var(--s3)',
-            color: queueView ? '#f59e0b' : '#71717a',
-            border: `1px solid ${queueView ? '#f59e0b44' : 'transparent'}`,
+            background: queueView ? '#d9a06622' : 'var(--s3)',
+            color: queueView ? '#d9a066' : '#757163',
+            border: `1px solid ${queueView ? '#d9a06644' : 'transparent'}`,
           }}>
           <Zap size={12} /> Focus Queue
         </button>
@@ -358,7 +358,7 @@ export default function Tasks() {
             className="px-3 py-1.5 rounded-full text-xs font-semibold tap"
             style={{
               background: filter === s ? `rgb(var(--accent-rgb) / 0.12)` : 'var(--s3)',
-              color: filter === s ? `rgb(var(--accent-rgb-light))` : '#71717a',
+              color: filter === s ? `rgb(var(--accent-rgb-light))` : '#757163',
               border: `1px solid ${filter === s ? `rgb(var(--accent-rgb) / 0.2)` : 'transparent'}`,
             }}>
             {s === 'all' ? 'All' : STATUS_LABELS[s as TaskStatus]}
@@ -369,7 +369,7 @@ export default function Tasks() {
       {/* Load error */}
       {loadErr && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs"
-          style={{ background: 'rgb(239 68 68 / 0.08)', color: '#f87171', border: '1px solid rgb(239 68 68 / 0.2)' }}>
+          style={{ background: 'rgb(239 68 68 / 0.08)', color: '#e07b62', border: '1px solid rgb(239 68 68 / 0.2)' }}>
           <AlertCircle size={13} />
           {loadErr} — <button onClick={fetchTasks} className="underline tap">retry</button>
         </div>
@@ -380,7 +380,7 @@ export default function Tasks() {
         {!loadErr && tasks.length === 0 && (
           <div className="card py-12 text-center">
             <p className="text-sm font-medium" style={{ color: 'var(--t-dim)' }}>No tasks found</p>
-            <p className="text-xs mt-1" style={{ color: '#52525b' }}>Tap "New task" to get started</p>
+            <p className="text-xs mt-1" style={{ color: '#57544a' }}>Tap "New task" to get started</p>
           </div>
         )}
 
@@ -399,7 +399,7 @@ export default function Tasks() {
           return (
             <div key={task.id}
               className="card overflow-hidden"
-              style={isOverdue ? { borderColor: '#f43f5e55' } : {}}>
+              style={isOverdue ? { borderColor: '#c2553d55' } : {}}>
 
               {/* Main row */}
               <div className="flex items-center gap-3 px-4 py-3">
@@ -425,7 +425,7 @@ export default function Tasks() {
                       {task.priority}
                     </span>
                     {task.due_date && (
-                      <span className="text-[11px]" style={{ color: isOverdue ? '#f43f5e' : '#71717a' }}>
+                      <span className="text-[11px]" style={{ color: isOverdue ? '#c2553d' : '#757163' }}>
                         {isOverdue ? '⚠ ' : ''}Due {task.due_date}{task.due_time ? ` ${task.due_time}` : ''}
                       </span>
                     )}
@@ -433,18 +433,18 @@ export default function Tasks() {
                       <span className="text-[11px]" style={{ color: `rgb(var(--accent-rgb-light))` }}>↻ {task.recur_interval}</span>
                     )}
                     {task.priority_score !== undefined && (
-                      <span className="text-[11px] font-semibold" style={{ color: '#f59e0b' }}>Score: {task.priority_score}</span>
+                      <span className="text-[11px] font-semibold" style={{ color: '#d9a066' }}>Score: {task.priority_score}</span>
                     )}
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1" style={{ flexShrink: 0 }}>
                   <button onClick={() => setExpanded(isExpanded ? null : task.id)}
-                    className="p-1 tap" style={{ color: '#52525b' }}>
+                    className="p-1 tap" style={{ color: '#57544a' }}>
                     {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                   </button>
                   <button onClick={() => deleteTask(task.id)}
-                    className="p-1 tap" style={{ color: '#52525b' }}>
+                    className="p-1 tap" style={{ color: '#57544a' }}>
                     <Trash2 size={15} />
                   </button>
                 </div>
@@ -457,7 +457,7 @@ export default function Tasks() {
                     <div className="space-y-2">
                       {editErr && (
                         <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs"
-                          style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+                          style={{ background: 'rgb(239 68 68 / 0.1)', color: '#e07b62' }}>
                           <AlertCircle size={12} />{editErr}
                         </div>
                       )}
@@ -503,12 +503,12 @@ export default function Tasks() {
                   ) : (
                     <>
                       {task.description && (
-                        <p className="text-sm" style={{ color: '#a1a1aa' }}>{task.description}</p>
+                        <p className="text-sm" style={{ color: '#a5a293' }}>{task.description}</p>
                       )}
-                      <div className="flex flex-wrap gap-3 text-xs" style={{ color: '#52525b' }}>
+                      <div className="flex flex-wrap gap-3 text-xs" style={{ color: '#57544a' }}>
                         <span>Status: <span className="text-head font-medium">{STATUS_LABELS[task.status]}</span></span>
                         {task.follow_up_date && <span>Follow-up: <span className="text-head font-medium">{task.follow_up_date}</span></span>}
-                        {task.deferred_count > 0 && <span style={{ color: '#f97316' }}>Deferred {task.deferred_count}×</span>}
+                        {task.deferred_count > 0 && <span style={{ color: '#d97757' }}>Deferred {task.deferred_count}×</span>}
                         <span>Created: {task.created_at.slice(0, 10)}</span>
                       </div>
                       <div className="flex gap-1.5 flex-wrap">
@@ -518,7 +518,7 @@ export default function Tasks() {
                             className="text-xs px-2.5 py-1 rounded-full tap font-semibold"
                             style={{
                               background: task.status === s ? `rgb(var(--accent-rgb) / 0.12)` : 'var(--s3)',
-                              color: task.status === s ? `rgb(var(--accent-rgb-light))` : '#71717a',
+                              color: task.status === s ? `rgb(var(--accent-rgb-light))` : '#757163',
                               border: `1px solid ${task.status === s ? `rgb(var(--accent-rgb) / 0.3)` : 'transparent'}`,
                             }}>
                             {STATUS_LABELS[s]}
@@ -600,7 +600,7 @@ export default function Tasks() {
                             <div className="space-y-2">
                               {editErr && (
                                 <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs"
-                                  style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+                                  style={{ background: 'rgb(239 68 68 / 0.1)', color: '#e07b62' }}>
                                   <AlertCircle size={12} />{editErr}
                                 </div>
                               )}

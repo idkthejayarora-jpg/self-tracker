@@ -17,10 +17,10 @@ const FIELDS: { key: keyof BodyStat; label: string; unit: string }[] = [
 ];
 
 function Trend({ curr, prev }: { curr?: number | null; prev?: number | null }) {
-  if (curr == null || prev == null) return <Minus size={12} style={{ color: '#52525b' }} />;
-  if (curr > prev) return <TrendingUp size={12} style={{ color: '#f97316' }} />;
-  if (curr < prev) return <TrendingDown size={12} style={{ color: '#22c55e' }} />;
-  return <Minus size={12} style={{ color: '#52525b' }} />;
+  if (curr == null || prev == null) return <Minus size={12} style={{ color: '#57544a' }} />;
+  if (curr > prev) return <TrendingUp size={12} style={{ color: '#d97757' }} />;
+  if (curr < prev) return <TrendingDown size={12} style={{ color: '#6f9d5c' }} />;
+  return <Minus size={12} style={{ color: '#57544a' }} />;
 }
 
 const emptyForm = () => ({
@@ -36,7 +36,7 @@ function EKGLine() {
       <svg viewBox="0 0 400 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
         <polyline
           points="0,20 40,20 55,20 65,5 75,28 85,15 95,20 140,20 155,20 165,2 175,28 185,14 195,20 240,20 255,20 265,4 275,28 285,15 295,20 340,20 355,20 365,3 375,28 385,15 400,20"
-          fill="none" stroke="#38bdf8" strokeWidth="1.5"
+          fill="none" stroke="#82b4ab" strokeWidth="1.5"
           strokeDasharray="200" style={{ animation: 'ekg-sweep 2.5s linear infinite' }}
         />
       </svg>
@@ -107,46 +107,46 @@ export default function BodyStats() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 anim-page"
-      style={{ '--accent-rgb': '56 189 248' } as React.CSSProperties}>
+      style={{ '--accent-rgb': '98 154 144' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(56,189,248,0.06) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(130,180,171,0.06) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }} />
       </div>
 
       {/* ── MEDICAL SCANNER HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #38bdf825', minHeight: 110 }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #82b4ab25', minHeight: 110 }}>
         <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: 'radial-gradient(circle, #38bdf806 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, #82b4ab06 1px, transparent 1px)',
           backgroundSize: '18px 18px',
         }} />
         <EKGLine />
-        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #38bdf8', borderLeft: '1.5px solid #38bdf8', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #38bdf8', borderRight: '1.5px solid #38bdf8', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #38bdf8', borderLeft: '1.5px solid #38bdf8', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #38bdf8', borderRight: '1.5px solid #38bdf8', opacity: 0.7 }} />
+        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #82b4ab', borderLeft: '1.5px solid #82b4ab', opacity: 0.7 }} />
+        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #82b4ab', borderRight: '1.5px solid #82b4ab', opacity: 0.7 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #82b4ab', borderLeft: '1.5px solid #82b4ab', opacity: 0.7 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #82b4ab', borderRight: '1.5px solid #82b4ab', opacity: 0.7 }} />
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #38bdf870, transparent)', boxShadow: '0 0 8px #38bdf8' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, #82b4ab70, transparent)', boxShadow: '0 0 8px #82b4ab' }} />
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#38bdf8', opacity: 0.6 }}>MED://</span>
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#82b4ab', opacity: 0.6 }}>MED://</span>
             <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">BIOMETRIC_SCAN</span>
-            <span className="cursor-blink font-mono" style={{ color: '#38bdf8', fontSize: 11 }}>▌</span>
+            <span className="cursor-blink font-mono" style={{ color: '#82b4ab', fontSize: 11 }}>▌</span>
           </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: '0 0 30px #38bdf840' }}>
+          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: '0 0 30px #82b4ab40' }}>
             BIOMETRIC SCAN
           </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#38bdf8', opacity: 0.5 }}>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#82b4ab', opacity: 0.5 }}>
             // full body analysis — vitals monitoring active
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #38bdf830, transparent)' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, #82b4ab30, transparent)' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
@@ -164,7 +164,7 @@ export default function BodyStats() {
 
       {loadErr && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs"
-          style={{ background: 'rgb(239 68 68 / 0.08)', color: '#f87171', border: '1px solid rgb(239 68 68 / 0.2)' }}>
+          style={{ background: 'rgb(239 68 68 / 0.08)', color: '#e07b62', border: '1px solid rgb(239 68 68 / 0.2)' }}>
           <AlertCircle size={13} />
           {loadErr} — <button type="button" onClick={load} className="underline tap">retry</button>
         </div>
@@ -173,7 +173,7 @@ export default function BodyStats() {
       {/* Latest stats card */}
       {latest && (
         <div className="card px-4 py-4">
-          <p className="text-xs font-semibold mb-3" style={{ color: '#52525b', letterSpacing: '0.05em' }}>
+          <p className="text-xs font-semibold mb-3" style={{ color: '#57544a', letterSpacing: '0.05em' }}>
             LATEST — {format(new Date(latest.date + 'T12:00:00'), 'd MMM yyyy')}
           </p>
           <div className="grid grid-cols-3 gap-3">
@@ -184,7 +184,7 @@ export default function BodyStats() {
                 <div key={key}>
                   <div className="flex items-center gap-1 mb-0.5">
                     <Trend curr={val} prev={prev?.[key] as number | null} />
-                    <span className="text-[11px]" style={{ color: '#52525b' }}>{label}</span>
+                    <span className="text-[11px]" style={{ color: '#57544a' }}>{label}</span>
                   </div>
                   <p className="text-lg font-bold text-head">{val}<span className="text-xs font-normal ml-0.5" style={{ color: 'var(--t-dim)' }}>{unit}</span></p>
                 </div>
@@ -229,7 +229,7 @@ export default function BodyStats() {
           <div className="flex gap-2">
             {formErr && (
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs col-span-2"
-                style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+                style={{ background: 'rgb(239 68 68 / 0.1)', color: '#e07b62' }}>
                 <AlertCircle size={13} />{formErr}
               </div>
             )}
@@ -252,15 +252,15 @@ export default function BodyStats() {
           <ResponsiveContainer width="100%" height={160}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--s3)" />
-              <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#52525b' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#52525b' }} domain={['auto', 'auto']} />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#57544a' }} />
+              <YAxis tick={{ fontSize: 10, fill: '#57544a' }} domain={['auto', 'auto']} />
               <Tooltip
                 contentStyle={{ background: 'var(--s2)', border: '1px solid var(--b)', borderRadius: 8, fontSize: 12 }}
-                labelStyle={{ color: '#a1a1aa' }}
+                labelStyle={{ color: '#a5a293' }}
               />
               <Line type="monotone" dataKey="weight" stroke="rgb(var(--accent-rgb))" strokeWidth={2} dot={false} name="Weight (kg)" />
               {chartData.some(d => d.fat != null) && (
-                <Line type="monotone" dataKey="fat" stroke="#a855f7" strokeWidth={2} dot={false} name="Body fat %" />
+                <Line type="monotone" dataKey="fat" stroke="#8a7ba8" strokeWidth={2} dot={false} name="Body fat %" />
               )}
             </LineChart>
           </ResponsiveContainer>
@@ -274,7 +274,7 @@ export default function BodyStats() {
           <div className="space-y-2">
             {stats.map(s => (
               <div key={s.id} className="flex items-center gap-3 py-2" style={{ borderBottom: '1px solid var(--b)' }}>
-                <Activity size={13} style={{ color: '#52525b', flexShrink: 0 }} />
+                <Activity size={13} style={{ color: '#57544a', flexShrink: 0 }} />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-head">{format(new Date(s.date + 'T12:00:00'), 'd MMM yyyy')}</p>
                   <p className="text-[11px] mt-0.5" style={{ color: 'var(--t-dim)' }}>
@@ -285,7 +285,7 @@ export default function BodyStats() {
                     ].filter(Boolean).join(' · ') || 'No data'}
                   </p>
                 </div>
-                <button onClick={() => del(s.id)} className="tap" style={{ color: '#52525b' }}>
+                <button onClick={() => del(s.id)} className="tap" style={{ color: '#57544a' }}>
                   <Trash2 size={13} />
                 </button>
               </div>
@@ -296,9 +296,9 @@ export default function BodyStats() {
 
       {stats.length === 0 && !showForm && (
         <div className="card py-12 text-center">
-          <Activity size={28} style={{ color: '#52525b', margin: '0 auto 8px' }} />
+          <Activity size={28} style={{ color: '#57544a', margin: '0 auto 8px' }} />
           <p className="text-sm font-medium" style={{ color: 'var(--t-dim)' }}>No measurements yet</p>
-          <p className="text-xs mt-1" style={{ color: '#52525b' }}>Tap "Log" to add your first entry</p>
+          <p className="text-xs mt-1" style={{ color: '#57544a' }}>Tap "Log" to add your first entry</p>
         </div>
       )}
 

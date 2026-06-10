@@ -85,8 +85,8 @@ export default function MissedLogsBanner() {
           : maxDays >= 4
           ? 'linear-gradient(90deg, #78350f, #92400e)'
           : 'linear-gradient(90deg, #1e1b4b, #312e81)',
-        borderBottom: `2px solid ${maxDays >= 7 ? '#ef4444' : maxDays >= 4 ? '#f59e0b' : '#6366f1'}`,
-        boxShadow: `0 4px 24px ${maxDays >= 7 ? '#ef444440' : maxDays >= 4 ? '#f59e0b40' : '#6366f140'}`,
+        borderBottom: `2px solid ${maxDays >= 7 ? '#cd5240' : maxDays >= 4 ? '#d9a066' : '#d97757'}`,
+        boxShadow: `0 4px 24px ${maxDays >= 7 ? '#cd524040' : maxDays >= 4 ? '#d9a06640' : '#d9775740'}`,
       }}>
 
       {/* Collapsed strip */}
@@ -94,7 +94,7 @@ export default function MissedLogsBanner() {
         <div
           className="flex items-center gap-3 px-4 py-2 cursor-pointer"
           onClick={() => setExpanded(true)}>
-          <AlertTriangle size={14} className="shrink-0 animate-pulse" style={{ color: maxDays >= 7 ? '#fca5a5' : '#fde68a' }} />
+          <AlertTriangle size={14} className="shrink-0 animate-pulse" style={{ color: maxDays >= 7 ? '#e8a18f' : '#fde68a' }} />
           <span className="text-xs font-bold text-white">
             {missed.length} log{missed.length > 1 ? 's' : ''} overdue — tap to see
           </span>
@@ -109,7 +109,7 @@ export default function MissedLogsBanner() {
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-2">
               <AlertTriangle size={16} className="shrink-0 animate-pulse"
-                style={{ color: maxDays >= 7 ? '#fca5a5' : '#fde68a' }} />
+                style={{ color: maxDays >= 7 ? '#e8a18f' : '#fde68a' }} />
               <span className="text-sm font-black text-white tracking-wide">
                 {maxDays >= 7 ? 'SERIOUSLY OVERDUE' : maxDays >= 4 ? 'FALLING BEHIND' : 'LOGS MISSED'}
               </span>
@@ -147,8 +147,8 @@ export default function MissedLogsBanner() {
                   </div>
                   <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full ml-1"
                     style={{
-                      background: m.daysSince >= 7 ? '#ef444440' : m.daysSince >= 4 ? '#f59e0b40' : '#6366f140',
-                      color: m.daysSince >= 7 ? '#fca5a5' : m.daysSince >= 4 ? '#fde68a' : '#a5b4fc',
+                      background: m.daysSince >= 7 ? '#cd524040' : m.daysSince >= 4 ? '#d9a06640' : '#d9775740',
+                      color: m.daysSince >= 7 ? '#e8a18f' : m.daysSince >= 4 ? '#fde68a' : '#a5b4fc',
                     }}>
                     LOG NOW →
                   </span>

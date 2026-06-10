@@ -24,23 +24,23 @@ interface MeSummary {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const ACCENT = '#60a5fa';
+const ACCENT = '#8fa9c4';
 
 const RANK_TIERS = [
-  { rank: 'E',  min: 0,  next: 12, color: '#6b7280', label: 'E-Class Hunter' },
-  { rank: 'D',  min: 12, next: 26, color: '#3b82f6', label: 'D-Class Hunter' },
-  { rank: 'C',  min: 26, next: 42, color: '#22c55e', label: 'C-Class Hunter' },
-  { rank: 'B',  min: 42, next: 58, color: '#a855f7', label: 'B-Class Hunter' },
-  { rank: 'A',  min: 58, next: 74, color: '#f97316', label: 'A-Class Hunter' },
-  { rank: 'S',  min: 74, next: 88, color: '#ef4444', label: 'S-Class Hunter' },
-  { rank: 'S+', min: 88, next: 100, color: '#e2c97e', label: 'Shadow Monarch' },
+  { rank: 'E',  min: 0,  next: 12, color: '#84816f', label: 'E-Class Hunter' },
+  { rank: 'D',  min: 12, next: 26, color: '#6a8bad', label: 'D-Class Hunter' },
+  { rank: 'C',  min: 26, next: 42, color: '#6f9d5c', label: 'C-Class Hunter' },
+  { rank: 'B',  min: 42, next: 58, color: '#8a7ba8', label: 'B-Class Hunter' },
+  { rank: 'A',  min: 58, next: 74, color: '#d97757', label: 'A-Class Hunter' },
+  { rank: 'S',  min: 74, next: 88, color: '#cd5240', label: 'S-Class Hunter' },
+  { rank: 'S+', min: 88, next: 100, color: '#d9a066', label: 'Shadow Monarch' },
 ];
 
 const MOOD_LABELS = ['', 'ROUGH', 'LOW', 'OKAY', 'GOOD', 'GREAT'];
-const MOOD_COLORS = ['', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6'];
+const MOOD_COLORS = ['', '#cd5240', '#d97757', '#d9a066', '#6f9d5c', '#6a8bad'];
 
-const TICK  = { fill: '#52525b', fontSize: 10, fontFamily: 'monospace' };
-const TICK_S = { fill: '#3f3f46', fontSize: 9,  fontFamily: 'monospace' };
+const TICK  = { fill: '#57544a', fontSize: 10, fontFamily: 'monospace' };
+const TICK_S = { fill: '#3d3935', fontSize: 9,  fontFamily: 'monospace' };
 
 // ── Shared UI ─────────────────────────────────────────────────────────────────
 
@@ -200,11 +200,11 @@ function RankCard({ me }: { me: MeSummary | null }) {
         {bd && (
           <div className="flex flex-wrap gap-1.5">
             {[
-              { label: 'STATS',    val: bd.statScore,   max: 45, color: '#f97316' },
-              { label: 'STREAKS',  val: bd.streakScore, max: 15, color: '#22c55e' },
+              { label: 'STATS',    val: bd.statScore,   max: 45, color: '#d97757' },
+              { label: 'STREAKS',  val: bd.streakScore, max: 15, color: '#6f9d5c' },
               { label: 'SKILLS',   val: bd.skillScore,  max: 15, color: ACCENT },
-              { label: 'CLAIMS',   val: bd.claimScore,  max: 10, color: '#a855f7' },
-              { label: 'POINTS',   val: bd.ptsScore,    max: 15, color: '#e2c97e' },
+              { label: 'CLAIMS',   val: bd.claimScore,  max: 10, color: '#8a7ba8' },
+              { label: 'POINTS',   val: bd.ptsScore,    max: 15, color: '#d9a066' },
             ].map(b => (
               <div key={b.label} className="flex items-center gap-1 px-2 py-0.5 rounded-md"
                 style={{ background: `${b.color}12`, border: `1px solid ${b.color}25` }}>
@@ -232,16 +232,16 @@ function ActivityTable({ data }: { data: DailyData[] }) {
 
   function pctColor(pct: number | null) {
     if (pct == null) return 'var(--t-faint)';
-    if (pct >= 70) return '#22c55e';
-    if (pct >= 40) return '#f59e0b';
-    return '#ef4444';
+    if (pct >= 70) return '#6f9d5c';
+    if (pct >= 40) return '#d9a066';
+    return '#cd5240';
   }
 
   function sleepColor(h: number | null) {
     if (h == null) return 'var(--t-faint)';
-    if (h >= 7 && h <= 9) return '#22c55e';
-    if (h >= 5.5) return '#f59e0b';
-    return '#ef4444';
+    if (h >= 7 && h <= 9) return '#6f9d5c';
+    if (h >= 5.5) return '#d9a066';
+    return '#cd5240';
   }
 
   return (
@@ -274,9 +274,9 @@ function ActivityTable({ data }: { data: DailyData[] }) {
                     </td>
                     {/* Tasks */}
                     <td className="py-1.5 pr-3" style={{ color: 'var(--t-faint)' }}>
-                      <span style={{ color: '#6366f1' }}>{r.tasks_created}</span>
+                      <span style={{ color: '#d97757' }}>{r.tasks_created}</span>
                       <span className="opacity-30 mx-0.5">→</span>
-                      <span style={{ color: '#0ea5e9' }}>{r.tasks_completed}</span>
+                      <span style={{ color: '#629a90' }}>{r.tasks_completed}</span>
                     </td>
                     {/* Task% */}
                     <td className="py-1.5 pr-3 font-black" style={{ color: pctColor(r.task_pct) }}>
@@ -301,7 +301,7 @@ function ActivityTable({ data }: { data: DailyData[] }) {
                     </td>
                     {/* Points */}
                     <td className="py-1.5 font-black"
-                      style={{ color: r.points > 0 ? '#e2c97e' : 'var(--t-faint)', opacity: r.points > 0 ? 1 : 0.3 }}>
+                      style={{ color: r.points > 0 ? '#d9a066' : 'var(--t-faint)', opacity: r.points > 0 ? 1 : 0.3 }}>
                       {r.points > 0 ? `+${r.points}` : '0'}
                     </td>
                   </tr>
@@ -322,13 +322,13 @@ function JournalHeatmap({ data }: { data: DailyData[] }) {
   const days63 = data.slice(-63);
 
   return (
-    <HudCard accent="#a855f7">
+    <HudCard accent="#8a7ba8">
       <div className="px-4 py-4">
-        <SectionLabel text="Mood Heatmap — 63 days" accent="#a855f7" />
+        <SectionLabel text="Mood Heatmap — 63 days" accent="#8a7ba8" />
         <div className="h-5 mb-3 flex items-center">
           {hovered
             ? <p className="text-[11px] font-mono">
-                <span style={{ color: '#a855f7', opacity: 0.7 }}>{hovered.date} → </span>
+                <span style={{ color: '#8a7ba8', opacity: 0.7 }}>{hovered.date} → </span>
                 {hovered.mood != null
                   ? <span style={{ color: MOOD_COLORS[hovered.mood], fontWeight: 900 }}>{MOOD_LABELS[hovered.mood]}</span>
                   : <span style={{ color: 'var(--t-faint)' }}>no entry</span>}
@@ -421,29 +421,29 @@ export default function Analytics() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-4 anim-page pb-10 overflow-x-hidden"
-      style={{ '--accent-rgb': '96 165 250' } as React.CSSProperties}>
+      style={{ '--accent-rgb': '98 154 144' } as React.CSSProperties}>
 
       {/* Dot grid bg */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{ position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle,rgba(96,165,250,0.05) 1px,transparent 1px)',
+          backgroundImage: 'radial-gradient(circle,rgba(143,169,196,0.05) 1px,transparent 1px)',
           backgroundSize: '24px 24px' }} />
       </div>
 
       {/* ── Header ── */}
       <div className="relative overflow-hidden rounded-2xl"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #60a5fa25', minHeight: 110, zIndex: 1 }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #8fa9c425', minHeight: 110, zIndex: 1 }}>
         <DataParticles />
         <div className="absolute top-0 left-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderTop: '1.5px solid #60a5fa', borderLeft: '1.5px solid #60a5fa', opacity: 0.6 }} />
+          style={{ width: 14, height: 14, borderTop: '1.5px solid #8fa9c4', borderLeft: '1.5px solid #8fa9c4', opacity: 0.6 }} />
         <div className="absolute top-0 right-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderTop: '1.5px solid #60a5fa', borderRight: '1.5px solid #60a5fa', opacity: 0.6 }} />
+          style={{ width: 14, height: 14, borderTop: '1.5px solid #8fa9c4', borderRight: '1.5px solid #8fa9c4', opacity: 0.6 }} />
         <div className="absolute bottom-0 left-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderBottom: '1.5px solid #60a5fa', borderLeft: '1.5px solid #60a5fa', opacity: 0.6 }} />
+          style={{ width: 14, height: 14, borderBottom: '1.5px solid #8fa9c4', borderLeft: '1.5px solid #8fa9c4', opacity: 0.6 }} />
         <div className="absolute bottom-0 right-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderBottom: '1.5px solid #60a5fa', borderRight: '1.5px solid #60a5fa', opacity: 0.6 }} />
+          style={{ width: 14, height: 14, borderBottom: '1.5px solid #8fa9c4', borderRight: '1.5px solid #8fa9c4', opacity: 0.6 }} />
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg,transparent,#60a5fa80,transparent)', boxShadow: '0 0 8px #60a5fa' }} />
+          style={{ background: 'linear-gradient(90deg,transparent,#8fa9c480,transparent)', boxShadow: '0 0 8px #8fa9c4' }} />
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: ACCENT, opacity: 0.6 }}>ORACLE://</span>
@@ -451,13 +451,13 @@ export default function Analytics() {
             <span className="cursor-blink font-mono" style={{ color: ACCENT, fontSize: 11 }}>▌</span>
           </div>
           <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: '0 0 30px #60a5fa40' }}>ORACLE CORE</h1>
+            style={{ textShadow: '0 0 30px #8fa9c440' }}>ORACLE CORE</h1>
           <p className="font-mono text-[10px] mt-1" style={{ color: ACCENT, opacity: 0.45 }}>
             // daily signal analysis — behavioral pattern recognition
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg,transparent,#60a5fa25,transparent)' }} />
+          style={{ background: 'linear-gradient(90deg,transparent,#8fa9c425,transparent)' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }} className="space-y-4">
@@ -479,11 +479,11 @@ export default function Analytics() {
       {/* ── Summary metric tiles ── */}
       <div className="grid grid-cols-2 gap-3">
         {/* Task completion */}
-        <HudCard accent="#0ea5e9">
+        <HudCard accent="#629a90">
           <div className="px-3 py-3">
-            <p className="text-[9px] font-black tracking-[0.2em] font-mono mb-1" style={{ color: '#0ea5e9', opacity: 0.55 }}>TASK RATE</p>
+            <p className="text-[9px] font-black tracking-[0.2em] font-mono mb-1" style={{ color: '#629a90', opacity: 0.55 }}>TASK RATE</p>
             <p className="text-3xl font-black font-mono leading-none"
-              style={{ color: completionRate >= 70 ? '#22c55e' : completionRate >= 40 ? '#f59e0b' : '#ef4444',
+              style={{ color: completionRate >= 70 ? '#6f9d5c' : completionRate >= 40 ? '#d9a066' : '#cd5240',
                 textShadow: '0 0 14px currentColor' }}>
               {completionRate}<span className="text-base opacity-40">%</span>
             </p>
@@ -493,20 +493,20 @@ export default function Analytics() {
           </div>
         </HudCard>
         {/* Habit consistency */}
-        <HudCard accent="#22c55e">
+        <HudCard accent="#6f9d5c">
           <div className="px-3 py-3">
-            <p className="text-[9px] font-black tracking-[0.2em] font-mono mb-1" style={{ color: '#22c55e', opacity: 0.55 }}>HABIT RATE</p>
+            <p className="text-[9px] font-black tracking-[0.2em] font-mono mb-1" style={{ color: '#6f9d5c', opacity: 0.55 }}>HABIT RATE</p>
             <p className="text-3xl font-black font-mono leading-none"
-              style={{ color: avgHabit != null ? (avgHabit >= 70 ? '#22c55e' : avgHabit >= 40 ? '#f59e0b' : '#ef4444') : '#52525b' }}>
+              style={{ color: avgHabit != null ? (avgHabit >= 70 ? '#6f9d5c' : avgHabit >= 40 ? '#d9a066' : '#cd5240') : '#57544a' }}>
               {avgHabit != null ? <>{avgHabit}<span className="text-base opacity-40">%</span></> : '—'}
             </p>
             <p className="text-[10px] font-mono mt-1" style={{ color: 'var(--t-faint)' }}>avg daily consistency</p>
           </div>
         </HudCard>
         {/* Active days */}
-        <HudCard accent="#f97316">
+        <HudCard accent="#d97757">
           <div className="px-3 py-3">
-            <p className="text-[9px] font-black tracking-[0.2em] font-mono mb-1" style={{ color: '#f97316', opacity: 0.55 }}>ACTIVE DAYS</p>
+            <p className="text-[9px] font-black tracking-[0.2em] font-mono mb-1" style={{ color: '#d97757', opacity: 0.55 }}>ACTIVE DAYS</p>
             <p className="text-3xl font-black font-mono leading-none" style={{ color: 'var(--t-head)' }}>
               {activedays}<span className="text-base opacity-40">/{days}</span>
             </p>
@@ -516,10 +516,10 @@ export default function Analytics() {
           </div>
         </HudCard>
         {/* Points */}
-        <HudCard accent="#e2c97e">
+        <HudCard accent="#d9a066">
           <div className="px-3 py-3">
-            <p className="text-[9px] font-black tracking-[0.2em] font-mono mb-1" style={{ color: '#e2c97e', opacity: 0.55 }}>POINTS EARNED</p>
-            <p className="text-3xl font-black font-mono leading-none" style={{ color: '#e2c97e' }}>
+            <p className="text-[9px] font-black tracking-[0.2em] font-mono mb-1" style={{ color: '#d9a066', opacity: 0.55 }}>POINTS EARNED</p>
+            <p className="text-3xl font-black font-mono leading-none" style={{ color: '#d9a066' }}>
               {totalPts.toLocaleString()}
             </p>
             <p className="text-[10px] font-mono mt-1" style={{ color: 'var(--t-faint)' }}>last {days} days</p>
@@ -529,38 +529,38 @@ export default function Analytics() {
 
       {/* ── Tasks: daily created vs completed bars ── */}
       {hasTasks && (
-        <HudCard accent="#0ea5e9">
+        <HudCard accent="#629a90">
           <div className="px-4 py-4 overflow-hidden">
-            <SectionLabel text={`Task Creation & Completion — Daily`} accent="#0ea5e9" />
+            <SectionLabel text={`Task Creation & Completion — Daily`} accent="#629a90" />
             <ResponsiveContainer width="100%" height={180}>
               <ComposedChart data={data} barGap={2} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
                 <defs>
                   <linearGradient id="gCreated" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"  stopColor="#6366f1" stopOpacity={0.85} />
-                    <stop offset="100%" stopColor="#6366f1" stopOpacity={0.3} />
+                    <stop offset="0%"  stopColor="#d97757" stopOpacity={0.85} />
+                    <stop offset="100%" stopColor="#d97757" stopOpacity={0.3} />
                   </linearGradient>
                   <linearGradient id="gCompleted" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"  stopColor="#0ea5e9" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0.35} />
+                    <stop offset="0%"  stopColor="#629a90" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="#629a90" stopOpacity={0.35} />
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="label" tick={TICK_S} axisLine={false} tickLine={false}
                   interval={tickInterval} />
                 <YAxis allowDecimals={false} tick={TICK} axisLine={false} tickLine={false} />
-                <Tooltip content={<Tooltip2 accent="#0ea5e9" />} />
+                <Tooltip content={<Tooltip2 accent="#629a90" />} />
                 <Bar dataKey="tasks_created"   name="Created"   fill="url(#gCreated)"   radius={[3,3,0,0]} barSize={days <= 14 ? 10 : 6} />
                 <Bar dataKey="tasks_completed" name="Completed" fill="url(#gCompleted)" radius={[3,3,0,0]} barSize={days <= 14 ? 10 : 6} />
                 {/* Completion % line on secondary axis — only show if there's data */}
                 <Line type="monotone" dataKey="task_pct" name="Done %" yAxisId="pct"
-                  stroke="#e2c97e" strokeWidth={1.5} dot={false}
-                  activeDot={{ r: 3, fill: '#e2c97e', strokeWidth: 0 }} connectNulls />
+                  stroke="#d9a066" strokeWidth={1.5} dot={false}
+                  activeDot={{ r: 3, fill: '#d9a066', strokeWidth: 0 }} connectNulls />
                 <YAxis yAxisId="pct" orientation="right" domain={[0, 100]}
                   tick={TICK_S} axisLine={false} tickLine={false}
                   tickFormatter={v => `${v}%`} />
               </ComposedChart>
             </ResponsiveContainer>
             <div className="flex flex-wrap gap-4 mt-2">
-              {[['#6366f1','Created'],['#0ea5e9','Completed'],['#e2c97e','Done %']].map(([c,l]) => (
+              {[['#d97757','Created'],['#629a90','Completed'],['#d9a066','Done %']].map(([c,l]) => (
                 <span key={l} className="flex items-center gap-1.5 text-[10px] font-mono"
                   style={{ color: 'var(--t-faint)' }}>
                   <span className="w-3 h-0.5 rounded-full inline-block" style={{ background: c as string }} />{l}
@@ -580,12 +580,12 @@ export default function Analytics() {
               <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
                 <defs>
                   <linearGradient id="gTaskPct" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#0ea5e9" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
+                    <stop offset="5%"  stopColor="#629a90" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#629a90" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="gHabitPct" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#22c55e" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                    <stop offset="5%"  stopColor="#6f9d5c" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#6f9d5c" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="label" tick={TICK_S} axisLine={false} tickLine={false}
@@ -597,19 +597,19 @@ export default function Analytics() {
                 <ReferenceLine y={70} stroke="#ffffff08" strokeDasharray="4 3" />
                 {hasTasks && (
                   <Area type="monotone" dataKey="task_pct" name="Tasks %"
-                    stroke="#0ea5e9" fill="url(#gTaskPct)" strokeWidth={2}
-                    dot={false} activeDot={{ r: 4, fill: '#0ea5e9', strokeWidth: 0 }} connectNulls />
+                    stroke="#629a90" fill="url(#gTaskPct)" strokeWidth={2}
+                    dot={false} activeDot={{ r: 4, fill: '#629a90', strokeWidth: 0 }} connectNulls />
                 )}
                 {hasHabits && (
                   <Area type="monotone" dataKey="habit_pct" name="Habits %"
-                    stroke="#22c55e" fill="url(#gHabitPct)" strokeWidth={2}
-                    dot={false} activeDot={{ r: 4, fill: '#22c55e', strokeWidth: 0 }} connectNulls />
+                    stroke="#6f9d5c" fill="url(#gHabitPct)" strokeWidth={2}
+                    dot={false} activeDot={{ r: 4, fill: '#6f9d5c', strokeWidth: 0 }} connectNulls />
                 )}
               </AreaChart>
             </ResponsiveContainer>
             <div className="flex flex-wrap gap-4 mt-2">
-              {[hasTasks && ['#0ea5e9','Task completion %'],
-                hasHabits && ['#22c55e','Habit consistency %']].filter(Boolean).map(([c, l]: any) => (
+              {[hasTasks && ['#629a90','Task completion %'],
+                hasHabits && ['#6f9d5c','Habit consistency %']].filter(Boolean).map(([c, l]: any) => (
                 <span key={l} className="flex items-center gap-1.5 text-[10px] font-mono"
                   style={{ color: 'var(--t-faint)' }}>
                   <span className="w-4 h-0.5 rounded-full inline-block"
@@ -623,23 +623,23 @@ export default function Analytics() {
 
       {/* ── Consistency: habit % bars (shows gaps visually) ── */}
       {hasHabits && (
-        <HudCard accent="#22c55e">
+        <HudCard accent="#6f9d5c">
           <div className="px-4 py-4 overflow-hidden">
-            <SectionLabel text="Habit Consistency — Daily" accent="#22c55e" />
+            <SectionLabel text="Habit Consistency — Daily" accent="#6f9d5c" />
             <ResponsiveContainer width="100%" height={150}>
               <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
                 <XAxis dataKey="label" tick={TICK_S} axisLine={false} tickLine={false}
                   interval={tickInterval} />
                 <YAxis domain={[0, 100]} tick={TICK} axisLine={false} tickLine={false}
                   tickFormatter={v => `${v}%`} />
-                <Tooltip content={<Tooltip2 accent="#22c55e" />}
+                <Tooltip content={<Tooltip2 accent="#6f9d5c" />}
                   formatter={(v: any) => [`${v}%`, 'Habits done']} />
-                <ReferenceLine y={70} stroke="#22c55e40" strokeDasharray="4 2"
-                  label={{ value: '70%', fill: '#22c55e50', fontSize: 9, fontFamily: 'monospace', position: 'insideTopRight' }} />
+                <ReferenceLine y={70} stroke="#6f9d5c40" strokeDasharray="4 2"
+                  label={{ value: '70%', fill: '#6f9d5c50', fontSize: 9, fontFamily: 'monospace', position: 'insideTopRight' }} />
                 <Bar dataKey="habit_pct" name="Habits %" radius={[3, 3, 0, 0]} barSize={days <= 14 ? 12 : 7}>
                   {data.map((d, i) => {
                     const pct = d.habit_pct ?? 0;
-                    const fill = pct >= 70 ? '#22c55e' : pct >= 40 ? '#f59e0b' : pct > 0 ? '#ef4444' : '#27272a';
+                    const fill = pct >= 70 ? '#6f9d5c' : pct >= 40 ? '#d9a066' : pct > 0 ? '#cd5240' : '#2b2927';
                     return <Cell key={i} fill={fill} fillOpacity={pct > 0 ? 0.85 : 0.25} />;
                   })}
                 </Bar>
@@ -651,25 +651,25 @@ export default function Analytics() {
 
       {/* ── Mood trend ── */}
       {hasMood && (
-        <HudCard accent="#ec4899">
+        <HudCard accent="#c2553d">
           <div className="px-4 py-4 overflow-hidden">
-            <SectionLabel text="Mood — Daily" accent="#ec4899" />
+            <SectionLabel text="Mood — Daily" accent="#c2553d" />
             <ResponsiveContainer width="100%" height={160}>
               <LineChart data={data.filter(d => d.mood != null)} margin={{ top: 4, right: 4, bottom: 0, left: -22 }}>
                 <XAxis dataKey="label" tick={TICK_S} axisLine={false} tickLine={false}
                   interval={tickInterval} />
                 <YAxis domain={[1, 5]} ticks={[1,2,3,4,5]} tick={TICK} axisLine={false} tickLine={false}
                   tickFormatter={v => MOOD_LABELS[v] || ''} width={38} />
-                <Tooltip content={<Tooltip2 accent="#ec4899" />}
+                <Tooltip content={<Tooltip2 accent="#c2553d" />}
                   formatter={(v: any) => [MOOD_LABELS[v] || v, 'Mood']} />
                 <ReferenceLine y={3} stroke="#ffffff08" strokeDasharray="4 3" />
-                <Line type="monotone" dataKey="mood" name="Mood" stroke="#ec4899" strokeWidth={2.5}
+                <Line type="monotone" dataKey="mood" name="Mood" stroke="#c2553d" strokeWidth={2.5}
                   dot={(props: any) => {
-                    const c = MOOD_COLORS[props.payload.mood] || '#ec4899';
+                    const c = MOOD_COLORS[props.payload.mood] || '#c2553d';
                     return <circle key={props.key} cx={props.cx} cy={props.cy} r={4}
                       fill={c} stroke="#0a0a0f" strokeWidth={1.5} />;
                   }}
-                  activeDot={{ r: 5, fill: '#ec4899', strokeWidth: 0 }} connectNulls />
+                  activeDot={{ r: 5, fill: '#c2553d', strokeWidth: 0 }} connectNulls />
               </LineChart>
             </ResponsiveContainer>
             <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
@@ -687,23 +687,23 @@ export default function Analytics() {
 
       {/* ── Sleep ── */}
       {hasSleep && (
-        <HudCard accent="#6366f1">
+        <HudCard accent="#d97757">
           <div className="px-4 py-4 overflow-hidden">
-            <SectionLabel text="Sleep — hours per night" accent="#6366f1" />
+            <SectionLabel text="Sleep — hours per night" accent="#d97757" />
             <ResponsiveContainer width="100%" height={150}>
               <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
                 <XAxis dataKey="label" tick={TICK_S} axisLine={false} tickLine={false}
                   interval={tickInterval} />
                 <YAxis domain={[0, 12]} ticks={[0,4,6,8,10,12]} tick={TICK} axisLine={false} tickLine={false}
                   tickFormatter={v => `${v}h`} />
-                <Tooltip content={<Tooltip2 accent="#6366f1" />}
+                <Tooltip content={<Tooltip2 accent="#d97757" />}
                   formatter={(v: any) => [`${v}h`, 'Sleep']} />
-                <ReferenceLine y={8} stroke="#6366f160" strokeDasharray="4 2"
-                  label={{ value: '8h', fill: '#6366f170', fontSize: 9, fontFamily: 'monospace', position: 'insideTopRight' }} />
+                <ReferenceLine y={8} stroke="#d9775760" strokeDasharray="4 2"
+                  label={{ value: '8h', fill: '#d9775770', fontSize: 9, fontFamily: 'monospace', position: 'insideTopRight' }} />
                 <Bar dataKey="sleep_hrs" name="Sleep" radius={[3,3,0,0]} barSize={days <= 14 ? 12 : 7}>
                   {data.map((d, i) => {
                     const h = d.sleep_hrs;
-                    const fill = h == null ? '#27272a' : h >= 7 && h <= 9 ? '#22c55e' : h >= 5.5 ? '#f59e0b' : '#ef4444';
+                    const fill = h == null ? '#2b2927' : h >= 7 && h <= 9 ? '#6f9d5c' : h >= 5.5 ? '#d9a066' : '#cd5240';
                     return <Cell key={i} fill={fill} fillOpacity={h != null ? 0.8 : 0.15} />;
                   })}
                 </Bar>
@@ -715,17 +715,17 @@ export default function Analytics() {
 
       {/* ── Workout sessions ── */}
       {hasWorkout && (
-        <HudCard accent="#f97316">
+        <HudCard accent="#d97757">
           <div className="px-4 py-4 overflow-hidden">
-            <SectionLabel text="Workout Sessions — Daily" accent="#f97316" />
+            <SectionLabel text="Workout Sessions — Daily" accent="#d97757" />
             <ResponsiveContainer width="100%" height={130}>
               <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
                 <XAxis dataKey="label" tick={TICK_S} axisLine={false} tickLine={false}
                   interval={tickInterval} />
                 <YAxis allowDecimals={false} tick={TICK} axisLine={false} tickLine={false} />
-                <Tooltip content={<Tooltip2 accent="#f97316" />}
+                <Tooltip content={<Tooltip2 accent="#d97757" />}
                   formatter={(v: any) => [v, 'Sessions']} />
-                <Bar dataKey="workouts" name="Sessions" fill="#f97316" fillOpacity={0.75}
+                <Bar dataKey="workouts" name="Sessions" fill="#d97757" fillOpacity={0.75}
                   radius={[3,3,0,0]} barSize={days <= 14 ? 12 : 7} />
               </BarChart>
             </ResponsiveContainer>
@@ -735,21 +735,21 @@ export default function Analytics() {
 
       {/* ── Points earned per day ── */}
       {totalPts > 0 && (
-        <HudCard accent="#e2c97e">
+        <HudCard accent="#d9a066">
           <div className="px-4 py-4 overflow-hidden">
-            <SectionLabel text="Points Earned — Daily" accent="#e2c97e" />
+            <SectionLabel text="Points Earned — Daily" accent="#d9a066" />
             <ResponsiveContainer width="100%" height={140}>
               <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
                 <defs>
                   <linearGradient id="gPts" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"  stopColor="#e2c97e" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="#e2c97e" stopOpacity={0.25} />
+                    <stop offset="0%"  stopColor="#d9a066" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="#d9a066" stopOpacity={0.25} />
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="label" tick={TICK_S} axisLine={false} tickLine={false}
                   interval={tickInterval} />
                 <YAxis allowDecimals={false} tick={TICK} axisLine={false} tickLine={false} />
-                <Tooltip content={<Tooltip2 accent="#e2c97e" />}
+                <Tooltip content={<Tooltip2 accent="#d9a066" />}
                   formatter={(v: any) => [v, 'Points']} />
                 <Bar dataKey="points" name="Points" fill="url(#gPts)"
                   radius={[3,3,0,0]} barSize={days <= 14 ? 12 : 7} />

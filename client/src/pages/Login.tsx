@@ -104,26 +104,26 @@ export default function Login() {
         {/* Grid */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'linear-gradient(rgba(167,139,250,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(167,139,250,0.04) 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(rgba(217,119,87,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(217,119,87,0.04) 1px, transparent 1px)',
           backgroundSize: '40px 40px',
         }} />
         {/* Portal scan line */}
         <div style={{
           position: 'absolute', left: 0, right: 0, height: 2,
-          background: 'linear-gradient(90deg, transparent, #a78bfa60, transparent)',
-          boxShadow: '0 0 12px #a78bfa',
+          background: 'linear-gradient(90deg, transparent, #d9775760, transparent)',
+          boxShadow: '0 0 12px #d97757',
           animation: 'portal-scan 4s linear infinite',
         }} />
         {/* Corner decorations */}
-        <div style={{ position: 'absolute', top: 20, left: 20, width: 40, height: 40, borderTop: '2px solid #a78bfa40', borderLeft: '2px solid #a78bfa40' }} />
-        <div style={{ position: 'absolute', top: 20, right: 20, width: 40, height: 40, borderTop: '2px solid #a78bfa40', borderRight: '2px solid #a78bfa40' }} />
-        <div style={{ position: 'absolute', bottom: 20, left: 20, width: 40, height: 40, borderBottom: '2px solid #a78bfa40', borderLeft: '2px solid #a78bfa40' }} />
-        <div style={{ position: 'absolute', bottom: 20, right: 20, width: 40, height: 40, borderBottom: '2px solid #a78bfa40', borderRight: '2px solid #a78bfa40' }} />
+        <div style={{ position: 'absolute', top: 20, left: 20, width: 40, height: 40, borderTop: '2px solid #d9775740', borderLeft: '2px solid #d9775740' }} />
+        <div style={{ position: 'absolute', top: 20, right: 20, width: 40, height: 40, borderTop: '2px solid #d9775740', borderRight: '2px solid #d9775740' }} />
+        <div style={{ position: 'absolute', bottom: 20, left: 20, width: 40, height: 40, borderBottom: '2px solid #d9775740', borderLeft: '2px solid #d9775740' }} />
+        <div style={{ position: 'absolute', bottom: 20, right: 20, width: 40, height: 40, borderBottom: '2px solid #d9775740', borderRight: '2px solid #d9775740' }} />
         {/* Radial glow center */}
         <div style={{
           position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
           width: 600, height: 600, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(167,139,250,0.06) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(217,119,87,0.06) 0%, transparent 70%)',
         }} />
       </div>
 
@@ -132,13 +132,13 @@ export default function Login() {
         {/* Logo + heading */}
         <div className="flex flex-col items-center gap-3">
           <div className="rounded-full overflow-hidden shadow-lg"
-            style={{ width: 80, height: 80, background: '#e3dfda', boxShadow: '0 0 0 3px rgba(167,139,250,0.2), 0 8px 32px rgba(0,0,0,0.3)' }}>
+            style={{ width: 80, height: 80, background: '#e3dfda', boxShadow: '0 0 0 3px rgba(217,119,87,0.2), 0 8px 32px rgba(0,0,0,0.3)' }}>
             <img src={localStorage.getItem('custom_logo') ?? '/logo.png'} alt="logo"
               className="w-full h-full object-cover"
               style={{ objectPosition: 'center top' }} />
           </div>
           <div className="text-center">
-            <p className="text-[9px] font-black tracking-[0.35em] mb-1" style={{ color: '#a78bfa', opacity: 0.6 }}>ACCESS PORTAL</p>
+            <p className="text-[9px] font-black tracking-[0.35em] mb-1" style={{ color: '#d97757', opacity: 0.6 }}>ACCESS PORTAL</p>
             <h1 className="text-2xl font-bold text-head tracking-tight">Self Tracker</h1>
             <p className="text-sm mt-0.5" style={{ color: 'var(--t-faint)' }}>Your personal command room</p>
           </div>
@@ -159,7 +159,7 @@ export default function Login() {
         </div>
 
         {/* Form card */}
-        <div className="card px-5 py-5" style={{ position: 'relative', zIndex: 1, border: '1px solid #a78bfa30', boxShadow: '0 0 40px #a78bfa15' }}>
+        <div className="card px-5 py-5" style={{ position: 'relative', zIndex: 1, border: '1px solid #d9775730', boxShadow: '0 0 40px #d9775715' }}>
 
           {/* ── Sign in / Register ── */}
           {(mode === 'login' || mode === 'register') && (
@@ -191,13 +191,13 @@ export default function Login() {
 
               {error && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
-                  style={{ background: 'rgb(239 68 68 / 0.08)', color: '#f87171', border: '1px solid rgb(239 68 68 / 0.2)' }}>
+                  style={{ background: 'rgb(239 68 68 / 0.08)', color: '#e07b62', border: '1px solid rgb(239 68 68 / 0.2)' }}>
                   <AlertCircle size={13} className="shrink-0" />{error}
                 </div>
               )}
               {success && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
-                  style={{ background: 'rgb(34 197 94 / 0.08)', color: '#4ade80', border: '1px solid rgb(34 197 94 / 0.2)' }}>
+                  style={{ background: 'rgb(34 197 94 / 0.08)', color: '#8fbb7e', border: '1px solid rgb(34 197 94 / 0.2)' }}>
                   <CheckCircle2 size={13} className="shrink-0" />{success}
                 </div>
               )}
@@ -263,13 +263,13 @@ export default function Login() {
 
               {error && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
-                  style={{ background: 'rgb(239 68 68 / 0.08)', color: '#f87171', border: '1px solid rgb(239 68 68 / 0.2)' }}>
+                  style={{ background: 'rgb(239 68 68 / 0.08)', color: '#e07b62', border: '1px solid rgb(239 68 68 / 0.2)' }}>
                   <AlertCircle size={13} className="shrink-0" />{error}
                 </div>
               )}
               {success && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
-                  style={{ background: 'rgb(34 197 94 / 0.08)', color: '#4ade80', border: '1px solid rgb(34 197 94 / 0.2)' }}>
+                  style={{ background: 'rgb(34 197 94 / 0.08)', color: '#8fbb7e', border: '1px solid rgb(34 197 94 / 0.2)' }}>
                   <CheckCircle2 size={13} className="shrink-0" />{success}
                 </div>
               )}

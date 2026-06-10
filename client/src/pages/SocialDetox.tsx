@@ -17,12 +17,12 @@ const APP_PRESETS = [
   { name: 'TikTok',    icon: '🎵', color: '#000000' },
   { name: 'X / Twitter', icon: '🐦', color: '#1da1f2' },
   { name: 'YouTube',   icon: '▶️', color: '#ff0000' },
-  { name: 'Reddit',    icon: '🤖', color: '#ff4500' },
+  { name: 'Reddit',    icon: '🤖', color: '#d97757' },
   { name: 'LinkedIn',  icon: '💼', color: '#0077b5' },
   { name: 'Snapchat',  icon: '👻', color: '#fffc00' },
   { name: 'WhatsApp',  icon: '💬', color: '#25d366' },
 ];
-const COLORS = ['#6366f1','#a855f7','#ec4899','#f43f5e','#f97316','#eab308','#22c55e','#14b8a6','#0ea5e9','#e1306c'];
+const COLORS = ['#d97757','#8a7ba8','#c2553d','#c2553d','#d97757','#d9a066','#6f9d5c','#629a90','#629a90','#e1306c'];
 
 export default function SocialDetox() {
   const [apps, setApps]       = useState<DetoxApp[]>([]);
@@ -30,7 +30,7 @@ export default function SocialDetox() {
   const [showAdd, setShowAdd]  = useState(false);
   const [newName, setNewName]  = useState('');
   const [newIcon, setNewIcon]  = useState('📱');
-  const [newColor, setNewColor]= useState('#6366f1');
+  const [newColor, setNewColor]= useState('#d97757');
   const [newLimit, setNewLimit]= useState('0');
 
   const load = useCallback(async () => {
@@ -52,7 +52,7 @@ export default function SocialDetox() {
   async function addApp() {
     if (!newName.trim()) return;
     await api.post('/detox/apps', { name: newName, icon: newIcon, color: newColor, daily_limit_minutes: Number(newLimit) });
-    setShowAdd(false); setNewName(''); setNewIcon('📱'); setNewColor('#6366f1'); setNewLimit('0');
+    setShowAdd(false); setNewName(''); setNewIcon('📱'); setNewColor('#d97757'); setNewLimit('0');
     load();
   }
 
@@ -71,20 +71,20 @@ export default function SocialDetox() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 anim-page"
-      style={{ '--accent-rgb': '244 63 94' } as React.CSSProperties}>
+      style={{ '--accent-rgb': '194 85 61' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(244,63,94,0.06) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(194,85,61,0.06) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }} />
       </div>
 
       {/* ── FIREWALL HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #f43f5e25', minHeight: 110 }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #c2553d25', minHeight: 110 }}>
         {/* Corrupted pixel noise */}
         <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.06 }}>
           {[...Array(6)].map((_,i) => (
@@ -92,36 +92,36 @@ export default function SocialDetox() {
               position: 'absolute',
               left: `${i * 17}%`, top: `${20 + (i%3)*20}%`,
               width: 40, height: 6,
-              background: i%2===0 ? '#f43f5e' : '#8b5cf6',
+              background: i%2===0 ? '#c2553d' : '#8a7ba8',
               animation: `glitch-block 5s step-end ${i*700}ms infinite`,
             }} />
           ))}
         </div>
         {/* Diagonal warning stripe */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(244,63,94,0.02) 20px, rgba(244,63,94,0.02) 22px)',
+          backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(194,85,61,0.02) 20px, rgba(194,85,61,0.02) 22px)',
         }} />
-        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #f43f5e', borderLeft: '1.5px solid #f43f5e', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #f43f5e', borderRight: '1.5px solid #f43f5e', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #f43f5e', borderLeft: '1.5px solid #f43f5e', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #f43f5e', borderRight: '1.5px solid #f43f5e', opacity: 0.7 }} />
+        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #c2553d', borderLeft: '1.5px solid #c2553d', opacity: 0.7 }} />
+        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #c2553d', borderRight: '1.5px solid #c2553d', opacity: 0.7 }} />
+        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #c2553d', borderLeft: '1.5px solid #c2553d', opacity: 0.7 }} />
+        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #c2553d', borderRight: '1.5px solid #c2553d', opacity: 0.7 }} />
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #f43f5e80, transparent)', boxShadow: '0 0 8px #f43f5e' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, #c2553d80, transparent)', boxShadow: '0 0 8px #c2553d' }} />
         <div className="relative z-10 px-5 py-5" style={{ animation: 'glitch-block 8s step-end 2s infinite' }}>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#f43f5e', opacity: 0.7 }}>BLOCK://</span>
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#c2553d', opacity: 0.7 }}>BLOCK://</span>
             <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">FIREWALL_ACTIVE</span>
-            <span className="cursor-blink font-mono" style={{ color: '#f43f5e', fontSize: 11 }}>▌</span>
+            <span className="cursor-blink font-mono" style={{ color: '#c2553d', fontSize: 11 }}>▌</span>
           </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: '0 0 30px #f43f5e50' }}>
+          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: '0 0 30px #c2553d50' }}>
             DIGITAL DETOX
           </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#8b5cf6', opacity: 0.6 }}>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#8a7ba8', opacity: 0.6 }}>
             // neural firewall engaged — signal blocking protocol
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #f43f5e30, transparent)' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, #c2553d30, transparent)' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
@@ -139,18 +139,18 @@ export default function SocialDetox() {
         <div className="card px-4 py-4">
           <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-2">
-              <Shield size={14} style={{ color: score === 100 ? '#22c55e' : score >= 60 ? '#eab308' : '#ef4444' }} />
+              <Shield size={14} style={{ color: score === 100 ? '#6f9d5c' : score >= 60 ? '#d9a066' : '#cd5240' }} />
               <span className="text-sm font-semibold text-head">Today's Detox Score</span>
             </div>
-            <span className="text-xl font-bold" style={{ color: score === 100 ? '#22c55e' : score >= 60 ? '#eab308' : '#ef4444' }}>
+            <span className="text-xl font-bold" style={{ color: score === 100 ? '#6f9d5c' : score >= 60 ? '#d9a066' : '#cd5240' }}>
               {score}%
             </span>
           </div>
           <div className="h-1.5 rounded-full w-full" style={{ background: 'var(--s3)' }}>
             <div className="h-1.5 rounded-full bar-fill"
-              style={{ width: `${score}%`, background: score === 100 ? '#22c55e' : score >= 60 ? '#eab308' : '#ef4444' }} />
+              style={{ width: `${score}%`, background: score === 100 ? '#6f9d5c' : score >= 60 ? '#d9a066' : '#cd5240' }} />
           </div>
-          <p className="text-[11px] mt-2" style={{ color: '#52525b' }}>
+          <p className="text-[11px] mt-2" style={{ color: '#57544a' }}>
             {cleanCount}/{apps.length} apps clean today
           </p>
         </div>
@@ -161,7 +161,7 @@ export default function SocialDetox() {
         <div className="card px-4 py-4 space-y-3 scale-in">
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold text-head">Track an app</span>
-            <button onClick={() => setShowAdd(false)} style={{ color: '#52525b' }}><X size={15} /></button>
+            <button onClick={() => setShowAdd(false)} style={{ color: '#57544a' }}><X size={15} /></button>
           </div>
           {/* Presets */}
           <div>
@@ -170,7 +170,7 @@ export default function SocialDetox() {
               {APP_PRESETS.map(p => (
                 <button key={p.name} onClick={() => fillPreset(p)}
                   className="tap flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
-                  style={{ background: newName === p.name ? p.color + '22' : 'var(--s2)', color: newName === p.name ? p.color : '#a1a1aa', border: `1px solid ${newName === p.name ? p.color + '44' : 'var(--b)'}` }}>
+                  style={{ background: newName === p.name ? p.color + '22' : 'var(--s2)', color: newName === p.name ? p.color : '#a5a293', border: `1px solid ${newName === p.name ? p.color + '44' : 'var(--b)'}` }}>
                   {p.icon} {p.name}
                 </button>
               ))}
@@ -234,7 +234,7 @@ export default function SocialDetox() {
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] mt-0.5" style={{ color: '#52525b' }}>
+                  <p className="text-[11px] mt-0.5" style={{ color: '#57544a' }}>
                     {app.daily_limit_minutes === 0 ? 'Full detox' : `Limit: ${app.daily_limit_minutes}m`}
                     {streakData && streakData.longest > 0 && ` · best ${streakData.longest}d`}
                   </p>
@@ -245,26 +245,26 @@ export default function SocialDetox() {
                   <button onClick={() => checkIn(app.id, 'clean')}
                     className="tap flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
                     style={{
-                      background: isClean ? '#22c55e22' : 'var(--s2)',
-                      color: isClean ? '#22c55e' : '#71717a',
-                      border: `1px solid ${isClean ? '#22c55e44' : 'var(--b)'}`,
+                      background: isClean ? '#6f9d5c22' : 'var(--s2)',
+                      color: isClean ? '#6f9d5c' : '#757163',
+                      border: `1px solid ${isClean ? '#6f9d5c44' : 'var(--b)'}`,
                     }}>
                     <Check size={11} /> Clean
                   </button>
                   <button onClick={() => checkIn(app.id, 'slipped')}
                     className="tap flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
                     style={{
-                      background: isSlipped ? '#ef444422' : 'var(--s2)',
-                      color: isSlipped ? '#ef4444' : '#71717a',
-                      border: `1px solid ${isSlipped ? '#ef444444' : 'var(--b)'}`,
+                      background: isSlipped ? '#cd524022' : 'var(--s2)',
+                      color: isSlipped ? '#cd5240' : '#757163',
+                      border: `1px solid ${isSlipped ? '#cd524044' : 'var(--b)'}`,
                     }}>
                     ✗
                   </button>
                   <button onClick={() => deleteApp(app.id)}
                     className="tap p-1.5 rounded-lg transition-colors"
-                    style={{ color: '#3f3f46' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#ef4444'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#3f3f46'}>
+                    style={{ color: '#3d3935' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#cd5240'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#3d3935'}>
                     <Trash2 size={13} />
                   </button>
                 </div>
@@ -273,7 +273,7 @@ export default function SocialDetox() {
               {/* Slip indicator */}
               {isSlipped && (
                 <div className="mt-2 text-[11px] px-2 py-1 rounded-md"
-                  style={{ background: '#ef444410', color: '#f87171' }}>
+                  style={{ background: '#cd524010', color: '#e07b62' }}>
                   Slipped today — tomorrow is a fresh start 🙏
                 </div>
               )}

@@ -7,16 +7,16 @@ import type { Habit } from '../types';
 
 const CATEGORIES = ['all', 'discipline', 'physical', 'mental', 'health', 'other'] as const;
 const CAT_COLOR: Record<string, string> = {
-  discipline: '#6366f1',
-  physical:   '#f97316',
-  mental:     '#a855f7',
-  health:     '#22c55e',
-  other:      '#71717a',
+  discipline: '#d97757',
+  physical:   '#d97757',
+  mental:     '#8a7ba8',
+  health:     '#6f9d5c',
+  other:      '#757163',
 };
 
 function getToday() { return new Date().toISOString().slice(0, 10); }
 
-const emptyForm = () => ({ name: '', icon: '', category: 'discipline', color: '#6366f1' });
+const emptyForm = () => ({ name: '', icon: '', category: 'discipline', color: '#d97757' });
 
 interface Violation { habit_id: number; missStreak: number; penaltyToday: number; }
 interface Momentum { multiplier: number; expiresAt: string; }
@@ -104,73 +104,73 @@ export default function Habits() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 anim-page"
-      style={{ '--accent-rgb': '167 139 250' } as React.CSSProperties}>
+      style={{ '--accent-rgb': '217 119 87' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(167,139,250,0.06) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(212,162,127,0.06) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }} />
       </div>
 
       {/* ── BIORHYTHM HEADER ── */}
       <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #a78bfa25', minHeight: 110 }}>
+        style={{ background: 'var(--hero-bg)', border: '1px solid #d4a27f25', minHeight: 110 }}>
         {/* Pulse rings */}
         <div className="absolute pointer-events-none" style={{ top: '50%', right: 40, transform: 'translateY(-50%)' }}>
           <div className="absolute rounded-full" style={{
             width: 80, height: 80, top: -40, left: -40,
-            border: '1px solid #a78bfa',
+            border: '1px solid #d4a27f',
             animation: 'pulse-ring-out 2.4s ease-out 0ms infinite',
           }} />
           <div className="absolute rounded-full" style={{
             width: 80, height: 80, top: -40, left: -40,
-            border: '1px solid #a78bfa',
+            border: '1px solid #d4a27f',
             animation: 'pulse-ring-out 2.4s ease-out 600ms infinite',
           }} />
           <div className="absolute rounded-full" style={{
             width: 80, height: 80, top: -40, left: -40,
-            border: '1px solid #a78bfa',
+            border: '1px solid #d4a27f',
             animation: 'pulse-ring-out 2.4s ease-out 1200ms infinite',
           }} />
           <div className="w-3 h-3 rounded-full absolute" style={{
             top: -6, left: -6,
             background: '#f0abfc',
-            boxShadow: '0 0 12px #f0abfc, 0 0 24px #a78bfa',
+            boxShadow: '0 0 12px #f0abfc, 0 0 24px #d4a27f',
           }} />
         </div>
         {/* HUD corners */}
         <div className="absolute top-0 left-0 pointer-events-none"
-          style={{ width: 12, height: 12, borderTop: '1.5px solid #a78bfa', borderLeft: '1.5px solid #a78bfa', opacity: 0.6 }} />
+          style={{ width: 12, height: 12, borderTop: '1.5px solid #d4a27f', borderLeft: '1.5px solid #d4a27f', opacity: 0.6 }} />
         <div className="absolute top-0 right-0 pointer-events-none"
-          style={{ width: 12, height: 12, borderTop: '1.5px solid #a78bfa', borderRight: '1.5px solid #a78bfa', opacity: 0.6 }} />
+          style={{ width: 12, height: 12, borderTop: '1.5px solid #d4a27f', borderRight: '1.5px solid #d4a27f', opacity: 0.6 }} />
         <div className="absolute bottom-0 left-0 pointer-events-none"
-          style={{ width: 12, height: 12, borderBottom: '1.5px solid #a78bfa', borderLeft: '1.5px solid #a78bfa', opacity: 0.6 }} />
+          style={{ width: 12, height: 12, borderBottom: '1.5px solid #d4a27f', borderLeft: '1.5px solid #d4a27f', opacity: 0.6 }} />
         <div className="absolute bottom-0 right-0 pointer-events-none"
-          style={{ width: 12, height: 12, borderBottom: '1.5px solid #a78bfa', borderRight: '1.5px solid #a78bfa', opacity: 0.6 }} />
+          style={{ width: 12, height: 12, borderBottom: '1.5px solid #d4a27f', borderRight: '1.5px solid #d4a27f', opacity: 0.6 }} />
         {/* Top neon edge */}
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #a78bfa60, transparent)', boxShadow: '0 0 8px #a78bfa' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, #d4a27f60, transparent)', boxShadow: '0 0 8px #d4a27f' }} />
         {/* Content */}
         <div className="relative z-10 px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#a78bfa', opacity: 0.6 }}>BIO://</span>
+            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#d4a27f', opacity: 0.6 }}>BIO://</span>
             <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">BEHAVIORAL_MATRIX</span>
             <span className="cursor-blink font-mono" style={{ color: '#f0abfc', fontSize: 11 }}>▌</span>
           </div>
           <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: '0 0 30px #a78bfa50' }}>
+            style={{ textShadow: '0 0 30px #d4a27f50' }}>
             BEHAVIORAL MATRIX
           </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#a78bfa', opacity: 0.5 }}>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#d4a27f', opacity: 0.5 }}>
             {'// neural pathway reinforcement protocol — daily cycles active'}
           </p>
         </div>
         {/* Bottom neon edge */}
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, transparent, #a78bfa40, transparent)' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, #d4a27f40, transparent)' }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
@@ -178,7 +178,7 @@ export default function Habits() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-medium mb-0.5" style={{ color: '#52525b', letterSpacing: '0.05em' }}>
+          <p className="text-xs font-medium mb-0.5" style={{ color: '#57544a', letterSpacing: '0.05em' }}>
             {format(new Date(), 'EEEE, d MMM').toUpperCase()}
           </p>
           <p className="text-sm mt-0.5" style={{ color: 'var(--t-dim)' }}>
@@ -194,7 +194,7 @@ export default function Habits() {
 
       {loadErr && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs"
-          style={{ background: 'rgb(239 68 68 / 0.08)', color: '#f87171', border: '1px solid rgb(239 68 68 / 0.2)' }}>
+          style={{ background: 'rgb(239 68 68 / 0.08)', color: '#e07b62', border: '1px solid rgb(239 68 68 / 0.2)' }}>
           <AlertCircle size={13} />
           {loadErr} — <button type="button" onClick={load} className="underline tap">retry</button>
         </div>
@@ -211,12 +211,12 @@ export default function Habits() {
       {/* Momentum buff badge */}
       {momentum && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl scale-in"
-          style={{ background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.4)', boxShadow: '0 0 18px rgba(34,197,94,0.15)' }}>
-          <Zap size={14} color="#22c55e" className="glow-pulse" />
-          <span className="text-xs font-black tracking-wide" style={{ color: '#22c55e' }}>
+          style={{ background: 'rgba(111,157,92,0.10)', border: '1px solid rgba(111,157,92,0.4)', boxShadow: '0 0 18px rgba(111,157,92,0.15)' }}>
+          <Zap size={14} color="#6f9d5c" className="glow-pulse" />
+          <span className="text-xs font-black tracking-wide" style={{ color: '#6f9d5c' }}>
             MOMENTUM ×{momentum.multiplier}
           </span>
-          <span className="text-[11px] font-mono" style={{ color: '#22c55e', opacity: 0.7 }}>
+          <span className="text-[11px] font-mono" style={{ color: '#6f9d5c', opacity: 0.7 }}>
             · habit points doubled — keep the streak alive
           </span>
         </div>
@@ -239,7 +239,7 @@ export default function Habits() {
                   className="px-2.5 py-1 rounded-full text-xs font-semibold capitalize tap"
                   style={{
                     background: form.category === cat ? CAT_COLOR[cat] + '22' : 'var(--s3)',
-                    color: form.category === cat ? CAT_COLOR[cat] : '#71717a',
+                    color: form.category === cat ? CAT_COLOR[cat] : '#757163',
                     border: form.category === cat ? `1px solid ${CAT_COLOR[cat]}44` : '1px solid transparent',
                   }}>
                   {cat}
@@ -249,7 +249,7 @@ export default function Habits() {
           </div>
           {formErr && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
-              style={{ background: 'rgb(239 68 68 / 0.1)', color: '#f87171' }}>
+              style={{ background: 'rgb(239 68 68 / 0.1)', color: '#e07b62' }}>
               <AlertCircle size={13} />{formErr}
             </div>
           )}
@@ -275,7 +275,7 @@ export default function Habits() {
             className="px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 capitalize tap"
             style={{
               background: filter === cat ? `rgb(var(--accent-rgb) / 0.12)` : 'var(--s2)',
-              color: filter === cat ? `rgb(var(--accent-rgb-light))` : '#71717a',
+              color: filter === cat ? `rgb(var(--accent-rgb-light))` : '#757163',
               border: filter === cat ? `1px solid rgb(var(--accent-rgb) / 0.2)` : '1px solid transparent',
             }}>
             {cat}
@@ -288,7 +288,7 @@ export default function Habits() {
       {/* Habit list */}
       {filtered.length === 0 ? (
         <div className="card py-10 text-center">
-          <Target size={28} style={{ color: '#52525b', margin: '0 auto 8px' }} />
+          <Target size={28} style={{ color: '#57544a', margin: '0 auto 8px' }} />
           <p className="text-sm font-medium" style={{ color: 'var(--t-dim)' }}>
             {habits.length === 0 ? 'No habits yet — add one above' : 'No habits in this category'}
           </p>
@@ -301,8 +301,8 @@ export default function Habits() {
             return (
               <div key={h.id} className="card px-4 py-3 flex items-center gap-3"
                 style={viol ? {
-                  borderColor: 'rgba(239,68,68,0.55)',
-                  boxShadow: '0 0 18px rgba(239,68,68,0.18)',
+                  borderColor: 'rgba(205,82,64,0.55)',
+                  boxShadow: '0 0 18px rgba(205,82,64,0.18)',
                   animation: 'glow-pulse 2s ease-in-out infinite',
                 } : undefined}>
                 {/* Done toggle */}
@@ -311,7 +311,7 @@ export default function Habits() {
                   style={{
                     background: h.done ? h.color + '22' : 'var(--s3)',
                     border: `1.5px solid ${h.done ? h.color : 'var(--b)'}`,
-                    color: h.done ? h.color : '#52525b',
+                    color: h.done ? h.color : '#57544a',
                   }}>
                   {h.done
                     ? <Check size={15} strokeWidth={3} />
@@ -325,11 +325,11 @@ export default function Habits() {
                     {h.name}
                   </p>
                   {viol ? (
-                    <p className="text-[10px] font-black tracking-wide mt-0.5 flex items-center gap-1" style={{ color: '#ef4444' }}>
+                    <p className="text-[10px] font-black tracking-wide mt-0.5 flex items-center gap-1" style={{ color: '#cd5240' }}>
                       <Flame size={10} /> {viol.missStreak} DAYS MISSED · PENALTY ACTIVE
                     </p>
                   ) : (
-                    <p className="text-[11px] capitalize mt-0.5" style={{ color: CAT_COLOR[h.category] ?? '#71717a' }}>
+                    <p className="text-[11px] capitalize mt-0.5" style={{ color: CAT_COLOR[h.category] ?? '#757163' }}>
                       {h.category}
                     </p>
                   )}
@@ -338,15 +338,15 @@ export default function Habits() {
                 {/* Streak */}
                 {streak > 0 && (
                   <div className="flex items-center gap-1 shrink-0">
-                    <Flame size={12} color="#f97316" />
-                    <span className="text-[11px] font-bold" style={{ color: '#f97316' }}>{streak}</span>
+                    <Flame size={12} color="#d97757" />
+                    <span className="text-[11px] font-bold" style={{ color: '#d97757' }}>{streak}</span>
                   </div>
                 )}
 
                 {/* Delete */}
                 <button type="button" onClick={() => deleteHabit(h.id)}
                   className="w-7 h-7 flex items-center justify-center rounded-lg tap"
-                  style={{ color: '#52525b' }}>
+                  style={{ color: '#57544a' }}>
                   <Trash2 size={13} />
                 </button>
               </div>

@@ -64,23 +64,23 @@ export default function UrgentTasksModal() {
       <div
         className="card max-w-sm w-full mx-4 px-5 py-5 space-y-4"
         onClick={e => e.stopPropagation()}
-        style={{ borderColor: 'rgba(239,68,68,0.3)' }}
+        style={{ borderColor: 'rgba(205,82,64,0.3)' }}
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
               style={{ background: 'rgb(239 68 68 / 0.12)' }}>
-              <AlertTriangle size={16} color="#ef4444" />
+              <AlertTriangle size={16} color="#cd5240" />
             </div>
             <div>
               <p className="text-sm font-bold text-head">Urgent Tasks</p>
-              <p className="text-[11px]" style={{ color: '#71717a' }}>
+              <p className="text-[11px]" style={{ color: '#757163' }}>
                 {tasks.length} task{tasks.length !== 1 ? 's' : ''} need{tasks.length === 1 ? 's' : ''} immediate attention
               </p>
             </div>
           </div>
-          <button onClick={dismiss} className="tap shrink-0 mt-0.5" style={{ color: '#52525b' }}>
+          <button onClick={dismiss} className="tap shrink-0 mt-0.5" style={{ color: '#57544a' }}>
             <X size={16} />
           </button>
         </div>
@@ -96,17 +96,17 @@ export default function UrgentTasksModal() {
                 borderBottom: i < Math.min(tasks.length, 6) - 1 ? '1px solid var(--b)' : 'none',
               }}
             >
-              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: '#ef4444' }} />
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: '#cd5240' }} />
               <p className="text-sm text-body flex-1 truncate">{t.title}</p>
               {t.due_date && (
-                <span className="text-[10px] shrink-0" style={{ color: '#ef4444' }}>
+                <span className="text-[10px] shrink-0" style={{ color: '#cd5240' }}>
                   {t.due_date < new Date().toISOString().slice(0, 10) ? '⚠ overdue' : t.due_date}
                 </span>
               )}
             </div>
           ))}
           {tasks.length > 6 && (
-            <div className="px-3 py-2 text-center text-xs" style={{ color: '#52525b', background: 'var(--s2)' }}>
+            <div className="px-3 py-2 text-center text-xs" style={{ color: '#57544a', background: 'var(--s2)' }}>
               +{tasks.length - 6} more
             </div>
           )}
@@ -117,7 +117,7 @@ export default function UrgentTasksModal() {
           <button
             onClick={dismiss}
             className="flex-1 py-2 rounded-xl text-sm font-medium tap"
-            style={{ background: 'var(--s3)', color: '#71717a' }}
+            style={{ background: 'var(--s3)', color: '#757163' }}
           >
             Dismiss
           </button>
@@ -125,7 +125,7 @@ export default function UrgentTasksModal() {
             to="/tasks"
             onClick={dismiss}
             className="flex-1 py-2 rounded-xl text-sm font-semibold tap flex items-center justify-center gap-1.5 no-underline"
-            style={{ background: 'rgb(239 68 68 / 0.15)', color: '#ef4444' }}
+            style={{ background: 'rgb(239 68 68 / 0.15)', color: '#cd5240' }}
           >
             View Tasks <ArrowRight size={13} />
           </Link>

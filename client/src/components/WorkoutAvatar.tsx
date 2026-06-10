@@ -16,31 +16,31 @@ function getBuffs(stats: WorkoutStats): Buff[] {
   const buffs: Buff[] = [];
 
   if (stats.weekly_sessions >= 5) {
-    buffs.push({ id: 'beast', emoji: '🦁', label: 'Beast Mode', description: '5+ sessions this week', color: '#f43f5e' });
+    buffs.push({ id: 'beast', emoji: '🦁', label: 'Beast Mode', description: '5+ sessions this week', color: '#c2553d' });
   } else if (stats.weekly_sessions >= 3) {
-    buffs.push({ id: 'strong', emoji: '💪', label: 'Strong', description: '3+ sessions this week', color: '#f97316' });
+    buffs.push({ id: 'strong', emoji: '💪', label: 'Strong', description: '3+ sessions this week', color: '#d97757' });
   } else if (stats.weekly_sessions >= 1) {
-    buffs.push({ id: 'active', emoji: '⚡', label: 'Active', description: 'Working out this week', color: '#eab308' });
+    buffs.push({ id: 'active', emoji: '⚡', label: 'Active', description: 'Working out this week', color: '#d9a066' });
   }
 
   if (stats.personal_bests >= 3) {
-    buffs.push({ id: 'record', emoji: '🏆', label: 'Record Breaker', description: `${stats.personal_bests} personal bests`, color: '#f59e0b' });
+    buffs.push({ id: 'record', emoji: '🏆', label: 'Record Breaker', description: `${stats.personal_bests} personal bests`, color: '#d9a066' });
   }
 
   if (stats.total_sets >= 50) {
-    buffs.push({ id: 'grind', emoji: '🔥', label: 'Grinder', description: `${stats.total_sets} sets logged`, color: '#ef4444' });
+    buffs.push({ id: 'grind', emoji: '🔥', label: 'Grinder', description: `${stats.total_sets} sets logged`, color: '#cd5240' });
   } else if (stats.total_sets >= 20) {
-    buffs.push({ id: 'consistent', emoji: '✨', label: 'Consistent', description: `${stats.total_sets} sets logged`, color: '#a78bfa' });
+    buffs.push({ id: 'consistent', emoji: '✨', label: 'Consistent', description: `${stats.total_sets} sets logged`, color: '#d4a27f' });
   }
 
   return buffs;
 }
 
 function getAvatarTier(sessions: number): { body: string; aura: string; label: string } {
-  if (sessions >= 5) return { body: '#f43f5e', aura: 'rgba(244,63,94,0.25)', label: 'Champion' };
-  if (sessions >= 3) return { body: '#f97316', aura: 'rgba(249,115,22,0.2)', label: 'Warrior' };
-  if (sessions >= 1) return { body: '#a78bfa', aura: 'rgba(167,139,250,0.18)', label: 'Fighter' };
-  return { body: '#6b7280', aura: 'rgba(107,114,128,0.1)', label: 'Rookie' };
+  if (sessions >= 5) return { body: '#c2553d', aura: 'rgba(194,85,61,0.25)', label: 'Champion' };
+  if (sessions >= 3) return { body: '#d97757', aura: 'rgba(217,119,87,0.2)', label: 'Warrior' };
+  if (sessions >= 1) return { body: '#d4a27f', aura: 'rgba(212,162,127,0.18)', label: 'Fighter' };
+  return { body: '#84816f', aura: 'rgba(132,129,111,0.1)', label: 'Rookie' };
 }
 
 export default function WorkoutAvatar({ stats }: { stats: WorkoutStats }) {
@@ -72,9 +72,9 @@ export default function WorkoutAvatar({ stats }: { stats: WorkoutStats }) {
             {/* Stars / energy sparks at top */}
             {stats.weekly_sessions >= 3 && (
               <>
-                <circle cx="44" cy="6" r="2" fill="#fbbf24" opacity="0.9"/>
-                <circle cx="36" cy="9" r="1.5" fill="#fbbf24" opacity="0.7"/>
-                <circle cx="52" cy="9" r="1.5" fill="#fbbf24" opacity="0.7"/>
+                <circle cx="44" cy="6" r="2" fill="#e0b27c" opacity="0.9"/>
+                <circle cx="36" cy="9" r="1.5" fill="#e0b27c" opacity="0.7"/>
+                <circle cx="52" cy="9" r="1.5" fill="#e0b27c" opacity="0.7"/>
               </>
             )}
           </svg>
