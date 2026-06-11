@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText, Dumbbell } from 'lucide-react';
 import WorkoutAvatar from '../components/WorkoutAvatar';
 import { format, parseISO } from 'date-fns';
 import {
@@ -11,14 +11,20 @@ import { useSync } from '../hooks/useSync';
 const CATEGORIES = ['push', 'pull', 'legs', 'cardio', 'core', 'other'] as const;
 type Category = typeof CATEGORIES[number];
 
-const CAT_COLORS: Record<Category, string> = {
-  push: 'text-orange-400 bg-orange-900/30',
-  pull: 'text-blue-400 bg-blue-900/30',
-  legs: 'text-green-400 bg-green-900/30',
-  cardio: 'text-red-400 bg-red-900/30',
-  core: 'text-yellow-400 bg-yellow-900/30',
-  other: 'text-gray-400 bg-gray-800',
+// Ember palette per category — no cool hues anywhere
+const CAT_HEX: Record<Category, string> = {
+  push: '#d97757',   // terracotta
+  pull: '#b5764f',   // sienna
+  legs: '#cf8a3e',   // ochre
+  cardio: '#b3372e', // brick
+  core: '#d9a066',   // kraft gold
+  other: '#a5a293',  // stone
 };
+const catChip = (cat: Category): React.CSSProperties => ({
+  color: CAT_HEX[cat],
+  background: `${CAT_HEX[cat]}16`,
+  border: `1px solid ${CAT_HEX[cat]}35`,
+});
 
 interface PlanExercise { id: number; day_id: number; name: string; sets: number; reps: string; weight: string; notes: string; }
 interface PlanDay { id: number; name: string; icon: string; color: string; exercises: PlanExercise[]; }
@@ -39,13 +45,15 @@ function ExerciseProgress({ exercise, onClose }: { exercise: Exercise; onClose: 
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl p-5 w-full max-w-lg" onClick={e => e.stopPropagation()}>
+      <div className="rounded-2xl p-5 w-full max-w-lg paper-in"
+        style={{ background: 'var(--s2)', border: '1px solid var(--bh)', boxShadow: '0 24px 64px rgba(0,0,0,0.45)' }}
+        onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-white">{exercise.name} — Progress</h3>
-          <button type="button" onClick={onClose} className="text-gray-500 hover:text-gray-200 text-xl">×</button>
+          <h3 className="font-semibold text-head">{exercise.name} — Progress</h3>
+          <button type="button" onClick={onClose} className="text-xl tap" style={{ color: 'var(--t-faint)' }}>×</button>
         </div>
         {data.length === 0 ? (
-          <p className="text-gray-500 text-sm py-8 text-center">No weight data yet</p>
+          <p className="text-sm py-8 text-center" style={{ color: 'var(--t-faint)' }}>No weight data yet</p>
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={data}>
@@ -121,9 +129,10 @@ function ExerciseSearchBox({ onSelect, selectedName, onClear }: {
 
   if (selectedName) {
     return (
-      <div className="flex items-center gap-2 w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5">
-        <span className="text-sm text-white flex-1 truncate">{selectedName}</span>
-        <button type="button" onClick={onClear} className="text-gray-400 hover:text-gray-200 text-sm px-1">×</button>
+      <div className="flex items-center gap-2 w-full rounded-xl px-2 py-1.5"
+        style={{ background: 'var(--s1)', border: '1px solid rgb(var(--accent-rgb) / 0.35)' }}>
+        <span className="text-sm flex-1 truncate" style={{ color: 'var(--t-body)' }}>{selectedName}</span>
+        <button type="button" onClick={onClear} className="text-sm px-1 tap" style={{ color: 'var(--t-faint)' }}>×</button>
       </div>
     );
   }
@@ -135,7 +144,8 @@ function ExerciseSearchBox({ onSelect, selectedName, onClear }: {
         onChange={e => { setQ(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
         placeholder="Tap to browse all exercises, or type to search…"
-        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-white text-sm focus:outline-none"
+        className="w-full rounded-xl px-2 py-1.5 text-sm focus:outline-none"
+        style={{ background: 'var(--s1)', border: '1px solid var(--b)', color: 'var(--t-body)' }}
       />
       {open && hits.length > 0 && (
         <div className="absolute left-0 right-0 top-full mt-1 z-30 rounded-lg overflow-hidden max-h-72 overflow-y-auto"
@@ -346,82 +356,47 @@ export default function Workout() {
     }
   }
 
+  const lastSession = sessions[0];
+  const headerSubtitle = sessions.length === 0
+    ? 'No sessions yet — log your first one below'
+    : `${sessions.length} session${sessions.length > 1 ? 's' : ''} logged${lastSession ? ` · last on ${format(parseISO(lastSession.date), 'd MMM')}` : ''}`;
+
   return (
-    <div className="space-y-4"
+    <div className="space-y-4 paper-in"
       style={{ '--accent-rgb': '179 55 46' } as React.CSSProperties}>
 
-      {/* Cyberpunk body overlay */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(217,119,87,0.06) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }} />
-      </div>
-
-      {/* ── FORGE HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'linear-gradient(180deg, #1a0800 0%, var(--hero-bg) 60%)', border: '1px solid #d9775730', minHeight: 120 }}>
-        {/* Heat shimmer columns */}
-        <div className="absolute inset-0 pointer-events-none flex gap-8 px-8" style={{ opacity: 0.15 }}>
-          {[0,200,400,600,800,1000,1200,1400].map(d => (
-            <div key={d} style={{
-              width: 2, flex: '0 0 2px', background: '#d9775760',
-              animation: `heat-shimmer 1.8s ease-in-out ${d}ms infinite`,
-            }} />
-          ))}
-        </div>
-        {/* Ember particles */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[...Array(6)].map((_,i) => (
-            <div key={i} className="absolute rounded-full" style={{
-              width: 3, height: 3,
-              background: i % 2 === 0 ? '#d97757' : '#ff8c00',
-              boxShadow: 'none',
-              left: `${15 + i * 14}%`,
-              bottom: 16,
-              animation: `ember-float ${1.5 + i * 0.3}s ease-out ${i * 400}ms infinite`,
-            }} />
-          ))}
-        </div>
-        {/* HUD corners in orange */}
-        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #d97757', borderLeft: '1.5px solid #d97757', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #d97757', borderRight: '1.5px solid #d97757', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #d97757', borderLeft: '1.5px solid #d97757', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #d97757', borderRight: '1.5px solid #d97757', opacity: 0.7 }} />
-        {/* Top lava edge */}
-        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: '#d97757', boxShadow: 'none' }} />
-        {/* Content */}
-        <div className="relative z-10 px-5 py-5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#d97757', opacity: 0.7 }}>FORGE://</span>
-            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">IRON_PROTOCOL</span>
-            <span className="cursor-blink font-mono" style={{ color: '#d97757', fontSize: 11 }}>▌</span>
+      {/* ── Header ── */}
+      <div className="rounded-2xl px-5 py-6"
+        style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold tracking-[0.22em] uppercase mb-1" style={{ color: 'var(--t-faint)' }}>
+              Strength & training
+            </p>
+            <h1 className="text-3xl font-bold text-head" style={{ fontFamily: "'Lora', serif" }}>Training</h1>
+            <p className="text-[12px] mt-1" style={{ color: 'var(--t-faint)' }}>{headerSubtitle}</p>
           </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none" style={{ color: '#fff', textShadow: 'none' }}>
-            THE FORGE
-          </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#d97757', opacity: 0.5 }}>
-            // STRENGTH PROTOCOL ACTIVE — forge your limits
-          </p>
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+            style={{ background: '#b3372e14', border: '1px solid #b3372e30' }}>
+            <Dumbbell size={18} style={{ color: '#b3372e' }} />
+          </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: '#d9775740' }} />
       </div>
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      <div>
 
       <div className="flex justify-end">
         {tab === 'log' && (
           <button type="button" onClick={() => { setShowNewSession(s => !s); setSessionErr(''); }}
-            className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+            className="flex items-center gap-2 text-white px-3 py-2 rounded-xl text-sm font-bold tap"
+            style={{ background: 'rgb(var(--accent-rgb))' }}>
             <Plus size={16} /> New session
           </button>
         )}
         {tab === 'exercises' && (
           <button type="button" onClick={() => { setShowNewExercise(s => !s); setExerciseErr(''); }}
-            className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+            className="flex items-center gap-2 text-white px-3 py-2 rounded-xl text-sm font-bold tap"
+            style={{ background: 'rgb(var(--accent-rgb))' }}>
             <Plus size={16} /> Add exercise
           </button>
         )}
@@ -431,7 +406,10 @@ export default function Workout() {
       <div className="flex gap-2 flex-wrap">
         {(['log', 'plan', 'exercises', 'stats'] as const).map(t => (
           <button key={t} type="button" onClick={() => setTab(t)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors capitalize ${tab === t ? 'bg-brand-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
+            className="px-4 py-1.5 rounded-xl text-sm font-medium tap capitalize"
+            style={tab === t
+              ? { background: 'rgb(var(--accent-rgb))', color: '#fff' }
+              : { background: 'var(--s2)', color: 'var(--t-faint)', border: '1px solid var(--b)' }}>
             {t === 'log' ? 'Workout Log' : t === 'stats' ? 'Stats & PBs' : t === 'plan' ? 'My Plan' : 'Exercises'}
           </button>
         ))}
@@ -441,18 +419,21 @@ export default function Workout() {
       {tab === 'log' && (
         <div className="space-y-3">
           {showNewSession && (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
+            <div className="rounded-2xl p-4 space-y-3 paper-in"
+              style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1">Date</label>
+                  <label className="text-xs block mb-1" style={{ color: 'var(--t-faint)' }}>Date</label>
                   <input type="date" value={newSessionDate} onChange={e => setNewSessionDate(e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                    className="w-full rounded-xl px-3 py-2 text-sm focus:outline-none"
+                    style={{ background: 'var(--s2)', border: '1px solid var(--b)', color: 'var(--t-body)' }} />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1">Name (optional)</label>
+                  <label className="text-xs block mb-1" style={{ color: 'var(--t-faint)' }}>Name (optional)</label>
                   <input placeholder="e.g. Push day" value={newSessionName} onChange={e => setNewSessionName(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && createSession()}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                    className="w-full rounded-xl px-3 py-2 text-sm focus:outline-none"
+                    style={{ background: 'var(--s2)', border: '1px solid var(--b)', color: 'var(--t-body)' }} />
                 </div>
               </div>
               {sessionErr && (
@@ -461,9 +442,11 @@ export default function Workout() {
                 </div>
               )}
               <div className="flex gap-2 justify-end">
-                <button type="button" onClick={() => { setShowNewSession(false); setSessionErr(''); }} className="px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200">Cancel</button>
+                <button type="button" onClick={() => { setShowNewSession(false); setSessionErr(''); }}
+                  className="px-3 py-1.5 text-sm tap" style={{ color: 'var(--t-faint)' }}>Cancel</button>
                 <button type="button" onClick={createSession} disabled={savingSession}
-                  className="px-4 py-1.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-sm rounded-lg font-medium">
+                  className="px-4 py-1.5 disabled:opacity-50 text-white text-sm rounded-xl font-bold tap"
+                  style={{ background: 'rgb(var(--accent-rgb))' }}>
                   {savingSession ? 'Creating...' : 'Create'}
                 </button>
               </div>
@@ -471,12 +454,11 @@ export default function Workout() {
           )}
 
           {/* Quick-log panel */}
-          <div className="card px-4 py-4 space-y-3"
-            style={{ borderColor: 'rgb(255 69 0 / 0.2)', background: 'linear-gradient(135deg, var(--s1) 0%, rgba(217,119,87,0.03) 100%)' }}>
+          <div className="card px-4 py-4 space-y-3">
             <div className="flex items-center gap-2">
-              <Zap size={10} style={{ color: '#d97757' }} />
-              <span className="text-[10px] font-black tracking-[0.2em]" style={{ color: '#d97757' }}>QUICK LOG</span>
-              <span className="text-[10px] font-mono opacity-40 text-white">// speak your workout</span>
+              <Zap size={11} style={{ color: '#cf8a3e' }} />
+              <span className="text-[10px] font-bold tracking-[0.16em] uppercase" style={{ color: 'var(--t-faint)' }}>Quick log</span>
+              <span className="text-[11px]" style={{ color: 'var(--t-faint)', opacity: 0.7 }}>— describe it, I'll sort the sets</span>
             </div>
             <textarea
               rows={2}
@@ -485,15 +467,15 @@ export default function Workout() {
               onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitQuickLog(); }}
               placeholder="e.g. chest day, bench 4x8 80kg, cable flies 3x12, 20 min cardio"
               className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none resize-none"
-              style={{ background: 'var(--s3)', color: 'var(--t-body)', border: '1px solid rgb(255 69 0 / 0.2)' }}
+              style={{ background: 'var(--s2)', color: 'var(--t-body)', border: '1px solid var(--b)' }}
             />
             {quickErr && (
               <p className="text-xs" style={{ color: '#e07b62' }}>{quickErr}</p>
             )}
             {quickResult && (
-              <div className="rounded-xl px-3 py-3 space-y-2"
-                style={{ background: 'rgb(255 69 0 / 0.06)', border: '1px solid rgb(255 69 0 / 0.15)' }}>
-                <p className="text-xs font-semibold" style={{ color: '#ff6a00' }}>{quickResult.preview}</p>
+              <div className="rounded-xl px-3 py-3 space-y-2 paper-in"
+                style={{ background: '#cf8a3e10', border: '1px solid #cf8a3e2a' }}>
+                <p className="text-xs font-semibold" style={{ color: '#cf8a3e' }}>{quickResult.preview}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {quickResult.exercises.map((ex, i) => (
                     <span key={i} className="text-[11px] px-2 py-0.5 rounded-full"
@@ -513,37 +495,39 @@ export default function Workout() {
             )}
             <div className="flex justify-end">
               <button type="button" onClick={submitQuickLog} disabled={!quickText.trim() || quickLogging}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold tap disabled:opacity-40"
-                style={{ background: 'rgb(255 69 0 / 0.9)', color: '#fff' }}>
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold tap disabled:opacity-40 text-white"
+                style={{ background: 'rgb(var(--accent-rgb))' }}>
                 <Zap size={13} />{quickLogging ? 'Logging...' : 'Log it'}
               </button>
             </div>
           </div>
 
-          {sessions.length === 0 && <p className="text-gray-500 text-sm py-8 text-center">No sessions yet. Add your first workout!</p>}
+          {sessions.length === 0 && <p className="text-sm py-8 text-center" style={{ color: 'var(--t-faint)' }}>No sessions yet. Add your first workout!</p>}
 
           {sessions.map(session => {
             const isExpanded = expandedSession === session.id;
             const sets = sessionSets[session.id] || [];
             return (
-              <div key={session.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+              <div key={session.id} className="card rounded-2xl overflow-hidden"
+                style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
                 <div className="flex items-center gap-3 px-4 py-3 cursor-pointer" onClick={() => expandSession(session.id)}>
                   <div className="flex-1">
-                    <p className="font-medium text-white text-sm">{session.name || format(parseISO(session.date), 'EEEE, d MMM')}</p>
-                    {session.name && <p className="text-xs text-gray-500">{format(parseISO(session.date), 'd MMM yyyy')}</p>}
-                    <p className="text-xs text-gray-500 mt-0.5">{session.exercise_count} exercises · {session.set_count} sets</p>
+                    <p className="font-medium text-head text-sm">{session.name || format(parseISO(session.date), 'EEEE, d MMM')}</p>
+                    {session.name && <p className="text-xs" style={{ color: 'var(--t-faint)' }}>{format(parseISO(session.date), 'd MMM yyyy')}</p>}
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--t-faint)' }}>{session.exercise_count} exercises · {session.set_count} sets</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={e => { e.stopPropagation(); deleteSession(session.id); }} className="p-1 text-gray-600 hover:text-red-400 transition-colors">
+                    <button type="button" onClick={e => { e.stopPropagation(); deleteSession(session.id); }}
+                      className="p-1 tap" style={{ color: 'var(--t-faint)' }}>
                       <Trash2 size={15} />
                     </button>
-                    {isExpanded ? <ChevronUp size={16} className="text-gray-500" /> : <ChevronDown size={16} className="text-gray-500" />}
+                    {isExpanded ? <ChevronUp size={16} style={{ color: 'var(--t-faint)' }} /> : <ChevronDown size={16} style={{ color: 'var(--t-faint)' }} />}
                   </div>
                 </div>
 
                 {isExpanded && (
-                  <div className="border-t border-gray-800 px-4 pb-4 pt-3 space-y-3">
-                    {sets.length === 0 && <p className="text-xs text-gray-500">No sets logged yet.</p>}
+                  <div className="px-4 pb-4 pt-3 space-y-3" style={{ borderTop: '1px solid var(--b)' }}>
+                    {sets.length === 0 && <p className="text-xs" style={{ color: 'var(--t-faint)' }}>No sets logged yet.</p>}
 
                     {/* Group sets by exercise */}
                     {Object.entries(sets.reduce((acc, s) => {
@@ -556,17 +540,17 @@ export default function Workout() {
                       return (
                         <div key={key}>
                           <div className="flex items-center gap-2 mb-1.5">
-                            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${CAT_COLORS[cat as Category]}`}>{cat}</span>
-                            <span className="text-sm font-medium text-gray-200">{exName}</span>
+                            <span className="text-xs px-1.5 py-0.5 rounded-full font-medium" style={catChip(cat as Category)}>{cat}</span>
+                            <span className="text-sm font-medium" style={{ color: 'var(--t-body)' }}>{exName}</span>
                           </div>
                           <div className="space-y-1 pl-2">
                             {exSets.map((s, i) => (
-                              <div key={s.id} className="flex items-center gap-3 text-xs text-gray-400">
-                                <span className="text-gray-600 w-4">#{i + 1}</span>
+                              <div key={s.id} className="flex items-center gap-3 text-xs" style={{ color: 'var(--t-muted)' }}>
+                                <span className="w-4" style={{ color: 'var(--t-faint)' }}>#{i + 1}</span>
                                 {s.reps && <span>{s.reps} reps</span>}
-                                {s.weight && <span className="text-brand-400 font-medium">{s.weight} kg</span>}
+                                {s.weight && <span className="font-medium" style={{ color: '#cf8a3e' }}>{s.weight} kg</span>}
                                 {s.duration_seconds && <span>{s.duration_seconds}s</span>}
-                                <button type="button" onClick={() => deleteSet(session.id, s.id)} className="ml-auto text-gray-700 hover:text-red-400">×</button>
+                                <button type="button" onClick={() => deleteSet(session.id, s.id)} className="ml-auto tap" style={{ color: 'var(--t-faint)' }}>×</button>
                               </div>
                             ))}
                           </div>
@@ -576,7 +560,8 @@ export default function Workout() {
 
                     {/* Add set form */}
                     {addSetSession === session.id ? (
-                      <div className="bg-gray-800 rounded-lg p-3 space-y-2 mt-2">
+                      <div className="rounded-xl p-3 space-y-2 mt-2 paper-in"
+                        style={{ background: 'var(--s2)', border: '1px solid var(--b)' }}>
                         <ExerciseSearchBox
                           selectedName={addSetExName}
                           onClear={() => { setAddSetExId(''); setAddSetExName(null); }}
@@ -584,9 +569,11 @@ export default function Workout() {
                         />
                         <div className="flex gap-2">
                           <input placeholder="Reps" type="number" value={addSetReps} onChange={e => setAddSetReps(e.target.value)}
-                            className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-white text-sm focus:outline-none" />
+                            className="w-full rounded-xl px-2 py-1.5 text-sm focus:outline-none"
+                            style={{ background: 'var(--s1)', border: '1px solid var(--b)', color: 'var(--t-body)' }} />
                           <input placeholder="Weight (kg)" type="number" step="0.5" value={addSetWeight} onChange={e => setAddSetWeight(e.target.value)}
-                            className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-white text-sm focus:outline-none" />
+                            className="w-full rounded-xl px-2 py-1.5 text-sm focus:outline-none"
+                            style={{ background: 'var(--s1)', border: '1px solid var(--b)', color: 'var(--t-body)' }} />
                         </div>
                         {setErr && (
                           <div className="flex items-center gap-1.5 text-xs" style={{ color: '#e07b62' }}>
@@ -594,16 +581,18 @@ export default function Workout() {
                           </div>
                         )}
                         <div className="flex gap-2">
-                          <button type="button" onClick={() => { setAddSetSession(null); setSetErr(''); }} className="text-xs text-gray-400 hover:text-gray-200 px-2">Cancel</button>
+                          <button type="button" onClick={() => { setAddSetSession(null); setSetErr(''); }}
+                            className="text-xs px-2 tap" style={{ color: 'var(--t-faint)' }}>Cancel</button>
                           <button type="button" onClick={() => addSet(session.id)} disabled={!addSetExId || savingSet}
-                            className="flex-1 text-xs bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white py-1.5 rounded font-medium">
+                            className="flex-1 text-xs disabled:opacity-50 text-white py-1.5 rounded-xl font-bold tap"
+                            style={{ background: 'rgb(var(--accent-rgb))' }}>
                             {savingSet ? 'Logging...' : 'Log set'}
                           </button>
                         </div>
                       </div>
                     ) : (
                       <button type="button" onClick={() => { setAddSetSession(session.id); setSetErr(''); }}
-                        className="flex items-center gap-1.5 text-xs text-brand-400 hover:text-brand-300 transition-colors mt-1">
+                        className="flex items-center gap-1.5 text-xs tap mt-1" style={{ color: '#cf8a3e' }}>
                         <Plus size={13} /> Add set
                       </button>
                     )}
@@ -635,7 +624,7 @@ export default function Workout() {
           {/* PDF import panel */}
           {showPdfImport && (
             <div className="glass rounded-2xl px-4 py-4 space-y-3 scale-in">
-              <p className="text-xs font-bold tracking-wider" style={{ color: 'var(--t-muted)' }}>// UPLOAD WORKOUT PLAN PDF</p>
+              <p className="text-xs font-bold tracking-wider uppercase" style={{ color: 'var(--t-faint)' }}>Upload workout plan (PDF)</p>
 
               <input type="file" accept=".pdf"
                 onChange={async e => {
@@ -663,7 +652,7 @@ export default function Workout() {
                 className="w-full text-xs" style={{ color: 'var(--t-muted)' }} />
 
               {planLoading && (
-                <p className="text-xs animate-pulse font-mono" style={{ color: 'var(--t-faint)' }}>Parsing PDF...</p>
+                <p className="text-xs animate-pulse" style={{ color: 'var(--t-faint)' }}>Reading the plan…</p>
               )}
 
               {/* Parsed plan preview */}
@@ -830,7 +819,7 @@ export default function Workout() {
                     }}
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold tap"
                       style={{ background: `${day.color}18`, color: day.color, border: `1px solid ${day.color}40` }}>
-                      ▶ LOG THIS
+                      Log this day
                     </button>
                     <button onClick={() => setEditingDayId(editingDayId === day.id ? null : day.id)}
                       className="w-9 h-9 rounded-lg flex items-center justify-center tap opacity-25 group-hover:opacity-100"
@@ -932,28 +921,35 @@ export default function Workout() {
       {tab === 'exercises' && (
         <div className="space-y-3">
           {showNewExercise && (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
+            <div className="rounded-2xl p-4 space-y-3 paper-in"
+              style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
               <input autoFocus placeholder="Exercise name" value={newExName}
                 onChange={e => setNewExName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && createExercise()}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                className="w-full rounded-xl px-3 py-2 text-sm focus:outline-none"
+                style={{ background: 'var(--s2)', border: '1px solid var(--b)', color: 'var(--t-body)' }} />
               <div className="flex flex-wrap gap-2">
                 {CATEGORIES.map(c => (
                   <button key={c} type="button" onClick={() => setNewExCat(c)}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${newExCat === c ? 'bg-brand-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
+                    className="px-3 py-1 rounded-full text-xs font-medium tap"
+                    style={newExCat === c
+                      ? catChip(c)
+                      : { background: 'var(--s2)', color: 'var(--t-faint)', border: '1px solid var(--b)' }}>
                     {c}
                   </button>
                 ))}
               </div>
               {exerciseErr && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs" style={{ background: 'rgb(239 68 68 / 0.1)', color: '#e07b62' }}>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs" style={{ background: '#b3372e14', color: '#e07b62' }}>
                   <AlertCircle size={13} />{exerciseErr}
                 </div>
               )}
               <div className="flex gap-2 justify-end">
-                <button type="button" onClick={() => { setShowNewExercise(false); setExerciseErr(''); }} className="px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200">Cancel</button>
+                <button type="button" onClick={() => { setShowNewExercise(false); setExerciseErr(''); }}
+                  className="px-3 py-1.5 text-sm tap" style={{ color: 'var(--t-faint)' }}>Cancel</button>
                 <button type="button" onClick={createExercise} disabled={!newExName.trim() || savingExercise}
-                  className="px-4 py-1.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-sm rounded-lg font-medium">
+                  className="px-4 py-1.5 disabled:opacity-50 text-white text-sm rounded-xl font-bold tap"
+                  style={{ background: 'rgb(var(--accent-rgb))' }}>
                   {savingExercise ? 'Adding...' : 'Add'}
                 </button>
               </div>
@@ -965,13 +961,15 @@ export default function Workout() {
             if (exs.length === 0) return null;
             return (
               <div key={cat}>
-                <p className={`text-xs font-semibold uppercase tracking-wider mb-2 ${CAT_COLORS[cat].split(' ')[0]}`}>{cat}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: CAT_HEX[cat] }}>{cat}</p>
                 <div className="space-y-1.5">
                   {exs.map(ex => (
-                    <div key={ex.id} className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5">
-                      <span className="text-sm text-gray-200">{ex.name}</span>
+                    <div key={ex.id} className="flex items-center justify-between rounded-xl px-4 py-2.5"
+                      style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
+                      <span className="text-sm" style={{ color: 'var(--t-body)' }}>{ex.name}</span>
                       <div className="flex items-center gap-2">
-                        <button type="button" onClick={() => setProgressEx(ex)} className="p-1 text-gray-500 hover:text-brand-400 transition-colors" title="View progress">
+                        <button type="button" onClick={() => setProgressEx(ex)} className="p-1 tap" title="View progress"
+                          style={{ color: '#cf8a3e' }}>
                           <TrendingUp size={15} />
                         </button>
                         <button type="button" onClick={async () => {
@@ -981,7 +979,7 @@ export default function Workout() {
                           } catch (e: any) {
                             alert(e?.response?.data?.error || 'Failed to delete exercise');
                           }
-                        }} className="p-1 text-gray-600 hover:text-red-400 transition-colors">
+                        }} className="p-1 tap" style={{ color: 'var(--t-faint)' }}>
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -991,21 +989,21 @@ export default function Workout() {
               </div>
             );
           })}
-          {exercises.length === 0 && <p className="text-gray-500 text-sm py-8 text-center">No exercises yet. Add some to get started!</p>}
+          {exercises.length === 0 && <p className="text-sm py-8 text-center" style={{ color: 'var(--t-faint)' }}>No exercises yet. Add some to get started!</p>}
         </div>
       )}
 
       {/* ── STATS TAB ── */}
       {tab === 'stats' && stats && (
-        <div className="space-y-5" style={{ position: 'relative', zIndex: 1 }}>
+        <div className="space-y-5">
           <WorkoutAvatar stats={{
             weekly_sessions: stats.weekly[stats.weekly.length - 1]?.sessions ?? 0,
             total_sets: sessions.reduce((s, sess) => s + (sess.set_count || 0), 0),
             personal_bests: stats.pbs.length,
           }} />
           {stats.weekly.length > 0 && (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-white mb-4">Sessions per week</h3>
+            <div className="card rounded-2xl p-4" style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
+              <h3 className="text-sm font-semibold text-head mb-4">Sessions per week</h3>
               <ResponsiveContainer width="100%" height={180}>
                 <LineChart data={stats.weekly}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#3d3935" />
@@ -1019,18 +1017,19 @@ export default function Workout() {
           )}
 
           {stats.pbs.length > 0 && (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-white mb-3">Personal Bests</h3>
+            <div className="card rounded-2xl p-4" style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
+              <h3 className="text-sm font-semibold text-head mb-3">Personal Bests</h3>
               <div className="space-y-2">
                 {stats.pbs.map(pb => (
-                  <div key={pb.name} className="flex items-center justify-between py-1.5 border-b border-gray-800 last:border-0">
+                  <div key={pb.name} className="flex items-center justify-between py-1.5"
+                    style={{ borderBottom: '1px solid var(--b)' }}>
                     <div>
-                      <span className="text-sm text-gray-200">{pb.name}</span>
-                      <span className={`ml-2 text-xs ${CAT_COLORS[pb.category as Category]?.split(' ')[0] || 'text-gray-500'}`}>{pb.category}</span>
+                      <span className="text-sm" style={{ color: 'var(--t-body)' }}>{pb.name}</span>
+                      <span className="ml-2 text-xs" style={{ color: CAT_HEX[pb.category as Category] || 'var(--t-faint)' }}>{pb.category}</span>
                     </div>
                     <div className="flex gap-4 text-xs text-right">
-                      {pb.max_weight && <span className="text-brand-400 font-medium">{pb.max_weight} kg</span>}
-                      {pb.max_reps && <span className="text-gray-400">{pb.max_reps} reps</span>}
+                      {pb.max_weight && <span className="font-medium" style={{ color: '#cf8a3e' }}>{pb.max_weight} kg</span>}
+                      {pb.max_reps && <span style={{ color: 'var(--t-muted)' }}>{pb.max_reps} reps</span>}
                     </div>
                   </div>
                 ))}
@@ -1038,7 +1037,7 @@ export default function Workout() {
             </div>
           )}
 
-          {stats.pbs.length === 0 && <p className="text-gray-500 text-sm py-8 text-center">Log some workouts to see your personal bests!</p>}
+          {stats.pbs.length === 0 && <p className="text-sm py-8 text-center" style={{ color: 'var(--t-faint)' }}>Log some workouts to see your personal bests!</p>}
         </div>
       )}
 

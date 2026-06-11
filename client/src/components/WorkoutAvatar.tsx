@@ -48,7 +48,7 @@ export default function WorkoutAvatar({ stats }: { stats: WorkoutStats }) {
   const tier = getAvatarTier(stats.weekly_sessions);
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+    <div className="card rounded-2xl p-5" style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
       <div className="flex items-center gap-5">
         {/* Avatar SVG */}
         <div className="relative shrink-0">
@@ -83,10 +83,10 @@ export default function WorkoutAvatar({ stats }: { stats: WorkoutStats }) {
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-lg font-bold text-white">{tier.label}</span>
-            <span className="text-xs text-gray-500">· this week</span>
+            <span className="text-lg font-bold text-head" style={{ fontFamily: "'Lora', serif" }}>{tier.label}</span>
+            <span className="text-xs" style={{ color: 'var(--t-faint)' }}>· this week</span>
           </div>
-          <div className="text-xs text-gray-400 space-y-0.5 mb-3">
+          <div className="text-xs space-y-0.5 mb-3" style={{ color: 'var(--t-muted)' }}>
             <p>{stats.weekly_sessions} session{stats.weekly_sessions !== 1 ? 's' : ''}</p>
             <p>{stats.total_sets} total sets</p>
             {stats.personal_bests > 0 && <p>🏅 {stats.personal_bests} personal best{stats.personal_bests !== 1 ? 's' : ''}</p>}
@@ -107,7 +107,7 @@ export default function WorkoutAvatar({ stats }: { stats: WorkoutStats }) {
               ))}
             </div>
           ) : (
-            <p className="text-xs text-gray-600 italic">Log a session to unlock buffs</p>
+            <p className="text-xs italic" style={{ color: 'var(--t-faint)' }}>Log a session to unlock buffs</p>
           )}
         </div>
       </div>
