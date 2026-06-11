@@ -41,16 +41,23 @@ router.get('/exercise-search', (req, res) => {
   const results = [];
   for (const m of mine) {
     const s = q ? score(m.name, []) : 1;
-    if (s > 0 || !q) results.push({ id: m.id, name: m.name, category: m.category, mine: true, _s: s + 5 }); // own exercises edge out catalog ties
+    if (s > 0 || !q) results.push({ id: m.id, name: m.name, category: m.category, muscle: 'My exercises', mine: true, _s: s + 5 }); // own exercises edge out catalog ties
   }
   for (const c of EXERCISE_CATALOG) {
     if (mineNames.has(c.name.toLowerCase())) continue; // already in their library
-    const s = q ? score(c.name, c.keywords) : 0;
-    if (s > 0 || !q) results.push({ id: null, name: c.name, category: c.category, mine: false, _s: s });
+    // muscle-group queries ("chest", "biceps") surface the whole group
+    const muscleHit = q && c.muscle.toLowerCase().startsWith(q) ? 45 : 0;
+    const s = q ? Math.max(score(c.name, c.keywords), muscleHit) : 0;
+    if (s > 0 || !q) results.push({ id: null, name: c.name, category: c.category, muscle: c.muscle, mine: false, _s: s });
   }
 
-  results.sort((a, b) => b._s - a._s || a.name.localeCompare(b.name));
-  res.json(results.slice(0, q ? 12 : 20).map(({ _s, ...r }) => r));
+  // Searching → flat ranked shortlist. Empty query → the entire catalog,
+  // in catalog order, so the client can render a browsable grouped list.
+  if (q) {
+    results.sort((a, b) => b._s - a._s || a.name.localeCompare(b.name));
+    return res.json(results.slice(0, 15).map(({ _s, ...r }) => r));
+  }
+  res.json(results.map(({ _s, ...r }) => r));
 });
 
 router.post('/exercises', (req, res) => {

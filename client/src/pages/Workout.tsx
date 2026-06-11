@@ -64,9 +64,10 @@ function ExerciseProgress({ exercise, onClose }: { exercise: Exercise; onClose: 
 }
 
 // ── Exercise search combobox ──────────────────────────────────────────────────
-// Type to search your own exercises + the built-in catalog; picking a catalog
-// entry creates it in your library automatically.
-interface SearchHit { id: number | null; name: string; category: Category; mine: boolean }
+// Works like the nutrition entry box: focus → browse the full gym catalog
+// grouped by muscle; type → ranked search. Picking a catalog entry creates it
+// in your library automatically.
+interface SearchHit { id: number | null; name: string; category: Category; muscle: string; mine: boolean }
 
 function ExerciseSearchBox({ onSelect, selectedName, onClear }: {
   onSelect: (ex: { id: number; name: string }) => void;
@@ -133,27 +134,39 @@ function ExerciseSearchBox({ onSelect, selectedName, onClear }: {
         value={q}
         onChange={e => { setQ(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
-        placeholder="Search exercise — bench, squat, curl…"
+        placeholder="Tap to browse all exercises, or type to search…"
         className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-white text-sm focus:outline-none"
       />
       {open && hits.length > 0 && (
-        <div className="absolute left-0 right-0 top-full mt-1 z-30 rounded-lg overflow-hidden max-h-56 overflow-y-auto"
+        <div className="absolute left-0 right-0 top-full mt-1 z-30 rounded-lg overflow-hidden max-h-72 overflow-y-auto"
           style={{ background: 'var(--s2)', border: '1px solid var(--bh)', boxShadow: '0 12px 32px rgba(0,0,0,0.4)' }}>
-          {hits.map((h, i) => (
-            <button key={`${h.name}-${i}`} type="button" onClick={() => pick(h)} disabled={busy}
-              className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-white/5 disabled:opacity-50"
-              style={{ color: 'var(--t-body)', borderTop: i ? '1px solid var(--b)' : 'none' }}>
-              <span className="flex-1 truncate">{h.name}</span>
-              <span className="text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded-full shrink-0"
-                style={{
-                  color: h.mine ? '#cf8a3e' : 'var(--t-faint)',
-                  background: h.mine ? '#cf8a3e14' : 'var(--s3)',
-                  border: `1px solid ${h.mine ? '#cf8a3e30' : 'var(--b)'}`,
-                }}>
-                {h.mine ? 'yours' : h.category}
-              </span>
-            </button>
-          ))}
+          {hits.map((h, i) => {
+            // Browse mode (no query): sticky muscle-group headers
+            const newGroup = !q.trim() && (i === 0 || hits[i - 1].muscle !== h.muscle);
+            return (
+              <div key={`${h.name}-${i}`}>
+                {newGroup && (
+                  <p className="sticky top-0 px-3 py-1.5 text-[9px] font-black tracking-[0.18em] uppercase"
+                    style={{ background: 'var(--s3)', color: 'var(--t-faint)', borderBottom: '1px solid var(--b)' }}>
+                    {h.muscle}
+                  </p>
+                )}
+                <button type="button" onClick={() => pick(h)} disabled={busy}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-white/5 disabled:opacity-50"
+                  style={{ color: 'var(--t-body)', borderTop: i && !newGroup ? '1px solid var(--b)' : 'none' }}>
+                  <span className="flex-1 truncate">{h.name}</span>
+                  <span className="text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded-full shrink-0"
+                    style={{
+                      color: h.mine ? '#cf8a3e' : 'var(--t-faint)',
+                      background: h.mine ? '#cf8a3e14' : 'var(--s3)',
+                      border: `1px solid ${h.mine ? '#cf8a3e30' : 'var(--b)'}`,
+                    }}>
+                    {h.mine ? 'yours' : h.muscle}
+                  </span>
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
