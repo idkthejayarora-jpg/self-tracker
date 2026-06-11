@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText } from 'lucide-react';
 import WorkoutAvatar from '../components/WorkoutAvatar';
 import { format, parseISO } from 'date-fns';
@@ -63,6 +63,103 @@ function ExerciseProgress({ exercise, onClose }: { exercise: Exercise; onClose: 
   );
 }
 
+// ── Exercise search combobox ──────────────────────────────────────────────────
+// Type to search your own exercises + the built-in catalog; picking a catalog
+// entry creates it in your library automatically.
+interface SearchHit { id: number | null; name: string; category: Category; mine: boolean }
+
+function ExerciseSearchBox({ onSelect, selectedName, onClear }: {
+  onSelect: (ex: { id: number; name: string }) => void;
+  selectedName: string | null;
+  onClear: () => void;
+}) {
+  const [q, setQ] = useState('');
+  const [hits, setHits] = useState<SearchHit[]>([]);
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const r = await api.get<SearchHit[]>(`/workout/exercise-search?q=${encodeURIComponent(q)}`);
+        setHits(r.data);
+      } catch { setHits([]); }
+    }, 160);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [q, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => {
+      if (!boxRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [open]);
+
+  async function pick(hit: SearchHit) {
+    if (busy) return;
+    if (hit.mine && hit.id != null) {
+      onSelect({ id: hit.id, name: hit.name });
+      setOpen(false); setQ('');
+      return;
+    }
+    // Catalog pick → add to the user's library first
+    setBusy(true);
+    try {
+      const r = await api.post('/workout/exercises', { name: hit.name, category: hit.category });
+      onSelect({ id: r.data.id, name: r.data.name });
+      setOpen(false); setQ('');
+    } catch { /* leave the box open so they can retry */ }
+    setBusy(false);
+  }
+
+  if (selectedName) {
+    return (
+      <div className="flex items-center gap-2 w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5">
+        <span className="text-sm text-white flex-1 truncate">{selectedName}</span>
+        <button type="button" onClick={onClear} className="text-gray-400 hover:text-gray-200 text-sm px-1">×</button>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={boxRef} className="relative">
+      <input
+        value={q}
+        onChange={e => { setQ(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        placeholder="Search exercise — bench, squat, curl…"
+        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-white text-sm focus:outline-none"
+      />
+      {open && hits.length > 0 && (
+        <div className="absolute left-0 right-0 top-full mt-1 z-30 rounded-lg overflow-hidden max-h-56 overflow-y-auto"
+          style={{ background: 'var(--s2)', border: '1px solid var(--bh)', boxShadow: '0 12px 32px rgba(0,0,0,0.4)' }}>
+          {hits.map((h, i) => (
+            <button key={`${h.name}-${i}`} type="button" onClick={() => pick(h)} disabled={busy}
+              className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-white/5 disabled:opacity-50"
+              style={{ color: 'var(--t-body)', borderTop: i ? '1px solid var(--b)' : 'none' }}>
+              <span className="flex-1 truncate">{h.name}</span>
+              <span className="text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded-full shrink-0"
+                style={{
+                  color: h.mine ? '#cf8a3e' : 'var(--t-faint)',
+                  background: h.mine ? '#cf8a3e14' : 'var(--s3)',
+                  border: `1px solid ${h.mine ? '#cf8a3e30' : 'var(--b)'}`,
+                }}>
+                {h.mine ? 'yours' : h.category}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Workout() {
   const [tab, setTab] = useState<'log' | 'plan' | 'exercises' | 'stats'>('log');
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -88,6 +185,7 @@ export default function Workout() {
   // Add set form
   const [addSetSession, setAddSetSession] = useState<number | null>(null);
   const [addSetExId, setAddSetExId] = useState('');
+  const [addSetExName, setAddSetExName] = useState<string | null>(null);
   const [addSetReps, setAddSetReps] = useState('');
   const [addSetWeight, setAddSetWeight] = useState('');
   const [setErr, setSetErr] = useState('');
@@ -194,7 +292,7 @@ export default function Workout() {
       });
       const r = await api.get<WorkoutSet[]>(`/workout/sessions/${sessionId}/sets`);
       setSessionSets(prev => ({ ...prev, [sessionId]: r.data }));
-      setAddSetExId(''); setAddSetReps(''); setAddSetWeight('');
+      setAddSetExId(''); setAddSetExName(null); setAddSetReps(''); setAddSetWeight('');
       await fetchSessions();
     } catch (e: any) {
       setSetErr(e?.response?.data?.error || e?.message || 'Failed to log set');
@@ -466,11 +564,11 @@ export default function Workout() {
                     {/* Add set form */}
                     {addSetSession === session.id ? (
                       <div className="bg-gray-800 rounded-lg p-3 space-y-2 mt-2">
-                        <select value={addSetExId} onChange={e => setAddSetExId(e.target.value)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-white text-sm focus:outline-none">
-                          <option value="">Select exercise</option>
-                          {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name} ({ex.category})</option>)}
-                        </select>
+                        <ExerciseSearchBox
+                          selectedName={addSetExName}
+                          onClear={() => { setAddSetExId(''); setAddSetExName(null); }}
+                          onSelect={ex => { setAddSetExId(String(ex.id)); setAddSetExName(ex.name); void fetchExercises(); }}
+                        />
                         <div className="flex gap-2">
                           <input placeholder="Reps" type="number" value={addSetReps} onChange={e => setAddSetReps(e.target.value)}
                             className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-white text-sm focus:outline-none" />

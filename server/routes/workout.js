@@ -5,12 +5,52 @@ const { updateStreak } = require('../utils/streakUtils');
 const { awardPoints, applySkillXP } = require('../utils/pointsUtils');
 const { localDate, SQL_OFF } = require('../utils/dateUtils');
 const { parseWorkoutText } = require('../utils/workoutParser');
+const EXERCISE_CATALOG = require('../utils/exerciseCatalog');
 
 router.use(authMiddleware);
 
 // ── Exercises ─────────────────────────────────────────────────
 router.get('/exercises', (req, res) => {
   res.json(db.prepare('SELECT * FROM exercises WHERE user_id = ? ORDER BY category, name').all(req.user.id));
+});
+
+// GET /exercise-search?q= — the user's own exercises plus the built-in
+// catalog, ranked. Own exercises carry their id; catalog hits are created
+// on selection via POST /exercises.
+router.get('/exercise-search', (req, res) => {
+  const q = (req.query.q || '').trim().toLowerCase();
+  const mine = db.prepare('SELECT * FROM exercises WHERE user_id = ? ORDER BY name').all(req.user.id);
+  const mineNames = new Set(mine.map(m => m.name.toLowerCase()));
+
+  const score = (name, keywords) => {
+    if (!q) return 0;
+    const n = name.toLowerCase();
+    if (n === q) return 100;
+    if (n.startsWith(q)) return 80;
+    if (n.includes(q)) return 60;
+    const kws = (keywords || []).map(k => k.toLowerCase());
+    if (kws.some(k => k === q)) return 70;
+    if (kws.some(k => k.startsWith(q) || k.includes(q))) return 50;
+    // every query word appears somewhere
+    const words = q.split(/\s+/).filter(Boolean);
+    const hay = `${n} ${kws.join(' ')}`;
+    if (words.length > 1 && words.every(w => hay.includes(w))) return 40;
+    return 0;
+  };
+
+  const results = [];
+  for (const m of mine) {
+    const s = q ? score(m.name, []) : 1;
+    if (s > 0 || !q) results.push({ id: m.id, name: m.name, category: m.category, mine: true, _s: s + 5 }); // own exercises edge out catalog ties
+  }
+  for (const c of EXERCISE_CATALOG) {
+    if (mineNames.has(c.name.toLowerCase())) continue; // already in their library
+    const s = q ? score(c.name, c.keywords) : 0;
+    if (s > 0 || !q) results.push({ id: null, name: c.name, category: c.category, mine: false, _s: s });
+  }
+
+  results.sort((a, b) => b._s - a._s || a.name.localeCompare(b.name));
+  res.json(results.slice(0, q ? 12 : 20).map(({ _s, ...r }) => r));
 });
 
 router.post('/exercises', (req, res) => {
