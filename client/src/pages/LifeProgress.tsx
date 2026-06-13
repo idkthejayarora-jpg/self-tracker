@@ -61,8 +61,7 @@ function GoalRow({
   const [title, setTitle] = useState(goal.title);
   const [desc, setDesc]   = useState(goal.description || '');
   const [color, setColor] = useState(goal.color);
-  const [showPalette, setShowPalette] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [, setShowPalette] = useState(false);
   const done = goal.status === 'done';
 
   function saveEdit() {
@@ -140,7 +139,7 @@ function GoalRow({
           }}>
           {goal.title}
         </p>
-        {(goal.description || expanded) && (
+        {goal.description && (
           <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color: 'var(--t-muted)' }}>
             {goal.description}
           </p>
@@ -462,16 +461,16 @@ export default function LifeProgress() {
           style={{ backgroundImage: 'radial-gradient(circle, rgba(217,119,87,0.14) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
         {/* Corner brackets */}
-        {[
-          { top: 0, left: 0,  borderTop: true,  borderLeft: true },
-          { top: 0, right: 0, borderTop: true,  borderRight: true },
-          { bottom: 0, left: 0,  borderBottom: true, borderLeft: true },
-          { bottom: 0, right: 0, borderBottom: true, borderRight: true },
-        ].map((pos, i) => (
+        {([
+          { top: 0,    left: 0,  borderTop: true,    borderLeft: true,   bottom: undefined, right: undefined,  borderBottom: false, borderRight: false },
+          { top: 0,    right: 0, borderTop: true,    borderRight: true,  bottom: undefined, left: undefined,   borderBottom: false, borderLeft: false  },
+          { bottom: 0, left: 0,  borderBottom: true, borderLeft: true,   top: undefined,    right: undefined,  borderTop: false,    borderRight: false },
+          { bottom: 0, right: 0, borderBottom: true, borderRight: true,  top: undefined,    left: undefined,   borderTop: false,    borderLeft: false  },
+        ] as Array<{ top?: number; bottom?: number; left?: number; right?: number; borderTop: boolean; borderBottom: boolean; borderLeft: boolean; borderRight: boolean }>).map((pos, i) => (
           <div key={i} className="absolute pointer-events-none"
             style={{
               width: 18, height: 18,
-              top: pos.top, bottom: (pos as Record<string, number>).bottom, left: pos.left, right: (pos as Record<string, number>).right,
+              top: pos.top, bottom: pos.bottom, left: pos.left, right: pos.right,
               borderTop:    pos.borderTop    ? '2px solid rgba(217,119,87,0.55)' : undefined,
               borderBottom: pos.borderBottom ? '2px solid rgba(217,119,87,0.55)' : undefined,
               borderLeft:   pos.borderLeft   ? '2px solid rgba(217,119,87,0.55)' : undefined,
