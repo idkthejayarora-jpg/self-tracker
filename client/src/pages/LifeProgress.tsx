@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Plus, X, Check, ChevronDown, ChevronUp, Pencil } from 'lucide-react';
+import { Plus, X, Check, ChevronDown, ChevronUp, Pencil, Calendar, ClipboardList, Sparkles } from 'lucide-react';
 import api from '../lib/api';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -13,6 +13,33 @@ interface Goal {
   color: string;
   sort_order: number;
   created_at: string;
+  deadline: string | null;
+  days_left: number | null;
+  auto_tasks_created: number;
+  auto_habits_created: number;
+}
+
+// ── Deadline helpers ──────────────────────────────────────────────────────────
+
+function deadlineColor(days: number | null): string {
+  if (days === null) return 'var(--t-faint)';
+  if (days < 0)   return '#c2553d';
+  if (days <= 7)  return '#c2553d';
+  if (days <= 21) return '#cf8a3e';
+  if (days <= 60) return '#d9a066';
+  return 'var(--t-muted)';
+}
+
+function deadlineLabel(days: number | null, deadline: string): string {
+  if (days === null) return '';
+  const d = new Date(deadline + 'T00:00:00');
+  const mon = d.toLocaleString('en', { month: 'short' }).toUpperCase();
+  const day = d.getDate();
+  if (days < 0)  return `${mon} ${day} · overdue`;
+  if (days === 0) return 'Due today';
+  if (days === 1) return 'Tomorrow';
+  if (days <= 14) return `${days}d left`;
+  return `${mon} ${day}`;
 }
 
 type NoteSection = 'pros_cons' | 'scripts' | 'topics' | 'free';
@@ -58,18 +85,24 @@ function GoalRow({
   onUpdate: (id: number, changes: Partial<Goal>) => void;
 }) {
   const [editing, setEditing] = useState(false);
-  const [title, setTitle] = useState(goal.title);
-  const [desc, setDesc]   = useState(goal.description || '');
-  const [color, setColor] = useState(goal.color);
-  const [, setShowPalette] = useState(false);
+  const [title, setTitle]     = useState(goal.title);
+  const [desc, setDesc]       = useState(goal.description || '');
+  const [color, setColor]     = useState(goal.color);
+  const [deadline, setDeadline] = useState(goal.deadline || '');
   const done = goal.status === 'done';
 
   function saveEdit() {
     if (!title.trim()) return;
-    onUpdate(goal.id, { title: title.trim(), description: desc.trim(), color });
+    onUpdate(goal.id, {
+      title: title.trim(),
+      description: desc.trim(),
+      color,
+      deadline: deadline || null,
+    });
     setEditing(false);
-    setShowPalette(false);
   }
+
+  const dlColor = deadlineColor(goal.days_left);
 
   if (editing) {
     return (
@@ -93,6 +126,16 @@ function GoalRow({
           placeholder="Add a description (optional)…"
         />
         <div className="flex items-center gap-2">
+          <Calendar size={10} style={{ color: 'var(--t-faint)', flexShrink: 0 }} />
+          <input
+            type="date"
+            value={deadline}
+            onChange={e => setDeadline(e.target.value)}
+            className="flex-1 rounded-lg px-2 py-1 text-xs focus:outline-none"
+            style={{ background: 'var(--s3)', color: 'var(--t-muted)', border: '1px solid var(--b)' }}
+          />
+        </div>
+        <div className="flex items-center gap-2">
           <div className="flex gap-1.5 flex-1">
             {PALETTE.map(c => (
               <ColorDot key={c} color={c} active={color === c} onClick={() => setColor(c)} />
@@ -114,51 +157,80 @@ function GoalRow({
   }
 
   return (
-    <div className="group flex items-start gap-3 px-4 py-3 paper-in"
+    <div className="group px-4 py-3 paper-in"
       style={{ borderBottom: '1px solid var(--b)', opacity: done ? 0.65 : 1, transition: 'opacity 0.2s' }}>
 
-      {/* Toggle done */}
-      <button onClick={() => onToggle(goal.id, goal.status)} className="tap mt-0.5 shrink-0"
-        title={done ? 'Mark active' : 'Mark done'}>
-        <div className="w-4 h-4 rounded-full flex items-center justify-center"
-          style={{
-            background: done ? `${goal.color}22` : 'transparent',
-            border: `2px solid ${goal.color}`,
-            transition: 'all 0.18s',
-          }}>
-          {done && <div className="w-1.5 h-1.5 rounded-full" style={{ background: goal.color }} />}
-        </div>
-      </button>
+      <div className="flex items-start gap-3">
+        {/* Toggle done */}
+        <button onClick={() => onToggle(goal.id, goal.status)} className="tap mt-0.5 shrink-0"
+          title={done ? 'Mark active' : 'Mark done'}>
+          <div className="w-4 h-4 rounded-full flex items-center justify-center"
+            style={{
+              background: done ? `${goal.color}22` : 'transparent',
+              border: `2px solid ${goal.color}`,
+              transition: 'all 0.18s',
+            }}>
+            {done && <div className="w-1.5 h-1.5 rounded-full" style={{ background: goal.color }} />}
+          </div>
+        </button>
 
-      {/* Text */}
-      <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold leading-snug"
-          style={{
-            color: done ? 'var(--t-faint)' : 'var(--t-head)',
-            textDecoration: done ? 'line-through' : 'none',
-          }}>
-          {goal.title}
-        </p>
-        {goal.description && (
-          <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color: 'var(--t-muted)' }}>
-            {goal.description}
+        {/* Text */}
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-semibold leading-snug"
+            style={{
+              color: done ? 'var(--t-faint)' : 'var(--t-head)',
+              textDecoration: done ? 'line-through' : 'none',
+            }}>
+            {goal.title}
           </p>
-        )}
+          {goal.description && (
+            <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color: 'var(--t-muted)' }}>
+              {goal.description}
+            </p>
+          )}
+        </div>
+
+        {/* Controls — visible on hover */}
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <button onClick={() => setEditing(true)}
+            className="tap w-6 h-6 rounded-md flex items-center justify-center"
+            style={{ background: 'var(--s3)', color: 'var(--t-faint)' }} title="Edit">
+            <Pencil size={9} />
+          </button>
+          <button onClick={() => onDelete(goal.id)}
+            className="tap w-6 h-6 rounded-md flex items-center justify-center"
+            style={{ background: 'var(--s3)', color: '#c2553d' }} title="Delete">
+            <X size={9} />
+          </button>
+        </div>
       </div>
 
-      {/* Controls — visible on hover */}
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-        <button onClick={() => setEditing(true)}
-          className="tap w-6 h-6 rounded-md flex items-center justify-center"
-          style={{ background: 'var(--s3)', color: 'var(--t-faint)' }} title="Edit">
-          <Pencil size={9} />
-        </button>
-        <button onClick={() => onDelete(goal.id)}
-          className="tap w-6 h-6 rounded-md flex items-center justify-center"
-          style={{ background: 'var(--s3)', color: '#c2553d' }} title="Delete">
-          <X size={9} />
-        </button>
-      </div>
+      {/* Bottom meta row: deadline + auto-created indicators */}
+      {(!!goal.deadline || !!goal.auto_tasks_created || !!goal.auto_habits_created) && (
+        <div className="flex items-center gap-2 mt-1.5 ml-7">
+          {goal.deadline && (
+            <span className="flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded"
+              style={{ color: dlColor, background: `${dlColor}18`, border: `1px solid ${dlColor}35` }}>
+              <Calendar size={8} />
+              {deadlineLabel(goal.days_left, goal.deadline)}
+            </span>
+          )}
+          {!!goal.auto_tasks_created && (
+            <span className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded"
+              style={{ color: 'var(--t-faint)', background: 'var(--s3)' }}
+              title="2 starter tasks were auto-created in your task list">
+              <ClipboardList size={8} />tasks
+            </span>
+          )}
+          {!!goal.auto_habits_created && (
+            <span className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded"
+              style={{ color: 'var(--t-faint)', background: 'var(--s3)' }}
+              title="Habits were auto-created to support this goal">
+              <Sparkles size={8} />habits
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -176,12 +248,13 @@ function GoalColumn({
   onToggle: (id: number, status: Goal['status']) => void;
   onDelete: (id: number) => void;
   onUpdate: (id: number, changes: Partial<Goal>) => void;
-  onCreate: (title: string, description: string, type: 'long_term' | 'short_term', color: string) => void;
+  onCreate: (title: string, description: string, type: 'long_term' | 'short_term', color: string, deadline: string | null) => void;
 }) {
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding]     = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc]   = useState('');
   const [newColor, setNewColor] = useState(PALETTE[0]);
+  const [newDeadline, setNewDeadline] = useState('');
   const [showDone, setShowDone] = useState(false);
 
   const active = goals.filter(g => g.status !== 'done');
@@ -189,8 +262,8 @@ function GoalColumn({
 
   function submit() {
     if (!newTitle.trim()) return;
-    onCreate(newTitle.trim(), newDesc.trim(), type, newColor);
-    setNewTitle(''); setNewDesc(''); setNewColor(PALETTE[0]); setAdding(false);
+    onCreate(newTitle.trim(), newDesc.trim(), type, newColor, newDeadline || null);
+    setNewTitle(''); setNewDesc(''); setNewColor(PALETTE[0]); setNewDeadline(''); setAdding(false);
   }
 
   return (
@@ -243,6 +316,17 @@ function GoalColumn({
             className="w-full rounded-xl px-3 py-2 text-xs resize-none focus:outline-none"
             style={{ background: 'var(--s2)', color: 'var(--t-muted)', border: '1px solid var(--b)' }}
           />
+          <div className="flex items-center gap-2">
+            <Calendar size={10} style={{ color: 'var(--t-faint)', flexShrink: 0 }} />
+            <input
+              type="date"
+              value={newDeadline}
+              onChange={e => setNewDeadline(e.target.value)}
+              className="flex-1 rounded-lg px-2 py-1.5 text-xs focus:outline-none"
+              style={{ background: 'var(--s2)', color: 'var(--t-muted)', border: '1px solid var(--b)' }}
+            />
+            <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>deadline (optional)</span>
+          </div>
           <div className="flex items-center gap-3">
             <div className="flex gap-1.5 flex-1">
               {PALETTE.map(c => (
@@ -418,9 +502,9 @@ export default function LifeProgress() {
 
   useEffect(() => { void load(); }, [load]);
 
-  async function createGoal(title: string, description: string, type: 'long_term' | 'short_term', color: string) {
+  async function createGoal(title: string, description: string, type: 'long_term' | 'short_term', color: string, deadline: string | null) {
     try {
-      const r = await api.post<Goal>('/life/goals', { title, description, type, color });
+      const r = await api.post<Goal>('/life/goals', { title, description, type, color, deadline });
       setGoals(prev => [...prev, r.data]);
     } catch (_) {}
   }

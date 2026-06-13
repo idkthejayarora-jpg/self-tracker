@@ -612,6 +612,10 @@ try {
   `).run();
 } catch (_) {}
 
+try { db.prepare('ALTER TABLE life_goals ADD COLUMN deadline DATE').run(); } catch(_) {}
+try { db.prepare('ALTER TABLE life_goals ADD COLUMN auto_tasks_created INTEGER DEFAULT 0').run(); } catch(_) {}
+try { db.prepare('ALTER TABLE life_goals ADD COLUMN auto_habits_created INTEGER DEFAULT 0').run(); } catch(_) {}
+
 try {
   db.prepare(`
     CREATE TABLE IF NOT EXISTS life_notes (
@@ -625,42 +629,149 @@ try {
   `).run();
 } catch (_) {}
 
+// ── Goal helpers ──────────────────────────────────────────────
+
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const ms = new Date(dateStr + 'T00:00:00').getTime() - Date.now();
+  return Math.ceil(ms / (1000 * 60 * 60 * 24));
+}
+
+const HABIT_MAP = [
+  { re: /swim|ocean|pool|lap|dive|surf/,                name: 'Swimming practice',      icon: '🏊', category: 'physical', color: '#4db6e0' },
+  { re: /run|jog|marathon|5k|10k|sprint/,               name: 'Running session',         icon: '🏃', category: 'physical', color: '#e06b4d' },
+  { re: /gym|lift|weight|muscle|strength|bench|squat/,  name: 'Gym session',             icon: '💪', category: 'physical', color: '#cf8a3e' },
+  { re: /yoga|stretch|flex|pilates/,                    name: 'Yoga & stretching',       icon: '🧘', category: 'health',   color: '#8fbf7f' },
+  { re: /meditat|mindful|breath|calm/,                  name: 'Meditation',              icon: '🧘', category: 'mental',   color: '#9b8fcf' },
+  { re: /read|book|learn|study|course|skill/,           name: 'Daily reading',           icon: '📚', category: 'mental',   color: '#d9a066' },
+  { re: /write|blog|content|article|essay|script/,      name: 'Writing practice',        icon: '✍️',  category: 'mental',   color: '#b5764f' },
+  { re: /code|develop|build.*app|software|program/,     name: 'Daily coding',            icon: '💻', category: 'mental',   color: '#6b9fcf' },
+  { re: /business|startup|launch|product|entrepreneur/, name: 'Work on business',        icon: '💼', category: 'discipline', color: '#c2553d' },
+  { re: /diet|nutrition|calorie|macro|lose.*weight|slim/, name: 'Track nutrition',       icon: '🥗', category: 'health',   color: '#7fbf9b' },
+  { re: /sleep|rest|recover|wake.*early|bed.*early/,    name: 'Sleep by 10:30pm',        icon: '😴', category: 'health',   color: '#7f8fbf' },
+  { re: /save|money|invest|financ|budget|income/,       name: 'Review finances',         icon: '💰', category: 'discipline', color: '#d9a066' },
+  { re: /network|connect|relation|people|friend/,       name: 'Reach out to someone',   icon: '🤝', category: 'discipline', color: '#cf7ab5' },
+  { re: /lang|speak|fluent|french|spanish|japanese/,    name: 'Language practice',       icon: '🗣️',  category: 'mental',   color: '#7fcfcf' },
+  { re: /music|guitar|piano|sing|instrument/,           name: 'Music practice',          icon: '🎸', category: 'mental',   color: '#cf9b6b' },
+];
+
+function inferHabits(title) {
+  const t = title.toLowerCase();
+  const matched = HABIT_MAP.filter(h => h.re.test(t)).slice(0, 2);
+  if (matched.length === 0) {
+    return [{ name: 'Daily progress', icon: '🎯', category: 'discipline', color: '#d97757' }];
+  }
+  return matched;
+}
+
+function inferTasks(title, deadline) {
+  const dueFirst  = new Date(Date.now() + 2  * 86400000).toISOString().slice(0, 10);
+  const dueSecond = new Date(Date.now() + 7  * 86400000).toISOString().slice(0, 10);
+  return [
+    {
+      title: `Map out: "${title.slice(0, 52)}"`,
+      description: 'Break this goal into 3–5 concrete action steps.',
+      priority: 'high',
+      due_date: dueFirst,
+    },
+    {
+      title: `First step toward: "${title.slice(0, 47)}"`,
+      description: 'Take the very first action. No more planning — just start.',
+      priority: 'medium',
+      due_date: deadline || dueSecond,
+    },
+  ];
+}
+
 router.get('/goals', (req, res) => {
+  const uid = req.user.id;
   const goals = db.prepare(
     'SELECT * FROM life_goals WHERE user_id=? ORDER BY type, status, sort_order, created_at'
-  ).all(req.user.id);
-  res.json(goals);
+  ).all(uid);
+
+  const result = goals.map(g => {
+    const dl = daysUntil(g.deadline);
+
+    // Auto-create habits when deadline is approaching (once per goal)
+    if (g.deadline && !g.auto_habits_created) {
+      const threshold = g.type === 'long_term' ? 90 : 30;
+      if (dl !== null && dl <= threshold) {
+        const habits = inferHabits(g.title);
+        const maxOrder = db.prepare('SELECT COALESCE(MAX(sort_order),0) as m FROM habits WHERE user_id=?').get(uid)?.m || 0;
+        habits.forEach((h, i) => {
+          const exists = db.prepare('SELECT id FROM habits WHERE user_id=? AND name=?').get(uid, h.name);
+          if (!exists) {
+            db.prepare('INSERT INTO habits (user_id, name, icon, category, color, sort_order) VALUES (?,?,?,?,?,?)')
+              .run(uid, h.name, h.icon, h.category, h.color, maxOrder + i + 1);
+          }
+        });
+        db.prepare('UPDATE life_goals SET auto_habits_created=1 WHERE id=?').run(g.id);
+        g.auto_habits_created = 1;
+      }
+    }
+
+    return { ...g, days_left: dl };
+  });
+
+  res.json(result);
 });
 
 router.post('/goals', (req, res) => {
-  const { title, description = '', type = 'long_term', color = '#d97757' } = req.body;
+  const { title, description = '', type = 'long_term', color = '#d97757', deadline = null } = req.body;
   if (!title?.trim()) return res.status(400).json({ error: 'Title required' });
+  const uid = req.user.id;
   const maxOrder = db.prepare(
     'SELECT COALESCE(MAX(sort_order),0) as m FROM life_goals WHERE user_id=? AND type=?'
-  ).get(req.user.id, type)?.m || 0;
+  ).get(uid, type)?.m || 0;
+
   const r = db.prepare(
-    'INSERT INTO life_goals (user_id, title, description, type, color, sort_order) VALUES (?,?,?,?,?,?)'
-  ).run(req.user.id, title.trim(), description.trim(), type, color, maxOrder + 1);
+    'INSERT INTO life_goals (user_id, title, description, type, color, deadline, sort_order) VALUES (?,?,?,?,?,?,?)'
+  ).run(uid, title.trim(), description.trim(), type, color, deadline || null, maxOrder + 1);
+
+  const goalId = r.lastInsertRowid;
+
+  // Auto-create 2 starter tasks
+  const tasks = inferTasks(title.trim(), deadline);
+  tasks.forEach(t => {
+    db.prepare('INSERT INTO tasks (user_id, title, description, priority, due_date) VALUES (?,?,?,?,?)')
+      .run(uid, t.title, t.description, t.priority, t.due_date);
+  });
+  db.prepare('UPDATE life_goals SET auto_tasks_created=1 WHERE id=?').run(goalId);
+
   res.json({
-    id: r.lastInsertRowid, title: title.trim(), description: description.trim(),
-    type, color, status: 'active', sort_order: maxOrder + 1,
-    created_at: new Date().toISOString(),
+    id: goalId, title: title.trim(), description: description.trim(),
+    type, color, deadline: deadline || null, status: 'active',
+    sort_order: maxOrder + 1, auto_tasks_created: 1, auto_habits_created: 0,
+    created_at: new Date().toISOString(), days_left: daysUntil(deadline),
   });
 });
 
 router.patch('/goals/:id', (req, res) => {
   const goal = db.prepare('SELECT id FROM life_goals WHERE id=? AND user_id=?').get(req.params.id, req.user.id);
   if (!goal) return res.status(404).json({ error: 'Not found' });
+
   const { title, description, status, color } = req.body;
-  db.prepare(`
-    UPDATE life_goals SET
-      title = COALESCE(?, title),
-      description = COALESCE(?, description),
-      status = COALESCE(?, status),
-      color = COALESCE(?, color),
-      updated_at = CURRENT_TIMESTAMP
-    WHERE id=? AND user_id=?
-  `).run(title ?? null, description ?? null, status ?? null, color ?? null, goal.id, req.user.id);
+  const updates = [
+    'title = COALESCE(?, title)',
+    'description = COALESCE(?, description)',
+    'status = COALESCE(?, status)',
+    'color = COALESCE(?, color)',
+    'updated_at = CURRENT_TIMESTAMP',
+  ];
+  const params = [title ?? null, description ?? null, status ?? null, color ?? null];
+
+  // Allow deadline to be set OR cleared (pass null to clear)
+  if (Object.prototype.hasOwnProperty.call(req.body, 'deadline')) {
+    updates.splice(4, 0, 'deadline = ?');
+    params.splice(4, 0, req.body.deadline ?? null);
+    // Reset habit flag if deadline pushed out, so habits re-trigger when close again
+    if (req.body.deadline) {
+      updates.splice(5, 0, 'auto_habits_created = 0');
+    }
+  }
+
+  params.push(goal.id, req.user.id);
+  db.prepare(`UPDATE life_goals SET ${updates.join(', ')} WHERE id=? AND user_id=?`).run(...params);
   res.json({ ok: true });
 });
 
