@@ -2,7 +2,7 @@ const router = require('express').Router();
 const db = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
 const {
-  aiEnabled, humanVoiceEnabled, converse, commitSheet, greeting,
+  aiEnabled, humanVoiceEnabled, converse, commitSheet, greeting, extractUpdate,
 } = require('../utils/jayBrain');
 
 router.use(authMiddleware);
@@ -69,6 +69,19 @@ router.post('/converse', async (req, res) => {
   } catch (e) {
     console.error('[jay/converse]', e.message);
     res.status(500).json({ error: 'Jay lost his train of thought — try again.' });
+  }
+});
+
+// POST /extract — one-shot voice box: pull structured data out of a free-form
+// daily update. body: { text }. Returns { sheet, caught, ai }.
+router.post('/extract', (req, res) => {
+  try {
+    const text = (req.body.text || '').toString();
+    if (!text.trim()) return res.json({ sheet: {}, caught: [], ai: false });
+    res.json(extractUpdate(req.user.id, text));
+  } catch (e) {
+    console.error('[jay/extract]', e.message);
+    res.status(500).json({ error: 'Could not read that — try again.' });
   }
 });
 

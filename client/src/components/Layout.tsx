@@ -11,7 +11,7 @@ import { useTheme, ACCENT_PRESETS } from '../contexts/ThemeContext';
 import api from '../lib/api';
 
 const NAV = [
-  { to: '/',          icon: AudioLines,      label: 'Jay',        color: '#e59a7f' },
+  { to: '/',          icon: AudioLines,      label: 'Daily log',  color: '#e59a7f' },
   { to: '/me',        icon: Swords,          label: 'Character',  color: '#d9a066' },
   { to: '/dashboard', icon: LayoutDashboard, label: 'Command',    color: '#d97757' },
   { to: '/tasks',     icon: CheckSquare,     label: 'Missions',   color: '#c2553d' },

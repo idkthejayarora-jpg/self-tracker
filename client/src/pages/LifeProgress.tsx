@@ -1,661 +1,556 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Send, Plus, X, Check, Settings2 } from 'lucide-react';
+import { Plus, X, Check, ChevronDown, ChevronUp, Pencil } from 'lucide-react';
 import api from '../lib/api';
-import AxisConsole from '../components/AxisConsole';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-interface Recommendation {
-  title: string;
-  due_date: string;
-  priority: 'low' | 'medium' | 'high';
-  life_area_id: number | null;
-  rationale: string;
-}
-
-interface ChatMessage {
-  role: 'user' | 'manager';
-  content: string;
-  ts: string;
-  recommendations?: Recommendation[];
-}
-
-interface Sector {
+interface Goal {
   id: number;
-  name: string;
-  icon: string;
+  title: string;
+  description: string;
+  type: 'long_term' | 'short_term';
+  status: 'active' | 'done' | 'paused';
   color: string;
-  fillPct: number;
-  total: number;
-  done: number;
+  sort_order: number;
+  created_at: string;
 }
 
-// ── Fill animation hook ───────────────────────────────────────────────────────
+type NoteSection = 'pros_cons' | 'scripts' | 'topics' | 'free';
 
-function useFillAnimate(sectors: Sector[]) {
-  const [fills, setFills] = useState<Record<number, number>>({});
-  useEffect(() => {
-    if (!sectors.length) return;
-    const zeros: Record<number, number> = {};
-    sectors.forEach(s => { zeros[s.id] = 0; });
-    setFills(zeros);
-    sectors.forEach((s, i) => {
-      setTimeout(() => {
-        setFills(prev => ({ ...prev, [s.id]: s.fillPct }));
-      }, 80 + i * 60);
-    });
-  }, [sectors]);
-  return fills;
-}
+// ── Constants ────────────────────────────────────────────────────────────────
 
-// ── Priority badge ────────────────────────────────────────────────────────────
+const PALETTE = ['#d97757', '#d9a066', '#c2553d', '#cf8a3e', '#b5764f', '#e59a7f'];
 
-const PRIORITY_COLORS: Record<string, string> = {
-  low:    '#d97757',
-  medium: '#d9a066',
-  high:   '#cd5240',
-};
+const TABS: { id: NoteSection; label: string; hint: string }[] = [
+  { id: 'pros_cons', label: 'Pros & Cons',  hint: 'Weigh it out. What plays for you, what plays against you.' },
+  { id: 'scripts',   label: 'Scripts',      hint: 'Write it before you say it — reels, pitches, talks.' },
+  { id: 'topics',    label: 'Topics',       hint: 'Things to research, explore, or dig into.' },
+  { id: 'free',      label: 'Free notes',   hint: 'No format. Just write.' },
+];
 
-function PriorityBadge({ p }: { p: string }) {
+// ── Tiny helpers ─────────────────────────────────────────────────────────────
+
+function ColorDot({ color, active, onClick }: { color: string; active?: boolean; onClick?: () => void }) {
   return (
-    <span className="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded-full"
+    <button
+      type="button"
+      onClick={onClick}
+      className="tap shrink-0 rounded-full transition-transform"
       style={{
-        background: `${PRIORITY_COLORS[p] ?? '#d97757'}20`,
-        color: PRIORITY_COLORS[p] ?? '#d97757',
-        border: `1px solid ${PRIORITY_COLORS[p] ?? '#d97757'}40`,
-      }}>
-      {p}
-    </span>
+        width: active ? 18 : 14,
+        height: active ? 18 : 14,
+        background: color,
+        border: active ? `2px solid rgba(245,243,235,0.55)` : '2px solid transparent',
+        boxShadow: active ? `0 0 6px ${color}80` : 'none',
+      }}
+    />
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// ── Goal Row ─────────────────────────────────────────────────────────────────
 
-export default function LifeProgress() {
-  const [history, setHistory]       = useState<ChatMessage[]>([]);
-  const [sectors, setSectors]       = useState<Sector[]>([]);
-  const [input, setInput]           = useState('');
-  const [sending, setSending]       = useState(false);
-  const [loaded, setLoaded]         = useState(false);
-  const [accepted, setAccepted]     = useState<Set<string>>(new Set());
-  const [skipped, setSkipped]       = useState<Set<string>>(new Set());
+function GoalRow({
+  goal, onToggle, onDelete, onUpdate,
+}: {
+  goal: Goal;
+  onToggle: (id: number, status: Goal['status']) => void;
+  onDelete: (id: number) => void;
+  onUpdate: (id: number, changes: Partial<Goal>) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState(goal.title);
+  const [desc, setDesc]   = useState(goal.description || '');
+  const [color, setColor] = useState(goal.color);
+  const [showPalette, setShowPalette] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const done = goal.status === 'done';
 
-  // Inline add-task on sector card
-  const [addingTo, setAddingTo]     = useState<Sector | null>(null);
-  const [taskTitle, setTaskTitle]   = useState('');
-  const [savingTask, setSavingTask] = useState(false);
-
-  // Edit sector
-  const [editingId, setEditingId]   = useState<number | null>(null);
-  const [editName, setEditName]     = useState('');
-  const [editIcon, setEditIcon]     = useState('');
-  const [editProgress, setEditProgress] = useState<number | null>(null);
-  const [savingEdit, setSavingEdit] = useState(false);
-
-  // Delete
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const inputRef   = useRef<HTMLTextAreaElement>(null);
-  const fills      = useFillAnimate(sectors);
-
-  // ── Load on mount ──────────────────────────────────────────────────────────
-
-  const loadHistory = useCallback(async () => {
-    try {
-      const r = await api.get<{ history: ChatMessage[]; sectors: Sector[] }>('/life/chat/history');
-      setHistory(r.data.history);
-      setSectors(r.data.sectors);
-    } catch (_) {}
-    setLoaded(true);
-  }, []);
-
-  useEffect(() => { loadHistory(); }, [loadHistory]);
-
-  // Auto-scroll on new messages
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [history]);
-
-  // ── Send message ───────────────────────────────────────────────────────────
-
-  async function send() {
-    const msg = input.trim();
-    if (!msg || sending) return;
-    setSending(true);
-    setInput('');
-
-    // Optimistic user bubble
-    const optimistic: ChatMessage = { role: 'user', content: msg, ts: new Date().toISOString() };
-    setHistory(prev => [...prev, optimistic]);
-
-    try {
-      const r = await api.post<{
-        reply: string;
-        recommendations: Recommendation[];
-        sectors: Sector[];
-        history: ChatMessage[];
-      }>('/life/chat', { message: msg });
-      setHistory(r.data.history);
-      setSectors(r.data.sectors);
-    } catch (_) {
-      setHistory(prev => prev.filter(m => m !== optimistic));
-      setInput(msg);
-    }
-    setSending(false);
-    inputRef.current?.focus();
+  function saveEdit() {
+    if (!title.trim()) return;
+    onUpdate(goal.id, { title: title.trim(), description: desc.trim(), color });
+    setEditing(false);
+    setShowPalette(false);
   }
 
-  // ── Accept recommendation ──────────────────────────────────────────────────
-
-  async function acceptRec(rec: Recommendation, key: string) {
-    setAccepted(prev => new Set(prev).add(key));
-    try {
-      await api.post('/tasks', {
-        title:        rec.title,
-        due_date:     rec.due_date,
-        priority:     rec.priority,
-        life_area_id: rec.life_area_id,
-      });
-      const r = await api.get<{ history: ChatMessage[]; sectors: Sector[] }>('/life/chat/history');
-      setSectors(r.data.sectors);
-    } catch (_) {
-      setAccepted(prev => { const s = new Set(prev); s.delete(key); return s; });
-    }
+  if (editing) {
+    return (
+      <div className="px-4 py-3 space-y-2 paper-in"
+        style={{ borderBottom: '1px solid var(--b)', background: 'var(--s2)' }}>
+        <input
+          autoFocus
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') setEditing(false); }}
+          className="w-full rounded-lg px-3 py-1.5 text-sm font-semibold focus:outline-none"
+          style={{ background: 'var(--s3)', color: 'var(--t-head)', border: `1.5px solid ${color}55` }}
+          placeholder="Goal title…"
+        />
+        <textarea
+          value={desc}
+          onChange={e => setDesc(e.target.value)}
+          rows={2}
+          className="w-full rounded-lg px-3 py-1.5 text-xs resize-none focus:outline-none"
+          style={{ background: 'var(--s3)', color: 'var(--t-muted)', border: '1px solid var(--b)' }}
+          placeholder="Add a description (optional)…"
+        />
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5 flex-1">
+            {PALETTE.map(c => (
+              <ColorDot key={c} color={c} active={color === c} onClick={() => setColor(c)} />
+            ))}
+          </div>
+          <button onClick={saveEdit}
+            className="tap text-[11px] font-bold px-3 py-1 rounded-lg text-white"
+            style={{ background: color }}>
+            <Check size={11} className="inline mr-1" />Save
+          </button>
+          <button onClick={() => setEditing(false)}
+            className="tap text-[11px] px-2 py-1 rounded-lg"
+            style={{ background: 'var(--s3)', color: 'var(--t-faint)' }}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
   }
-
-  // ── Inline add task ────────────────────────────────────────────────────────
-
-  async function addTask() {
-    if (!addingTo || !taskTitle.trim()) return;
-    setSavingTask(true);
-    try {
-      await api.post('/tasks', { title: taskTitle.trim(), priority: 'medium', life_area_id: addingTo.id });
-      setTaskTitle('');
-      setAddingTo(null);
-      const r = await api.get<{ history: ChatMessage[]; sectors: Sector[] }>('/life/chat/history');
-      setSectors(r.data.sectors);
-    } catch (_) {}
-    setSavingTask(false);
-  }
-
-  // ── Edit / delete sector ───────────────────────────────────────────────────
-
-  function startEdit(s: Sector) {
-    setEditingId(s.id);
-    setEditName(s.name);
-    setEditIcon(s.icon);
-    setEditProgress(null); // null = use auto-computed
-  }
-
-  async function saveEdit(id: number) {
-    if (!editName.trim()) return;
-    setSavingEdit(true);
-    try {
-      // progress: null clears manual override (auto mode); 0 also resets
-      const progressVal = editProgress !== null ? editProgress : null;
-      await api.patch(`/life/areas/${id}`, {
-        name: editName.trim(),
-        icon: editIcon.trim() || undefined,
-        progress: progressVal,
-      });
-      setSectors(prev => prev.map(s =>
-        s.id === id
-          ? { ...s, name: editName.trim(), icon: editIcon.trim() || s.icon,
-              fillPct: progressVal !== null ? progressVal : s.fillPct }
-          : s
-      ));
-      setEditingId(null);
-    } catch (_) {}
-    setSavingEdit(false);
-  }
-
-  async function deleteSector(id: number) {
-    setDeletingId(id);
-    try {
-      await api.delete(`/life/areas/${id}`);
-      setTimeout(() => { setSectors(prev => prev.filter(s => s.id !== id)); setDeletingId(null); }, 350);
-    } catch (_) { setDeletingId(null); }
-  }
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
-  function recKey(msgTs: string, recTitle: string) { return `${msgTs}::${recTitle}`; }
-
-  function fillOpacity(pct: number) {
-    return pct === 0 ? 0.06 : 0.12 + (pct / 100) * 0.52;
-  }
-
-  function glowStyle(pct: number, color: string) {
-    if (pct < 5) return 'none';
-    const alpha = Math.round((pct / 100) * 55).toString(16).padStart(2, '0');
-    return `0 0 ${10 + pct / 6}px ${color}${alpha}`;
-  }
-
-  function formatDate(d: string) {
-    return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-  }
-
-  const hasSectors = sectors.length > 0;
-  const hasHistory = history.length > 0;
-
-  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 anim-page pb-10"
-      style={{ '--accent-rgb': '229 154 127' } as React.CSSProperties}>
+    <div className="group flex items-start gap-3 px-4 py-3 paper-in"
+      style={{ borderBottom: '1px solid var(--b)', opacity: done ? 0.65 : 1, transition: 'opacity 0.2s' }}>
 
-      {/* ── HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl"
-        style={{
-          background: 'var(--hero-bg)',
-          border: '1px solid #e59a7f30',
-          minHeight: 100,
-        }}>
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ backgroundImage: 'radial-gradient(circle, #e59a7f10 1px, transparent 1px)', backgroundSize: '22px 22px' }} />
-        <div className="absolute top-0 left-0 pointer-events-none"    style={{ width: 14, height: 14, borderTop: '1.5px solid #e59a7f', borderLeft:  '1.5px solid #e59a7f', opacity: 0.6 }} />
-        <div className="absolute top-0 right-0 pointer-events-none"   style={{ width: 14, height: 14, borderTop: '1.5px solid #e59a7f', borderRight: '1.5px solid #e59a7f', opacity: 0.6 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #e59a7f', borderLeft:  '1.5px solid #e59a7f', opacity: 0.6 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none"style={{ width: 14, height: 14, borderBottom: '1.5px solid #e59a7f', borderRight: '1.5px solid #e59a7f', opacity: 0.6 }} />
-        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: '#e59a7f80', boxShadow: 'none' }} />
-        <div className="relative z-10 px-5 py-5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#e59a7f', opacity: 0.7 }}>JAY://</span>
-            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">LIFE_MANAGER</span>
-            <span className="cursor-blink font-mono" style={{ color: '#e59a7f', fontSize: 11 }}>▌</span>
-          </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: 'none' }}>LIFE PATH</h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#e59a7f', opacity: 0.5 }}>
-            // WRITE YOUR GOALS — JAY BUILDS YOUR PLAN
-          </p>
+      {/* Toggle done */}
+      <button onClick={() => onToggle(goal.id, goal.status)} className="tap mt-0.5 shrink-0"
+        title={done ? 'Mark active' : 'Mark done'}>
+        <div className="w-4 h-4 rounded-full flex items-center justify-center"
+          style={{
+            background: done ? `${goal.color}22` : 'transparent',
+            border: `2px solid ${goal.color}`,
+            transition: 'all 0.18s',
+          }}>
+          {done && <div className="w-1.5 h-1.5 rounded-full" style={{ background: goal.color }} />}
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: '#e59a7f40' }} />
+      </button>
+
+      {/* Text */}
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-semibold leading-snug"
+          style={{
+            color: done ? 'var(--t-faint)' : 'var(--t-head)',
+            textDecoration: done ? 'line-through' : 'none',
+          }}>
+          {goal.title}
+        </p>
+        {(goal.description || expanded) && (
+          <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color: 'var(--t-muted)' }}>
+            {goal.description}
+          </p>
+        )}
       </div>
 
-      {/* ── SPLIT: chat (left) + sectors (right) ── */}
-      <div className="flex flex-col lg:flex-row gap-5" style={{ alignItems: 'flex-start' }}>
+      {/* Controls — visible on hover */}
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+        <button onClick={() => setEditing(true)}
+          className="tap w-6 h-6 rounded-md flex items-center justify-center"
+          style={{ background: 'var(--s3)', color: 'var(--t-faint)' }} title="Edit">
+          <Pencil size={9} />
+        </button>
+        <button onClick={() => onDelete(goal.id)}
+          className="tap w-6 h-6 rounded-md flex items-center justify-center"
+          style={{ background: 'var(--s3)', color: '#c2553d' }} title="Delete">
+          <X size={9} />
+        </button>
+      </div>
+    </div>
+  );
+}
 
-        {/* ── JAY VOICE CONSOLE ── */}
-        <AxisConsole onFinished={(secs) => setSectors(secs as Sector[])} />
+// ── Goal Column ───────────────────────────────────────────────────────────────
 
-        {/* legacy text chat — superseded by the voice console, kept out of render */}
-        {false && (
-        <div className="flex flex-col rounded-2xl overflow-hidden flex-1 min-w-0"
-          style={{ background: 'var(--s1)', border: '1px solid var(--b)', minHeight: 520 }}>
+function GoalColumn({
+  type, label, subtitle, accent, goals, onToggle, onDelete, onUpdate, onCreate,
+}: {
+  type: 'long_term' | 'short_term';
+  label: string;
+  subtitle: string;
+  accent: string;
+  goals: Goal[];
+  onToggle: (id: number, status: Goal['status']) => void;
+  onDelete: (id: number) => void;
+  onUpdate: (id: number, changes: Partial<Goal>) => void;
+  onCreate: (title: string, description: string, type: 'long_term' | 'short_term', color: string) => void;
+}) {
+  const [adding, setAdding] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newDesc, setNewDesc]   = useState('');
+  const [newColor, setNewColor] = useState(PALETTE[0]);
+  const [showDone, setShowDone] = useState(false);
 
-          {/* Chat header bar */}
-          <div className="px-4 py-3 flex items-center gap-2"
-            style={{ borderBottom: '1px solid var(--b)', background: 'var(--s2)' }}>
-            <span className="text-sm font-black tracking-widest" style={{ color: '#e59a7f' }}>JAY</span>
-            <span className="cursor-blink font-mono text-xs" style={{ color: '#e59a7f' }}>▌</span>
-            <span className="text-xs ml-auto" style={{ color: 'var(--t-faint)' }}>your life manager</span>
+  const active = goals.filter(g => g.status !== 'done');
+  const done   = goals.filter(g => g.status === 'done');
+
+  function submit() {
+    if (!newTitle.trim()) return;
+    onCreate(newTitle.trim(), newDesc.trim(), type, newColor);
+    setNewTitle(''); setNewDesc(''); setNewColor(PALETTE[0]); setAdding(false);
+  }
+
+  return (
+    <div className="card-raised overflow-hidden paper-spine flex flex-col"
+      style={{ border: `1.5px solid ${accent}35`, minHeight: 320 }}>
+
+      {/* Column header */}
+      <div className="px-4 py-3 flex items-center justify-between"
+        style={{ borderBottom: `2px solid ${accent}30`, background: `${accent}0a` }}>
+        <div>
+          <p className="text-[10px] font-black tracking-[0.22em] uppercase" style={{ color: accent }}>
+            {label}
+          </p>
+          <p className="text-[10px]" style={{ color: 'var(--t-faint)' }}>{subtitle}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {active.length > 0 && (
+            <span className="text-[11px] font-black px-2 py-0.5 rounded-full"
+              style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}35` }}>
+              {active.length}
+            </span>
+          )}
+          <button onClick={() => setAdding(!adding)}
+            className="tap w-7 h-7 rounded-lg flex items-center justify-center text-white"
+            style={{ background: adding ? 'var(--s3)' : accent }}
+            title="Add goal">
+            {adding ? <X size={12} /> : <Plus size={12} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Add form */}
+      {adding && (
+        <div className="px-4 py-3 space-y-2 paper-in"
+          style={{ borderBottom: `1px solid ${accent}25`, background: `${accent}07` }}>
+          <input
+            autoFocus
+            value={newTitle}
+            onChange={e => setNewTitle(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') setAdding(false); }}
+            placeholder="What do you want to achieve?"
+            className="w-full rounded-xl px-3 py-2 text-sm focus:outline-none"
+            style={{ background: 'var(--s2)', color: 'var(--t-head)', border: `1.5px solid ${accent}40` }}
+          />
+          <textarea
+            value={newDesc}
+            onChange={e => setNewDesc(e.target.value)}
+            rows={2}
+            placeholder="Why does this matter? (optional)"
+            className="w-full rounded-xl px-3 py-2 text-xs resize-none focus:outline-none"
+            style={{ background: 'var(--s2)', color: 'var(--t-muted)', border: '1px solid var(--b)' }}
+          />
+          <div className="flex items-center gap-3">
+            <div className="flex gap-1.5 flex-1">
+              {PALETTE.map(c => (
+                <ColorDot key={c} color={c} active={newColor === c} onClick={() => setNewColor(c)} />
+              ))}
+            </div>
+            <button onClick={submit} disabled={!newTitle.trim()}
+              className="tap text-[11px] font-bold px-3 py-1.5 rounded-lg text-white disabled:opacity-30"
+              style={{ background: accent }}>
+              Add
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Goals list */}
+      <div className="flex-1 overflow-y-auto">
+        {active.length === 0 && !adding && (
+          <div className="flex flex-col items-center justify-center py-10 text-center px-4">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2"
+              style={{ background: `${accent}12`, border: `1.5px dashed ${accent}40` }}>
+              <Plus size={12} style={{ color: accent, opacity: 0.6 }} />
+            </div>
+            <p className="text-[12px] font-semibold" style={{ color: 'var(--t-faint)', fontFamily: "'Lora', serif", fontStyle: 'italic' }}>
+              Nothing here yet
+            </p>
+            <p className="text-[10px] mt-0.5" style={{ color: 'var(--t-faint)' }}>
+              Tap + to add your first {type === 'long_term' ? 'long-term' : 'short-term'} goal
+            </p>
+          </div>
+        )}
+        {active.map(g => (
+          <GoalRow key={g.id} goal={g} onToggle={onToggle} onDelete={onDelete} onUpdate={onUpdate} />
+        ))}
+      </div>
+
+      {/* Done section */}
+      {done.length > 0 && (
+        <div style={{ borderTop: `1px solid var(--b)` }}>
+          <button onClick={() => setShowDone(!showDone)}
+            className="tap w-full flex items-center justify-between px-4 py-2"
+            style={{ background: 'var(--s2)' }}>
+            <span className="text-[10px] font-bold tracking-[0.18em] uppercase" style={{ color: 'var(--t-faint)' }}>
+              Done · {done.length}
+            </span>
+            {showDone ? <ChevronUp size={12} style={{ color: 'var(--t-faint)' }} />
+                      : <ChevronDown size={12} style={{ color: 'var(--t-faint)' }} />}
+          </button>
+          {showDone && done.map(g => (
+            <GoalRow key={g.id} goal={g} onToggle={onToggle} onDelete={onDelete} onUpdate={onUpdate} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Scratchpad ────────────────────────────────────────────────────────────────
+
+function Scratchpad() {
+  const [activeTab, setActiveTab] = useState<NoteSection>('pros_cons');
+  const [notes, setNotes] = useState<Record<NoteSection, string>>({
+    pros_cons: '', scripts: '', topics: '', free: '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [loaded, setLoaded] = useState<Set<NoteSection>>(new Set());
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  async function loadTab(section: NoteSection) {
+    if (loaded.has(section)) return;
+    try {
+      const r = await api.get<{ content: string }>(`/life/notes/${section}`);
+      setNotes(prev => ({ ...prev, [section]: r.data.content || '' }));
+      setLoaded(prev => new Set(prev).add(section));
+    } catch (_) {
+      setLoaded(prev => new Set(prev).add(section));
+    }
+  }
+
+  useEffect(() => { void loadTab(activeTab); }, [activeTab]);
+
+  function handleChange(val: string) {
+    setNotes(prev => ({ ...prev, [activeTab]: val }));
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    setSaving(true);
+    saveTimer.current = setTimeout(async () => {
+      try { await api.put(`/life/notes/${activeTab}`, { content: val }); }
+      catch (_) {}
+      setSaving(false);
+    }, 1400);
+  }
+
+  const wordCount = notes[activeTab].trim() ? notes[activeTab].trim().split(/\s+/).length : 0;
+  const activeTabInfo = TABS.find(t => t.id === activeTab)!;
+
+  return (
+    <div className="card-raised overflow-hidden fold-corner" style={{ border: '1.5px solid var(--gl-border-h)' }}>
+
+      {/* Tab bar */}
+      <div className="flex items-end gap-0 overflow-x-auto hide-scroll"
+        style={{ borderBottom: '2px solid var(--b)', background: 'var(--s2)', paddingTop: 4 }}>
+        {TABS.map(tab => {
+          const active = tab.id === activeTab;
+          return (
+            <button key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="tap shrink-0 px-4 py-2.5 text-[11px] font-bold tracking-[0.1em] uppercase transition-colors relative"
+              style={{
+                color: active ? 'var(--accent)' : 'var(--t-faint)',
+                background: active ? 'var(--s1)' : 'transparent',
+                borderRadius: '10px 10px 0 0',
+                borderBottom: active ? '2px solid var(--accent)' : '2px solid transparent',
+                marginBottom: -2,
+              }}>
+              {tab.label}
+            </button>
+          );
+        })}
+        <div className="flex-1" />
+        <div className="flex items-center gap-3 px-3 pb-2">
+          {saving && <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>saving…</span>}
+          {wordCount > 0 && <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>{wordCount}w</span>}
+        </div>
+      </div>
+
+      {/* Hint */}
+      <div className="px-5 pt-3 pb-0">
+        <p className="text-[11px]" style={{ color: 'var(--t-faint)', fontFamily: "'Lora', serif", fontStyle: 'italic' }}>
+          {activeTabInfo.hint}
+        </p>
+      </div>
+
+      {/* Writing area */}
+      <div className="relative paper-ruled mx-4 my-3 rounded-xl"
+        style={{ background: 'var(--s1)', border: '1.5px solid var(--b)' }}>
+        <textarea
+          key={activeTab}
+          value={notes[activeTab]}
+          onChange={e => handleChange(e.target.value)}
+          rows={14}
+          placeholder={`Start writing here…`}
+          className="w-full rounded-xl px-5 py-4 text-[14px] resize-none focus:outline-none"
+          style={{
+            background: 'transparent',
+            color: 'var(--t-body)',
+            border: 'none',
+            boxShadow: 'none',
+            fontFamily: "'Lora', Georgia, serif",
+            lineHeight: '28px',
+            caretColor: 'var(--accent)',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
+
+export default function LifeProgress() {
+  const [goals, setGoals]   = useState<Goal[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const year = new Date().getFullYear();
+
+  const load = useCallback(async () => {
+    try {
+      const r = await api.get<Goal[]>('/life/goals');
+      setGoals(r.data);
+    } catch (_) {}
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  async function createGoal(title: string, description: string, type: 'long_term' | 'short_term', color: string) {
+    try {
+      const r = await api.post<Goal>('/life/goals', { title, description, type, color });
+      setGoals(prev => [...prev, r.data]);
+    } catch (_) {}
+  }
+
+  async function toggleGoal(id: number, current: Goal['status']) {
+    const next: Goal['status'] = current === 'done' ? 'active' : 'done';
+    setGoals(prev => prev.map(g => g.id === id ? { ...g, status: next } : g));
+    try { await api.patch(`/life/goals/${id}`, { status: next }); }
+    catch (_) { setGoals(prev => prev.map(g => g.id === id ? { ...g, status: current } : g)); }
+  }
+
+  async function deleteGoal(id: number) {
+    setGoals(prev => prev.filter(g => g.id !== id));
+    try { await api.delete(`/life/goals/${id}`); } catch (_) { void load(); }
+  }
+
+  async function updateGoal(id: number, changes: Partial<Goal>) {
+    setGoals(prev => prev.map(g => g.id === id ? { ...g, ...changes } : g));
+    try { await api.patch(`/life/goals/${id}`, changes); }
+    catch (_) { void load(); }
+  }
+
+  const longGoals  = goals.filter(g => g.type === 'long_term');
+  const shortGoals = goals.filter(g => g.type === 'short_term');
+
+  const totalActive = goals.filter(g => g.status !== 'done').length;
+  const totalDone   = goals.filter(g => g.status === 'done').length;
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-5 anim-page pb-10 px-1 sm:px-0">
+
+      {/* ── HEADER ── */}
+      <div className="relative overflow-hidden rounded-2xl fold-corner"
+        style={{ background: 'var(--hero-bg)', border: '1.5px solid var(--b)', minHeight: 110 }}>
+
+        {/* Dot-grid texture */}
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(circle, rgba(217,119,87,0.14) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+
+        {/* Corner brackets */}
+        {[
+          { top: 0, left: 0,  borderTop: true,  borderLeft: true },
+          { top: 0, right: 0, borderTop: true,  borderRight: true },
+          { bottom: 0, left: 0,  borderBottom: true, borderLeft: true },
+          { bottom: 0, right: 0, borderBottom: true, borderRight: true },
+        ].map((pos, i) => (
+          <div key={i} className="absolute pointer-events-none"
+            style={{
+              width: 18, height: 18,
+              top: pos.top, bottom: (pos as Record<string, number>).bottom, left: pos.left, right: (pos as Record<string, number>).right,
+              borderTop:    pos.borderTop    ? '2px solid rgba(217,119,87,0.55)' : undefined,
+              borderBottom: pos.borderBottom ? '2px solid rgba(217,119,87,0.55)' : undefined,
+              borderLeft:   pos.borderLeft   ? '2px solid rgba(217,119,87,0.55)' : undefined,
+              borderRight:  pos.borderRight  ? '2px solid rgba(217,119,87,0.55)' : undefined,
+            }} />
+        ))}
+
+        <div className="relative z-10 px-6 py-5 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[9px] font-black tracking-[0.32em] uppercase mb-1.5"
+              style={{ color: 'var(--accent)', opacity: 0.8 }}>Plot the journey</p>
+            <h1 className="text-4xl font-bold leading-none" style={{ fontFamily: "'Lora', serif", color: 'var(--t-head)' }}>
+              Life Path
+            </h1>
+            <p className="text-[11px] mt-2" style={{ color: 'var(--t-dim)' }}>
+              Goals that pull you forward · a scratchpad for your thinking
+            </p>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: 440 }}>
-
-            {loaded && !hasHistory && !sending && (
-              <div className="flex flex-col items-center justify-center text-center py-12 space-y-3">
-                <p className="text-4xl" style={{ opacity: 0.2 }}>⚡</p>
-                <p className="text-sm font-semibold" style={{ color: 'var(--t-muted)' }}>Tell Jay what you're working toward</p>
-                <p className="text-xs max-w-xs leading-relaxed" style={{ color: 'var(--t-faint)' }}>
-                  Write freely — goals, plans, struggles. Jay reads your data and queues tasks that actually move things forward.
+          <div className="flex flex-col items-end gap-1.5 shrink-0">
+            <span className="text-[10px] font-black tracking-widest px-2.5 py-1 rounded-full"
+              style={{ background: 'rgba(217,119,87,0.12)', color: 'var(--accent)', border: '1px solid rgba(217,119,87,0.28)' }}>
+              {year}
+            </span>
+            {!loading && (totalActive + totalDone > 0) && (
+              <div className="text-right">
+                <p className="text-[11px] font-semibold" style={{ color: 'var(--t-muted)' }}>
+                  {totalActive} active · {totalDone} done
                 </p>
               </div>
             )}
-
-            {history.map((msg, i) => {
-              const isManager = msg.role === 'manager';
-              return (
-                <div key={i} className={`flex ${isManager ? 'justify-start' : 'justify-end'}`}>
-                  <div style={{ maxWidth: '84%' }}>
-
-                    {/* Bubble */}
-                    <div className="rounded-2xl px-4 py-3 leading-relaxed"
-                      style={{
-                        background: isManager ? 'var(--s2)' : 'var(--s3)',
-                        borderLeft: isManager ? '2px solid #e59a7f60' : 'none',
-                        color: 'var(--t-body)',
-                        fontFamily: isManager ? 'monospace' : 'inherit',
-                        fontSize: isManager ? 12 : 13,
-                      }}>
-                      {isManager && (
-                        <span className="text-[9px] font-black tracking-widest block mb-1.5" style={{ color: '#e59a7f', opacity: 0.7 }}>
-                          Jay —
-                        </span>
-                      )}
-                      {msg.content}
-                    </div>
-
-                    {/* Recommendations */}
-                    {isManager && msg.recommendations && msg.recommendations.length > 0 && (
-                      <div className="mt-2 space-y-1.5">
-                        {msg.recommendations.map(rec => {
-                          const key     = recKey(msg.ts, rec.title);
-                          const isDone  = accepted.has(key);
-                          const isSkip  = skipped.has(key);
-                          if (isSkip) return null;
-                          return (
-                            <div key={key}
-                              className="rounded-xl px-3 py-2.5 flex items-start gap-2"
-                              style={{
-                                background: isDone ? '#ab6e2a18' : 'var(--s1)',
-                                border: `1px solid ${isDone ? '#ab6e2a40' : 'var(--b)'}`,
-                                opacity: isDone ? 0.7 : 1,
-                                transition: 'all 0.25s',
-                              }}>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold" style={{ color: isDone ? '#d9a066' : 'var(--t-head)' }}>
-                                  {isDone && '✓ '}{rec.title}
-                                </p>
-                                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                  <PriorityBadge p={rec.priority} />
-                                  <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>due {formatDate(rec.due_date)}</span>
-                                  {rec.rationale && (
-                                    <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>· {rec.rationale}</span>
-                                  )}
-                                </div>
-                              </div>
-                              {!isDone && (
-                                <div className="flex items-center gap-1 shrink-0">
-                                  <button onClick={() => acceptRec(rec, key)}
-                                    className="text-[10px] font-bold px-2 py-1 rounded-lg tap text-white"
-                                    style={{ background: '#ab6e2a' }}>
-                                    ✓ Add
-                                  </button>
-                                  <button onClick={() => setSkipped(prev => new Set(prev).add(key))}
-                                    className="w-6 h-6 rounded-lg flex items-center justify-center tap"
-                                    style={{ background: 'var(--s3)', color: 'var(--t-faint)' }}>
-                                    <X size={10} />
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    <p className="text-[9px] mt-1 px-1"
-                      style={{ color: 'var(--t-faint)', textAlign: isManager ? 'left' : 'right' }}>
-                      {new Date(msg.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-
-            {sending && (
-              <div className="flex justify-start">
-                <div className="rounded-2xl px-4 py-3 text-xs font-mono"
-                  style={{ background: 'var(--s2)', borderLeft: '2px solid #e59a7f60', color: '#e59a7f' }}>
-                  <span className="opacity-60">Jay —</span>
-                  <span className="ml-2 animate-pulse">analyzing...</span>
-                </div>
-              </div>
-            )}
-
-            <div ref={chatEndRef} />
-          </div>
-
-          {/* Input row */}
-          <div className="px-3 pb-3 pt-2" style={{ borderTop: '1px solid var(--b)' }}>
-            <div className="flex items-end gap-2">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-                placeholder="Tell Jay what you want to work on…"
-                rows={2}
-                className="flex-1 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none"
-                style={{
-                  background: 'var(--s2)',
-                  border: '1px solid var(--b)',
-                  color: 'var(--t-body)',
-                  fontFamily: 'inherit',
-                  lineHeight: 1.5,
-                  transition: 'border-color 0.2s',
-                }}
-                onFocus={e => { e.currentTarget.style.borderColor = '#e59a7f60'; }}
-                onBlur={e => { e.currentTarget.style.borderColor = 'var(--b)'; }}
-              />
-              <button onClick={send} disabled={!input.trim() || sending}
-                className="w-9 h-9 rounded-xl flex items-center justify-center tap disabled:opacity-30 shrink-0 text-white"
-                style={{ background: 'rgb(var(--accent-rgb))' }}>
-                {sending
-                  ? <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                  : <Send size={14} />}
-              </button>
-            </div>
-            <p className="text-[9px] mt-1.5 px-1" style={{ color: 'var(--t-faint)' }}>↵ send · shift+↵ newline</p>
           </div>
         </div>
-        )}
+      </div>
 
-        {/* ── SECTOR GRID ── */}
-        <div style={{ width: '100%', maxWidth: 340, flexShrink: 0 }}>
-          {hasSectors ? (
-            <>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs font-black tracking-widest uppercase" style={{ color: 'var(--t-faint)' }}>
-                  // {sectors.length} sector{sectors.length !== 1 ? 's' : ''}
-                </span>
-                <div className="flex-1 h-px" style={{ background: 'var(--b)' }} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {sectors.map(sector => {
-                  const fill     = fills[sector.id] ?? 0;
-                  const isGhost  = fill === 0;
-                  const isFull   = fill >= 100;
-                  const isEdit   = editingId === sector.id;
-                  const isDel    = deletingId === sector.id;
-                  const isAdding = addingTo?.id === sector.id;
-
-                  return (
-                    <div key={sector.id}
-                      className="relative overflow-hidden rounded-2xl flex flex-col"
-                      style={{
-                        background: 'var(--s1)',
-                        border: `1px solid ${isGhost ? `${sector.color}20` : `${sector.color}45`}`,
-                        minHeight: 150,
-                        boxShadow: isGhost ? 'none' : glowStyle(fill, sector.color),
-                        opacity: isDel ? 0 : 1,
-                        transform: isDel ? 'scale(0.95)' : 'scale(1)',
-                        transition: 'box-shadow 0.6s, border-color 0.6s, opacity 0.3s, transform 0.3s',
-                      }}>
-
-                      {/* Water fill */}
-                      <div aria-hidden style={{
-                        position: 'absolute', bottom: 0, left: 0, right: 0,
-                        height: `${fill}%`,
-                        background: `${sector.color}${Math.round(fillOpacity(fill) * 0.7 * 255).toString(16).padStart(2,'0')}`,
-                        transition: 'height 1s steps(10, end)',
-                        pointerEvents: 'none',
-                      }} />
-
-                      {isGhost && (
-                        <div aria-hidden style={{ position: 'absolute', inset: 0, background: `${sector.color}07`, pointerEvents: 'none' }} />
-                      )}
-
-                      <div className="relative z-10 flex flex-col flex-1 p-3 gap-2">
-
-                        {/* Top row */}
-                        <div className="flex items-start justify-between gap-1">
-                          <span className="text-xl leading-none"
-                            style={{
-                              opacity: isGhost ? 0.3 : 0.9,
-                              filter: isGhost ? 'none' : `drop-shadow(0 0 4px ${sector.color}70)`,
-                              transition: 'opacity 0.5s, filter 0.5s',
-                            }}>
-                            {sector.icon}
-                          </span>
-                          <div className="flex items-center gap-1 ml-auto">
-                            <span className="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded-full"
-                              style={{
-                                background: isGhost ? 'var(--s3)' : `${sector.color}20`,
-                                color: isGhost ? 'var(--t-faint)' : sector.color,
-                                border: `1px solid ${isGhost ? 'var(--b)' : `${sector.color}40`}`,
-                                transition: 'all 0.4s',
-                              }}>
-                              {fill}%
-                            </span>
-                            {/* Always-visible controls — no hover required (works on mobile) */}
-                            {!isEdit && !isAdding && (
-                              <>
-                                <button onClick={() => startEdit(sector)}
-                                  className="w-6 h-6 rounded-md flex items-center justify-center tap"
-                                  style={{ background: 'var(--s3)', color: 'var(--t-faint)' }}
-                                  title="Edit sector">
-                                  <Settings2 size={10} />
-                                </button>
-                                <button onClick={() => deleteSector(sector.id)}
-                                  className="w-6 h-6 rounded-md flex items-center justify-center tap"
-                                  style={{ background: 'var(--s3)', color: '#e07b62' }}
-                                  title="Delete sector">
-                                  <X size={10} />
-                                </button>
-                              </>
-                            )}
-                            {isEdit && (
-                              <button onClick={() => setEditingId(null)}
-                                className="w-6 h-6 rounded-md flex items-center justify-center tap"
-                                style={{ background: `${sector.color}25`, color: sector.color }}>
-                                <X size={10} />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Name / edit */}
-                        {isEdit ? (
-                          <div className="space-y-1.5">
-                            <div className="flex gap-1">
-                              <input autoFocus value={editIcon} onChange={e => setEditIcon(e.target.value)}
-                                className="w-9 rounded-lg px-1 py-1 text-sm text-center focus:outline-none"
-                                style={{ background: 'var(--s3)', color: 'var(--t-head)', border: `1px solid ${sector.color}40` }}
-                                placeholder="🎯" />
-                              <input value={editName} onChange={e => setEditName(e.target.value)}
-                                onKeyDown={e => { if (e.key === 'Enter') saveEdit(sector.id); if (e.key === 'Escape') setEditingId(null); }}
-                                className="flex-1 rounded-lg px-2 py-1 text-xs focus:outline-none"
-                                style={{ background: 'var(--s3)', color: 'var(--t-head)', border: `1px solid ${sector.color}40` }} />
-                            </div>
-                            {/* Manual fill % override */}
-                            <div>
-                              <div className="flex items-center justify-between mb-0.5">
-                                <span className="text-[9px]" style={{ color: 'var(--t-faint)' }}>
-                                  fill %
-                                </span>
-                                <span className="text-[9px] font-bold" style={{ color: sector.color }}>
-                                  {editProgress !== null ? editProgress : sector.fillPct}%
-                                  {editProgress === null && <span style={{ color: 'var(--t-faint)' }}> (auto)</span>}
-                                </span>
-                              </div>
-                              <input
-                                type="range" min={0} max={100} step={1}
-                                value={editProgress !== null ? editProgress : sector.fillPct}
-                                onChange={e => setEditProgress(Number(e.target.value))}
-                                className="w-full h-1 rounded-full appearance-none cursor-pointer"
-                                style={{ accentColor: sector.color }}
-                              />
-                              {editProgress !== null && (
-                                <button onClick={() => setEditProgress(null)}
-                                  className="text-[9px] tap mt-0.5" style={{ color: 'var(--t-faint)' }}>
-                                  reset to auto
-                                </button>
-                              )}
-                            </div>
-                            <button onClick={() => saveEdit(sector.id)} disabled={!editName.trim() || savingEdit}
-                              className="flex items-center gap-1 text-[10px] font-bold tap px-2 py-1 rounded-lg disabled:opacity-40 text-white"
-                              style={{ background: sector.color }}>
-                              {savingEdit ? '…' : <><Check size={9} /> Save</>}
-                            </button>
-                          </div>
-                        ) : (
-                          <div>
-                            <p className="text-xs font-bold leading-snug"
-                              style={{ color: isGhost ? 'var(--t-faint)' : 'var(--t-head)', transition: 'color 0.4s' }}>
-                              {sector.name}
-                            </p>
-                            {isFull && <p className="text-[9px] font-bold mt-0.5" style={{ color: sector.color }}>✦ Complete</p>}
-                          </div>
-                        )}
-
-                        <div className="flex-1" />
-
-                        {/* Stats + quick add */}
-                        {!isEdit && (
-                          <>
-                            <div className="flex items-center justify-between gap-1">
-                              <span className="text-[9px]" style={{ color: 'var(--t-faint)' }}>
-                                {sector.total === 0 ? 'No tasks' : `${sector.done}/${sector.total} done`}
-                              </span>
-                              {!isAdding && (
-                                <button onClick={() => { setAddingTo(sector); setTaskTitle(''); }}
-                                  className="flex items-center gap-0.5 text-[9px] font-bold tap px-1.5 py-0.5 rounded-lg shrink-0"
-                                  style={{ background: `${sector.color}14`, color: sector.color, border: `1px solid ${sector.color}30` }}>
-                                  <Plus size={8} /> Task
-                                </button>
-                              )}
-                            </div>
-
-                            {isAdding && (
-                              <div className="flex gap-1">
-                                <input autoFocus value={taskTitle}
-                                  onChange={e => setTaskTitle(e.target.value)}
-                                  onKeyDown={e => { if (e.key === 'Enter') addTask(); if (e.key === 'Escape') setAddingTo(null); }}
-                                  placeholder="Task name…"
-                                  className="flex-1 rounded-lg px-2 py-1 text-[10px] focus:outline-none"
-                                  style={{ background: 'var(--s3)', color: 'var(--t-head)', border: `1px solid ${sector.color}40` }} />
-                                <button onClick={addTask} disabled={!taskTitle.trim() || savingTask}
-                                  className="px-1.5 py-1 rounded-lg text-[10px] font-bold tap disabled:opacity-40 text-white"
-                                  style={{ background: sector.color }}>
-                                  {savingTask ? '…' : '↵'}
-                                </button>
-                                <button onClick={() => setAddingTo(null)}
-                                  className="px-1 py-1 rounded-lg tap"
-                                  style={{ color: 'var(--t-faint)', background: 'var(--s3)' }}>
-                                  <X size={9} />
-                                </button>
-                              </div>
-                            )}
-                          </>
-                        )}
-
-                        {/* Progress bar */}
-                        <div className="w-full h-[2px] rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
-                          <div style={{
-                            height: '100%',
-                            width: `${fill}%`,
-                            background: sector.color,
-                            boxShadow: fill > 0 ? `0 0 4px ${sector.color}80` : 'none',
-                            borderRadius: 99,
-                            transition: 'width 1.2s cubic-bezier(0.34,1.2,0.64,1)',
-                          }} />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          ) : (
-            loaded && (
-              <div className="flex flex-col items-center justify-center text-center py-14 rounded-2xl space-y-2"
-                style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
-                <p className="text-3xl" style={{ opacity: 0.2 }}>🗺️</p>
-                <p className="text-xs font-semibold" style={{ color: 'var(--t-muted)' }}>Sectors appear here</p>
-                <p className="text-[10px]" style={{ color: 'var(--t-faint)' }}>Send a message to get started</p>
-              </div>
-            )
-          )}
+      {/* ── GOALS ── */}
+      <div>
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-[10px] font-black tracking-[0.22em] uppercase shrink-0"
+            style={{ color: 'var(--t-muted)' }}>Goals</span>
+          <div className="section-rule flex-1" />
         </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <GoalColumn
+            type="long_term"
+            label="Long Term"
+            subtitle="years · lifetime"
+            accent="#d97757"
+            goals={longGoals}
+            onToggle={toggleGoal}
+            onDelete={deleteGoal}
+            onUpdate={updateGoal}
+            onCreate={createGoal}
+          />
+          <GoalColumn
+            type="short_term"
+            label="Short Term"
+            subtitle="weeks · months"
+            accent="#d9a066"
+            goals={shortGoals}
+            onToggle={toggleGoal}
+            onDelete={deleteGoal}
+            onUpdate={updateGoal}
+            onCreate={createGoal}
+          />
+        </div>
+      </div>
 
+      {/* ── SCRATCHPAD ── */}
+      <div>
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-[10px] font-black tracking-[0.22em] uppercase shrink-0"
+            style={{ color: 'var(--t-muted)' }}>Scratchpad</span>
+          <div className="section-rule flex-1" />
+          <span className="text-[10px]" style={{ color: 'var(--t-faint)', fontFamily: "'Lora', serif", fontStyle: 'italic' }}>
+            auto-saves
+          </span>
+        </div>
+        <Scratchpad />
       </div>
     </div>
   );

@@ -446,7 +446,7 @@ function clausesAbout(answer, signalRe) {
     .join('. ');
 }
 const FOOD_SIGNAL = /\b(ate|eat|had|food|meal|breakfast|lunch|dinner|snack|roti|rice|dal|paratha|poha|eggs?|shake|chai|coffee|salad|chicken|paneer|biryani|dosa|idli|fruit|milk|curd|dahi)\b/i;
-const TRAIN_SIGNAL = /\b(gym|workout|trained|training|push day|pull day|leg day|chest|back day|lifted|bench|squat|deadlift|curl|press|ran|running|jog|walk(ed)?|yoga|cardio|sets?|reps?)\b/i;
+const TRAIN_SIGNAL = /\b(gym|workout|trained|training|push day|pull day|leg day|chest|back day|lifted|bench|squat|deadlift|curl|press|ran|runs?|running|jog|walk(ed)?|yoga|cardio|sets?|reps?)\b/i;
 
 const NEG_RE = /^\s*(no\b|nah|nope|didn'?t|did not|nothing|none|skipped|rest day)/i;
 
@@ -499,7 +499,7 @@ function extractFromAnswer(userId, topic, answer, snap, sheet) {
       (e.sets || 0) > 1 || parseInt(e.reps) > 0 || e.weight);
     if (realExercises.length || p.cardioMinutes || TRAIN_SIGNAL.test(a)) {
       sheet.workout = {
-        name: p.dayName || (/(ran|running|jog)/.test(a) ? 'Run' : /walk/.test(a) ? 'Walk' : 'Workout'),
+        name: p.dayName || (/(ran|runs?|running|jog)/.test(a) ? 'Run' : /walk/.test(a) ? 'Walk' : 'Workout'),
         notes: (trainText || answer).slice(0, 200),
         ...(p.cardioMinutes ? { cardio_minutes: p.cardioMinutes } : {}),
         exercises: realExercises.slice(0, 12).map(e => ({
@@ -710,6 +710,209 @@ function converseScripted(userId, transcript) {
   const ack = idx >= 0 && lastAnswer ? ackFor(lastFound, lastAnswer) + ' ' : '';
   const bridge = pick(['So — ', 'Okay. ', 'Next thing — ', 'Tell me this — ', '', '']);
   return { reply: `${ack}${bridge}${plan[idx].ask}`, done: false, sheet, ai: false };
+}
+
+// ── One-shot extraction (the voice box) ──────────────────────────────────────
+// No conversation, no questions: take a free-form daily update and pull every
+// sector out of it in a single pass, then hand back the complete sheet plus a
+// plain list of what was recognized. commitSheet (unchanged) files it.
+
+const DONE_CUE = /\b(done|finished|complete[d]?|sent|submitted|called|paid|wrapped|knocked out|sorted|ticked off|handed in|finally did)\b/;
+const TASK_CUE = /\b(?:remind me to|don'?t forget to|i need to|i've got to|i have to|i gotta|need to)\s+([a-z][^.,;!?]{2,70}?)(?=[.,;!?]| and | then | also | but |$)/gi;
+const CONTENT_CUE = /\b(?:idea for|make|do|post|film|shoot|record|create)\s+(?:a |an )?(reel|post|carousel|story|video|short)\b(?:\s+(?:about|on)\s+([^.,;!?]{2,60}?))?(?=[.,;!?]|$)/gi;
+
+// Habits the user named as done today — matched against their real habit list,
+// skipped when the mention is negated ("didn't meditate").
+function detectHabits(text, snap, sheet) {
+  const a = text.toLowerCase();
+  const done = [];
+  const all = /\b(all of (them|those)|all my habits|everything|every one)\b/.test(a);
+  for (const h of snap.habitList) {
+    if (h.doneToday) continue;
+    const nm = h.name.toLowerCase();
+    const firstWord = nm.split(/\s+/)[0];
+    const mentioned = all || a.includes(nm) || nm.split(/\s+/).some(w => w.length > 3 && a.includes(w));
+    if (!mentioned) continue;
+    if (!all) {
+      const at = a.indexOf(firstWord);
+      const before = a.slice(Math.max(0, at - 24), at);
+      if (/(didn'?t|not|skip|miss|except|but no)/.test(before)) continue;
+    }
+    done.push(h.name);
+  }
+  if (done.length) sheet.habits_done = [...new Set([...(sheet.habits_done || []), ...done])];
+}
+
+// Pending tasks the user said they finished. Gated on a completion cue so a
+// passing mention of a task's topic doesn't mark it done by accident.
+function detectTasksDone(text, snap, sheet) {
+  const a = text.toLowerCase();
+  if (!DONE_CUE.test(a)) return;
+  const matched = [];
+  for (const t of snap.pendingTasks) {
+    const toks = t.title.toLowerCase().split(/\W+/).filter(w => w.length > 3);
+    if (!toks.length) continue;
+    const hits = toks.filter(w => a.includes(w)).length;
+    if (hits >= Math.max(1, Math.ceil(toks.length / 2))) matched.push(t.title);
+  }
+  if (matched.length) sheet.tasks_done = [...new Set([...(sheet.tasks_done || []), ...matched])];
+}
+
+// New commitments stated in the update. Conservative — fires only on explicit
+// intent cues; commitSheet dedupes against existing tasks before inserting.
+function detectNewTasks(text, sheet) {
+  const adds = [];
+  const seen = new Set();
+  let m;
+  TASK_CUE.lastIndex = 0;
+  while ((m = TASK_CUE.exec(text)) && adds.length < 5) {
+    const title = m[1].trim().replace(/\s+/g, ' ');
+    const n = title.split(' ').length;
+    if (n < 1 || n > 12) continue;
+    const key = title.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    adds.push({ title: title.charAt(0).toUpperCase() + title.slice(1), priority: 'medium' });
+  }
+  if (adds.length) sheet.tasks_add = [...(sheet.tasks_add || []), ...adds];
+}
+
+// Sleep, including phrasings the Q&A extractor misses ("got 8 hours", "6 and a
+// half"). Strong sleep words count anywhere; a generic verb ("got"/"had") only
+// counts when it reads like sleep — a 4–14h figure with no work/screen context.
+const SLEEP_BLOCK = /(work|meeting|drive|flight|shift|\bcall\b|class|study|commute|\btv\b|screen|scroll|gaming|\bgame\b|movie|episode|nap)/;
+function detectSleep(text, sheet) {
+  const a = text.toLowerCase();
+  const half = (intStr, h) => parseFloat(intStr) + (h ? 0.5 : 0);
+  let hrs = null;
+  let m = a.match(/slept\s+(?:about|around|like|roughly|maybe|some|for)?\s*(\d+(?:\.\d+)?)\s*(and a half\s*)?(?:hours?|hrs?|h)\b/)
+       || a.match(/(\d+(?:\.\d+)?)\s*(and a half\s*)?(?:hours?|hrs?|h)\b[^.!?]{0,20}(?:of\s+)?sleep/)
+       || a.match(/sleep[^.!?]{0,15}?(\d+(?:\.\d+)?)\s*(and a half\s*)?(?:hours?|hrs?|h)\b/);
+  if (m) hrs = half(m[1], m[2]);
+  if (hrs === null) {
+    const g = a.match(/\b(?:got|had|managed|clocked|grabbed)\s+(?:about|around|like|roughly|maybe|some)?\s*(\d+(?:\.\d+)?)\s*(and a half\s*)?(?:hours?|hrs?|h)\b/);
+    if (g) {
+      const cand = half(g[1], g[2]);
+      const around = a.slice(Math.max(0, a.indexOf(g[0]) - 30), a.indexOf(g[0]) + g[0].length + 30);
+      if (cand >= 4 && cand <= 14 && !SLEEP_BLOCK.test(around)) hrs = cand;
+    }
+  }
+  if (hrs !== null && hrs > 2 && hrs <= 16) {
+    sheet.sleep = { ...(sheet.sleep || {}), duration_minutes: Math.round(hrs * 60) };
+  }
+}
+
+// Bodyweight — clause-scoped so an unrelated training mention elsewhere in the
+// update doesn't block it, and a lift weight ("bench at 60kg") isn't read as one.
+const LIFT_NEAR = /(bench|squat|deadlift|press|curl|lift|rack|\brow\b|pull|dumbbell|barbell|plate)/;
+function detectBody(text, sheet) {
+  const a = text.toLowerCase();
+  // Main pattern: keyword-prefixed weight ("weight 74.5", "scale says 74", "down to 73.8kg")
+  const re = /\b(?:weighed?|weighing|weight|scale|bodyweight|i'?m (?:at|now)?|i (?:am|was)(?: at)?|came in at|sitting at|down to|up to)\b[^.!?]{0,22}?(\d{2,3}(?:\.\d+)?)\s*(?:kg|kgs|kilos?)?\b/g;
+  let m;
+  while ((m = re.exec(a))) {
+    const before = a.slice(Math.max(0, m.index - 20), m.index);
+    if (LIFT_NEAR.test(before) || LIFT_NEAR.test(m[0])) continue;
+    const kg = parseFloat(m[1]);
+    if (kg >= 40 && kg <= 200) { sheet.body = { ...(sheet.body || {}), weight_kg: kg }; return; }
+  }
+  // Fallback: bare "74.8kg" at sentence boundary with no lift context nearby.
+  // Covers "74.8kg this morning" / "73.5kg today" type entries.
+  if (!sheet.body?.weight_kg) {
+    const bareRe = /(?:^|[.!?]\s+)(\d{2,3}(?:\.\d+)?)\s*(?:kg|kgs|kilos?)\b/gm;
+    while ((m = bareRe.exec(a))) {
+      const around = a.slice(Math.max(0, m.index - 20), m.index + (m[0] || '').length + 40);
+      if (LIFT_NEAR.test(around)) continue;
+      const kg = parseFloat(m[1]);
+      if (kg >= 40 && kg <= 200) { sheet.body = { ...(sheet.body || {}), weight_kg: kg }; return; }
+    }
+  }
+}
+
+// Screen-time mentions for apps the user actually tracks.
+function detectDetox(text, snap, sheet) {
+  const lower = text.toLowerCase();
+  const entries = [];
+  for (const app of snap.detoxApps) {
+    const name = (app || '').toLowerCase();
+    if (!name || !lower.includes(name)) continue;
+    const at = lower.indexOf(name);
+    const around = lower.slice(Math.max(0, at - 40), at + name.length + 40);
+    const clean = /(stayed off|stayed away|avoided|didn'?t open|did not open|stayed clean|no time on)/.test(around);
+    let minutes = 0;
+    const hm = around.match(/(\d+(?:\.\d+)?)\s*(hours?|hrs?|h\b|minutes?|mins?|m\b)/);
+    if (hm) { const v = parseFloat(hm[1]); minutes = /^(h|hour|hr)/.test(hm[2]) ? Math.round(v * 60) : Math.round(v); }
+    entries.push({ app, status: clean ? 'clean' : 'slipped', minutes_used: minutes });
+  }
+  if (entries.length) sheet.detox = [...(sheet.detox || []), ...entries];
+}
+
+// Content ideas ("idea for a reel about X", "shoot a video on Y").
+function detectContentIdeas(text, sheet) {
+  const ideas = [];
+  let m;
+  CONTENT_CUE.lastIndex = 0;
+  while ((m = CONTENT_CUE.exec(text)) && ideas.length < 3) {
+    const type = m[1].toLowerCase();
+    const topic = (m[2] || '').trim();
+    const content_type = ['reel', 'post', 'carousel', 'story'].includes(type) ? type : 'reel';
+    const title = topic ? topic.charAt(0).toUpperCase() + topic.slice(1) : `New ${type}`;
+    ideas.push({ title, content_type });
+  }
+  if (ideas.length) sheet.content_ideas = [...(sheet.content_ideas || []), ...ideas];
+}
+
+// Run every detector over the whole update in one pass and summarize the hits.
+function extractEverything(userId, text, snap) {
+  const sheet = {};
+  const caught = [];
+  const clean = (text || '').trim();
+  if (!clean) return { sheet, caught };
+
+  // 'day' mode is clause-filtered, so food and training don't bleed into each
+  // other, and it also picks up sleep, weight, and money. Run it exactly once
+  // (it appends finance entries, so a second call would double-log them).
+  extractFromAnswer(userId, 'day', clean, snap, sheet);
+  detectSleep(clean, sheet);
+  detectBody(clean, sheet);
+  detectHabits(clean, snap, sheet);
+  detectTasksDone(clean, snap, sheet);
+  detectNewTasks(clean, sheet);
+  detectDetox(clean, snap, sheet);
+  detectContentIdeas(clean, sheet);
+
+  // The update itself becomes the journal entry; mood read from its tone.
+  const blob = clean.toLowerCase();
+  let mood = 3;
+  if (/(terrible|awful|horrible|worst|depress|miserable)/.test(blob)) mood = 1;
+  else if (/(rough|bad|tired|low|stress|exhaust|drained|down)/.test(blob)) mood = 2;
+  else if (/(great|amazing|fantastic|brilliant|best|crushed|smashed|nailed)/.test(blob)) mood = 5;
+  else if (/(good|nice|productive|happy|solid|decent|fine)/.test(blob)) mood = 4;
+  sheet.journal = { mood, text: clean, tags: ['voice-log'] };
+
+  // Plain-language summary of what actually landed in the sheet.
+  if (sheet.sleep?.duration_minutes) caught.push(`Sleep — ${r1(sheet.sleep.duration_minutes / 60)}h`);
+  if (sheet.meals?.length) {
+    const cal = sheet.meals.reduce((s, m) => s + (m.calories || 0), 0);
+    caught.push(`${sheet.meals.length} meal${sheet.meals.length > 1 ? 's' : ''}${cal ? ` · ${cal} cal` : ''}`);
+  }
+  if (sheet.workout?.name) caught.push(`Workout — ${sheet.workout.name}`);
+  if (sheet.habits_done?.length) caught.push(`${sheet.habits_done.length} habit${sheet.habits_done.length > 1 ? 's' : ''}`);
+  if (sheet.tasks_done?.length) caught.push(`${sheet.tasks_done.length} task${sheet.tasks_done.length > 1 ? 's' : ''} done`);
+  if (sheet.tasks_add?.length) caught.push(`${sheet.tasks_add.length} new task${sheet.tasks_add.length > 1 ? 's' : ''}`);
+  if (sheet.body?.weight_kg) caught.push(`Weight — ${sheet.body.weight_kg}kg`);
+  if (sheet.finance?.length) caught.push(`${sheet.finance.length} money entr${sheet.finance.length > 1 ? 'ies' : 'y'}`);
+  if (sheet.detox?.length) caught.push('Screen time');
+  if (sheet.content_ideas?.length) caught.push(`${sheet.content_ideas.length} content idea${sheet.content_ideas.length > 1 ? 's' : ''}`);
+
+  return { sheet, caught };
+}
+
+// Public entry for the voice box: snapshot + extract, no DB writes.
+function extractUpdate(userId, text) {
+  const snap = buildSnapshot(userId);
+  const { sheet, caught } = extractEverything(userId, text, snap);
+  return { sheet, caught, ai: false };
 }
 
 async function converse(userId, transcript) {
@@ -1026,5 +1229,5 @@ function commitSheet(userId, sheet) {
 
 module.exports = {
   aiEnabled, humanVoiceEnabled, voiceTagsEnabled,
-  converse, commitSheet, buildSnapshot, greeting,
+  converse, commitSheet, buildSnapshot, greeting, extractUpdate,
 };

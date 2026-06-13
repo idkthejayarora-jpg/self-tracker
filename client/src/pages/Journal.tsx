@@ -50,9 +50,9 @@ const MOODS = [
 function SectionLabel({ text }: { text: string }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="text-[10px] font-bold tracking-[0.18em] uppercase shrink-0"
-        style={{ color: 'var(--t-faint)' }}>{text}</span>
-      <div className="h-px flex-1" style={{ background: 'var(--b)' }} />
+      <span className="text-[10.5px] font-black tracking-[0.20em] uppercase shrink-0"
+        style={{ color: 'var(--t-muted)' }}>{text}</span>
+      <div className="section-rule flex-1" />
     </div>
   );
 }
@@ -116,12 +116,12 @@ export default function Journal() {
       style={{ '--accent-rgb': '212 162 127' } as React.CSSProperties}>
 
       {/* ── Header — a paper title page ── */}
-      <div className="relative overflow-hidden rounded-2xl px-5 py-6"
-        style={{ background: 'var(--hero-bg)', border: '1px solid var(--b)' }}>
+      <div className="relative overflow-hidden rounded-2xl px-5 py-6 fold-corner paper-spine"
+        style={{ background: 'var(--hero-bg)', border: '1.5px solid var(--b)' }}>
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="text-[10px] font-bold tracking-[0.18em] uppercase mb-1.5"
-              style={{ color: 'var(--t-faint)' }}>Daily pages</p>
+            <p className="text-[10px] font-black tracking-[0.22em] uppercase mb-1.5"
+              style={{ color: 'var(--t-muted)' }}>Daily pages</p>
             <h1 className="text-3xl leading-none" style={{ color: 'var(--t-head)' }}>
               Journal
             </h1>
@@ -180,8 +180,8 @@ export default function Journal() {
       </div>
 
       {/* ── The page itself ── */}
-      <div className="card-raised overflow-hidden"
-        style={{ borderColor: focused ? `${accent}45` : undefined, transition: 'border-color 0.3s' }}>
+      <div className="card-raised overflow-hidden paper-ruled fold-corner"
+        style={{ borderColor: focused ? `${accent}45` : undefined, transition: 'border-color 0.3s', border: '1.5px solid var(--gl-border-h)' }}>
         <div className="p-4 space-y-4">
 
           {/* Mood */}
@@ -214,7 +214,8 @@ export default function Journal() {
                 {wordCount ? `${wordCount} word${wordCount === 1 ? '' : 's'}` : ''}
               </span>
             </div>
-            <div className="relative">
+            <div className="relative paper-ruled rounded-xl"
+              style={{ background: 'var(--s1)', border: `1.5px solid ${listening ? '#c2553d55' : focused ? accent + '50' : 'var(--b)'}`, transition: 'border-color 0.25s' }}>
               <textarea
                 value={content}
                 onFocus={() => setFocused(true)}
@@ -224,13 +225,14 @@ export default function Journal() {
                 placeholder="What happened today? Put it on the page — plain and honest…"
                 className="w-full rounded-xl px-4 py-3 text-[15px] resize-none focus:outline-none"
                 style={{
-                  background: 'var(--s1)',
+                  background: 'transparent',
                   color: 'var(--t-body)',
-                  border: `1px solid ${listening ? '#c2553d55' : focused ? accent + '40' : 'var(--b)'}`,
+                  border: 'none',
+                  boxShadow: 'none',
                   paddingRight: supported ? '2.75rem' : '1rem',
                   caretColor: accent,
                   fontFamily: "'Lora', Georgia, serif",
-                  lineHeight: 1.75,
+                  lineHeight: '28px',
                   transition: 'border-color 0.25s',
                 }}
               />

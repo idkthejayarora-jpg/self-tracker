@@ -33,8 +33,8 @@
   /* ── Paper material values (replaces glass) ── */
   --gl-bg:       #232120;
   --gl-bg-hi:    #2b2927;
-  --gl-border:   rgba(245,243,235,0.09);
-  --gl-border-h: rgba(245,243,235,0.16);
+  --gl-border:   rgba(245,243,235,0.15);
+  --gl-border-h: rgba(245,243,235,0.26);
   --gl-top:      rgba(245,243,235,0.05);
   --gl-bottom:   rgba(0,0,0,0.20);
   --gl-blur:     none;
@@ -47,8 +47,8 @@
     0 8px 24px rgba(0,0,0,0.24);
 
   /* ── Borders ── */
-  --b:  rgba(245,243,235,0.09);
-  --bh: rgba(245,243,235,0.16);
+  --b:  rgba(245,243,235,0.15);
+  --bh: rgba(245,243,236,0.26);
 
   /* ── Hover wash (used by nav / buttons) ── */
   --hov:   rgba(245,243,235,0.06);
@@ -56,10 +56,10 @@
 
   /* ── Text — warm ivory ── */
   --t-head:  #f5f3ec;
-  --t-body:  rgba(245,243,236,0.84);
-  --t-muted: rgba(245,243,236,0.58);
-  --t-dim:   rgba(245,243,236,0.40);
-  --t-faint: rgba(245,243,236,0.26);
+  --t-body:  rgba(245,243,236,0.92);
+  --t-muted: rgba(245,243,236,0.70);
+  --t-dim:   rgba(245,243,236,0.50);
+  --t-faint: rgba(245,243,236,0.34);
 
   /* ── Kraft gold / sage (badge + secondary accents) ── */
   --gold:     #d9a066;
@@ -108,7 +108,7 @@
     inset: 0;
     z-index: 2147483647;
     pointer-events: none;
-    opacity: 0.07;
+    opacity: 0.10;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size: 160px 160px;
   }
@@ -132,6 +132,14 @@
 /* ═══════════════════════════════════════════════════════════════════
    PAPER INPUTS
    ═══════════════════════════════════════════════════════════════════ */
+
+/* Textarea inside a ruled wrapper — transparent so parent lines show through */
+.paper-ruled textarea {
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
 
 input, textarea, select {
   background: var(--s3) !important;
@@ -367,6 +375,72 @@ input:focus, textarea:focus, select:focus {
     flex-shrink: 0;
     animation: dot-glow 2s ease-in-out infinite;
   }
+
+  /* ── Paper extras — tactile / craft details ── */
+
+  /* Ruled notebook lines — set as background-image so it layers on any bg */
+  .paper-ruled {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 27px,
+      rgba(245,243,235,0.07) 27px,
+      rgba(245,243,235,0.07) 28.5px
+    ) !important;
+  }
+  html.light .paper-ruled {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 27px,
+      rgba(20,20,19,0.07) 27px,
+      rgba(20,20,19,0.07) 28.5px
+    ) !important;
+  }
+
+  /* Folded page corner — dog-ear at top-right */
+  .fold-corner { position: relative; overflow: hidden; }
+  .fold-corner::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; z-index: 2;
+    width: 26px; height: 26px;
+    background: linear-gradient(
+      225deg,
+      var(--s0) 47%,
+      rgba(245,243,235,0.20) 49%,
+      transparent 51%
+    );
+    pointer-events: none;
+  }
+  html.light .fold-corner::after {
+    background: linear-gradient(
+      225deg,
+      #e8e4d8 47%,
+      rgba(20,20,19,0.15) 49%,
+      transparent 51%
+    );
+  }
+
+  /* Left spine accent — a vertical ink strip like a bound edge */
+  .paper-spine {
+    border-left-width: 3px !important;
+    border-left-color: rgb(var(--accent-rgb) / 0.32) !important;
+    border-left-style: solid !important;
+  }
+
+  /* Double-border wrap — outline sits 5px outside like a second sheet behind */
+  .paper-wrap {
+    outline: 1.5px solid rgb(var(--accent-rgb) / 0.14);
+    outline-offset: 5px;
+  }
+
+  /* Heavier section rule */
+  .section-rule {
+    height: 2px;
+    background: var(--bh);
+    border-radius: 99px;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -379,8 +453,8 @@ html.light {
   --s2: #f5f3ec;
   --s3: #edeae0;
   --s4: #e5e1d4;
-  --b:  rgba(20,20,19,0.10);
-  --bh: rgba(20,20,19,0.18);
+  --b:  rgba(20,20,19,0.14);
+  --bh: rgba(20,20,19,0.24);
 
   --side-bg: #eae7dc;
 
@@ -431,6 +505,7 @@ html.light .bg-gray-800 { background: var(--s2) !important; }
 html.light .bg-gray-700 { background: var(--s3) !important; }
 html.light .text-green-400 { color: #4c7c3c !important; }
 html.light .text-red-400   { color: #b3372e !important; }
+html.light body::after { opacity: 0.05; }
 
 /* ═══════════════════════════════════════════════════════════════════
    TAP / BUTTON PRIMITIVES

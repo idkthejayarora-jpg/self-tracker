@@ -593,4 +593,99 @@ router.get('/life-score', (req, res) => {
   res.json({ score: avg, sectors: sectors.length });
 });
 
+// ── Goals ──────────────────────────────────────────────────────
+
+try {
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS life_goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      type TEXT DEFAULT 'long_term' CHECK(type IN ('long_term','short_term')),
+      status TEXT DEFAULT 'active' CHECK(status IN ('active','done','paused')),
+      color TEXT DEFAULT '#d97757',
+      sort_order INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
+} catch (_) {}
+
+try {
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS life_notes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      section TEXT DEFAULT 'free',
+      content TEXT DEFAULT '',
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, section)
+    )
+  `).run();
+} catch (_) {}
+
+router.get('/goals', (req, res) => {
+  const goals = db.prepare(
+    'SELECT * FROM life_goals WHERE user_id=? ORDER BY type, status, sort_order, created_at'
+  ).all(req.user.id);
+  res.json(goals);
+});
+
+router.post('/goals', (req, res) => {
+  const { title, description = '', type = 'long_term', color = '#d97757' } = req.body;
+  if (!title?.trim()) return res.status(400).json({ error: 'Title required' });
+  const maxOrder = db.prepare(
+    'SELECT COALESCE(MAX(sort_order),0) as m FROM life_goals WHERE user_id=? AND type=?'
+  ).get(req.user.id, type)?.m || 0;
+  const r = db.prepare(
+    'INSERT INTO life_goals (user_id, title, description, type, color, sort_order) VALUES (?,?,?,?,?,?)'
+  ).run(req.user.id, title.trim(), description.trim(), type, color, maxOrder + 1);
+  res.json({
+    id: r.lastInsertRowid, title: title.trim(), description: description.trim(),
+    type, color, status: 'active', sort_order: maxOrder + 1,
+    created_at: new Date().toISOString(),
+  });
+});
+
+router.patch('/goals/:id', (req, res) => {
+  const goal = db.prepare('SELECT id FROM life_goals WHERE id=? AND user_id=?').get(req.params.id, req.user.id);
+  if (!goal) return res.status(404).json({ error: 'Not found' });
+  const { title, description, status, color } = req.body;
+  db.prepare(`
+    UPDATE life_goals SET
+      title = COALESCE(?, title),
+      description = COALESCE(?, description),
+      status = COALESCE(?, status),
+      color = COALESCE(?, color),
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id=? AND user_id=?
+  `).run(title ?? null, description ?? null, status ?? null, color ?? null, goal.id, req.user.id);
+  res.json({ ok: true });
+});
+
+router.delete('/goals/:id', (req, res) => {
+  db.prepare('DELETE FROM life_goals WHERE id=? AND user_id=?').run(req.params.id, req.user.id);
+  res.json({ ok: true });
+});
+
+// ── Scratchpad notes ───────────────────────────────────────────
+
+router.get('/notes/:section', (req, res) => {
+  const row = db.prepare(
+    'SELECT content FROM life_notes WHERE user_id=? AND section=?'
+  ).get(req.user.id, req.params.section);
+  res.json({ content: row?.content || '' });
+});
+
+router.put('/notes/:section', (req, res) => {
+  const { content = '' } = req.body;
+  db.prepare(`
+    INSERT INTO life_notes (user_id, section, content)
+    VALUES (?,?,?)
+    ON CONFLICT(user_id, section) DO UPDATE SET content=excluded.content, updated_at=CURRENT_TIMESTAMP
+  `).run(req.user.id, req.params.section, content);
+  res.json({ ok: true });
+});
+
 module.exports = router;
