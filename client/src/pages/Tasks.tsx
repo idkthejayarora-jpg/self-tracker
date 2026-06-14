@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Plus, Check, Trash2, ChevronDown, ChevronUp, Zap, Pencil, Save, AlertCircle } from 'lucide-react';
+import PaperBanner from '../components/PaperBanner';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
 import type { Task, TaskPriority, TaskStatus } from '../types';
@@ -179,44 +180,12 @@ export default function Tasks() {
         }} />
       </div>
 
-      {/* ── TERMINAL HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #d9775720' }}>
-        {/* Scanlines */}
-        <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{
-          backgroundImage: 'none',
-        }} />
-        {/* Top neon bar */}
-        <div className="absolute top-0 left-0 right-0 h-px" style={{
-          background: '#d9775760',
-          boxShadow: 'none',
-        }} />
-        {/* Content */}
-        <div className="relative z-10 px-5 py-4">
-          {/* Terminal top bar */}
-          <div className="flex items-center gap-2 mb-3">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#ff5f56' }} />
-            <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#ffbd2e' }} />
-            <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#d9a066' }} />
-            <span className="text-[9px] font-mono ml-2 opacity-30 text-white">mission_queue.exe — bash</span>
-            <span className="ml-auto flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#ff5f56', animation: 'neon-pulse 1.2s ease-in-out infinite' }} />
-              <span className="text-[8px] font-mono" style={{ color: '#ff5f56', opacity: 0.7 }}>REC</span>
-            </span>
-          </div>
-          <p className="font-mono text-[11px] mb-1" style={{ color: '#d97757', opacity: 0.5 }}>root@system:~$</p>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black font-mono tracking-tight"
-              style={{ color: '#d97757', textShadow: 'none' }}>
-              ./MISSION_QUEUE
-            </h1>
-            <span className="cursor-blink font-mono text-2xl" style={{ color: '#d97757' }}>_</span>
-          </div>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#d97757', opacity: 0.4 }}>
-            {'// executing task management protocol...'}
-          </p>
-        </div>
-      </div>
+      <PaperBanner
+        title="Missions"
+        label="Task Queue"
+        accent="#d97757"
+        subtitle="what needs to be done — written down, crossed out"
+      />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
 

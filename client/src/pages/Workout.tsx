@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText, Dumbbell } from 'lucide-react';
+import PaperBanner from '../components/PaperBanner';
 import WorkoutAvatar from '../components/WorkoutAvatar';
 import { format, parseISO } from 'date-fns';
 import {
@@ -365,23 +366,13 @@ export default function Workout() {
     <div className="space-y-4 paper-in"
       style={{ '--accent-rgb': '179 55 46' } as React.CSSProperties}>
 
-      {/* ── Header ── */}
-      <div className="rounded-2xl px-5 py-6"
-        style={{ background: 'var(--s1)', border: '1px solid var(--b)' }}>
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-bold tracking-[0.22em] uppercase mb-1" style={{ color: 'var(--t-faint)' }}>
-              Strength & training
-            </p>
-            <h1 className="text-3xl font-bold text-head" style={{ fontFamily: "'Lora', serif" }}>Training</h1>
-            <p className="text-[12px] mt-1" style={{ color: 'var(--t-faint)' }}>{headerSubtitle}</p>
-          </div>
-          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: '#b3372e14', border: '1px solid #b3372e30' }}>
-            <Dumbbell size={18} style={{ color: '#b3372e' }} />
-          </div>
-        </div>
-      </div>
+      <PaperBanner
+        title="Training"
+        label="Strength Log"
+        accent="#b3372e"
+        subtitle={headerSubtitle}
+        icon={Dumbbell}
+      />
 
       <div>
 

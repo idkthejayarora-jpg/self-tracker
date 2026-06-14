@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Target, Plus, Trash2, Flame, Check, AlertCircle, Zap } from 'lucide-react';
+import PaperBanner from '../components/PaperBanner';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
 import { format } from 'date-fns';
@@ -106,72 +107,12 @@ export default function Habits() {
     <div className="max-w-2xl mx-auto space-y-5 anim-page"
       style={{ '--accent-rgb': '217 119 87' } as React.CSSProperties}>
 
-      {/* Cyberpunk body overlay */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(212,162,127,0.06) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }} />
-      </div>
-
-      {/* ── BIORHYTHM HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #d4a27f25', minHeight: 110 }}>
-        {/* Pulse rings */}
-        <div className="absolute pointer-events-none" style={{ top: '50%', right: 40, transform: 'translateY(-50%)' }}>
-          <div className="absolute rounded-full" style={{
-            width: 80, height: 80, top: -40, left: -40,
-            border: '1px solid #d4a27f',
-            animation: 'pulse-ring-out 2.4s ease-out 0ms infinite',
-          }} />
-          <div className="absolute rounded-full" style={{
-            width: 80, height: 80, top: -40, left: -40,
-            border: '1px solid #d4a27f',
-            animation: 'pulse-ring-out 2.4s ease-out 600ms infinite',
-          }} />
-          <div className="absolute rounded-full" style={{
-            width: 80, height: 80, top: -40, left: -40,
-            border: '1px solid #d4a27f',
-            animation: 'pulse-ring-out 2.4s ease-out 1200ms infinite',
-          }} />
-          <div className="w-3 h-3 rounded-full absolute" style={{
-            top: -6, left: -6,
-            background: '#f0abfc',
-            boxShadow: 'none',
-          }} />
-        </div>
-        {/* HUD corners */}
-        <div className="absolute top-0 left-0 pointer-events-none"
-          style={{ width: 12, height: 12, borderTop: '1.5px solid #d4a27f', borderLeft: '1.5px solid #d4a27f', opacity: 0.6 }} />
-        <div className="absolute top-0 right-0 pointer-events-none"
-          style={{ width: 12, height: 12, borderTop: '1.5px solid #d4a27f', borderRight: '1.5px solid #d4a27f', opacity: 0.6 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none"
-          style={{ width: 12, height: 12, borderBottom: '1.5px solid #d4a27f', borderLeft: '1.5px solid #d4a27f', opacity: 0.6 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none"
-          style={{ width: 12, height: 12, borderBottom: '1.5px solid #d4a27f', borderRight: '1.5px solid #d4a27f', opacity: 0.6 }} />
-        {/* Top neon edge */}
-        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: '#d4a27f60', boxShadow: 'none' }} />
-        {/* Content */}
-        <div className="relative z-10 px-5 py-5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#d4a27f', opacity: 0.6 }}>BIO://</span>
-            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">BEHAVIORAL_MATRIX</span>
-            <span className="cursor-blink font-mono" style={{ color: '#f0abfc', fontSize: 11 }}>▌</span>
-          </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: 'none' }}>
-            BEHAVIORAL MATRIX
-          </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#d4a27f', opacity: 0.5 }}>
-            {'// neural pathway reinforcement protocol — daily cycles active'}
-          </p>
-        </div>
-        {/* Bottom neon edge */}
-        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: '#d4a27f40' }} />
-      </div>
+      <PaperBanner
+        title="Habits"
+        label="Behavioral Matrix"
+        accent="#d4a27f"
+        subtitle="daily cycles — reinforce the patterns that build you"
+      />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
 

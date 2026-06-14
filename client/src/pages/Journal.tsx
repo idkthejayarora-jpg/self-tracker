@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Save, Mic, MicOff, Tag, AlertCircle, CheckCircle2, BookOpen } from 'lucide-react';
+import PaperBanner from '../components/PaperBanner';
 import { format, addDays, subDays, parseISO } from 'date-fns';
 import api from '../lib/api';
 import type { JournalEntry } from '../types';
@@ -115,38 +116,29 @@ export default function Journal() {
     <div className="max-w-2xl mx-auto space-y-5 anim-page pb-10 px-1 sm:px-0"
       style={{ '--accent-rgb': '212 162 127' } as React.CSSProperties}>
 
-      {/* ── Header — a paper title page ── */}
-      <div className="relative overflow-hidden rounded-2xl px-5 py-6 fold-corner paper-spine"
-        style={{ background: 'var(--hero-bg)', border: '1.5px solid var(--b)' }}>
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-black tracking-[0.22em] uppercase mb-1.5"
-              style={{ color: 'var(--t-muted)' }}>Daily pages</p>
-            <h1 className="text-3xl leading-none" style={{ color: 'var(--t-head)' }}>
-              Journal
-            </h1>
-            <p className="text-xs mt-2" style={{ color: 'var(--t-dim)' }}>
-              {format(parseISO(date), 'EEEE, d MMMM yyyy')}{isToday ? ' · today' : ''}
-            </p>
-          </div>
-
-          {/* Mood seal — like a wax stamp on the page */}
-          <div className="flex flex-col items-center gap-1.5 shrink-0">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full"
+      <PaperBanner
+        title="Journal"
+        label="Daily Pages"
+        accent="#d4a27f"
+        subtitle={`${format(parseISO(date), 'EEEE, d MMMM yyyy')}${isToday ? ' · today' : ''}`}
+        icon={BookOpen}
+        right={
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center justify-center w-11 h-11 rounded-full"
               style={{
-                background: moodData ? `${moodData.color}1c` : 'transparent',
-                border: `1.5px ${moodData ? 'solid' : 'dashed'} ${moodData ? moodData.color + '70' : 'var(--bh)'}`,
+                background: moodData ? `${moodData.color}18` : 'transparent',
+                border: `1.5px ${moodData ? 'solid' : 'dashed'} ${moodData ? moodData.color + '55' : 'var(--bh)'}`,
               }}>
-              <span className="w-4 h-4 rounded-full block"
+              <span className="w-3.5 h-3.5 rounded-full block"
                 style={{ background: moodData ? moodData.color : 'var(--s3)' }} />
             </div>
-            <span className="text-[10px] font-semibold"
+            <span className="text-[9px] font-semibold"
               style={{ color: moodData?.color ?? 'var(--t-faint)' }}>
               {moodData?.label ?? 'No mood'}
             </span>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* ── Date nav ── */}
       <div className="card px-4 py-2.5 flex items-center gap-3">

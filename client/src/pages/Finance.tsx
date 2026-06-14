@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Wallet, Plus, Trash2, ChevronLeft, ChevronRight, Target, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
+import PaperBanner from '../components/PaperBanner';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
@@ -175,55 +176,14 @@ export default function Finance() {
         }} />
       </div>
 
-      {/* ── ASSET NEXUS HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #cf8a3e20' }}>
-        {/* Financial grid */}
-        <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: 'linear-gradient(rgba(207,138,62,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(207,138,62,0.03) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }} />
-        {/* HUD corners */}
-        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #cf8a3e', borderLeft: '1.5px solid #cf8a3e', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #cf8a3e', borderRight: '1.5px solid #cf8a3e', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #cf8a3e', borderLeft: '1.5px solid #cf8a3e', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #cf8a3e', borderRight: '1.5px solid #cf8a3e', opacity: 0.7 }} />
-        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: '#cf8a3e80', boxShadow: 'none' }} />
-        {/* Main content */}
-        <div className="relative z-10 px-5 pt-5 pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#cf8a3e', opacity: 0.6 }}>MKT://</span>
-                <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">ASSET_NEXUS</span>
-                <span className="cursor-blink font-mono" style={{ color: '#cf8a3e', fontSize: 11 }}>▌</span>
-              </div>
-              <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-                style={{ textShadow: 'none' }}>
-                ASSET NEXUS
-              </h1>
-              <p className="font-mono text-[10px] mt-1" style={{ color: '#cf8a3e', opacity: 0.5 }}>
-                // financial intelligence — wealth tracking protocol
-              </p>
-            </div>
-            {/* Live indicator */}
-            <div className="flex flex-col items-center gap-1 shrink-0">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full" style={{ background: '#cf8a3e', boxShadow: 'none', animation: 'neon-pulse 1.5s ease-in-out infinite' }} />
-                <span className="text-[9px] font-black tracking-widest" style={{ color: '#cf8a3e' }}>LIVE</span>
-              </div>
-              <span className="text-[8px] font-mono opacity-30 text-white">MARKET OPEN</span>
-            </div>
-          </div>
-        </div>
-        {/* Ticker tape */}
-        <div className="relative z-10 px-2 pb-2">
-          <div style={{ borderTop: '1px solid rgba(207,138,62,0.1)', paddingTop: 6 }}>
-            <TickerTape />
-          </div>
-        </div>
-      </div>
+      <PaperBanner
+        title="Finance"
+        label="Asset Ledger"
+        accent="#cf8a3e"
+        subtitle="income, expenses, and the numbers that matter"
+      >
+        <TickerTape />
+      </PaperBanner>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
 

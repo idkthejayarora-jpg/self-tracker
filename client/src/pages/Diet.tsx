@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Trash2, ChevronLeft, ChevronRight, Salad, Check, Undo2, Mic } from 'lucide-react';
+import PaperBanner from '../components/PaperBanner';
 import { format, parseISO, addDays, subDays } from 'date-fns';
 import api from '../lib/api';
 import { useVoiceInput } from '../hooks/useVoiceInput';
@@ -133,41 +134,12 @@ export default function Diet() {
         }} />
       </div>
 
-      {/* ── HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl"
-        style={{ background: 'var(--hero-bg)', border: `1px solid ${ACCENT}25`, minHeight: 96, zIndex: 1 }}>
-        {/* Scanlines */}
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ backgroundImage: 'none' }} />
-        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: `${ACCENT}80` }} />
-        {/* HUD corners */}
-        {([['top-0 left-0', { borderTop: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` }],
-           ['top-0 right-0', { borderTop: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}` }],
-           ['bottom-0 left-0', { borderBottom: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` }],
-           ['bottom-0 right-0', { borderBottom: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}` }],
-        ] as [string, React.CSSProperties][]).map(([pos, s], i) => (
-          <div key={i} className={`absolute ${pos} pointer-events-none`}
-            style={{ width: 10, height: 10, opacity: 0.45, ...s }} />
-        ))}
-        <div className="relative z-10 px-5 py-5 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: ACCENT, opacity: 0.6 }}>LAB://</span>
-              <span className="cursor-blink font-mono" style={{ color: ACCENT, fontSize: 11 }}>▌</span>
-            </div>
-            <h1 className="text-2xl font-black tracking-tight text-white" style={{ textShadow: 'none' }}>
-              BIOLAB
-            </h1>
-            <p className="font-mono text-[10px] mt-0.5" style={{ color: ACCENT, opacity: 0.45 }}>
-              {'// fuel optimization — 430+ foods auto-matched'}
-            </p>
-          </div>
-          <Salad size={30} style={{ color: ACCENT, opacity: 0.2 }} />
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: `${ACCENT}30` }} />
-      </div>
+      <PaperBanner
+        title="Nutrition"
+        label="BioLab"
+        accent={ACCENT}
+        subtitle="food, fuel, and what goes into the body"
+      />
 
       <div style={{ position: 'relative', zIndex: 1 }} className="space-y-5">
 

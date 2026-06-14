@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Plus, X, Check, ChevronDown, ChevronUp, Pencil, Calendar, ClipboardList, Sparkles } from 'lucide-react';
+import PaperBanner from '../components/PaperBanner';
 import api from '../lib/api';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -536,59 +537,26 @@ export default function LifeProgress() {
   return (
     <div className="max-w-4xl mx-auto space-y-5 anim-page pb-10 px-1 sm:px-0">
 
-      {/* ── HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl fold-corner"
-        style={{ background: 'var(--hero-bg)', border: '1.5px solid var(--b)', minHeight: 110 }}>
-
-        {/* Dot-grid texture */}
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ backgroundImage: 'radial-gradient(circle, rgba(217,119,87,0.14) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-
-        {/* Corner brackets */}
-        {([
-          { top: 0,    left: 0,  borderTop: true,    borderLeft: true,   bottom: undefined, right: undefined,  borderBottom: false, borderRight: false },
-          { top: 0,    right: 0, borderTop: true,    borderRight: true,  bottom: undefined, left: undefined,   borderBottom: false, borderLeft: false  },
-          { bottom: 0, left: 0,  borderBottom: true, borderLeft: true,   top: undefined,    right: undefined,  borderTop: false,    borderRight: false },
-          { bottom: 0, right: 0, borderBottom: true, borderRight: true,  top: undefined,    left: undefined,   borderTop: false,    borderLeft: false  },
-        ] as Array<{ top?: number; bottom?: number; left?: number; right?: number; borderTop: boolean; borderBottom: boolean; borderLeft: boolean; borderRight: boolean }>).map((pos, i) => (
-          <div key={i} className="absolute pointer-events-none"
-            style={{
-              width: 18, height: 18,
-              top: pos.top, bottom: pos.bottom, left: pos.left, right: pos.right,
-              borderTop:    pos.borderTop    ? '2px solid rgba(217,119,87,0.55)' : undefined,
-              borderBottom: pos.borderBottom ? '2px solid rgba(217,119,87,0.55)' : undefined,
-              borderLeft:   pos.borderLeft   ? '2px solid rgba(217,119,87,0.55)' : undefined,
-              borderRight:  pos.borderRight  ? '2px solid rgba(217,119,87,0.55)' : undefined,
-            }} />
-        ))}
-
-        <div className="relative z-10 px-6 py-5 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-[9px] font-black tracking-[0.32em] uppercase mb-1.5"
-              style={{ color: 'var(--accent)', opacity: 0.8 }}>Plot the journey</p>
-            <h1 className="text-4xl font-bold leading-none" style={{ fontFamily: "'Lora', serif", color: 'var(--t-head)' }}>
-              Life Path
-            </h1>
-            <p className="text-[11px] mt-2" style={{ color: 'var(--t-dim)' }}>
-              Goals that pull you forward · a scratchpad for your thinking
-            </p>
-          </div>
-
-          <div className="flex flex-col items-end gap-1.5 shrink-0">
+      <PaperBanner
+        title="Life Path"
+        label="Plot the journey"
+        accent="#d97757"
+        subtitle="goals that pull you forward — written down, mapped out"
+        icon={Sparkles}
+        right={
+          <div className="flex flex-col items-end gap-1">
             <span className="text-[10px] font-black tracking-widest px-2.5 py-1 rounded-full"
               style={{ background: 'rgba(217,119,87,0.12)', color: 'var(--accent)', border: '1px solid rgba(217,119,87,0.28)' }}>
               {year}
             </span>
             {!loading && (totalActive + totalDone > 0) && (
-              <div className="text-right">
-                <p className="text-[11px] font-semibold" style={{ color: 'var(--t-muted)' }}>
-                  {totalActive} active · {totalDone} done
-                </p>
-              </div>
+              <p className="text-[11px] font-semibold" style={{ color: 'var(--t-muted)' }}>
+                {totalActive} active · {totalDone} done
+              </p>
             )}
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* ── GOALS ── */}
       <div>

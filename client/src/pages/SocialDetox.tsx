@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, X, Shield, Flame, Check } from 'lucide-react';
+import PaperBanner from '../components/PaperBanner';
 import api from '../lib/api';
 
 interface DetoxApp {
@@ -73,56 +74,12 @@ export default function SocialDetox() {
     <div className="max-w-2xl mx-auto space-y-5 anim-page"
       style={{ '--accent-rgb': '194 85 61' } as React.CSSProperties}>
 
-      {/* Cyberpunk body overlay */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(194,85,61,0.06) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }} />
-      </div>
-
-      {/* ── FIREWALL HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #c2553d25', minHeight: 110 }}>
-        {/* Corrupted pixel noise */}
-        <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.06 }}>
-          {[...Array(6)].map((_,i) => (
-            <div key={i} style={{
-              position: 'absolute',
-              left: `${i * 17}%`, top: `${20 + (i%3)*20}%`,
-              width: 40, height: 6,
-              background: i%2===0 ? '#c2553d' : '#e59a7f',
-              animation: `glitch-block 5s step-end ${i*700}ms infinite`,
-            }} />
-          ))}
-        </div>
-        {/* Diagonal warning stripe */}
-        <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: 'none',
-        }} />
-        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #c2553d', borderLeft: '1.5px solid #c2553d', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #c2553d', borderRight: '1.5px solid #c2553d', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #c2553d', borderLeft: '1.5px solid #c2553d', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #c2553d', borderRight: '1.5px solid #c2553d', opacity: 0.7 }} />
-        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: '#c2553d80', boxShadow: 'none' }} />
-        <div className="relative z-10 px-5 py-5" style={{ animation: 'glitch-block 8s step-end 2s infinite' }}>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#c2553d', opacity: 0.7 }}>BLOCK://</span>
-            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">FIREWALL_ACTIVE</span>
-            <span className="cursor-blink font-mono" style={{ color: '#c2553d', fontSize: 11 }}>▌</span>
-          </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: 'none' }}>
-            DIGITAL DETOX
-          </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#e59a7f', opacity: 0.6 }}>
-            // neural firewall engaged — signal blocking protocol
-          </p>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: '#c2553d30' }} />
-      </div>
+      <PaperBanner
+        title="Digital Detox"
+        label="Screen Limits"
+        accent="#c2553d"
+        subtitle="reclaim your time — screen limits written in ink"
+      />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
 

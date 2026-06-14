@@ -99,31 +99,23 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center px-4"
       style={{ background: 'var(--s0)' }}>
 
-      {/* ── PORTAL BACKGROUND ── */}
+      {/* ── PAPER BACKGROUND — grain texture only ── */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-        {/* Grid */}
+        {/* Subtle grain vignette at edges */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'linear-gradient(rgba(217,119,87,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(217,119,87,0.04) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
+          background: 'radial-gradient(ellipse 80% 80% at 50% 50%, transparent 60%, rgba(0,0,0,0.18) 100%)',
         }} />
-        {/* Portal scan line */}
+        {/* Top torn edge — a strip torn from a paper sheet */}
         <div style={{
-          position: 'absolute', left: 0, right: 0, height: 2,
-          background: '#d9775760',
-          boxShadow: 'none',
-          animation: 'portal-scan 4s linear infinite',
+          position: 'absolute', top: 0, left: 0, right: 0, height: 20,
+          background: 'rgba(var(--accent-rgb), 0.04)',
+          borderBottom: '1px solid rgba(var(--accent-rgb), 0.10)',
         }} />
-        {/* Corner decorations */}
-        <div style={{ position: 'absolute', top: 20, left: 20, width: 40, height: 40, borderTop: '2px solid #d9775740', borderLeft: '2px solid #d9775740' }} />
-        <div style={{ position: 'absolute', top: 20, right: 20, width: 40, height: 40, borderTop: '2px solid #d9775740', borderRight: '2px solid #d9775740' }} />
-        <div style={{ position: 'absolute', bottom: 20, left: 20, width: 40, height: 40, borderBottom: '2px solid #d9775740', borderLeft: '2px solid #d9775740' }} />
-        <div style={{ position: 'absolute', bottom: 20, right: 20, width: 40, height: 40, borderBottom: '2px solid #d9775740', borderRight: '2px solid #d9775740' }} />
-        {/* Radial glow center */}
         <div style={{
-          position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-          width: 600, height: 600, borderRadius: '50%',
-          background: 'transparent',
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 20,
+          background: 'rgba(var(--accent-rgb), 0.04)',
+          borderTop: '1px solid rgba(var(--accent-rgb), 0.10)',
         }} />
       </div>
 
@@ -138,9 +130,13 @@ export default function Login() {
               style={{ objectPosition: 'center top' }} />
           </div>
           <div className="text-center">
-            <p className="text-[9px] font-black tracking-[0.35em] mb-1" style={{ color: '#d97757', opacity: 0.6 }}>ACCESS PORTAL</p>
-            <h1 className="text-2xl font-bold text-head tracking-tight">Self Tracker</h1>
-            <p className="text-sm mt-0.5" style={{ color: 'var(--t-faint)' }}>Your personal command room</p>
+            <div className="flex items-center gap-2 justify-center mb-1">
+              <div className="h-px w-6 rounded-full" style={{ background: '#d97757', opacity: 0.35 }} />
+              <span className="text-[9px] font-black tracking-[0.30em]" style={{ color: '#d97757', opacity: 0.55, fontFamily: "'Lora', Georgia, serif" }}>ACCESS PORTAL</span>
+              <div className="h-px w-6 rounded-full" style={{ background: '#d97757', opacity: 0.35 }} />
+            </div>
+            <h1 className="text-2xl text-head tracking-tight" style={{ fontFamily: "'Lora', Georgia, serif", fontWeight: 700 }}>Self Tracker</h1>
+            <p className="text-sm mt-0.5 italic" style={{ color: 'var(--t-faint)' }}>Your personal command room</p>
           </div>
         </div>
 

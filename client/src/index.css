@@ -378,6 +378,207 @@ input:focus, textarea:focus, select:focus {
 
   /* ── Paper extras — tactile / craft details ── */
 
+  /* ─── Torn paper edges ─────────────────────────────── */
+
+  /* Page-level paper banner — wrap page titles in this */
+  .paper-banner {
+    position: relative;
+    padding: 20px 0 54px;
+    margin-bottom: 20px;
+  }
+  .paper-banner::before {
+    content: '';
+    position: absolute;
+    inset: -4px -100px 0;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E") repeat,
+      linear-gradient(180deg,
+        rgba(var(--accent-rgb) / 0.09) 0%,
+        rgba(var(--accent-rgb) / 0.04) 38%,
+        transparent 54%,
+        rgba(0,0,0,0.08) 72%,
+        rgba(0,0,0,0.24) 86%,
+        rgba(0,0,0,0.42) 97%
+      );
+    pointer-events: none;
+    z-index: 0;
+  }
+  .paper-banner::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: -100px; right: -100px;
+    height: 34px;
+    background: var(--s0);
+    pointer-events: none;
+    z-index: 4;
+    clip-path: polygon(
+      0 100%, 100% 100%, 100% 55%,
+      99% 90%, 97.5% 10%, 96% 85%, 94% 5%, 92.5% 80%, 91% 25%, 89.5% 95%,
+      88% 12%, 86.5% 78%, 85% 30%, 83.5% 92%, 82% 8%, 80.5% 75%, 79% 35%,
+      77.5% 88%, 76% 18%, 74.5% 82%, 73% 12%, 71.5% 90%, 70% 30%, 68.5% 95%,
+      67% 20%, 65.5% 78%, 64% 38%, 62.5% 88%, 61% 15%, 59.5% 72%, 58% 32%,
+      56.5% 92%, 55% 18%, 53.5% 82%, 52% 28%, 50.5% 90%, 49% 10%, 47.5% 80%,
+      46% 28%, 44.5% 95%, 43% 15%, 41.5% 78%, 40% 28%, 38.5% 90%, 37% 12%,
+      35.5% 78%, 34% 25%, 32.5% 88%, 31% 14%, 29.5% 75%, 28% 40%, 26.5% 92%,
+      25% 18%, 23.5% 80%, 22% 32%, 20.5% 90%, 19% 20%, 17.5% 78%,
+      16% 22%, 14.5% 88%, 13% 10%, 11.5% 75%, 10% 35%, 8.5% 92%,
+      7% 18%, 5.5% 82%, 4% 30%, 2.5% 88%, 1% 40%, 0 55%
+    );
+  }
+  html.light .paper-banner::before {
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.10'/%3E%3C/svg%3E") repeat,
+      linear-gradient(180deg,
+        rgba(var(--accent-rgb) / 0.06) 0%,
+        transparent 54%,
+        rgba(0,0,0,0.03) 72%,
+        rgba(0,0,0,0.10) 97%
+      );
+  }
+  html.light .paper-banner::after { background: var(--s0); }
+  .paper-banner > * { position: relative; z-index: 1; }
+
+  /* Torn edge at bottom of any element */
+  .torn-b { position: relative; }
+  .torn-b::after {
+    content: '';
+    position: absolute;
+    bottom: -10px; left: 0; right: 0;
+    height: 12px;
+    background: var(--s0);
+    pointer-events: none;
+    z-index: 4;
+    clip-path: polygon(
+      0 100%, 100% 100%, 100% 55%,
+      97% 82%, 94% 30%, 91% 68%, 88% 22%, 85% 72%, 82% 40%, 79% 82%,
+      76% 18%, 73% 65%, 70% 35%, 67% 78%, 64% 28%, 61% 62%, 58% 20%,
+      55% 72%, 52% 45%, 49% 82%, 46% 25%, 43% 68%, 40% 38%, 37% 82%,
+      34% 28%, 31% 68%, 28% 18%, 25% 62%, 22% 38%, 19% 78%,
+      16% 30%, 13% 68%, 10% 20%, 7% 62%, 4% 38%, 1% 70%, 0 55%
+    );
+  }
+
+  /* Torn edge at top of any element */
+  .torn-t { position: relative; }
+  .torn-t::before {
+    content: '';
+    position: absolute;
+    top: -10px; left: 0; right: 0;
+    height: 12px;
+    background: var(--s0);
+    pointer-events: none;
+    z-index: 4;
+    clip-path: polygon(
+      0 0%, 100% 0%, 100% 45%,
+      97% 18%, 94% 70%, 91% 30%, 88% 78%, 85% 28%, 82% 60%, 79% 18%,
+      76% 82%, 73% 35%, 70% 65%, 67% 22%, 64% 72%, 61% 38%, 58% 80%,
+      55% 28%, 52% 58%, 49% 18%, 46% 75%, 43% 32%, 40% 62%, 37% 18%,
+      34% 72%, 31% 32%, 28% 82%, 25% 40%, 22% 62%, 19% 22%,
+      16% 70%, 13% 30%, 10% 82%, 7% 38%, 4% 60%, 1% 28%, 0 45%
+    );
+  }
+
+  /* Kraft tape accent strip across card top */
+  .kraft-tape { position: relative; }
+  .kraft-tape::before {
+    content: '';
+    position: absolute;
+    top: -3px; left: 16px;
+    width: 52px; height: 10px;
+    background: rgba(var(--accent-rgb) / 0.20);
+    border: 1px solid rgba(var(--accent-rgb) / 0.28);
+    border-radius: 2px;
+    transform: rotate(-1.8deg);
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  /* Tape corner — top right */
+  .tape-tr { position: relative; }
+  .tape-tr::after {
+    content: '';
+    position: absolute;
+    top: 12px; right: -4px;
+    width: 30px; height: 9px;
+    background: rgba(var(--accent-rgb) / 0.18);
+    border: 1px solid rgba(var(--accent-rgb) / 0.25);
+    border-radius: 2px;
+    transform: rotate(44deg);
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  /* Paper stamp label */
+  .paper-stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border: 1.5px solid currentColor;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.60;
+    transform: rotate(-0.6deg);
+    font-family: 'Lora', Georgia, serif;
+  }
+
+  /* Section divider — dashed rule like a perforated page tear */
+  .paper-divider {
+    position: relative;
+    height: 24px;
+    margin: 4px 0;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+  }
+  .paper-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0; right: 0;
+    height: 1px;
+    background: repeating-linear-gradient(
+      90deg,
+      rgba(var(--accent-rgb) / 0.18) 0px,
+      rgba(var(--accent-rgb) / 0.18) 5px,
+      transparent 5px, transparent 10px
+    );
+  }
+
+  /* Stacked paper shadow */
+  .paper-stack {
+    box-shadow:
+      var(--gl-shadow),
+      3px 3px 0 0 var(--s0),
+      4px 4px 0 1px var(--gl-border);
+  }
+
+  /* Grain texture on a card/section */
+  .paper-grain { position: relative; overflow: hidden; }
+  .paper-grain::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.14;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+    border-radius: inherit;
+    z-index: 0;
+  }
+  .paper-grain > * { position: relative; z-index: 1; }
+  html.light .paper-grain::before { opacity: 0.07; }
+
+  /* Ink margin line — notebook margin feel */
+  .ink-margin {
+    border-left: 2px solid rgba(var(--accent-rgb) / 0.22) !important;
+    padding-left: 16px !important;
+  }
+
   /* Ruled notebook lines — set as background-image so it layers on any bg */
   .paper-ruled {
     background-image: repeating-linear-gradient(

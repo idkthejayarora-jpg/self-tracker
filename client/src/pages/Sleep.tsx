@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Moon, Plus, Trash2, Star, Clock, AlertCircle } from 'lucide-react';
+import PaperBanner from '../components/PaperBanner';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
@@ -116,21 +117,13 @@ export default function Sleep() {
     <div className="max-w-2xl mx-auto space-y-5 anim-page"
       style={{ '--accent-rgb': '229 154 127' } as React.CSSProperties}>
 
-      {/* ── Header — paper title page ── */}
-      <div className="relative overflow-hidden rounded-2xl px-5 py-6 mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid var(--b)' }}>
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-bold tracking-[0.18em] uppercase mb-1.5"
-              style={{ color: 'var(--t-faint)' }}>Rest &amp; recovery</p>
-            <h1 className="text-3xl leading-none" style={{ color: 'var(--t-head)' }}>Sleep</h1>
-            <p className="text-xs mt-2" style={{ color: 'var(--t-dim)' }}>
-              {stats && stats.avgDuration ? `Averaging ${fmtDuration(stats.avgDuration)} a night this week` : 'Log last night to start the record'}
-            </p>
-          </div>
-          <Moon size={30} strokeWidth={1.5} style={{ color: 'var(--t-faint)', marginBottom: 4 }} />
-        </div>
-      </div>
+      <PaperBanner
+        title="Sleep"
+        label="Rest & Recovery"
+        accent="#e59a7f"
+        subtitle={stats?.avgDuration ? `averaging ${fmtDuration(stats.avgDuration)} a night` : 'log last night to start the record'}
+        icon={Moon}
+      />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
 

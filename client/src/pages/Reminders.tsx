@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Plus, Bell, Trash2, AlarmClock, Check, AlertCircle } from 'lucide-react';
+import PaperBanner from '../components/PaperBanner';
 import { format, parseISO } from 'date-fns';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
@@ -107,50 +108,16 @@ export default function Reminders() {
         }} />
       </div>
 
-      {/* ── INCOMING SIGNAL HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl mb-4"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #e0b27c25', minHeight: 110 }}>
-        {/* Signal rings on right */}
-        <div className="absolute pointer-events-none" style={{ top: '50%', right: 40, transform: 'translateY(-50%)' }}>
-          {[0, 700, 1400].map(d => (
-            <div key={d} className="absolute rounded-full" style={{
-              width: 50, height: 50, top: -25, left: -25,
-              border: '1px solid #e0b27c',
-              animation: `signal-ring 2.1s ease-out ${d}ms infinite`,
-            }} />
-          ))}
-          <div className="w-3 h-3 rounded-full absolute" style={{
-            top: -6, left: -6, background: '#e0b27c',
-            boxShadow: 'none',
-          }} />
-        </div>
-        <div className="absolute top-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #e0b27c', borderLeft: '1.5px solid #e0b27c', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderTop: '1.5px solid #e0b27c', borderRight: '1.5px solid #e0b27c', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #e0b27c', borderLeft: '1.5px solid #e0b27c', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: 14, height: 14, borderBottom: '1.5px solid #e0b27c', borderRight: '1.5px solid #e0b27c', opacity: 0.7 }} />
-        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: '#e0b27c70', boxShadow: 'none' }} />
-        <div className="relative z-10 px-5 py-5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: '#e0b27c', opacity: 0.6 }}>SIG://</span>
-            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">BROADCAST_INCOMING</span>
-            <span className="cursor-blink font-mono" style={{ color: '#e0b27c', fontSize: 11 }}>▌</span>
-          </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white" style={{ textShadow: 'none' }}>
-            INCOMING SIGNALS
-          </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#e0b27c', opacity: 0.5 }}>
-            // priority transmissions queued — awaiting acknowledgment
-          </p>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: '#e0b27c30' }} />
-      </div>
+      <PaperBanner
+        title="Reminders"
+        label="Alerts"
+        accent="#e0b27c"
+        subtitle="things written down so they won't be forgotten"
+      />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
 
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold" style={{ color: 'rgb(var(--accent-rgb))' }}>// Reminders</h1>
         <button type="button" onClick={() => { setShowForm(s => !s); setFormErr(''); }}
           className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium tap"
           style={{ background: 'rgb(var(--accent-rgb) / 0.12)', color: 'rgb(var(--accent-rgb))', border: '1px solid rgb(var(--accent-rgb) / 0.25)' }}>

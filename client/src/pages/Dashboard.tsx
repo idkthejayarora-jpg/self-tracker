@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import PaperBanner from '../components/PaperBanner';
 import {
   Flame, CheckSquare, BookOpen, Zap, ArrowRight, Dumbbell, Moon,
   Plus, Target,
@@ -328,73 +329,14 @@ export default function Dashboard() {
     <div className="max-w-2xl mx-auto space-y-8 anim-page pb-10"
       style={{ '--accent-rgb': '217 119 87' } as React.CSSProperties}>
 
-      {/* ── WAR ROOM HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl mb-5"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #d9775725', minHeight: 120 }}>
-        {/* Tactical grid */}
-        <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: 'radial-gradient(circle, #d9775708 1px, transparent 1px)',
-          backgroundSize: '22px 22px',
-        }} />
-        {/* Radar arc */}
-        <div className="absolute top-3 right-3 pointer-events-none" style={{ width: 70, height: 70 }}>
-          <div style={{
-            position: 'absolute', inset: 0, borderRadius: '50%',
-            border: '1px solid #d9775730',
-            boxShadow: 'none',
-          }} />
-          <div style={{
-            position: 'absolute', top: '50%', left: '50%',
-            width: 35, height: 1.5,
-            background: '#d97757',
-            transformOrigin: 'left center',
-            animation: 'radar-rotate 3s linear infinite',
-            boxShadow: 'none',
-          }} />
-          <div style={{ position: 'absolute', inset: 10, borderRadius: '50%', border: '1px solid #d9775718' }} />
-          <div style={{ position: 'absolute', inset: 20, borderRadius: '50%', border: '1px solid #d9775710' }} />
-        </div>
-        {/* HUD corners */}
-        <div className="absolute top-0 left-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderTop: '1.5px solid #d97757', borderLeft: '1.5px solid #d97757', opacity: 0.7 }} />
-        <div className="absolute top-0 right-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderTop: '1.5px solid #d97757', borderRight: '1.5px solid #d97757', opacity: 0.7 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderBottom: '1.5px solid #d97757', borderLeft: '1.5px solid #d97757', opacity: 0.7 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderBottom: '1.5px solid #d97757', borderRight: '1.5px solid #d97757', opacity: 0.7 }} />
-        {/* Content */}
-        <div className="relative z-10 px-5 py-5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.35em]" style={{ color: '#d97757', opacity: 0.6, textShadow: 'none' }}>SYS://</span>
-            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">COMMAND_CENTER</span>
-            <span className="cursor-blink font-mono" style={{ color: '#d97757', fontSize: 11 }}>▌</span>
-          </div>
-          <h1 className="text-3xl font-black tracking-tight text-white leading-none"
-            style={{ textShadow: 'none' }}>
-            COMMAND CENTER
-          </h1>
-          <p className="font-mono text-[11px] mt-1" style={{ color: '#d97757', opacity: 0.5 }}>
-            {'// MISSION CONTROL — GOOD '}
-            {new Date().getHours() < 12 ? 'MORNING' : new Date().getHours() < 17 ? 'AFTERNOON' : 'EVENING'}
-            {', OPERATOR'}
-          </p>
-          {/* Neon bottom edge */}
-          <div className="absolute bottom-0 left-0 right-0 h-px"
-            style={{ background: '#d9775750' }} />
-        </div>
-      </div>
+      <PaperBanner
+        title="Command Center"
+        label="Daily Log"
+        accent="#d97757"
+        subtitle={`Good ${new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'} — your command room`}
+      />
 
-      {/* Cyberpunk body overlay */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(217,119,87,0.06) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }} />
-      </div>
-
-      <div className="space-y-8" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="space-y-8">
 
       {/* ═══════════════════════════════════════ HEADER */}
       <div>

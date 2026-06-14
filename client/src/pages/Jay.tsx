@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Mic, Send, BookOpen, Moon, Salad, Dumbbell, Target,
-  CheckSquare, Activity, Wallet, ShieldOff, Video, Bell, Check, Plus, RotateCcw,
+  CheckSquare, Activity, Wallet, ShieldOff, Video, Bell, Check, Plus, RotateCcw, AudioLines,
 } from 'lucide-react';
+import PaperBanner from '../components/PaperBanner';
 import api from '../lib/api';
 import { useVoiceInput } from '../hooks/useVoiceInput';
 import AxisOrb, { type OrbState } from '../components/AxisOrb';
@@ -137,19 +138,13 @@ export default function Jay() {
 
   return (
     <div className="space-y-4 paper-in">
-      {/* ── Header ── */}
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="text-[10px] font-black tracking-[0.22em] uppercase mb-1" style={{ color: 'var(--t-muted)' }}>
-            Speak it, I'll file it
-          </p>
-          <h1 className="text-3xl font-bold text-head" style={{ fontFamily: "'Lora', serif" }}>Daily log</h1>
-        </div>
-        <span className="text-[9px] font-bold tracking-widest uppercase px-2 py-1 rounded-full"
-          style={{ background: 'var(--s2)', color: 'var(--t-faint)', border: '1px solid var(--b)' }}>
-          On-device
-        </span>
-      </div>
+      <PaperBanner
+        title="Daily Log"
+        label="Speak it, I'll file it"
+        accent="#d97757"
+        subtitle="voice your day — Jay listens and logs"
+        icon={AudioLines}
+      />
 
       <div className="grid md:grid-cols-3 gap-4 items-start">
         {/* ── Voice box ── */}

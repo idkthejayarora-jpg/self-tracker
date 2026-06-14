@@ -4,6 +4,7 @@ import {
   Plus, ChevronRight, ChevronDown, ChevronUp, Trash2, X,
   AlertTriangle, Lightbulb, PenLine, Film, CheckCircle2, Archive,
 } from 'lucide-react';
+import PaperBanner from '../components/PaperBanner';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import api from '../lib/api';
 
@@ -615,51 +616,12 @@ export default function Content() {
         }} />
       </div>
 
-      {/* ── STUDIO HEADER ── */}
-      <div className="relative overflow-hidden rounded-2xl"
-        style={{ background: 'var(--hero-bg)', border: `1px solid ${ACCENT}25`, minHeight: 110, zIndex: 1 }}>
-        {/* Scanlines */}
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ backgroundImage: 'none' }} />
-        {/* HUD corners */}
-        {[['top-0 left-0', 'borderTop borderLeft'], ['top-0 right-0', 'borderTop borderRight'],
-          ['bottom-0 left-0', 'borderBottom borderLeft'], ['bottom-0 right-0', 'borderBottom borderRight']
-        ].map(([pos], i) => (
-          <div key={i} className={`absolute ${pos} pointer-events-none`}
-            style={{ width: 12, height: 12,
-              ...(i === 0 && { borderTop: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}`, opacity: 0.5 }),
-              ...(i === 1 && { borderTop: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}`, opacity: 0.5 }),
-              ...(i === 2 && { borderBottom: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}`, opacity: 0.5 }),
-              ...(i === 3 && { borderBottom: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}`, opacity: 0.5 }),
-            }} />
-        ))}
-        {/* Top neon bar */}
-        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: `${ACCENT}60`, boxShadow: 'none' }} />
-        {/* REC indicator — top right */}
-        <div className="absolute top-3 right-4 flex items-center gap-1.5 pointer-events-none">
-          <span className="w-1.5 h-1.5 rounded-full"
-            style={{ background: ACCENT, animation: 'neon-pulse 1.2s ease-in-out infinite', boxShadow: 'none' }} />
-          <span className="text-[8px] font-mono font-black tracking-widest" style={{ color: ACCENT, opacity: 0.7 }}>REC</span>
-        </div>
-        {/* Content */}
-        <div className="relative z-10 px-5 py-5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: ACCENT, opacity: 0.6 }}>SIG://</span>
-            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">CONTENT_STUDIO</span>
-            <span className="cursor-blink font-mono" style={{ color: ACCENT, fontSize: 11 }}>▌</span>
-          </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: 'none' }}>
-            CONTENT STUDIO
-          </h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: ACCENT, opacity: 0.5 }}>
-            {'// idea pipeline — broadcast protocol active'}
-          </p>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: `${ACCENT}40` }} />
-      </div>
+      <PaperBanner
+        title="Content Studio"
+        label="Creator"
+        accent={ACCENT}
+        subtitle="ideas, drafts, and everything to be made"
+      />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
 

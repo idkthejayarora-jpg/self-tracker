@@ -3,6 +3,7 @@ import {
   AreaChart, Area, BarChart, Bar, LineChart, Line, ComposedChart,
   XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell,
 } from 'recharts';
+import PaperBanner from '../components/PaperBanner';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
 
@@ -423,42 +424,12 @@ export default function Analytics() {
     <div className="max-w-2xl mx-auto space-y-4 anim-page pb-10 overflow-x-hidden"
       style={{ '--accent-rgb': '217 160 102' } as React.CSSProperties}>
 
-      {/* Dot grid bg */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-        <div style={{ position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle,rgba(196,160,133,0.05) 1px,transparent 1px)',
-          backgroundSize: '24px 24px' }} />
-      </div>
-
-      {/* ── Header ── */}
-      <div className="relative overflow-hidden rounded-2xl"
-        style={{ background: 'var(--hero-bg)', border: '1px solid #c4a08525', minHeight: 110, zIndex: 1 }}>
-        <DataParticles />
-        <div className="absolute top-0 left-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderTop: '1.5px solid #c4a085', borderLeft: '1.5px solid #c4a085', opacity: 0.6 }} />
-        <div className="absolute top-0 right-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderTop: '1.5px solid #c4a085', borderRight: '1.5px solid #c4a085', opacity: 0.6 }} />
-        <div className="absolute bottom-0 left-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderBottom: '1.5px solid #c4a085', borderLeft: '1.5px solid #c4a085', opacity: 0.6 }} />
-        <div className="absolute bottom-0 right-0 pointer-events-none"
-          style={{ width: 14, height: 14, borderBottom: '1.5px solid #c4a085', borderRight: '1.5px solid #c4a085', opacity: 0.6 }} />
-        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: '#c4a08580', boxShadow: 'none' }} />
-        <div className="relative z-10 px-5 py-5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-black tracking-[0.3em]" style={{ color: ACCENT, opacity: 0.6 }}>ORACLE://</span>
-            <span className="text-[9px] font-mono opacity-30 text-white tracking-widest">DATA_CORE</span>
-            <span className="cursor-blink font-mono" style={{ color: ACCENT, fontSize: 11 }}>▌</span>
-          </div>
-          <h1 className="text-3xl font-black tracking-tight leading-none text-white"
-            style={{ textShadow: 'none' }}>ORACLE CORE</h1>
-          <p className="font-mono text-[10px] mt-1" style={{ color: ACCENT, opacity: 0.45 }}>
-            // daily signal analysis — behavioral pattern recognition
-          </p>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-          style={{ background: '#c4a08525' }} />
-      </div>
+      <PaperBanner
+        title="Analytics"
+        label="Intel Report"
+        accent="#c4a085"
+        subtitle="patterns in the data — what your weeks are made of"
+      />
 
       <div style={{ position: 'relative', zIndex: 1 }} className="space-y-4">
 
