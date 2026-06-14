@@ -126,21 +126,6 @@ function RangePicker({ value, onChange }: { value: number; onChange: (v: number)
   );
 }
 
-// ── DataParticles ─────────────────────────────────────────────────────────────
-
-function DataParticles() {
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: 0.12 }}>
-      {[...Array(12)].map((_, i) => (
-        <div key={i} className="absolute w-px"
-          style={{ left: `${8 + i * 7.5}%`, top: 0, bottom: 0,
-            background: `${ACCENT}`,
-            animation: `data-scroll ${2 + (i % 3) * 0.8}s linear ${i * 200}ms infinite` }} />
-      ))}
-    </div>
-  );
-}
-
 // ── Rank Card ─────────────────────────────────────────────────────────────────
 
 function RankCard({ me }: { me: MeSummary | null }) {
