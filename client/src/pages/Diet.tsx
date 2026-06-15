@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Trash2, ChevronLeft, ChevronRight, Salad, Check, Undo2, Mic } from 'lucide-react';
+import { Trash2, ChevronLeft, ChevronRight, Salad, Check, Undo2, Mic, BookMarked, Plus, X, ChevronDown } from 'lucide-react';
 import PaperBanner from '../components/PaperBanner';
 import { format, parseISO, addDays, subDays } from 'date-fns';
 import api from '../lib/api';
@@ -11,6 +11,12 @@ interface FoodLog {
   id: number; date: string; meal_type: string; name: string;
   calories: number; protein_g: number; carbs_g: number; fat_g: number;
   saved_meal_id: number | null;
+}
+
+interface SavedMeal {
+  id: number; name: string;
+  calories: number; protein_g: number; carbs_g: number; fat_g: number;
+  notes: string;
 }
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
@@ -35,6 +41,13 @@ export default function Diet() {
   // calorie goal
   const [calorieGoal] = useState<number>(getStoredGoal);
 
+  // saved meals
+  const [savedMeals, setSavedMeals]         = useState<SavedMeal[]>([]);
+  const [showSaved, setShowSaved]           = useState(false);
+  const [showAddMeal, setShowAddMeal]       = useState(false);
+  const [savedMealType, setSavedMealType]   = useState<MealType>('lunch');
+  const [mealForm, setMealForm]             = useState({ name: '', calories: '', protein_g: '', carbs_g: '', fat_g: '' });
+
   // text input
   const [text, setText]       = useState('');
   const [logging, setLogging] = useState(false);
@@ -48,6 +61,42 @@ export default function Diet() {
   const textRef = useRef<HTMLTextAreaElement>(null);
 
   const isToday = date === new Date().toISOString().slice(0, 10);
+
+  const loadSaved = useCallback(async () => {
+    const res = await api.get<SavedMeal[]>('/diet/meals');
+    setSavedMeals(res.data);
+  }, []);
+
+  useEffect(() => { loadSaved(); }, [loadSaved]);
+
+  async function createSavedMeal() {
+    if (!mealForm.name.trim()) return;
+    await api.post('/diet/meals', {
+      name: mealForm.name.trim(),
+      calories:  Number(mealForm.calories)  || 0,
+      protein_g: Number(mealForm.protein_g) || 0,
+      carbs_g:   Number(mealForm.carbs_g)   || 0,
+      fat_g:     Number(mealForm.fat_g)     || 0,
+    });
+    setMealForm({ name: '', calories: '', protein_g: '', carbs_g: '', fat_g: '' });
+    setShowAddMeal(false);
+    loadSaved();
+  }
+
+  async function logSavedMeal(meal: SavedMeal) {
+    await api.post('/diet/log', {
+      date, meal_type: savedMealType,
+      name: meal.name, calories: meal.calories,
+      protein_g: meal.protein_g, carbs_g: meal.carbs_g, fat_g: meal.fat_g,
+      saved_meal_id: meal.id,
+    });
+    await loadLog(date);
+  }
+
+  async function deleteSavedMeal(id: number) {
+    await api.delete(`/diet/meals/${id}`);
+    loadSaved();
+  }
 
   const loadLog = useCallback(async (d: string) => {
     setLoading(true);
@@ -325,6 +374,125 @@ export default function Diet() {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* ── Saved Meals ── */}
+        <div className="card overflow-hidden">
+          <button
+            className="w-full flex items-center justify-between px-4 py-3 tap"
+            onClick={() => setShowSaved(s => !s)}>
+            <div className="flex items-center gap-2">
+              <BookMarked size={14} style={{ color: ACCENT }} />
+              <span className="text-xs font-black tracking-[0.12em] uppercase" style={{ color: ACCENT }}>
+                Saved Meals
+              </span>
+              {savedMeals.length > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-mono"
+                  style={{ background: `${ACCENT}18`, color: ACCENT }}>
+                  {savedMeals.length}
+                </span>
+              )}
+            </div>
+            <ChevronDown size={14} style={{ color: 'var(--t-faint)', transform: showSaved ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+          </button>
+
+          {showSaved && (
+            <div className="px-4 pb-4 space-y-3 border-t" style={{ borderColor: 'var(--b)' }}>
+              {/* Meal type picker for logging */}
+              <div className="flex items-center gap-2 pt-3">
+                <span className="text-[10px] font-mono" style={{ color: 'var(--t-faint)' }}>Log as:</span>
+                <div className="flex gap-1.5">
+                  {MEAL_TYPES.map(mt => (
+                    <button key={mt} onClick={() => setSavedMealType(mt)}
+                      className="px-2.5 py-1 rounded-lg text-[10px] font-semibold capitalize tap transition-all"
+                      style={{
+                        background: savedMealType === mt ? `${ACCENT}22` : 'var(--s2)',
+                        color: savedMealType === mt ? ACCENT : 'var(--t-faint)',
+                        border: `1px solid ${savedMealType === mt ? ACCENT + '44' : 'var(--b)'}`,
+                      }}>
+                      {mt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Saved meal cards */}
+              {savedMeals.length === 0 && !showAddMeal && (
+                <p className="text-xs font-mono py-2" style={{ color: 'var(--t-faint)' }}>
+                  No saved meals yet — add your go-to meals with exact macros.
+                </p>
+              )}
+
+              <div className="space-y-2">
+                {savedMeals.map(meal => (
+                  <div key={meal.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+                    style={{ background: 'var(--s2)', border: '1px solid var(--b)' }}>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate" style={{ color: 'var(--t-head)' }}>{meal.name}</p>
+                      <p className="text-[11px] font-mono mt-0.5 flex gap-x-2 flex-wrap" style={{ color: 'var(--t-faint)' }}>
+                        {meal.calories > 0 && <span style={{ color: ACCENT }}>{meal.calories} kcal</span>}
+                        {meal.protein_g > 0 && <span>{meal.protein_g}g P</span>}
+                        {meal.carbs_g   > 0 && <span>{meal.carbs_g}g C</span>}
+                        {meal.fat_g     > 0 && <span>{meal.fat_g}g F</span>}
+                      </p>
+                    </div>
+                    <button onClick={() => logSavedMeal(meal)}
+                      className="tap shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold"
+                      style={{ background: `${ACCENT}18`, color: ACCENT }}>
+                      Log
+                    </button>
+                    <button onClick={() => deleteSavedMeal(meal.id)}
+                      className="tap shrink-0 p-1.5 rounded-lg"
+                      style={{ color: 'var(--t-faint)' }}>
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add new saved meal form */}
+              {showAddMeal ? (
+                <div className="rounded-xl p-3 space-y-2.5" style={{ background: 'var(--s2)', border: `1px solid ${ACCENT}30` }}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold" style={{ color: 'var(--t-head)' }}>New saved meal</span>
+                    <button onClick={() => setShowAddMeal(false)} style={{ color: 'var(--t-faint)' }}><X size={14} /></button>
+                  </div>
+                  <input
+                    value={mealForm.name}
+                    onChange={e => setMealForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder="Meal name (e.g. Home oats bowl)"
+                    className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none"
+                    style={{ background: 'var(--s3)', border: '1px solid var(--b)', color: 'var(--t-head)' }}
+                  />
+                  <div className="grid grid-cols-4 gap-2">
+                    {([['calories','kcal'],['protein_g','P g'],['carbs_g','C g'],['fat_g','F g']] as const).map(([field, label]) => (
+                      <div key={field}>
+                        <p className="text-[10px] mb-1 font-mono" style={{ color: 'var(--t-faint)' }}>{label}</p>
+                        <input
+                          type="number" min="0"
+                          value={mealForm[field]}
+                          onChange={e => setMealForm(f => ({ ...f, [field]: e.target.value }))}
+                          className="w-full px-2 py-1.5 rounded-lg text-sm text-center focus:outline-none"
+                          style={{ background: 'var(--s3)', border: '1px solid var(--b)', color: 'var(--t-head)' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <button onClick={createSavedMeal} disabled={!mealForm.name.trim()}
+                    className="tap w-full py-2 rounded-lg text-sm font-bold disabled:opacity-40"
+                    style={{ background: ACCENT, color: '#000' }}>
+                    Save meal
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => setShowAddMeal(true)}
+                  className="tap flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg w-full justify-center"
+                  style={{ background: `${ACCENT}10`, color: ACCENT, border: `1px dashed ${ACCENT}40` }}>
+                  <Plus size={13} /> Add custom meal
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ── Today's log ── */}
