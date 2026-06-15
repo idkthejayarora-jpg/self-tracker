@@ -71,7 +71,7 @@ export default function SocialDetox() {
   const streakMap = Object.fromEntries(streaks.map(s => [s.app_id, s]));
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 anim-page"
+    <div className="max-w-3xl mx-auto space-y-7 anim-page"
       style={{ '--accent-rgb': '194 85 61' } as React.CSSProperties}>
 
       <PaperBanner

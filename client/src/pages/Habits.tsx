@@ -104,7 +104,7 @@ export default function Habits() {
   const doneCount = habits.filter(h => h.done).length;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 anim-page"
+    <div className="max-w-3xl mx-auto space-y-7 anim-page"
       style={{ '--accent-rgb': '217 119 87' } as React.CSSProperties}>
 
       <PaperBanner

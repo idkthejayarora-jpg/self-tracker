@@ -600,7 +600,7 @@ export default function Content() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="anim-page max-w-2xl mx-auto space-y-6 pb-12"
+    <div className="anim-page max-w-3xl mx-auto space-y-7 pb-12"
       style={{ '--accent-rgb': '194 85 61' } as React.CSSProperties}>
 
       {/* Focus trap — prevents mobile keyboard auto-opening on page load */}

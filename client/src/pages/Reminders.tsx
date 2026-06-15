@@ -96,7 +96,7 @@ export default function Reminders() {
   const upcoming = reminders.filter(r => new Date(r.remind_at) > now && (!r.snoozed_until || new Date(r.snoozed_until) > now));
 
   return (
-    <div className="space-y-4"
+    <div className="max-w-3xl mx-auto space-y-7"
       style={{ '--accent-rgb': '224 178 124' } as React.CSSProperties}>
 
       {/* Cyberpunk body overlay */}

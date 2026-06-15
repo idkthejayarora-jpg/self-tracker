@@ -114,7 +114,7 @@ export default function Sleep() {
   });
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 anim-page"
+    <div className="max-w-3xl mx-auto space-y-7 anim-page"
       style={{ '--accent-rgb': '229 154 127' } as React.CSSProperties}>
 
       <PaperBanner

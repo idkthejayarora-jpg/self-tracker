@@ -535,7 +535,7 @@ export default function LifeProgress() {
   const totalDone   = goals.filter(g => g.status === 'done').length;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-5 anim-page pb-10 px-1 sm:px-0">
+    <div className="max-w-4xl mx-auto space-y-7 anim-page pb-10 px-1 sm:px-0">
 
       <PaperBanner
         title="Life Path"

@@ -406,7 +406,7 @@ export default function Analytics() {
   const tickInterval = days <= 14 ? 0 : days <= 30 ? 2 : 6;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4 anim-page pb-10 overflow-x-hidden"
+    <div className="max-w-3xl mx-auto space-y-6 anim-page pb-10 overflow-x-hidden"
       style={{ '--accent-rgb': '217 160 102' } as React.CSSProperties}>
 
       <PaperBanner

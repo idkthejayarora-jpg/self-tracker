@@ -326,7 +326,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 anim-page pb-10"
+    <div className="max-w-3xl mx-auto space-y-8 anim-page pb-10"
       style={{ '--accent-rgb': '217 119 87' } as React.CSSProperties}>
 
       <PaperBanner

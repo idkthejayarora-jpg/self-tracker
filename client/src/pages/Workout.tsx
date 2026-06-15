@@ -363,7 +363,7 @@ export default function Workout() {
     : `${sessions.length} session${sessions.length > 1 ? 's' : ''} logged${lastSession ? ` · last on ${format(parseISO(lastSession.date), 'd MMM')}` : ''}`;
 
   return (
-    <div className="space-y-4 paper-in"
+    <div className="max-w-3xl mx-auto space-y-7 paper-in"
       style={{ '--accent-rgb': '179 55 46' } as React.CSSProperties}>
 
       <PaperBanner

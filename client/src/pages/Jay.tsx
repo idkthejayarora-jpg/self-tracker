@@ -137,7 +137,7 @@ export default function Jay() {
   }
 
   return (
-    <div className="space-y-4 paper-in">
+    <div className="max-w-3xl mx-auto space-y-7 paper-in">
       <PaperBanner
         title="Daily Log"
         label="Speak it, I'll file it"

@@ -113,7 +113,7 @@ export default function Journal() {
   const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 anim-page pb-10 px-1 sm:px-0"
+    <div className="max-w-3xl mx-auto space-y-7 anim-page pb-10 px-1 sm:px-0"
       style={{ '--accent-rgb': '212 162 127' } as React.CSSProperties}>
 
       <PaperBanner

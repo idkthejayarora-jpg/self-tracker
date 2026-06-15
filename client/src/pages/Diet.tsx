@@ -171,7 +171,7 @@ export default function Diet() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 anim-page pb-16"
+    <div className="max-w-3xl mx-auto space-y-7 anim-page pb-16"
       style={{ '--accent-rgb': '181 118 79', '--accent-rgb-light': ACCENT } as React.CSSProperties}>
 
       {/* Dot grid */}
