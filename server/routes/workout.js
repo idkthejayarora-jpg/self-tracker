@@ -271,7 +271,7 @@ router.post('/plan/log/:dayId', (req, res) => {
   if (!day) return res.status(404).json({ error: 'Day not found' });
   const exercises = db.prepare('SELECT * FROM workout_plan_exercises WHERE day_id=? ORDER BY sort_order').all(req.params.dayId);
   const today = localDate();
-  const r = db.prepare('INSERT INTO workout_sessions (user_id, date, notes) VALUES (?,?,?)').run(req.user.id, today, `${day.name} — from plan`);
+  const r = db.prepare('INSERT INTO workout_sessions (user_id, date, name, notes, plan_day_id) VALUES (?,?,?,?,?)').run(req.user.id, today, day.name, `${day.name} — from plan`, day.id);
   const sessionId = r.lastInsertRowid;
   // Pre-populate sets (1 set per exercise as placeholder)
   exercises.forEach(ex => {
@@ -284,6 +284,184 @@ router.post('/plan/log/:dayId', (req, res) => {
     db.prepare('INSERT INTO workout_sets (session_id,exercise_id,reps,weight,notes) VALUES (?,?,?,?,?)').run(sessionId, exercise.id, parseInt(ex.reps)||0, parseFloat(ex.weight)||0, `${ex.sets} sets × ${ex.reps}`);
   });
   res.status(201).json({ sessionId, day: day.name, exercisesAdded: exercises.length });
+});
+
+// ── Today's rotation ──────────────────────────────────────────
+// PPL (or any split) repeats in plan order. "Today" = the day after the last
+// completed plan day, wrapping around. Once you've started a plan day today,
+// that day is locked in for the rest of the day.
+
+function categoryForDay(name = '') {
+  const n = name.toLowerCase();
+  if (/push|chest|bench|press|shoulder|delt|tricep/.test(n)) return 'push';
+  if (/pull|back|row|deadlift|bicep|lat|curl/.test(n))       return 'pull';
+  if (/leg|squat|lunge|hamstring|quad|calf|glute/.test(n))   return 'legs';
+  if (/cardio|run|hiit|cycle|condition/.test(n))             return 'cardio';
+  if (/core|abs|plank/.test(n))                              return 'core';
+  return 'other';
+}
+
+// Resolve the current rotation day for a user. Returns { day, sessionId, days } or null.
+function getRotationDay(userId) {
+  const days = db.prepare('SELECT * FROM workout_plan_days WHERE user_id=? ORDER BY sort_order, id').all(userId);
+  if (!days.length) return null;
+  const today = localDate();
+
+  // Already started a plan day today → lock onto it.
+  const todaySession = db.prepare(
+    'SELECT * FROM workout_sessions WHERE user_id=? AND date=? AND plan_day_id IS NOT NULL ORDER BY created_at DESC LIMIT 1'
+  ).get(userId, today);
+  if (todaySession) {
+    const day = days.find(d => d.id === todaySession.plan_day_id);
+    if (day) return { day, sessionId: todaySession.id, days };
+  }
+
+  // Otherwise advance one step past the most recent *worked* plan day — only
+  // sessions with logged sets count, so empty "preview" switches don't drift it.
+  const last = db.prepare(`
+    SELECT s.* FROM workout_sessions s
+    WHERE s.user_id=? AND s.plan_day_id IS NOT NULL
+      AND EXISTS (SELECT 1 FROM workout_sets ws WHERE ws.session_id = s.id)
+    ORDER BY s.date DESC, s.created_at DESC LIMIT 1
+  `).get(userId);
+  let idx = 0;
+  if (last) {
+    const lastIdx = days.findIndex(d => d.id === last.plan_day_id);
+    if (lastIdx !== -1) idx = (lastIdx + 1) % days.length;
+  }
+  return { day: days[idx], sessionId: null, days };
+}
+
+// Create (without awarding) or fetch today's session for a plan day.
+function ensureTodaySession(userId, day) {
+  const today = localDate();
+  const existing = db.prepare(
+    'SELECT * FROM workout_sessions WHERE user_id=? AND date=? AND plan_day_id=? ORDER BY created_at DESC LIMIT 1'
+  ).get(userId, today, day.id);
+  if (existing) return existing.id;
+  const r = db.prepare(
+    'INSERT INTO workout_sessions (user_id, date, name, notes, plan_day_id) VALUES (?,?,?,?,?)'
+  ).run(userId, today, day.name, `${day.name} — from plan`, day.id);
+  return r.lastInsertRowid;
+}
+
+router.get('/today', (req, res) => {
+  const rot = getRotationDay(req.user.id);
+  if (!rot) return res.json({ hasPlan: false });
+  const { day, sessionId, days } = rot;
+
+  const exercises = db.prepare('SELECT * FROM workout_plan_exercises WHERE day_id=? ORDER BY sort_order, id').all(day.id);
+
+  // Done = this exercise has sets logged in today's session
+  let doneNames = new Set();
+  if (sessionId) {
+    const rows = db.prepare(`
+      SELECT DISTINCT LOWER(e.name) AS n
+      FROM workout_sets ws JOIN exercises e ON e.id = ws.exercise_id
+      WHERE ws.session_id = ?
+    `).all(sessionId);
+    doneNames = new Set(rows.map(r => r.n));
+  }
+
+  const idx = days.findIndex(d => d.id === day.id);
+  res.json({
+    hasPlan: true,
+    sessionId,
+    rotation: { index: idx, total: days.length },
+    allDays: days.map(d => ({ id: d.id, name: d.name, icon: d.icon, color: d.color })),
+    day: {
+      id: day.id, name: day.name, icon: day.icon, color: day.color,
+      exercises: exercises.map(ex => ({
+        id: ex.id, name: ex.name, sets: ex.sets, reps: ex.reps, weight: ex.weight,
+        done: doneNames.has(ex.name.toLowerCase()),
+      })),
+    },
+  });
+});
+
+// Tick an exercise done / undone for today
+router.post('/today/toggle', (req, res) => {
+  const { dayId, planExerciseId, done } = req.body;
+  const day = db.prepare('SELECT * FROM workout_plan_days WHERE id=? AND user_id=?').get(dayId, req.user.id);
+  if (!day) return res.status(404).json({ error: 'Day not found' });
+  const pex = db.prepare('SELECT * FROM workout_plan_exercises WHERE id=? AND day_id=?').get(planExerciseId, dayId);
+  if (!pex) return res.status(404).json({ error: 'Exercise not found' });
+
+  const sessionId = ensureTodaySession(req.user.id, day);
+
+  // Find or create the matching exercise in the user's library
+  let exRow = db.prepare('SELECT id FROM exercises WHERE user_id=? AND LOWER(name)=LOWER(?)').get(req.user.id, pex.name);
+  if (!exRow) {
+    const nr = db.prepare('INSERT INTO exercises (user_id, name, category) VALUES (?,?,?)').run(req.user.id, pex.name, categoryForDay(day.name));
+    exRow = { id: nr.lastInsertRowid };
+  }
+
+  const setsBefore = db.prepare('SELECT COUNT(*) c FROM workout_sets WHERE session_id=?').get(sessionId).c;
+
+  // Always clear this exercise's sets first (idempotent)
+  db.prepare('DELETE FROM workout_sets WHERE session_id=? AND exercise_id=?').run(sessionId, exRow.id);
+
+  if (done) {
+    const setCount = Math.min(parseInt(pex.sets) || 1, 12);
+    const reps = parseInt(pex.reps) || null;
+    const weight = parseFloat(pex.weight) || null;
+    let order = (db.prepare('SELECT MAX(sort_order) m FROM workout_sets WHERE session_id=?').get(sessionId).m ?? -1) + 1;
+    for (let i = 0; i < setCount; i++) {
+      db.prepare('INSERT INTO workout_sets (session_id, exercise_id, reps, weight, sort_order) VALUES (?,?,?,?,?)').run(sessionId, exRow.id, reps, weight, order++);
+    }
+    // First exercise of the day → this counts as a workout
+    if (setsBefore === 0) {
+      updateStreak(req.user.id, 'workout');
+      awardPoints(req.user.id, 'workout', 'session', 30, sessionId, day.name);
+      applySkillXP(req.user.id, 'workout', ['workout', 'strength', 'fitness', day.name]);
+    }
+  }
+
+  res.json({ ok: true, sessionId, done: !!done });
+});
+
+// Edit an exercise's weight — carries forward to next rotation (progressive overload)
+router.patch('/today/weight', (req, res) => {
+  const { planExerciseId, weight } = req.body;
+  const pex = db.prepare(`
+    SELECT wpe.*, wpd.user_id AS owner FROM workout_plan_exercises wpe
+    JOIN workout_plan_days wpd ON wpd.id = wpe.day_id
+    WHERE wpe.id=? AND wpd.user_id=?
+  `).get(planExerciseId, req.user.id);
+  if (!pex) return res.status(404).json({ error: 'Not found' });
+
+  const clean = (weight === '' || weight == null) ? '' : String(weight).trim();
+  db.prepare('UPDATE workout_plan_exercises SET weight=? WHERE id=?').run(clean, planExerciseId);
+
+  // If already logged today, update those sets too
+  const today = localDate();
+  const s = db.prepare('SELECT id FROM workout_sessions WHERE user_id=? AND date=? AND plan_day_id=?').get(req.user.id, today, pex.day_id);
+  if (s) {
+    const exRow = db.prepare('SELECT id FROM exercises WHERE user_id=? AND LOWER(name)=LOWER(?)').get(req.user.id, pex.name);
+    if (exRow) db.prepare('UPDATE workout_sets SET weight=? WHERE session_id=? AND exercise_id=?').run(parseFloat(clean) || null, s.id, exRow.id);
+  }
+  res.json({ ok: true, weight: clean });
+});
+
+// Manually switch which plan day is "today" (override the rotation)
+router.post('/today/set-day', (req, res) => {
+  const { dayId } = req.body;
+  const day = db.prepare('SELECT * FROM workout_plan_days WHERE id=? AND user_id=?').get(dayId, req.user.id);
+  if (!day) return res.status(404).json({ error: 'Day not found' });
+  const today = localDate();
+
+  const existing = db.prepare(
+    'SELECT * FROM workout_sessions WHERE user_id=? AND date=? AND plan_day_id IS NOT NULL ORDER BY created_at DESC LIMIT 1'
+  ).get(req.user.id, today);
+
+  if (existing && existing.plan_day_id !== dayId) {
+    // Switching day → drop the old day's ticks and repoint the session
+    db.prepare('DELETE FROM workout_sets WHERE session_id=?').run(existing.id);
+    db.prepare('UPDATE workout_sessions SET plan_day_id=?, name=?, notes=? WHERE id=?').run(dayId, day.name, `${day.name} — from plan`, existing.id);
+  } else if (!existing) {
+    db.prepare('INSERT INTO workout_sessions (user_id, date, name, notes, plan_day_id) VALUES (?,?,?,?,?)').run(req.user.id, today, day.name, `${day.name} — from plan`, dayId);
+  }
+  res.json({ ok: true, dayId });
 });
 
 // ── Quick-log (NLP) ──────────────────────────────────────────

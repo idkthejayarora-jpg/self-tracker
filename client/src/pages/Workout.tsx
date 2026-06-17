@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText, Dumbbell } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText, Dumbbell, CheckCircle2, Circle, RotateCcw } from 'lucide-react';
 import PaperBanner from '../components/PaperBanner';
 import WorkoutAvatar from '../components/WorkoutAvatar';
 import { format, parseISO } from 'date-fns';
@@ -32,6 +32,16 @@ interface PlanDay { id: number; name: string; icon: string; color: string; exerc
 
 interface ParsedExercise { name: string; sets: number; reps: string; weight: string; }
 interface ParsedDay { name: string; icon: string; color: string; exercises: ParsedExercise[]; }
+
+interface TodayExercise { id: number; name: string; sets: number; reps: string; weight: string; done: boolean; }
+interface TodayDay { id: number; name: string; icon: string; color: string; exercises: TodayExercise[]; }
+interface TodayData {
+  hasPlan: boolean;
+  sessionId: number | null;
+  rotation?: { index: number; total: number };
+  allDays?: { id: number; name: string; icon: string; color: string }[];
+  day?: TodayDay;
+}
 
 interface Exercise { id: number; name: string; category: Category; }
 interface WorkoutSet { id: number; session_id: number; exercise_id: number; exercise_name: string; category: Category; reps: number | null; weight: number | null; duration_seconds: number | null; }
@@ -184,8 +194,30 @@ function ExerciseSearchBox({ onSelect, selectedName, onClear }: {
   );
 }
 
+// Inline weight editor — type a new number, it carries forward to next time.
+function WeightField({ value, color, onSave }: { value: string; color: string; onSave: (v: string) => void }) {
+  const [v, setV] = useState(value);
+  useEffect(() => { setV(value); }, [value]);
+  return (
+    <div className="flex items-center gap-1 shrink-0">
+      <input
+        value={v}
+        onChange={e => setV(e.target.value)}
+        onBlur={() => { if (v.trim() !== (value || '').trim()) onSave(v.trim()); }}
+        onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+        onClick={e => e.stopPropagation()}
+        inputMode="decimal"
+        placeholder="—"
+        className="w-12 text-center rounded-lg px-1 py-1 text-sm font-semibold focus:outline-none focus:ring-1"
+        style={{ background: 'var(--s2)', border: `1px solid ${color}33`, color: 'var(--t-head)' }}
+      />
+      <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>kg</span>
+    </div>
+  );
+}
+
 export default function Workout() {
-  const [tab, setTab] = useState<'log' | 'plan' | 'exercises' | 'stats'>('log');
+  const [tab, setTab] = useState<'today' | 'log' | 'plan' | 'exercises' | 'stats'>('today');
   const [sessions, setSessions] = useState<Session[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [expandedSession, setExpandedSession] = useState<number | null>(null);
@@ -244,8 +276,40 @@ export default function Workout() {
     setPlanDays(r.data);
   }, []);
 
-  useEffect(() => { fetchSessions(); fetchExercises(); loadPlan(); }, [fetchSessions, fetchExercises, loadPlan]);
+  // Today's rotation
+  const [today, setToday] = useState<TodayData | null>(null);
+  const loadToday = useCallback(async () => {
+    const r = await api.get<TodayData>('/workout/today');
+    setToday(r.data);
+  }, []);
+
+  useEffect(() => { fetchSessions(); fetchExercises(); loadPlan(); loadToday(); }, [fetchSessions, fetchExercises, loadPlan, loadToday]);
   useSync(fetchSessions, 60000);
+
+  async function toggleToday(ex: TodayExercise) {
+    if (!today?.day) return;
+    const newDone = !ex.done;
+    // optimistic
+    setToday(t => (t && t.day) ? { ...t, day: { ...t.day, exercises: t.day.exercises.map(e => e.id === ex.id ? { ...e, done: newDone } : e) } } : t);
+    try {
+      await api.post('/workout/today/toggle', { dayId: today.day.id, planExerciseId: ex.id, done: newDone });
+      await Promise.all([loadToday(), fetchSessions()]);
+    } catch {
+      await loadToday();
+    }
+  }
+
+  async function saveTodayWeight(ex: TodayExercise, weight: string) {
+    setToday(t => (t && t.day) ? { ...t, day: { ...t.day, exercises: t.day.exercises.map(e => e.id === ex.id ? { ...e, weight } : e) } } : t);
+    try { await api.patch('/workout/today/weight', { planExerciseId: ex.id, weight }); }
+    catch { await loadToday(); }
+  }
+
+  async function switchTodayDay(dayId: number) {
+    if (today?.day?.id === dayId) return;
+    try { await api.post('/workout/today/set-day', { dayId }); await Promise.all([loadToday(), fetchSessions()]); }
+    catch { await loadToday(); }
+  }
 
   useEffect(() => {
     if (tab === 'stats') api.get('/workout/stats').then(r => setStats(r.data));
@@ -395,16 +459,143 @@ export default function Workout() {
 
       {/* Tabs */}
       <div className="flex gap-2 flex-wrap">
-        {(['log', 'plan', 'exercises', 'stats'] as const).map(t => (
+        {(['today', 'log', 'plan', 'exercises', 'stats'] as const).map(t => (
           <button key={t} type="button" onClick={() => setTab(t)}
             className="px-4 py-1.5 rounded-xl text-sm font-medium tap capitalize"
             style={tab === t
               ? { background: 'rgb(var(--accent-rgb))', color: '#fff' }
               : { background: 'var(--s2)', color: 'var(--t-faint)', border: '1px solid var(--b)' }}>
-            {t === 'log' ? 'Workout Log' : t === 'stats' ? 'Stats & PBs' : t === 'plan' ? 'My Plan' : 'Exercises'}
+            {t === 'today' ? 'Today' : t === 'log' ? 'History' : t === 'stats' ? 'Stats & PBs' : t === 'plan' ? 'My Plan' : 'Exercises'}
           </button>
         ))}
       </div>
+
+      {/* ── TODAY TAB ── */}
+      {tab === 'today' && (
+        <div className="space-y-4">
+          {!today && (
+            <p className="text-sm py-8 text-center" style={{ color: 'var(--t-faint)' }}>Loading today…</p>
+          )}
+
+          {today && !today.hasPlan && (
+            <div className="card px-5 py-10 text-center space-y-3">
+              <Dumbbell size={28} className="mx-auto" style={{ color: 'var(--t-faint)', opacity: 0.4 }} />
+              <p className="text-sm font-semibold text-head">No plan set up yet</p>
+              <p className="text-xs max-w-xs mx-auto" style={{ color: 'var(--t-faint)' }}>
+                Build your split once (e.g. Push / Pull / Legs) and it'll cycle here automatically — just tick exercises off each day.
+              </p>
+              <button onClick={() => setTab('plan')}
+                className="mt-1 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold tap text-white"
+                style={{ background: 'rgb(var(--accent-rgb))' }}>
+                <Plus size={14} /> Set up my plan
+              </button>
+            </div>
+          )}
+
+          {today?.hasPlan && today.day && (() => {
+            const day = today.day;
+            const doneCount = day.exercises.filter(e => e.done).length;
+            const total = day.exercises.length;
+            const pct = total ? Math.round((doneCount / total) * 100) : 0;
+            const allDone = total > 0 && doneCount === total;
+            return (
+              <div className="space-y-4">
+                {/* Rotation switcher */}
+                {today.allDays && today.allDays.length > 1 && (
+                  <div className="flex gap-1.5 flex-wrap items-center">
+                    {today.allDays.map(d => (
+                      <button key={d.id} onClick={() => switchTodayDay(d.id)}
+                        className="px-2.5 py-1 rounded-lg text-[11px] font-semibold tap transition-all"
+                        style={d.id === day.id
+                          ? { background: `${d.color}22`, color: d.color, border: `1px solid ${d.color}55` }
+                          : { background: 'var(--s2)', color: 'var(--t-faint)', border: '1px solid var(--b)' }}>
+                        {d.icon} {d.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Today's day card */}
+                <div className="card overflow-hidden" style={{ borderLeft: `3px solid ${day.color}` }}>
+                  {/* Header */}
+                  <div className="px-4 pt-4 pb-3" style={{ background: `${day.color}0c` }}>
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl leading-none">{day.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-black tracking-[0.18em] uppercase" style={{ color: day.color }}>
+                            Today's session
+                          </span>
+                          {today.rotation && today.rotation.total > 1 && (
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full"
+                              style={{ background: 'var(--s3)', color: 'var(--t-faint)' }}>
+                              {today.rotation.index + 1}/{today.rotation.total}
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="text-xl font-bold leading-tight" style={{ color: 'var(--t-head)', fontFamily: "'Lora', Georgia, serif" }}>
+                          {day.name}
+                        </h3>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-2xl font-black leading-none" style={{ color: allDone ? '#cf8a3e' : day.color }}>{doneCount}<span className="text-sm" style={{ color: 'var(--t-faint)' }}>/{total}</span></p>
+                        <p className="text-[10px] mt-0.5" style={{ color: 'var(--t-faint)' }}>done</p>
+                      </div>
+                    </div>
+                    {/* Progress bar */}
+                    <div className="mt-3 h-1.5 rounded-full" style={{ background: 'var(--s3)' }}>
+                      <div className="h-1.5 rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%`, background: allDone ? '#cf8a3e' : day.color }} />
+                    </div>
+                  </div>
+
+                  {/* Exercise checklist */}
+                  <div className="divide-y" style={{ borderColor: 'var(--b)' }}>
+                    {day.exercises.length === 0 && (
+                      <p className="text-xs px-4 py-6 text-center" style={{ color: 'var(--t-faint)' }}>
+                        No exercises on this day yet — add them in My Plan.
+                      </p>
+                    )}
+                    {day.exercises.map(ex => (
+                      <div key={ex.id} className="flex items-center gap-3 px-4 py-3 tap"
+                        onClick={() => toggleToday(ex)}
+                        style={{ opacity: ex.done ? 0.65 : 1, transition: 'opacity 0.2s' }}>
+                        {ex.done
+                          ? <CheckCircle2 size={22} className="shrink-0" style={{ color: '#cf8a3e' }} />
+                          : <Circle size={22} className="shrink-0" style={{ color: 'var(--t-faint)' }} />}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold truncate"
+                            style={{ color: 'var(--t-head)', textDecoration: ex.done ? 'line-through' : 'none' }}>
+                            {ex.name}
+                          </p>
+                          <p className="text-[11px]" style={{ color: 'var(--t-faint)' }}>
+                            {ex.sets} sets × {ex.reps} reps
+                          </p>
+                        </div>
+                        <WeightField value={ex.weight || ''} color={day.color} onSave={w => saveTodayWeight(ex, w)} />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Footer */}
+                  {allDone && (
+                    <div className="px-4 py-3 flex items-center gap-2" style={{ background: '#cf8a3e10', borderTop: '1px solid #cf8a3e2a' }}>
+                      <CheckCircle2 size={15} style={{ color: '#cf8a3e' }} />
+                      <span className="text-xs font-semibold" style={{ color: '#cf8a3e' }}>
+                        Session complete — logged & saved. Tomorrow rolls to the next day.
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-[11px] text-center flex items-center justify-center gap-1.5" style={{ color: 'var(--t-faint)' }}>
+                  <RotateCcw size={11} /> Bump a weight to carry it forward next time
+                </p>
+              </div>
+            );
+          })()}
+        </div>
+      )}
 
       {/* ── LOG TAB ── */}
       {tab === 'log' && (
