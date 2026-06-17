@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText, Dumbbell, CheckCircle2, Circle, RotateCcw, ArrowLeftRight } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText, Dumbbell, CheckCircle2, RotateCcw, ArrowLeftRight } from 'lucide-react';
 import PaperBanner from '../components/PaperBanner';
 import WorkoutAvatar from '../components/WorkoutAvatar';
 import { format, parseISO } from 'date-fns';
@@ -30,13 +30,14 @@ const catChip = (cat: Category): React.CSSProperties => ({
 // Warm ember palette for colour-coding plan days
 const PLAN_COLORS = ['#d97757','#c2553d','#e08b4e','#d9a066','#cf8a3e','#b5764f','#b3372e','#e8a87c','#a97e5f','#a5a293'];
 
-interface PlanExercise { id: number; day_id: number; name: string; sets: number; reps: string; weight: string; notes: string; }
+interface PlanExercise { id: number; day_id: number; name: string; sets: number; reps: string; weight: string; notes: string; duration_min?: number; kind?: 'weighted' | 'bodyweight' | 'timed'; }
 interface PlanDay { id: number; name: string; icon: string; color: string; exercises: PlanExercise[]; }
 
 interface ParsedExercise { name: string; sets: number; reps: string; weight: string; }
 interface ParsedDay { name: string; icon: string; color: string; exercises: ParsedExercise[]; }
 
-interface TodayExercise { id: number; name: string; sets: number; reps: string; weight: string; done: boolean; }
+type ExerciseKind = 'weighted' | 'bodyweight' | 'timed';
+interface TodayExercise { id: number; name: string; sets: number; reps: string; weight: string; duration_min: number; kind: ExerciseKind; done: boolean; }
 interface TodayDay { id: number; name: string; icon: string; color: string; exercises: TodayExercise[]; }
 interface TodayData {
   hasPlan: boolean;
@@ -273,8 +274,33 @@ function SwapExercisePicker({ current, accent, onPick, onClose }: {
   );
 }
 
-// Inline weight editor — type a new number, it carries forward to next time.
-function WeightField({ value, color, onSave }: { value: string; color: string; onSave: (v: string) => void }) {
+// A little glyph per movement so the list reads at a glance and feels alive.
+function exerciseGlyph(name: string, kind: ExerciseKind): string {
+  const n = name.toLowerCase();
+  if (/shadow ?box|boxing|kickbox|spar|punch/.test(n)) return '🥊';
+  if (/treadmill|run|jog|sprint/.test(n))              return '🏃';
+  if (/cycl|\bbike\b|spin/.test(n))                    return '🚴';
+  if (/swim/.test(n))                                  return '🏊';
+  if (/row/.test(n) && kind === 'timed')               return '🚣';
+  if (/jump ?rope|skip|double under/.test(n))          return '🟰';
+  if (/walk|hike|hiking/.test(n))                      return '🥾';
+  if (/yoga|stretch|mobility|pilates|namaskar|cat.?cow|foam|warm.?up|meditat|breath/.test(n)) return '🧘';
+  if (/burpee|jumping jack|mountain climber|high knee|hiit|conditioning/.test(n)) return '⚡';
+  if (/sled|prowler|battle rope/.test(n))              return '🛷';
+  if (/football|soccer|basketball|tennis|cricket|badminton|squash|volleyball|skating|dance|zumba/.test(n)) return '🏅';
+  if (/plank|hollow|wall sit|dead ?hang|hang/.test(n)) return '⏳';
+  if (kind === 'timed')                                return '⏱️';
+  if (/push.?up/.test(n))                              return '🙇';
+  if (/pull.?up|chin.?up|muscle.?up/.test(n))          return '🧗';
+  if (/dip/.test(n))                                   return '🆙';
+  if (/squat|lunge|leg|calf|glute|hip/.test(n))        return '🦵';
+  if (/curl|bicep/.test(n))                            return '💪';
+  if (kind === 'bodyweight')                           return '🤸';
+  return '🏋️';
+}
+
+// Inline number editor — type a new value, it carries forward to next time.
+function StatField({ value, unit, color, onSave }: { value: string; unit: string; color: string; onSave: (v: string) => void }) {
   const [v, setV] = useState(value);
   useEffect(() => { setV(value); }, [value]);
   return (
@@ -290,7 +316,7 @@ function WeightField({ value, color, onSave }: { value: string; color: string; o
         className="w-12 text-center rounded-lg px-1 py-1 text-sm font-semibold focus:outline-none focus:ring-1"
         style={{ background: 'var(--s2)', border: `1px solid ${color}33`, color: 'var(--t-head)' }}
       />
-      <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>kg</span>
+      <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>{unit}</span>
     </div>
   );
 }
@@ -398,6 +424,13 @@ export default function Workout() {
   async function saveTodayWeight(ex: TodayExercise, weight: string) {
     setToday(t => (t && t.day) ? { ...t, day: { ...t.day, exercises: t.day.exercises.map(e => e.id === ex.id ? { ...e, weight } : e) } } : t);
     try { await api.patch('/workout/today/weight', { planExerciseId: ex.id, weight }); }
+    catch { await loadToday(); }
+  }
+
+  async function saveTodayDuration(ex: TodayExercise, mins: string) {
+    const n = Math.max(0, parseInt(mins) || 0);
+    setToday(t => (t && t.day) ? { ...t, day: { ...t.day, exercises: t.day.exercises.map(e => e.id === ex.id ? { ...e, duration_min: n } : e) } } : t);
+    try { await api.patch('/workout/today/duration', { planExerciseId: ex.id, duration_min: n }); }
     catch { await loadToday(); }
   }
 
@@ -657,40 +690,69 @@ export default function Workout() {
                         No exercises on this day yet — add them in My Plan.
                       </p>
                     )}
-                    {day.exercises.map(ex => (
-                      <div key={ex.id} className="flex items-center gap-3 px-4 py-3 tap"
-                        onClick={() => toggleToday(ex)}
-                        style={{ opacity: ex.done ? 0.65 : 1, transition: 'opacity 0.2s' }}>
-                        {ex.done
-                          ? <CheckCircle2 size={22} className="shrink-0" style={{ color: '#cf8a3e' }} />
-                          : <Circle size={22} className="shrink-0" style={{ color: 'var(--t-faint)' }} />}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold truncate"
-                            style={{ color: 'var(--t-head)', textDecoration: ex.done ? 'line-through' : 'none' }}>
-                            {ex.name}
-                          </p>
-                          <p className="text-[11px]" style={{ color: 'var(--t-faint)' }}>
-                            {ex.sets} sets × {ex.reps} reps
-                          </p>
+                    {day.exercises.map(ex => {
+                      const glyph = exerciseGlyph(ex.name, ex.kind);
+                      const meta =
+                        ex.kind === 'timed'      ? 'cardio · timed'
+                        : ex.kind === 'bodyweight' ? `${ex.sets} × ${ex.reps} · bodyweight`
+                        : `${ex.sets} sets × ${ex.reps} reps`;
+                      return (
+                        <div key={ex.id}
+                          className={`flex items-center gap-3 px-4 py-3 tap exrow ${ex.done ? 'exrow-done' : ''}`}
+                          onClick={() => toggleToday(ex)}
+                          style={{ ['--exc' as string]: day.color }}>
+                          {/* Check + glyph */}
+                          <div className="relative shrink-0" style={{ width: 34, height: 34 }}>
+                            <span className="absolute inset-0 flex items-center justify-center text-lg transition-all duration-200"
+                              style={{ opacity: ex.done ? 0 : 1, transform: ex.done ? 'scale(0.4)' : 'scale(1)' }}>
+                              {glyph}
+                            </span>
+                            <span className="absolute inset-0 flex items-center justify-center"
+                              style={{ opacity: ex.done ? 1 : 0, transform: ex.done ? 'scale(1)' : 'scale(0.4)', transition: 'all 0.22s cubic-bezier(0.34,1.56,0.64,1)' }}>
+                              <CheckCircle2 size={26} style={{ color: '#cf8a3e' }} className="tick-pop" />
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold truncate"
+                              style={{ color: 'var(--t-head)', textDecoration: ex.done ? 'line-through' : 'none', opacity: ex.done ? 0.6 : 1 }}>
+                              {ex.name}
+                            </p>
+                            <p className="text-[11px]" style={{ color: 'var(--t-faint)' }}>{meta}</p>
+                          </div>
+                          {/* Right-side metric: minutes for timed, kg for weighted, nothing for bodyweight */}
+                          {ex.kind === 'timed' ? (
+                            <StatField value={ex.duration_min ? String(ex.duration_min) : ''} unit="min" color={day.color} onSave={m => saveTodayDuration(ex, m)} />
+                          ) : ex.kind === 'weighted' ? (
+                            <StatField value={ex.weight || ''} unit="kg" color={day.color} onSave={w => saveTodayWeight(ex, w)} />
+                          ) : (
+                            <span className="text-[10px] font-bold uppercase tracking-wider shrink-0 px-2 py-1 rounded-lg"
+                              style={{ color: 'var(--t-faint)', background: 'var(--s2)' }}>BW</span>
+                          )}
                         </div>
-                        <WeightField value={ex.weight || ''} color={day.color} onSave={w => saveTodayWeight(ex, w)} />
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* Footer */}
                   {allDone && (
-                    <div className="px-4 py-3 flex items-center gap-2" style={{ background: '#cf8a3e10', borderTop: '1px solid #cf8a3e2a' }}>
-                      <CheckCircle2 size={15} style={{ color: '#cf8a3e' }} />
-                      <span className="text-xs font-semibold" style={{ color: '#cf8a3e' }}>
-                        Session complete — logged & saved. Tomorrow rolls to the next day.
+                    <div className="px-4 py-4 flex flex-col items-center gap-1.5 scale-in"
+                      style={{ background: '#cf8a3e12', borderTop: '1px solid #cf8a3e2a' }}>
+                      <div className="done-stamp flex items-center gap-2 px-4 py-1.5 rounded-lg"
+                        style={{ border: '2px solid #cf8a3e', color: '#cf8a3e' }}>
+                        <CheckCircle2 size={16} />
+                        <span className="text-sm font-black tracking-[0.18em] uppercase" style={{ fontFamily: "'Lora', Georgia, serif" }}>
+                          Session done
+                        </span>
+                      </div>
+                      <span className="text-[11px]" style={{ color: 'var(--t-faint)' }}>
+                        Logged & saved · tomorrow rolls to the next day 🔥
                       </span>
                     </div>
                   )}
                 </div>
 
                 <p className="text-[11px] text-center flex items-center justify-center gap-1.5" style={{ color: 'var(--t-faint)' }}>
-                  <RotateCcw size={11} /> Bump a weight to carry it forward next time
+                  <RotateCcw size={11} /> Tick as you go · bump a weight or minutes to carry it forward
                 </p>
               </div>
             );
@@ -1160,25 +1222,47 @@ export default function Workout() {
                             <span className="flex-1 text-left truncate">{ex.name}</span>
                             <span className="text-[9px] font-bold uppercase tracking-wider shrink-0" style={{ color: day.color }}>swap</span>
                           </button>
-                          <div className="grid grid-cols-2 gap-1.5">
-                            <input defaultValue={String(ex.sets)} placeholder="Sets" inputMode="numeric"
-                              className="rounded-lg px-2 py-1 text-xs focus:outline-none"
-                              style={{ background: 'var(--s2)', color: 'var(--t-head)', border: '1px solid var(--b)' }}
-                              onBlur={async e => { await api.patch(`/workout/plan/exercises/${ex.id}`, { sets: Number(e.target.value) }); loadPlan(); }} />
-                            <input defaultValue={ex.reps} placeholder="Reps"
-                              className="rounded-lg px-2 py-1 text-xs focus:outline-none"
-                              style={{ background: 'var(--s2)', color: 'var(--t-head)', border: '1px solid var(--b)' }}
-                              onBlur={async e => { await api.patch(`/workout/plan/exercises/${ex.id}`, { reps: e.target.value }); loadPlan(); }} />
-                          </div>
+                          {ex.kind === 'timed' ? (
+                            <div className="flex items-center gap-1.5">
+                              <input defaultValue={ex.duration_min ? String(ex.duration_min) : ''} placeholder="Minutes" inputMode="numeric"
+                                className="flex-1 rounded-lg px-2 py-1 text-xs focus:outline-none"
+                                style={{ background: 'var(--s2)', color: 'var(--t-head)', border: '1px solid var(--b)' }}
+                                onBlur={async e => { await api.patch(`/workout/plan/exercises/${ex.id}`, { duration_min: Number(e.target.value) || 0 }); loadPlan(); loadToday(); }} />
+                              <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>min · timed</span>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2 gap-1.5">
+                              <input defaultValue={String(ex.sets)} placeholder="Sets" inputMode="numeric"
+                                className="rounded-lg px-2 py-1 text-xs focus:outline-none"
+                                style={{ background: 'var(--s2)', color: 'var(--t-head)', border: '1px solid var(--b)' }}
+                                onBlur={async e => { await api.patch(`/workout/plan/exercises/${ex.id}`, { sets: Number(e.target.value) }); loadPlan(); }} />
+                              <input defaultValue={ex.reps} placeholder="Reps"
+                                className="rounded-lg px-2 py-1 text-xs focus:outline-none"
+                                style={{ background: 'var(--s2)', color: 'var(--t-head)', border: '1px solid var(--b)' }}
+                                onBlur={async e => { await api.patch(`/workout/plan/exercises/${ex.id}`, { reps: e.target.value }); loadPlan(); }} />
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="flex-1 flex items-center gap-2">
-                          <span className="text-xs font-medium text-head flex-1">{ex.name}</span>
-                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded"
-                            style={{ background: `${day.color}15`, color: day.color }}>
-                            {ex.sets}×{ex.reps}
-                          </span>
-                          {ex.weight && <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>{ex.weight}</span>}
+                          <span className="shrink-0">{exerciseGlyph(ex.name, (ex.kind ?? 'weighted'))}</span>
+                          <span className="text-xs font-medium text-head flex-1 truncate">{ex.name}</span>
+                          {ex.kind === 'timed' ? (
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                              style={{ background: `${day.color}15`, color: day.color }}>
+                              {ex.duration_min ? `${ex.duration_min} min` : 'timed'}
+                            </span>
+                          ) : (
+                            <>
+                              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                                style={{ background: `${day.color}15`, color: day.color }}>
+                                {ex.sets}×{ex.reps}
+                              </span>
+                              {ex.kind === 'bodyweight'
+                                ? <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--t-faint)' }}>BW</span>
+                                : ex.weight && <span className="text-[10px]" style={{ color: 'var(--t-faint)' }}>{ex.weight}kg</span>}
+                            </>
+                          )}
                         </div>
                       )}
                       <button onClick={async () => {

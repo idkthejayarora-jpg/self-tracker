@@ -77,6 +77,10 @@ addColumnIfMissing('workout_sets', 'notes', 'TEXT DEFAULT NULL');
 // PPL rotation knows where you are and what comes next.
 addColumnIfMissing('workout_sessions', 'plan_day_id', 'INTEGER REFERENCES workout_plan_days(id) ON DELETE SET NULL');
 
+// workout_plan_exercises — target minutes for timed/cardio moves (running,
+// shadow boxing, yoga…) that don't use sets/reps/weight.
+addColumnIfMissing('workout_plan_exercises', 'duration_min', 'INTEGER DEFAULT 0');
+
 // ── Streaks CHECK constraint migration ────────────────────────────────────────
 // The original schema only allowed ('tasks','journal','overall').
 // We need to expand it to include 'workout' and 'sleep'.

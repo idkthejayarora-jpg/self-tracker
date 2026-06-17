@@ -734,6 +734,31 @@ html.light body::after { opacity: 0.05; }
 .card-hover { transition: transform 0.2s cubic-bezier(0.34,1.2,0.64,1), box-shadow 0.2s ease; }
 .card-hover:hover { transform: translateY(-3px) rotate(-0.35deg); }
 
+/* ── Workout "Today" checklist — fun logging ── */
+.exrow {
+  position: relative;
+  transition: background 0.2s ease, opacity 0.2s ease;
+  box-shadow: inset 3px 0 0 -1px transparent;
+}
+.exrow:hover { background: color-mix(in srgb, var(--exc, #d97757) 7%, transparent); }
+.exrow:active { transform: none; }            /* row itself shouldn't shrink — only the check pops */
+.exrow.exrow-done { background: color-mix(in srgb, var(--exc, #d97757) 5%, transparent); }
+.exrow.exrow-done:hover { background: color-mix(in srgb, var(--exc, #d97757) 9%, transparent); }
+/* satisfying check pop when an exercise is marked done */
+@keyframes tick-pop {
+  0%   { transform: scale(0.3) rotate(-12deg); }
+  55%  { transform: scale(1.22) rotate(4deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+.tick-pop { animation: tick-pop 0.34s cubic-bezier(0.34,1.56,0.64,1) both; }
+/* completion stamp — slams in slightly rotated like an ink stamp */
+@keyframes stamp-in {
+  0%   { transform: scale(1.5) rotate(-8deg); opacity: 0; }
+  60%  { transform: scale(0.94) rotate(-3deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-2.5deg); opacity: 1; }
+}
+.done-stamp { animation: stamp-in 0.4s cubic-bezier(0.34,1.4,0.64,1) both; transform: rotate(-2.5deg); }
+
 /* Nav */
 .nav-item { transition: background 0.15s, color 0.15s; }
 .nav-item:hover { background: var(--hov) !important; color: var(--t-head) !important; }

@@ -218,7 +218,10 @@ router.get('/plan/days', (req, res) => {
     JOIN workout_plan_days wpd ON wpd.id = wpe.day_id
     WHERE wpd.user_id = ? ORDER BY wpe.sort_order, wpe.id
   `).all(req.user.id);
-  const result = days.map(d => ({ ...d, exercises: exercises.filter(e => e.day_id === d.id) }));
+  const result = days.map(d => ({
+    ...d,
+    exercises: exercises.filter(e => e.day_id === d.id).map(e => ({ ...e, kind: classifyExercise(e.name) })),
+  }));
   res.json(result);
 });
 
@@ -248,18 +251,18 @@ router.delete('/plan/days/:id', (req, res) => {
 router.post('/plan/days/:dayId/exercises', (req, res) => {
   const day = db.prepare('SELECT * FROM workout_plan_days WHERE id=? AND user_id=?').get(req.params.dayId, req.user.id);
   if (!day) return res.status(404).json({ error: 'Day not found' });
-  const { name, sets=3, reps='8-12', weight='', notes='' } = req.body;
+  const { name, sets=3, reps='8-12', weight='', notes='', duration_min=0 } = req.body;
   if (!name) return res.status(400).json({ error: 'Name required' });
   const maxOrder = db.prepare('SELECT MAX(sort_order) as m FROM workout_plan_exercises WHERE day_id=?').get(req.params.dayId);
-  const r = db.prepare('INSERT INTO workout_plan_exercises (day_id,name,sets,reps,weight,notes,sort_order) VALUES (?,?,?,?,?,?,?)').run(req.params.dayId, name, sets, reps, weight, notes, (maxOrder?.m ?? -1) + 1);
+  const r = db.prepare('INSERT INTO workout_plan_exercises (day_id,name,sets,reps,weight,notes,duration_min,sort_order) VALUES (?,?,?,?,?,?,?,?)').run(req.params.dayId, name, sets, reps, weight, notes, duration_min, (maxOrder?.m ?? -1) + 1);
   res.status(201).json(db.prepare('SELECT * FROM workout_plan_exercises WHERE id=?').get(r.lastInsertRowid));
 });
 
 router.patch('/plan/exercises/:id', (req, res) => {
   const ex = db.prepare(`SELECT wpe.* FROM workout_plan_exercises wpe JOIN workout_plan_days wpd ON wpd.id=wpe.day_id WHERE wpe.id=? AND wpd.user_id=?`).get(req.params.id, req.user.id);
   if (!ex) return res.status(404).json({ error: 'Not found' });
-  const { name, sets, reps, weight, notes } = req.body;
-  db.prepare('UPDATE workout_plan_exercises SET name=?,sets=?,reps=?,weight=?,notes=? WHERE id=?').run(name??ex.name, sets??ex.sets, reps??ex.reps, weight??ex.weight, notes??ex.notes, req.params.id);
+  const { name, sets, reps, weight, notes, duration_min } = req.body;
+  db.prepare('UPDATE workout_plan_exercises SET name=?,sets=?,reps=?,weight=?,notes=?,duration_min=? WHERE id=?').run(name??ex.name, sets??ex.sets, reps??ex.reps, weight??ex.weight, notes??ex.notes, duration_min??ex.duration_min??0, req.params.id);
   res.json(db.prepare('SELECT * FROM workout_plan_exercises WHERE id=?').get(req.params.id));
 });
 
@@ -302,6 +305,26 @@ function categoryForDay(name = '') {
   if (/cardio|run|hiit|cycle|condition/.test(n))             return 'cardio';
   if (/core|abs|plank/.test(n))                              return 'core';
   return 'other';
+}
+
+// Catalog lookup by name → { category, muscle }
+const CATALOG_BY_NAME = new Map(EXERCISE_CATALOG.map(c => [c.name.toLowerCase(), c]));
+const TIMED_RE = /(treadmill|running|\brun\b|jog|sprint|cycling|\bbike\b|spin|elliptical|stair ?(master|climber|mill)|jump ?rope|skipping|double under|shadow ?box|boxing|kickbox|sparring|burpee|mountain climber|jumping jack|high knees|butt kick|\bhiit\b|conditioning|sled|prowler|battle rope|\bwalk\b|hiking|\bhike\b|swimming|\bswim\b|stretch|yoga|pilates|mobility|foam roll|warm.?up|meditat|breathwork|wall sit|dead ?hang|agility|footwork|shuttle|rowing machine|row erg|\berg\b|\brower\b|ski erg|jacob|badminton|cricket|football|soccer|basketball|tennis|squash|volleyball|skating|zumba|dance|namaskar|cat.?cow)/;
+const BODYWEIGHT_RE = /(push.?up|pull.?up|chin.?up|\bdips?\b|sit.?up|crunch|leg raise|knee raise|bodyweight|air squat|pistol squat|inverted row|muscle.?up|nordic|hyperextension|superman|bird ?dog|glute bridge|hollow|flutter kick|russian twist|\bplank\b|wall sit|dead ?hang|mountain climber|burpee|jumping jack|hanging)/;
+
+// Classify an exercise for UI: 'timed' (no sets/reps/weight, minutes instead),
+// 'bodyweight' (sets×reps, no weight), or 'weighted' (sets×reps×kg).
+function classifyExercise(name = '') {
+  const n = name.toLowerCase().trim();
+  const cat = CATALOG_BY_NAME.get(n);
+  if (cat) {
+    if (cat.category === 'cardio' || ['Cardio', 'Sports', 'Mobility'].includes(cat.muscle)) return 'timed';
+    if (BODYWEIGHT_RE.test(n)) return 'bodyweight';
+    return 'weighted';
+  }
+  if (TIMED_RE.test(n)) return 'timed';
+  if (BODYWEIGHT_RE.test(n)) return 'bodyweight';
+  return 'weighted';
 }
 
 // Resolve the current rotation day for a user. Returns { day, sessionId, days } or null.
@@ -376,6 +399,8 @@ router.get('/today', (req, res) => {
       id: day.id, name: day.name, icon: day.icon, color: day.color,
       exercises: exercises.map(ex => ({
         id: ex.id, name: ex.name, sets: ex.sets, reps: ex.reps, weight: ex.weight,
+        duration_min: ex.duration_min || 0,
+        kind: classifyExercise(ex.name),
         done: doneNames.has(ex.name.toLowerCase()),
       })),
     },
@@ -405,12 +430,19 @@ router.post('/today/toggle', (req, res) => {
   db.prepare('DELETE FROM workout_sets WHERE session_id=? AND exercise_id=?').run(sessionId, exRow.id);
 
   if (done) {
-    const setCount = Math.min(parseInt(pex.sets) || 1, 12);
-    const reps = parseInt(pex.reps) || null;
-    const weight = parseFloat(pex.weight) || null;
+    const kind = classifyExercise(pex.name);
     let order = (db.prepare('SELECT MAX(sort_order) m FROM workout_sets WHERE session_id=?').get(sessionId).m ?? -1) + 1;
-    for (let i = 0; i < setCount; i++) {
-      db.prepare('INSERT INTO workout_sets (session_id, exercise_id, reps, weight, sort_order) VALUES (?,?,?,?,?)').run(sessionId, exRow.id, reps, weight, order++);
+    if (kind === 'timed') {
+      // One entry holding the duration — no reps, no weight
+      const secs = (parseInt(pex.duration_min) || 0) * 60 || null;
+      db.prepare('INSERT INTO workout_sets (session_id, exercise_id, reps, weight, duration_seconds, sort_order) VALUES (?,?,?,?,?,?)').run(sessionId, exRow.id, null, null, secs, order);
+    } else {
+      const setCount = Math.min(parseInt(pex.sets) || 1, 12);
+      const reps = parseInt(pex.reps) || null;
+      const weight = kind === 'bodyweight' ? null : (parseFloat(pex.weight) || null);
+      for (let i = 0; i < setCount; i++) {
+        db.prepare('INSERT INTO workout_sets (session_id, exercise_id, reps, weight, sort_order) VALUES (?,?,?,?,?)').run(sessionId, exRow.id, reps, weight, order++);
+      }
     }
     // First exercise of the day → this counts as a workout
     if (setsBefore === 0) {
@@ -444,6 +476,28 @@ router.patch('/today/weight', (req, res) => {
     if (exRow) db.prepare('UPDATE workout_sets SET weight=? WHERE session_id=? AND exercise_id=?').run(parseFloat(clean) || null, s.id, exRow.id);
   }
   res.json({ ok: true, weight: clean });
+});
+
+// Edit a timed exercise's target minutes — carries forward, like weight does
+router.patch('/today/duration', (req, res) => {
+  const { planExerciseId, duration_min } = req.body;
+  const pex = db.prepare(`
+    SELECT wpe.* FROM workout_plan_exercises wpe
+    JOIN workout_plan_days wpd ON wpd.id = wpe.day_id
+    WHERE wpe.id=? AND wpd.user_id=?
+  `).get(planExerciseId, req.user.id);
+  if (!pex) return res.status(404).json({ error: 'Not found' });
+
+  const mins = Math.max(0, parseInt(duration_min) || 0);
+  db.prepare('UPDATE workout_plan_exercises SET duration_min=? WHERE id=?').run(mins, planExerciseId);
+
+  const today = localDate();
+  const s = db.prepare('SELECT id FROM workout_sessions WHERE user_id=? AND date=? AND plan_day_id=?').get(req.user.id, today, pex.day_id);
+  if (s) {
+    const exRow = db.prepare('SELECT id FROM exercises WHERE user_id=? AND LOWER(name)=LOWER(?)').get(req.user.id, pex.name);
+    if (exRow) db.prepare('UPDATE workout_sets SET duration_seconds=? WHERE session_id=? AND exercise_id=?').run(mins * 60 || null, s.id, exRow.id);
+  }
+  res.json({ ok: true, duration_min: mins });
 });
 
 // Manually switch which plan day is "today" (override the rotation)
