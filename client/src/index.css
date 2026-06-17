@@ -744,13 +744,56 @@ html.light body::after { opacity: 0.05; }
 .exrow:active { transform: none; }            /* row itself shouldn't shrink — only the check pops */
 .exrow.exrow-done { background: color-mix(in srgb, var(--exc, #d97757) 5%, transparent); }
 .exrow.exrow-done:hover { background: color-mix(in srgb, var(--exc, #d97757) 9%, transparent); }
-/* satisfying check pop when an exercise is marked done */
-@keyframes tick-pop {
-  0%   { transform: scale(0.3) rotate(-12deg); }
-  55%  { transform: scale(1.22) rotate(4deg); }
-  100% { transform: scale(1) rotate(0deg); }
+/* hand-drawn checkbox — the tick draws itself on */
+.excheck svg { display: block; overflow: visible; }
+.excheck-box {
+  fill: none;
+  stroke: var(--t-faint);
+  stroke-width: 2;
+  transition: stroke 0.25s ease, fill 0.25s ease;
 }
-.tick-pop { animation: tick-pop 0.34s cubic-bezier(0.34,1.56,0.64,1) both; }
+.excheck.is-done .excheck-box {
+  stroke: var(--exc, #cf8a3e);
+  fill: color-mix(in srgb, var(--exc, #cf8a3e) 16%, transparent);
+}
+.excheck-tick {
+  fill: none;
+  stroke: var(--exc, #cf8a3e);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 26;
+  stroke-dashoffset: 26;
+}
+.excheck.is-done .excheck-tick { animation: draw-check 0.32s 0.04s cubic-bezier(0.65,0,0.35,1) forwards; }
+@keyframes draw-check { to { stroke-dashoffset: 0; } }
+
+/* ink strike-through — sweeps across the name as you cross it off */
+.exname {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  color: var(--t-head);
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+.exname::after {
+  content: '';
+  position: absolute;
+  left: -2px; right: -2px;
+  top: 56%;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--exc, #cf8a3e);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.4s cubic-bezier(0.5,0,0.15,1);
+}
+.exname.is-done { color: var(--t-faint); opacity: 0.7; }
+.exname.is-done::after { transform: scaleX(1); }
 /* completion stamp — slams in slightly rotated like an ink stamp */
 @keyframes stamp-in {
   0%   { transform: scale(1.5) rotate(-8deg); opacity: 0; }

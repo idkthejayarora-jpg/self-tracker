@@ -274,29 +274,16 @@ function SwapExercisePicker({ current, accent, onPick, onClose }: {
   );
 }
 
-// A little glyph per movement so the list reads at a glance and feels alive.
-function exerciseGlyph(name: string, kind: ExerciseKind): string {
-  const n = name.toLowerCase();
-  if (/shadow ?box|boxing|kickbox|spar|punch/.test(n)) return '🥊';
-  if (/treadmill|run|jog|sprint/.test(n))              return '🏃';
-  if (/cycl|\bbike\b|spin/.test(n))                    return '🚴';
-  if (/swim/.test(n))                                  return '🏊';
-  if (/row/.test(n) && kind === 'timed')               return '🚣';
-  if (/jump ?rope|skip|double under/.test(n))          return '🟰';
-  if (/walk|hike|hiking/.test(n))                      return '🥾';
-  if (/yoga|stretch|mobility|pilates|namaskar|cat.?cow|foam|warm.?up|meditat|breath/.test(n)) return '🧘';
-  if (/burpee|jumping jack|mountain climber|high knee|hiit|conditioning/.test(n)) return '⚡';
-  if (/sled|prowler|battle rope/.test(n))              return '🛷';
-  if (/football|soccer|basketball|tennis|cricket|badminton|squash|volleyball|skating|dance|zumba/.test(n)) return '🏅';
-  if (/plank|hollow|wall sit|dead ?hang|hang/.test(n)) return '⏳';
-  if (kind === 'timed')                                return '⏱️';
-  if (/push.?up/.test(n))                              return '🙇';
-  if (/pull.?up|chin.?up|muscle.?up/.test(n))          return '🧗';
-  if (/dip/.test(n))                                   return '🆙';
-  if (/squat|lunge|leg|calf|glute|hip/.test(n))        return '🦵';
-  if (/curl|bicep/.test(n))                            return '💪';
-  if (kind === 'bodyweight')                           return '🤸';
-  return '🏋️';
+// Hand-drawn checkbox — the tick draws itself on when an exercise is ticked off.
+function CheckMark({ done }: { done: boolean }) {
+  return (
+    <span className={`excheck shrink-0 ${done ? 'is-done' : ''}`}>
+      <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden>
+        <rect x="2.5" y="2.5" width="19" height="19" rx="6" className="excheck-box" />
+        <path d="M6.5 12.5 L10.5 16.5 L17.5 7.5" className="excheck-tick" />
+      </svg>
+    </span>
+  );
 }
 
 // Inline number editor — type a new value, it carries forward to next time.
@@ -691,7 +678,6 @@ export default function Workout() {
                       </p>
                     )}
                     {day.exercises.map(ex => {
-                      const glyph = exerciseGlyph(ex.name, ex.kind);
                       const meta =
                         ex.kind === 'timed'      ? 'cardio · timed'
                         : ex.kind === 'bodyweight' ? `${ex.sets} × ${ex.reps} · bodyweight`
@@ -701,22 +687,11 @@ export default function Workout() {
                           className={`flex items-center gap-3 px-4 py-3 tap exrow ${ex.done ? 'exrow-done' : ''}`}
                           onClick={() => toggleToday(ex)}
                           style={{ ['--exc' as string]: day.color }}>
-                          {/* Check + glyph */}
-                          <div className="relative shrink-0" style={{ width: 34, height: 34 }}>
-                            <span className="absolute inset-0 flex items-center justify-center text-lg transition-all duration-200"
-                              style={{ opacity: ex.done ? 0 : 1, transform: ex.done ? 'scale(0.4)' : 'scale(1)' }}>
-                              {glyph}
-                            </span>
-                            <span className="absolute inset-0 flex items-center justify-center"
-                              style={{ opacity: ex.done ? 1 : 0, transform: ex.done ? 'scale(1)' : 'scale(0.4)', transition: 'all 0.22s cubic-bezier(0.34,1.56,0.64,1)' }}>
-                              <CheckCircle2 size={26} style={{ color: '#cf8a3e' }} className="tick-pop" />
-                            </span>
-                          </div>
+                          <CheckMark done={ex.done} />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold truncate"
-                              style={{ color: 'var(--t-head)', textDecoration: ex.done ? 'line-through' : 'none', opacity: ex.done ? 0.6 : 1 }}>
+                            <span className={`exname text-sm font-semibold ${ex.done ? 'is-done' : ''}`}>
                               {ex.name}
-                            </p>
+                            </span>
                             <p className="text-[11px]" style={{ color: 'var(--t-faint)' }}>{meta}</p>
                           </div>
                           {/* Right-side metric: minutes for timed, kg for weighted, nothing for bodyweight */}
@@ -1245,7 +1220,6 @@ export default function Workout() {
                         </div>
                       ) : (
                         <div className="flex-1 flex items-center gap-2">
-                          <span className="shrink-0">{exerciseGlyph(ex.name, (ex.kind ?? 'weighted'))}</span>
                           <span className="text-xs font-medium text-head flex-1 truncate">{ex.name}</span>
                           {ex.kind === 'timed' ? (
                             <span className="text-[10px] font-mono px-1.5 py-0.5 rounded"
