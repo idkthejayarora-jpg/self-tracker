@@ -314,7 +314,7 @@ input:focus, textarea:focus, select:focus {
   .xp-fill {
     height: 100%;
     border-radius: 99px;
-    transition: width 0.8s steps(10, end);
+    transition: width 0.8s cubic-bezier(0.22,1,0.36,1);
     position: relative;
     overflow: hidden;
   }
@@ -713,15 +713,14 @@ html.light body::after { opacity: 0.05; }
    ═══════════════════════════════════════════════════════════════════ */
 
 .tap {
-  transition-timing-function: steps(2, end) !important;
-  transition: transform 0.14s cubic-bezier(0.34,1.6,0.64,1), opacity 0.1s;
+  transition: transform 0.16s cubic-bezier(0.34,1.2,0.64,1), opacity 0.12s ease;
   cursor: pointer;
 }
 .tap:hover  { transform: translateY(-1px); }
-.tap:active { transform: scale(0.92) translateY(0); opacity: 0.72; }
+.tap:active { transform: scale(0.97) translateY(0); opacity: 0.85; }
 
 .btn-glow {
-  transition: box-shadow 0.15s steps(2, end), transform 0.15s steps(2, end);
+  transition: box-shadow 0.18s ease, transform 0.18s cubic-bezier(0.34,1.2,0.64,1);
 }
 .btn-glow:hover {
   box-shadow: 0 3px 0 rgba(0,0,0,0.22);
@@ -729,10 +728,10 @@ html.light body::after { opacity: 0.05; }
 }
 
 /* Progress */
-.bar-fill { transition: width 0.7s steps(10, end); position: relative; }
+.bar-fill { transition: width 0.7s cubic-bezier(0.22,1,0.36,1); position: relative; }
 
 /* Card lift */
-.card-hover { transition: transform 0.18s steps(3, end), box-shadow 0.18s steps(3, end); }
+.card-hover { transition: transform 0.2s cubic-bezier(0.34,1.2,0.64,1), box-shadow 0.2s ease; }
 .card-hover:hover { transform: translateY(-3px) rotate(-0.35deg); }
 
 /* Nav */
@@ -905,7 +904,7 @@ html.light body::after { opacity: 0.05; }
 }
 
 /* ── Animation utility classes ── */
-.anim-page > * { animation: paper-in 0.45s steps(5, end) both; }
+.anim-page > * { animation: paper-in 0.4s cubic-bezier(0.22,1,0.36,1) both; }
 .anim-page > *:nth-child(1)  { animation-delay: 0.00s; }
 .anim-page > *:nth-child(2)  { animation-delay: 0.04s; }
 .anim-page > *:nth-child(3)  { animation-delay: 0.08s; }
@@ -919,17 +918,17 @@ html.light body::after { opacity: 0.05; }
 .anim-page > *:nth-child(11) { animation-delay: 0.40s; }
 .anim-page > *:nth-child(12) { animation-delay: 0.44s; }
 
-.slide-up      { animation: slideUp     0.38s steps(5, end) both; }
-.scale-in      { animation: scaleIn     0.28s steps(4, end) both; }
-.fade-in       { animation: fadeIn      0.25s steps(4, end) both; }
-.count-up      { animation: countUp     0.35s steps(5, end) both; }
-.slide-in-left { animation: slideInLeft 0.32s steps(5, end) both; }
-.stat-pop      { animation: stat-pop    0.4s  steps(5, end) both; }
-.badge-pop     { animation: badge-pop   0.5s  steps(6, end) both; }
+.slide-up      { animation: slideUp     0.38s cubic-bezier(0.22,1,0.36,1) both; }
+.scale-in      { animation: scaleIn     0.28s cubic-bezier(0.34,1.2,0.64,1) both; }
+.fade-in       { animation: fadeIn      0.25s ease-out both; }
+.count-up      { animation: countUp     0.35s cubic-bezier(0.22,1,0.36,1) both; }
+.slide-in-left { animation: slideInLeft 0.32s cubic-bezier(0.22,1,0.36,1) both; }
+.stat-pop      { animation: stat-pop    0.4s  cubic-bezier(0.34,1.3,0.64,1) both; }
+.badge-pop     { animation: badge-pop   0.5s  cubic-bezier(0.34,1.4,0.64,1) both; }
 .float-up      { animation: float-up    3s    steps(8) infinite; }
 .glow-pulse    { animation: glow-pulse  2s    steps(4) infinite; }
 .data-pulse    { animation: data-pulse  2.2s  steps(4) infinite; }
-.node-in       { animation: node-in     0.4s  steps(5, end) both; }
+.node-in       { animation: node-in     0.4s  cubic-bezier(0.22,1,0.36,1) both; }
 .warrior-float { animation: warrior-float 3.5s steps(10) infinite; }
 .aura-breathe  { animation: aura-breathe  2.5s steps(5) infinite; }
 .rank-glow-anim { animation: rank-glow    2s   steps(4) infinite; }

@@ -27,6 +27,9 @@ const catChip = (cat: Category): React.CSSProperties => ({
   border: `1px solid ${CAT_HEX[cat]}35`,
 });
 
+// Warm ember palette for colour-coding plan days
+const PLAN_COLORS = ['#d97757','#c2553d','#e08b4e','#d9a066','#cf8a3e','#b5764f','#b3372e','#e8a87c','#a97e5f','#a5a293'];
+
 interface PlanExercise { id: number; day_id: number; name: string; sets: number; reps: string; weight: string; notes: string; }
 interface PlanDay { id: number; name: string; icon: string; color: string; exercises: PlanExercise[]; }
 
@@ -276,6 +279,12 @@ export default function Workout() {
     setPlanDays(r.data);
   }, []);
 
+  async function patchDay(dayId: number, fields: { name?: string; color?: string }) {
+    setPlanDays(d => d.map(x => x.id === dayId ? { ...x, ...fields } : x)); // optimistic
+    try { await api.patch(`/workout/plan/days/${dayId}`, fields); await loadToday(); }
+    catch { await loadPlan(); }
+  }
+
   // Today's rotation
   const [today, setToday] = useState<TodayData | null>(null);
   const loadToday = useCallback(async () => {
@@ -500,18 +509,23 @@ export default function Workout() {
             const allDone = total > 0 && doneCount === total;
             return (
               <div className="space-y-4">
-                {/* Rotation switcher */}
+                {/* Rotation switcher — manual override if the auto-pick is wrong */}
                 {today.allDays && today.allDays.length > 1 && (
-                  <div className="flex gap-1.5 flex-wrap items-center">
-                    {today.allDays.map(d => (
-                      <button key={d.id} onClick={() => switchTodayDay(d.id)}
-                        className="px-2.5 py-1 rounded-lg text-[11px] font-semibold tap transition-all"
-                        style={d.id === day.id
-                          ? { background: `${d.color}22`, color: d.color, border: `1px solid ${d.color}55` }
-                          : { background: 'var(--s2)', color: 'var(--t-faint)', border: '1px solid var(--b)' }}>
-                        {d.icon} {d.name}
-                      </button>
-                    ))}
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--t-faint)' }}>
+                      Not your day? Tap to switch
+                    </p>
+                    <div className="flex gap-1.5 flex-wrap items-center">
+                      {today.allDays.map(d => (
+                        <button key={d.id} onClick={() => switchTodayDay(d.id)}
+                          className="px-2.5 py-1 rounded-lg text-[11px] font-semibold tap transition-all"
+                          style={d.id === day.id
+                            ? { background: `${d.color}22`, color: d.color, border: `1px solid ${d.color}55` }
+                            : { background: 'var(--s2)', color: 'var(--t-faint)', border: '1px solid var(--b)' }}>
+                          {d.icon} {d.name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -984,12 +998,20 @@ export default function Workout() {
               style={{ borderLeft: `3px solid ${day.color}`, '--gc': `${day.color}55` } as React.CSSProperties}>
               <div className="px-4 py-3">
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
                     <span className="text-2xl">{day.icon}</span>
-                    <div>
-                      <p className="text-sm font-bold text-head">{day.name}</p>
-                      <p className="text-[11px]" style={{ color: 'var(--t-faint)' }}>{day.exercises.length} exercises</p>
-                    </div>
+                    {editingDayId === day.id ? (
+                      <input defaultValue={day.name} placeholder="Day name"
+                        className="flex-1 min-w-0 rounded-lg px-2 py-1 text-sm font-bold focus:outline-none focus:ring-1"
+                        style={{ background: 'var(--s3)', color: 'var(--t-head)', border: `1px solid ${day.color}44` }}
+                        onBlur={e => { if (e.target.value.trim() && e.target.value !== day.name) patchDay(day.id, { name: e.target.value.trim() }); }}
+                        onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} />
+                    ) : (
+                      <div>
+                        <p className="text-sm font-bold text-head">{day.name}</p>
+                        <p className="text-[11px]" style={{ color: 'var(--t-faint)' }}>{day.exercises.length} exercises</p>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     {/* LOG THIS button */}
@@ -1018,6 +1040,22 @@ export default function Workout() {
                     </button>
                   </div>
                 </div>
+
+                {/* Colour picker — edit mode */}
+                {editingDayId === day.id && (
+                  <div className="flex items-center gap-2 mb-3 px-1 flex-wrap">
+                    <span className="text-[10px] font-bold tracking-[0.1em] uppercase" style={{ color: 'var(--t-faint)' }}>Colour</span>
+                    {PLAN_COLORS.map(c => (
+                      <button key={c} onClick={() => patchDay(day.id, { color: c })}
+                        className="w-5 h-5 rounded-full tap transition-transform"
+                        style={{
+                          background: c,
+                          transform: day.color === c ? 'scale(1.25)' : undefined,
+                          boxShadow: day.color === c ? `0 0 0 2px var(--s1), 0 0 0 3.5px ${c}` : undefined,
+                        }} />
+                    ))}
+                  </div>
+                )}
 
                 {/* Exercise list */}
                 <div className="space-y-1.5">
