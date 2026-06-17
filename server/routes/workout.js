@@ -19,7 +19,10 @@ router.get('/exercises', (req, res) => {
 // on selection via POST /exercises.
 router.get('/exercise-search', (req, res) => {
   const q = (req.query.q || '').trim().toLowerCase();
-  const mine = db.prepare('SELECT * FROM exercises WHERE user_id = ? ORDER BY name').all(req.user.id);
+  // catalogOnly → swap picker: the built-in library only, never the user's
+  // own ad-hoc exercises.
+  const catalogOnly = req.query.catalogOnly === '1' || req.query.catalogOnly === 'true';
+  const mine = catalogOnly ? [] : db.prepare('SELECT * FROM exercises WHERE user_id = ? ORDER BY name').all(req.user.id);
   const mineNames = new Set(mine.map(m => m.name.toLowerCase()));
 
   const score = (name, keywords) => {
@@ -44,7 +47,7 @@ router.get('/exercise-search', (req, res) => {
     if (s > 0 || !q) results.push({ id: m.id, name: m.name, category: m.category, muscle: 'My exercises', mine: true, _s: s + 5 }); // own exercises edge out catalog ties
   }
   for (const c of EXERCISE_CATALOG) {
-    if (mineNames.has(c.name.toLowerCase())) continue; // already in their library
+    if (!catalogOnly && mineNames.has(c.name.toLowerCase())) continue; // already in their library
     // muscle-group queries ("chest", "biceps") surface the whole group
     const muscleHit = q && c.muscle.toLowerCase().startsWith(q) ? 45 : 0;
     const s = q ? Math.max(score(c.name, c.keywords), muscleHit) : 0;

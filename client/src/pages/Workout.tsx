@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText, Dumbbell, CheckCircle2, Circle, RotateCcw } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText, Dumbbell, CheckCircle2, Circle, RotateCcw, ArrowLeftRight } from 'lucide-react';
 import PaperBanner from '../components/PaperBanner';
 import WorkoutAvatar from '../components/WorkoutAvatar';
 import { format, parseISO } from 'date-fns';
@@ -197,6 +197,82 @@ function ExerciseSearchBox({ onSelect, selectedName, onClear }: {
   );
 }
 
+// ── Swap picker ─────────────────────────────────────────────────────────────
+// Replace a plan exercise with a variation from the built-in catalog (browse
+// by muscle group, or search). Catalog only — never the user's ad-hoc list.
+function SwapExercisePicker({ current, accent, onPick, onClose }: {
+  current: string; accent: string; onPick: (name: string) => void; onClose: () => void;
+}) {
+  const [q, setQ] = useState('');
+  const [hits, setHits] = useState<SearchHit[]>([]);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const r = await api.get<SearchHit[]>(`/workout/exercise-search?catalogOnly=1&q=${encodeURIComponent(q)}`);
+        setHits(r.data);
+      } catch { setHits([]); }
+    }, 140);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [q]);
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 sm:p-4" onClick={onClose}>
+      <div className="rounded-t-2xl sm:rounded-2xl w-full max-w-lg paper-in flex flex-col"
+        style={{ background: 'var(--s2)', border: '1px solid var(--bh)', boxShadow: '0 24px 64px rgba(0,0,0,0.45)', maxHeight: '82vh' }}
+        onClick={e => e.stopPropagation()}>
+        {/* Header + search */}
+        <div className="px-4 pt-4 pb-3 shrink-0" style={{ borderBottom: '1px solid var(--b)' }}>
+          <div className="flex items-start justify-between mb-2.5 gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold tracking-[0.16em] uppercase" style={{ color: 'var(--t-faint)' }}>Swap exercise</p>
+              <p className="text-sm font-semibold truncate" style={{ color: 'var(--t-head)' }}>
+                Replacing <span style={{ color: accent }}>{current}</span>
+              </p>
+            </div>
+            <button onClick={onClose} className="tap p-1 shrink-0" style={{ color: 'var(--t-faint)' }}><X size={17} /></button>
+          </div>
+          <input autoFocus value={q} onChange={e => setQ(e.target.value)}
+            placeholder="Search the library, or browse by muscle…"
+            className="w-full rounded-xl px-3 py-2 text-sm focus:outline-none"
+            style={{ background: 'var(--s1)', border: '1px solid var(--b)', color: 'var(--t-body)' }} />
+        </div>
+        {/* Results */}
+        <div className="overflow-y-auto">
+          {hits.map((h, i) => {
+            const newGroup = !q.trim() && (i === 0 || hits[i - 1].muscle !== h.muscle);
+            const isCurrent = h.name.toLowerCase() === current.toLowerCase();
+            return (
+              <div key={`${h.name}-${i}`}>
+                {newGroup && (
+                  <p className="sticky top-0 px-4 py-1.5 text-[9px] font-black tracking-[0.18em] uppercase"
+                    style={{ background: 'var(--s3)', color: 'var(--t-faint)', borderBottom: '1px solid var(--b)' }}>
+                    {h.muscle}
+                  </p>
+                )}
+                <button onClick={() => onPick(h.name)}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm tap"
+                  style={{ color: 'var(--t-body)', borderTop: i && !newGroup ? '1px solid var(--b)' : 'none', background: isCurrent ? `${accent}12` : 'transparent' }}>
+                  <span className="flex-1 truncate">{h.name}</span>
+                  {isCurrent && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ background: `${accent}22`, color: accent }}>current</span>
+                  )}
+                  {q.trim() && <span className="text-[9px] uppercase tracking-wider shrink-0" style={{ color: 'var(--t-faint)' }}>{h.muscle}</span>}
+                </button>
+              </div>
+            );
+          })}
+          {hits.length === 0 && (
+            <p className="text-xs text-center py-10" style={{ color: 'var(--t-faint)' }}>No matches in the library</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Inline weight editor — type a new number, it carries forward to next time.
 function WeightField({ value, color, onSave }: { value: string; color: string; onSave: (v: string) => void }) {
   const [v, setV] = useState(value);
@@ -282,6 +358,17 @@ export default function Workout() {
   async function patchDay(dayId: number, fields: { name?: string; color?: string }) {
     setPlanDays(d => d.map(x => x.id === dayId ? { ...x, ...fields } : x)); // optimistic
     try { await api.patch(`/workout/plan/days/${dayId}`, fields); await loadToday(); }
+    catch { await loadPlan(); }
+  }
+
+  // Swap a plan exercise for a catalog variation
+  const [swapEx, setSwapEx] = useState<{ id: number; name: string; dayId: number; color: string } | null>(null);
+  async function doSwap(name: string) {
+    if (!swapEx) return;
+    const { id, dayId } = swapEx;
+    setPlanDays(d => d.map(dd => dd.id === dayId ? { ...dd, exercises: dd.exercises.map(e => e.id === id ? { ...e, name } : e) } : dd));
+    setSwapEx(null);
+    try { await api.patch(`/workout/plan/exercises/${id}`, { name }); await loadToday(); }
     catch { await loadPlan(); }
   }
 
@@ -1063,20 +1150,26 @@ export default function Workout() {
                     <div key={ex.id} className="flex items-center gap-2 px-2 py-1.5 rounded-xl group/ex"
                       style={{ background: 'var(--s3)' }}>
                       {editingDayId === day.id ? (
-                        /* Edit row */
-                        <div className="flex-1 grid grid-cols-4 gap-1.5">
-                          <input defaultValue={ex.name} placeholder="Exercise"
-                            className="col-span-2 rounded-lg px-2 py-1 text-xs focus:outline-none"
-                            style={{ background: 'var(--s2)', color: 'var(--t-head)', border: '1px solid var(--b)' }}
-                            onBlur={async e => { await api.patch(`/workout/plan/exercises/${ex.id}`, { name: e.target.value }); loadPlan(); }} />
-                          <input defaultValue={String(ex.sets)} placeholder="Sets"
-                            className="rounded-lg px-2 py-1 text-xs focus:outline-none"
-                            style={{ background: 'var(--s2)', color: 'var(--t-head)', border: '1px solid var(--b)' }}
-                            onBlur={async e => { await api.patch(`/workout/plan/exercises/${ex.id}`, { sets: Number(e.target.value) }); loadPlan(); }} />
-                          <input defaultValue={ex.reps} placeholder="Reps"
-                            className="rounded-lg px-2 py-1 text-xs focus:outline-none"
-                            style={{ background: 'var(--s2)', color: 'var(--t-head)', border: '1px solid var(--b)' }}
-                            onBlur={async e => { await api.patch(`/workout/plan/exercises/${ex.id}`, { reps: e.target.value }); loadPlan(); }} />
+                        /* Edit row — tap the name to swap for a catalog variation */
+                        <div className="flex-1 space-y-1.5">
+                          <button type="button"
+                            onClick={() => setSwapEx({ id: ex.id, name: ex.name, dayId: day.id, color: day.color })}
+                            className="w-full flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium tap"
+                            style={{ background: 'var(--s2)', color: 'var(--t-head)', border: `1px solid ${day.color}40` }}>
+                            <ArrowLeftRight size={12} style={{ color: day.color }} className="shrink-0" />
+                            <span className="flex-1 text-left truncate">{ex.name}</span>
+                            <span className="text-[9px] font-bold uppercase tracking-wider shrink-0" style={{ color: day.color }}>swap</span>
+                          </button>
+                          <div className="grid grid-cols-2 gap-1.5">
+                            <input defaultValue={String(ex.sets)} placeholder="Sets" inputMode="numeric"
+                              className="rounded-lg px-2 py-1 text-xs focus:outline-none"
+                              style={{ background: 'var(--s2)', color: 'var(--t-head)', border: '1px solid var(--b)' }}
+                              onBlur={async e => { await api.patch(`/workout/plan/exercises/${ex.id}`, { sets: Number(e.target.value) }); loadPlan(); }} />
+                            <input defaultValue={ex.reps} placeholder="Reps"
+                              className="rounded-lg px-2 py-1 text-xs focus:outline-none"
+                              style={{ background: 'var(--s2)', color: 'var(--t-head)', border: '1px solid var(--b)' }}
+                              onBlur={async e => { await api.patch(`/workout/plan/exercises/${ex.id}`, { reps: e.target.value }); loadPlan(); }} />
+                          </div>
                         </div>
                       ) : (
                         <div className="flex-1 flex items-center gap-2">
@@ -1262,6 +1355,15 @@ export default function Workout() {
       )}
 
       {progressEx && <ExerciseProgress exercise={progressEx} onClose={() => setProgressEx(null)} />}
+
+      {swapEx && (
+        <SwapExercisePicker
+          current={swapEx.name}
+          accent={swapEx.color}
+          onPick={doSwap}
+          onClose={() => setSwapEx(null)}
+        />
+      )}
 
       </div>{/* end relative zIndex wrapper */}
     </div>
