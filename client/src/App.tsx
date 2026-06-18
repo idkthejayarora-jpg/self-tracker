@@ -22,6 +22,7 @@ import Sleep from './pages/Sleep';
 import Finance from './pages/Finance';
 import Me from './pages/Me';
 import Content from './pages/Content';
+import Focus from './pages/Focus';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -43,6 +44,7 @@ function AppRoutes() {
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Jay />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="focus" element={<Focus />} />
         <Route path="tasks" element={<Tasks />} />
         <Route path="journal" element={<Journal />} />
         <Route path="workout" element={<Workout />} />

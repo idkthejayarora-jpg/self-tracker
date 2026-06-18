@@ -271,6 +271,18 @@ CREATE TABLE IF NOT EXISTS points_log (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ── Focus / hyperfocus sessions (ADHD deep-work timer) ────────────────────────
+CREATE TABLE IF NOT EXISTS focus_sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  label TEXT,
+  task_id INTEGER,
+  planned_minutes INTEGER DEFAULT 25,
+  actual_seconds INTEGER DEFAULT 0,
+  completed INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- ── Me / Character ────────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS me_profile (
