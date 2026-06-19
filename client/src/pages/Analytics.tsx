@@ -20,7 +20,7 @@ interface DailyData {
 interface MeSummary {
   meritScore: number; rank: string; rankColor: string; rankLabel: string;
   totalPoints: number;
-  breakdown?: { statScore: number; streakScore: number; skillScore: number; claimScore: number; ptsScore: number };
+  meritBreakdown?: { consistency: number; discipline: number; vitality: number; mastery: number; momentum: number };
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -28,13 +28,14 @@ interface MeSummary {
 const ACCENT = '#c4a085';
 
 const RANK_TIERS = [
-  { rank: 'E',  min: 0,  next: 12, color: '#84816f', label: 'E-Class Hunter' },
-  { rank: 'D',  min: 12, next: 26, color: '#a97e5f', label: 'D-Class Hunter' },
-  { rank: 'C',  min: 26, next: 42, color: '#cf8a3e', label: 'C-Class Hunter' },
-  { rank: 'B',  min: 42, next: 58, color: '#e59a7f', label: 'B-Class Hunter' },
-  { rank: 'A',  min: 58, next: 74, color: '#d97757', label: 'A-Class Hunter' },
-  { rank: 'S',  min: 74, next: 88, color: '#cd5240', label: 'S-Class Hunter' },
-  { rank: 'S+', min: 88, next: 100, color: '#d9a066', label: 'Shadow Monarch' },
+  { rank: 'E',  min: 0,  next: 15,  color: '#a59785', label: 'Raw Recruit' },
+  { rank: 'D',  min: 15, next: 25,  color: '#b98a64', label: 'Foot Soldier' },
+  { rank: 'C',  min: 25, next: 35,  color: '#cf8a3e', label: 'Veteran Soldier' },
+  { rank: 'B',  min: 35, next: 50,  color: '#d4a27f', label: 'Elite Soldier' },
+  { rank: 'A',  min: 50, next: 65,  color: '#d97757', label: 'Battle Commander' },
+  { rank: 'S',  min: 65, next: 75,  color: '#c2553d', label: 'Supreme General' },
+  { rank: 'S+', min: 75, next: 90,  color: '#e08b4e', label: 'Shadow Monarch' },
+  { rank: '∞',  min: 90, next: 100, color: '#e8a87c', label: 'Absolute Ruler' },
 ];
 
 const MOOD_LABELS = ['', 'ROUGH', 'LOW', 'OKAY', 'GOOD', 'GREAT'];
@@ -135,7 +136,7 @@ function RankCard({ me }: { me: MeSummary | null }) {
   const pct  = tier.next > tier.min
     ? Math.min(100, Math.round(((me.meritScore - tier.min) / (tier.next - tier.min)) * 100))
     : 100;
-  const bd   = me.breakdown;
+  const bd   = me.meritBreakdown;
 
   return (
     <HudCard accent={tier.color}>
@@ -186,11 +187,11 @@ function RankCard({ me }: { me: MeSummary | null }) {
         {bd && (
           <div className="flex flex-wrap gap-1.5">
             {[
-              { label: 'STATS',    val: bd.statScore,   max: 45, color: '#d97757' },
-              { label: 'STREAKS',  val: bd.streakScore, max: 15, color: '#cf8a3e' },
-              { label: 'SKILLS',   val: bd.skillScore,  max: 15, color: ACCENT },
-              { label: 'CLAIMS',   val: bd.claimScore,  max: 10, color: '#e59a7f' },
-              { label: 'POINTS',   val: bd.ptsScore,    max: 15, color: '#d9a066' },
+              { label: 'CONSIST',  val: bd.consistency, max: 25, color: '#d97757' },
+              { label: 'DISCIP',   val: bd.discipline,  max: 25, color: '#cf8a3e' },
+              { label: 'VITAL',    val: bd.vitality,    max: 20, color: '#c2553d' },
+              { label: 'MASTERY',  val: bd.mastery,     max: 15, color: ACCENT },
+              { label: 'MOMENT',   val: bd.momentum,    max: 15, color: '#d9a066' },
             ].map(b => (
               <div key={b.label} className="flex items-center gap-1 px-2 py-0.5 rounded-md"
                 style={{ background: `${b.color}12`, border: `1px solid ${b.color}25` }}>

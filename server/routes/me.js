@@ -7,78 +7,78 @@ const { SQL_OFF } = require('../utils/dateUtils');
 
 router.use(authMiddleware);
 
-// ── Merit-based rank system (v3 — 3-tier class hierarchy) ────────────────────
-// Stats score      (0–45): weighted avg of 7 live stats (Wealth ×0.5)
-// Streaks score    (0–15): max current streak / 14 × 15
-// Skills score     (0–15): avg skill level × 3, capped
-// Claims score     (0–10): claimed × 2, capped
-// Points score     (0–15): floor(totalPoints / 200), capped
-// Max merit = 100
+// ── Merit-based rank system (v4 — 5 pillars, premium rank tiers) ─────────────
+// Merit (0–100) is built from five clear pillars:
+//   Consistency (0–25) — current streak (the daily turn-up)
+//   Discipline  (0–25) — habit + task completion rates
+//   Vitality    (0–20) — training + sleep + endurance
+//   Mastery     (0–15) — average skill level
+//   Momentum    (0–15) — points grind + claimed milestones
 //
-// ┌──────── KING CLASS (75–100) ────────────────────────────────────────────┐
-// │  ∞   Rank  90–100  Absolute Ruler     — no rank above, the infinite end │
-// │  S+  Rank  75–89   Shadow Monarch     — King-class, one step from apex  │
-// ├──────── GENERAL CLASS (50–74) ──────────────────────────────────────────┤
-// │  S   Rank  65–74   Supreme General    — commands every front             │
-// │  A   Rank  50–64   Battle Commander   — hardened across all disciplines  │
-// ├──────── SOLDIER CLASS (0–49) — 4 ranks ─────────────────────────────────┤
-// │  B   Rank  35–49   Elite Soldier      — top of Soldier, promotion close  │
-// │  C   Rank  25–34   Veteran Soldier    — real foundations built            │
-// │  D   Rank  15–24   Foot Soldier       — on the path, earning every point  │
-// │  E   Rank   0–14   Raw Recruit        — the journey begins                │
-// └─────────────────────────────────────────────────────────────────────────┘
+// Each rank has its own CARD FINISH (escalating premium look) and a PERKS
+// ladder — climbing literally upgrades how your card looks and what it unlocks.
+//
+// ┌─ KING CLASS (75–100) ── apex finishes ──────────────────────────────────┐
+// │  ∞   90–100  Absolute Ruler   — living aurora card, the rarest finish    │
+// │  S+  75–89   Shadow Monarch   — holographic foil                         │
+// ├─ GENERAL CLASS (50–74) ── metal foils ──────────────────────────────────┤
+// │  S   65–74   Supreme General  — crimson + gold, animated shine           │
+// │  A   50–64   Battle Commander — gold foil + glow                         │
+// ├─ SOLDIER CLASS (0–49) ── matte → metal ─────────────────────────────────┤
+// │  B   35–49   Elite Soldier    — silver foil                              │
+// │  C   25–34   Veteran Soldier  — iron plate                               │
+// │  D   15–24   Foot Soldier     — bronze edge                              │
+// │  E    0–14   Raw Recruit      — plain kraft                              │
+// └──────────────────────────────────────────────────────────────────────────┘
 
 const RANK_TIERS = [
-  { rank: '∞',  cls: 'King',    min: 90, color: '#e8a87c', label: 'Absolute Ruler',   desc: 'Beyond all ranks — the infinite threshold' },
-  { rank: 'S+', cls: 'King',    min: 75, color: '#e08b4e', label: 'Shadow Monarch',   desc: 'King-class power — one step from infinity' },
-  { rank: 'S',  cls: 'General', min: 65, color: '#c2553d', label: 'Supreme General',  desc: 'Commands every front — peak of General class' },
-  { rank: 'A',  cls: 'General', min: 50, color: '#d97757', label: 'Battle Commander', desc: 'Hardened across all disciplines' },
-  { rank: 'B',  cls: 'Soldier', min: 35, color: '#d4a27f', label: 'Elite Soldier',    desc: 'Top of Soldier ranks — promotion is close' },
-  { rank: 'C',  cls: 'Soldier', min: 25, color: '#cf8a3e', label: 'Veteran Soldier',  desc: 'Real foundations built — seasoned fighter' },
-  { rank: 'D',  cls: 'Soldier', min: 15, color: '#b98a64', label: 'Foot Soldier',     desc: 'On the path — earning every point' },
-  { rank: 'E',  cls: 'Soldier', min:  0, color: '#a59785', label: 'Raw Recruit',      desc: 'The journey begins — Soldier class' },
+  { rank: '∞',  cls: 'King',    min: 90, color: '#e8a87c', tier: 'aurora',   label: 'Absolute Ruler',   desc: 'Beyond all ranks — the infinite threshold',
+    perks: ['Living aurora card — the rarest finish', 'Animated holographic sheen', 'Infinite crown on your avatar', 'Apex rank — nothing stands above'] },
+  { rank: 'S+', cls: 'King',    min: 75, color: '#e08b4e', tier: 'obsidian', label: 'Shadow Monarch',   desc: 'King-class power — one step from infinity',
+    perks: ['Holographic monarch card', 'Living foil shimmer', 'Shadow Monarch crown', 'King-class banner'] },
+  { rank: 'S',  cls: 'General', min: 65, color: '#c2553d', tier: 'crimson',  label: 'Supreme General',  desc: 'Commands every front — peak of General class',
+    perks: ['Crimson general card', 'Animated shine sweep', 'Supreme seal', 'General-class banner'] },
+  { rank: 'A',  cls: 'General', min: 50, color: '#d97757', tier: 'gold',     label: 'Battle Commander', desc: 'Hardened across all disciplines',
+    perks: ['Gold-foil card', 'Commander glow', 'Animated sheen unlocked'] },
+  { rank: 'B',  cls: 'Soldier', min: 35, color: '#d4a27f', tier: 'silver',   label: 'Elite Soldier',    desc: 'Top of Soldier ranks — promotion is close',
+    perks: ['Silver-foil card', 'Elite insignia', 'Card sheen'] },
+  { rank: 'C',  cls: 'Soldier', min: 25, color: '#cf8a3e', tier: 'iron',     label: 'Veteran Soldier',  desc: 'Real foundations built — seasoned fighter',
+    perks: ['Iron-plate card', 'Veteran stamp'] },
+  { rank: 'D',  cls: 'Soldier', min: 15, color: '#b98a64', tier: 'bronze',   label: 'Foot Soldier',     desc: 'On the path — earning every point',
+    perks: ['Bronze-edged card', 'Foot Soldier insignia'] },
+  { rank: 'E',  cls: 'Soldier', min:  0, color: '#a59785', tier: 'kraft',    label: 'Raw Recruit',      desc: 'The journey begins — Soldier class',
+    perks: ['Full tracker unlocked', 'Kraft rank card', 'Merit tracking begins'] },
 ];
 
 function computeMeritScore(stats, skills, claims, totalPoints, maxCurrentStreak) {
-  // Stats: if a system is genuinely unused its stat is null/undefined → treat as
-  // a neutral 30 so one unused feature doesn't crater the whole score.
-  // Wealth always defaults to 50 (break-even) when no finance data exists.
-  const s = {
-    strength:   stats.strength   ?? 30,
-    vitality:   stats.vitality   ?? 30,   // no sleep logs → neutral, not zero
-    discipline: stats.discipline ?? 30,   // no habits → neutral
-    focus:      stats.focus      ?? 30,   // no tasks → neutral
-    endurance:  stats.endurance  ?? 20,
-    creativity: stats.creativity ?? 20,   // not a creator → neutral
-    wealth:     stats.wealth     ?? 50,
-  };
+  const n = (v, d) => (v == null ? d : v); // neutral default when a feature is unused
 
-  const weightedSum  = s.strength + s.vitality + s.discipline + s.focus +
-                       s.endurance + s.creativity + 0.5 * s.wealth;
-  const weightedAvg  = weightedSum / 6.5;
-  const statScore    = Math.round((weightedAvg / 100) * 45);
+  // 1 · Consistency (0–25) — current streak, 21 straight days = full
+  const consistency = Math.min(25, Math.round((maxCurrentStreak / 21) * 25));
 
-  // Streak: 14-day current streak = full 15 pts (was 30 — too brutal)
-  const streakScore  = Math.min(15, Math.round((maxCurrentStreak / 14) * 15));
+  // 2 · Discipline (0–25) — habit + task completion (neutral 30 when unused)
+  const disciplinePct = (n(stats.discipline, 30) + n(stats.focus, 30)) / 2;
+  const discipline = Math.min(25, Math.round((disciplinePct / 100) * 25));
 
-  // Skills: level 5 avg = full 15 pts; all-level-1 still earns ~3 pts
-  const avgSkillLvl  = skills.length > 0
+  // 3 · Vitality (0–20) — training + sleep + endurance
+  const bodyPct = (n(stats.strength, 20) + n(stats.vitality, 30) + n(stats.endurance, 20)) / 3;
+  const vitality = Math.min(20, Math.round((bodyPct / 100) * 20));
+
+  // 4 · Mastery (0–15) — average skill level (lvl 5 avg = full)
+  const avgSkillLvl = skills.length > 0
     ? skills.reduce((a, sk) => a + (sk.level || 1), 0) / skills.length : 1;
-  const skillScore   = Math.min(15, Math.round(avgSkillLvl * 3));
+  const mastery = Math.min(15, Math.round(avgSkillLvl * 3));
 
-  // Claims: unchanged
+  // 5 · Momentum (0–15) — points grind (≤10) + claimed milestones (≤5)
   const claimedCount = claims.filter(c => c.status === 'claimed').length;
-  const claimScore   = Math.min(10, claimedCount * 2);
+  const ptsPart   = Math.min(10, Math.max(0, Math.floor(totalPoints / 200)));
+  const claimPart = Math.min(5, claimedCount);
+  const momentum  = ptsPart + claimPart;
 
-  // Points: every 200 pts = 1 merit point → 3 000 pts needed for full 15
-  // (was /800 → needed 12 000 pts — basically unreachable)
-  // Clamp ≥ 0: penalties can drive totalPoints negative, which must not
-  // produce a negative merit component and corrupt the total.
-  const ptsScore     = Math.max(0, Math.min(15, Math.floor(totalPoints / 200)));
-
+  const total = Math.min(100, consistency + discipline + vitality + mastery + momentum);
   return {
-    total: statScore + streakScore + skillScore + claimScore + ptsScore,
-    breakdown: { statScore, streakScore, skillScore, claimScore, ptsScore },
+    total,
+    breakdown: { consistency, discipline, vitality, mastery, momentum },
   };
 }
 
@@ -201,6 +201,8 @@ router.get('/summary', (req, res) => {
     rankColor: rankTier.color,
     rankLabel: rankTier.label,
     rankDesc:  rankTier.desc,
+    rankTier:  rankTier.tier,
+    rankPerks: rankTier.perks,
     meritScore:     merit.total,
     meritBreakdown: merit.breakdown,
     nextRank: nextTier ? {
@@ -209,7 +211,14 @@ router.get('/summary', (req, res) => {
       min:      nextTier.min,
       color:    nextTier.color,
       label:    nextTier.label,
+      tier:     nextTier.tier,
+      perks:    nextTier.perks,
     } : null,
+    // Full ladder (low → high) so the UI can show every rank's card + perks
+    ranks: [...RANK_TIERS].reverse().map(t => ({
+      rank: t.rank, cls: t.cls, min: t.min, color: t.color,
+      tier: t.tier, label: t.label, desc: t.desc, perks: t.perks,
+    })),
     totalPoints,
     stats,
     skills,

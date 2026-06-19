@@ -3,6 +3,7 @@ import { Plus, X, ChevronUp, Trash2, Pencil, Check, Sparkles, Trophy, Star, Dumb
 import api from '../lib/api';
 import type { MeSummary, MeProfile, MeSkill, MeClaim, MeMentor, PointsLogEntry } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
+import { getRankFinish, RankFinishLayer, RankLadder } from '../components/RankCard';
 
 // ── Count-up animation hook ───────────────────────────────────────────────────
 function useCountUp(target: number, duration = 900) {
@@ -413,12 +414,14 @@ export default function Me() {
     </div>
   );
 
-  const { profile, rank, rankClass, rankColor, rankLabel, rankDesc, meritScore, meritBreakdown, nextRank, totalPoints, stats, skills, claims, mentors } = data;
+  const { profile, rank, rankClass, rankColor, rankLabel, rankDesc, rankTier, rankPerks, meritScore, meritBreakdown, nextRank, ranks, totalPoints, stats, skills, claims, mentors } = data;
   const activeClaims = claims.filter(c => c.status === 'active');
   const claimedList  = claims.filter(c => c.status === 'claimed');
   const autoSolid    = RANK_SOLID[rank] ?? rankColor;
   // Custom color from palette picker (shared with sidebar via localStorage)
   const rankSolid    = customRankColor ?? autoSolid;
+  // Premium card finish for this rank — escalates E → ∞
+  const finish       = getRankFinish(rankTier, rankSolid);
 
   // Infer class from rank if API hasn't sent rankClass yet (backwards compat)
   const RANK_TO_CLASS: Record<string, string> = {
@@ -458,16 +461,15 @@ export default function Me() {
       <div className="relative overflow-hidden rounded-2xl"
         style={{
           minHeight: 360,
-          background: isLight
-            ? '#ebe7da'
-            : '#1f1c19',
-          boxShadow: isLight
-            ? '0 20px 60px rgba(0,0,0,0.12)'
-            : '0 30px 80px rgba(0,0,0,0.5)',
-          border: isLight ? `1px solid rgba(0,0,0,0.08)` : `1px solid rgba(255,255,255,0.10)`,
+          background: isLight ? '#ebe7da' : '#1f1c19',
+          boxShadow: finish.shadow,   // glow escalates with rank
+          border: finish.border,      // foil/metal edge per rank
           backdropFilter: 'blur(0px)',
           zIndex: 1,
         }}>
+
+        {/* Rank finish — foil / holographic / aurora overlay */}
+        <RankFinishLayer finish={finish} />
 
         {/* Brand of Sacrifice — behind everything */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none"
@@ -584,14 +586,14 @@ export default function Me() {
               <div className="h-full rounded-full transition-all duration-700 bar-fill"
                 style={{ width: `${meritScore}%`, background: rankSolid, boxShadow: 'none' }} />
             </div>
-            {/* Breakdown — 5 components: Stats/Streaks/Skills/Claims/Pts */}
+            {/* Breakdown — 5 pillars: Consistency/Discipline/Vitality/Mastery/Momentum */}
             <div className="grid grid-cols-5 gap-1.5 pt-1">
               {([
-                { label: 'STATS',   val: meritBreakdown.statScore,   max: 45, color: '#cd5240' },
-                { label: 'STREAK',  val: meritBreakdown.streakScore, max: 15, color: '#d97757' },
-                { label: 'SKILLS',  val: meritBreakdown.skillScore,  max: 15, color: '#d97757' },
-                { label: 'CLAIMS',  val: meritBreakdown.claimScore,  max: 10, color: '#d97757' },
-                { label: 'PTS',     val: meritBreakdown.ptsScore,    max: 15, color: '#d9a066' },
+                { label: 'CONSIST', val: meritBreakdown.consistency, max: 25, color: '#d97757' },
+                { label: 'DISCIP',  val: meritBreakdown.discipline,  max: 25, color: '#cf8a3e' },
+                { label: 'VITAL',   val: meritBreakdown.vitality,    max: 20, color: '#c2553d' },
+                { label: 'MASTERY', val: meritBreakdown.mastery,     max: 15, color: '#d4a27f' },
+                { label: 'MOMENT',  val: meritBreakdown.momentum,    max: 15, color: '#d9a066' },
               ]).map(b => (
                 <div key={b.label} className="flex flex-col items-center gap-0.5">
                   <span className="text-[9px] tracking-wider font-semibold" style={{ color: 'var(--t-muted)' }}>{b.label}</span>
@@ -604,7 +606,25 @@ export default function Me() {
                 </div>
               ))}
             </div>
-            {/* Next rank progress */}
+
+            {/* This rank's perks / premium benefits */}
+            {rankPerks && rankPerks.length > 0 && (
+              <div className="pt-1.5" style={{ borderTop: '1px solid var(--b)' }}>
+                <p className="text-[9px] font-bold tracking-[0.16em] uppercase mb-1.5" style={{ color: 'var(--t-faint)' }}>
+                  {finish.name} card · your perks
+                </p>
+                <div className="flex flex-wrap gap-1 justify-center">
+                  {rankPerks.map((p, i) => (
+                    <span key={i} className="text-[10px] px-1.5 py-0.5 rounded-md"
+                      style={{ background: `${rankSolid}16`, color: rankSolid, border: `1px solid ${rankSolid}2e` }}>
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Next rank progress + what it unlocks */}
             {nextRank && (
               <p className="text-[10px] text-center pt-0.5" style={{ color: 'var(--t-faint)' }}>
                 Next:&nbsp;
@@ -615,7 +635,7 @@ export default function Me() {
                     · {nextRank.rankClass.toUpperCase()} CLASS ↑
                   </span>
                 )}
-                <span className="opacity-60"> — {nextRank.min - meritScore} pts to go</span>
+                <span className="opacity-60"> — {nextRank.min - meritScore} merit to go</span>
               </p>
             )}
           </div>
@@ -664,6 +684,19 @@ export default function Me() {
           </div>
         </div>
       </div>
+
+      {/* ══════════════════════════════════════════════════════ RANK LADDER */}
+      {ranks && ranks.length > 0 && (
+        <div className="relative" style={{ zIndex: 1 }}>
+          <div className="flex items-center gap-2 mb-2.5 px-1">
+            <Trophy size={13} style={{ color: rankSolid }} />
+            <p className="text-[10px] font-bold tracking-[0.15em]" style={{ color: 'var(--t-faint)' }}>
+              RANK LADDER — CLIMB FOR BETTER CARDS &amp; PERKS
+            </p>
+          </div>
+          <RankLadder ranks={ranks} currentRank={rank} merit={meritScore} />
+        </div>
+      )}
 
       {/* ══════════════════════════════════════════════════════ ADVENTURE */}
       <div className="glass rounded-2xl px-5 py-4 relative"

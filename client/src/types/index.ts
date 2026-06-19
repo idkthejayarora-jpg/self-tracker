@@ -231,6 +231,17 @@ export interface MeStats {
   creativity: number;
 }
 
+export interface RankLadderEntry {
+  rank: string;
+  cls: string;
+  min: number;
+  color: string;
+  tier: string;
+  label: string;
+  desc: string;
+  perks: string[];
+}
+
 export interface MeSummary {
   profile: MeProfile;
   rank: string;
@@ -238,15 +249,18 @@ export interface MeSummary {
   rankColor: string;
   rankLabel: string;
   rankDesc: string;
+  rankTier: string;
+  rankPerks: string[];
   meritScore: number;
   meritBreakdown: {
-    statScore: number;
-    streakScore: number;
-    skillScore: number;
-    claimScore: number;
-    ptsScore: number;
+    consistency: number;
+    discipline: number;
+    vitality: number;
+    mastery: number;
+    momentum: number;
   };
-  nextRank: { rank: string; rankClass?: string; min: number; color: string; label: string } | null;
+  nextRank: { rank: string; rankClass?: string; min: number; color: string; label: string; tier?: string; perks?: string[] } | null;
+  ranks: RankLadderEntry[];
   totalPoints: number;
   stats: MeStats;
   skills: MeSkill[];
