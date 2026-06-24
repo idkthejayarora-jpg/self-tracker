@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Trash2, ChevronLeft, ChevronRight, X, Quote } from 'lucide-react';
+import { Plus, Trash2, ChevronLeft, ChevronRight, X, MessageSquare } from 'lucide-react';
 import api from '../lib/api';
 
 interface QuoteItem {
@@ -221,7 +221,7 @@ function AddQuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: (q:
         <form onSubmit={submit} className="px-6 pb-6 pt-2 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Quote size={16} style={{ color: '#d97757' }} />
+              <MessageSquare size={16} style={{ color: '#d97757' }} />
               <h2 className="font-black text-head text-base" style={{ fontFamily: "'Lora', Georgia, serif" }}>
                 Add a quote
               </h2>
@@ -340,7 +340,7 @@ export default function Quotes() {
           style={{ minHeight: 340, background: 'var(--s1)', border: '1.5px dashed var(--b)' }}>
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
             style={{ background: '#d9775718', border: '1px solid #d9775730' }}>
-            <Quote size={28} style={{ color: '#d97757' }} />
+            <MessageSquare size={28} style={{ color: '#d97757' }} />
           </div>
           <div>
             <p className="font-black text-head text-base" style={{ fontFamily: "'Lora', Georgia, serif" }}>
