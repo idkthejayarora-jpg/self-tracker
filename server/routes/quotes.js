@@ -11,7 +11,7 @@ db.prepare(`
     user_id    INTEGER NOT NULL,
     text       TEXT    NOT NULL,
     author     TEXT,
-    created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+    created_at TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
   )
 `).run();
 
