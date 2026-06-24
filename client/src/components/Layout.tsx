@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CheckSquare, BookOpen, Bell, BarChart2,
   Dumbbell, Sparkles, LogOut, Sun, Moon, Palette, X, Salad, KeyRound,
   ShieldOff, Target, Activity, Wallet, Swords, Zap, Shield, ImagePlus, Video,
-  AudioLines, Brain,
+  AudioLines, Brain, Flame,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, ACCENT_PRESETS } from '../contexts/ThemeContext';
@@ -28,6 +28,7 @@ const NAV = [
   { to: '/reminders', icon: Bell,            label: 'Alerts',     color: '#d97757' },
   { to: '/detox',     icon: ShieldOff,       label: 'Detox',      color: '#b5764f' },
   { to: '/content',   icon: Video,           label: 'Creator',    color: '#d4a27f' },
+  { to: '/quotes',    icon: Flame,           label: 'Wall of Fire', color: '#e08b4e' },
 ];
 
 const RANK_COLORS: Record<string, string> = {

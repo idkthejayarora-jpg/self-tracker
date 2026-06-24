@@ -23,6 +23,7 @@ import Finance from './pages/Finance';
 import Me from './pages/Me';
 import Content from './pages/Content';
 import Focus from './pages/Focus';
+import Quotes from './pages/Quotes';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -59,6 +60,7 @@ function AppRoutes() {
         <Route path="finance" element={<Finance />} />
         <Route path="me" element={<Me />} />
         <Route path="content" element={<Content />} />
+        <Route path="quotes" element={<Quotes />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

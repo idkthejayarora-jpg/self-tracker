@@ -827,6 +827,18 @@ html.light body::after { opacity: 0.05; }
 }
 .aurora-foil { background-size: 400% 400%; animation: aurora-shift 10s ease-in-out infinite; }
 
+/* Quote tile ambient orb drift */
+@keyframes orb-drift-a {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%      { transform: translate(40px,-30px) scale(1.1); }
+  66%      { transform: translate(-20px,40px) scale(0.9); }
+}
+@keyframes orb-drift-b {
+  0%,100% { transform: translate(0,0) scale(1); }
+  40%     { transform: translate(-50px,20px) scale(1.08); }
+  70%     { transform: translate(30px,-40px) scale(0.95); }
+}
+
 /* Nav */
 .nav-item { transition: background 0.15s, color 0.15s; }
 .nav-item:hover { background: var(--hov) !important; color: var(--t-head) !important; }
