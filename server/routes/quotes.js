@@ -4,17 +4,6 @@ const { authMiddleware } = require('../middleware/auth');
 
 router.use(authMiddleware);
 
-// ensure table exists
-db.prepare(`
-  CREATE TABLE IF NOT EXISTS quotes (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id    INTEGER NOT NULL,
-    text       TEXT    NOT NULL,
-    author     TEXT,
-    created_at TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
-  )
-`).run();
-
 // GET  /api/quotes
 router.get('/', (req, res) => {
   const rows = db.prepare(

@@ -365,6 +365,15 @@ CREATE TABLE IF NOT EXISTS workout_plan_exercises (
 -- Add life_area_id to tasks if it doesn't exist (SQLite migration workaround)
 -- Handled in server startup via db.prepare / try-catch
 
+-- ── Inspirational Quotes ─────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS quotes (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  text       TEXT    NOT NULL,
+  author     TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- ── Content Creator ───────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS content_niches (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
