@@ -10,6 +10,9 @@
     "build:start": "npm run build && npm start",
     "start": "cd server && npm start"
   },
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "devDependencies": {
     "concurrently": "^8.2.2"
   }
