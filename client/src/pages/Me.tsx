@@ -114,18 +114,6 @@ function Chip({ label, color }: { label: string; color: string }) {
   );
 }
 
-// ── Hex shade helper — lighten (+) / darken (−) for metallic gradients ────────
-function shade(hex: string, amt: number): string {
-  const c = hex.replace('#', '');
-  const full = c.length === 3 ? c.split('').map(x => x + x).join('') : c;
-  const n = parseInt(full, 16);
-  const clamp = (v: number) => Math.max(0, Math.min(255, v));
-  const r = clamp((n >> 16) + amt);
-  const g = clamp(((n >> 8) & 0xff) + amt);
-  const b = clamp((n & 0xff) + amt);
-  return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
-}
-
 // 5-pointed star polygon points (tip pointing up)
 function starPoints(cx: number, cy: number, R: number, r: number): string {
   const pts: string[] = [];
@@ -137,98 +125,94 @@ function starPoints(cx: number, cy: number, R: number, r: number): string {
   return pts.join(' ');
 }
 
-// ── Rank insignia — gradient shapes that symbolise real military / royal ranks ─
-// Soldier (E·D·C·B) → chevrons · General (A·S) → stars · King (S+·∞) → crowns.
-// Each emblem is filled with a static metallic gradient of the rank colour.
+// ── Rank insignia — shapes that symbolise real military / royal ranks ──────────
+// Soldier (E–B) → chevrons, General (A·S) → stars, King (S+·∞) → crowns.
+// Uses direct color fills + stroke outline — no SVG gradient refs (Safari-safe).
 function RankInsignia({ rank, color }: { rank: string; color: string }) {
-  const gid     = `ins-${rank.replace(/[^a-z0-9]/gi, '') || 'x'}`;
-  const gidSoft = `${gid}-soft`;
-  const light = shade(color, 78);
-  const dark  = shade(color, -58);
-
   const SOLDIER = ['E', 'D', 'C', 'B'];
   const GENERAL = ['A', 'S'];
+  const fill = color;
+  const stroke = 'rgba(255,255,255,0.45)';
 
-  const body = (() => {
-    // ── Soldier: stacked chevrons (count grows with rank, B adds a rocker) ──
-    if (SOLDIER.includes(rank)) {
-      const idx = SOLDIER.indexOf(rank);                 // E0 D1 C2 B3
-      const chevrons = Math.min(idx + 1, 3);             // 1,2,3,3
-      const gap = 34;
-      const topY = 92 - ((chevrons - 1) * gap - 38) / 2;
-      const bottomY = topY + (chevrons - 1) * gap;
-      return (
-        <g fill="none" stroke={`url(#${gid})`} strokeWidth="21" strokeLinejoin="round" strokeLinecap="butt">
+  // ── Soldier: stacked chevrons ──────────────────────────────────────────────
+  if (SOLDIER.includes(rank)) {
+    const idx      = SOLDIER.indexOf(rank);       // E=0 D=1 C=2 B=3
+    const chevrons = Math.min(idx + 1, 3);        // 1, 2, 3, 3
+    const gap      = 38;
+    const topY     = 110 - ((chevrons - 1) * gap) / 2;
+    const botY     = topY + (chevrons - 1) * gap;
+    return (
+      <svg viewBox="0 0 200 200" style={{ width: '100%', height: 'auto' }} aria-hidden="true">
+        <g fill="none" stroke={fill} strokeWidth="22" strokeLinejoin="round" strokeLinecap="round">
           {Array.from({ length: chevrons }).map((_, i) => {
             const y = topY + i * gap;
-            return <path key={i} d={`M48,${y} L100,${y - 38} L152,${y}`} />;
+            return <path key={i} d={`M44,${y} L100,${y - 44} L156,${y}`} />;
           })}
           {rank === 'B' && (
-            <path d={`M44,${bottomY + 20} Q100,${bottomY + 48} 156,${bottomY + 20}`}
-              strokeWidth="16" strokeLinecap="round" />
+            <path d={`M42,${botY + 22} Q100,${botY + 52} 158,${botY + 22}`} strokeWidth="15" />
           )}
         </g>
-      );
-    }
-
-    // ── General: stars (A = single, S = three) ──
-    if (GENERAL.includes(rank)) {
-      if (rank === 'A') {
-        return <polygon points={starPoints(100, 100, 74, 31)} fill={`url(#${gid})`} stroke={light} strokeWidth="1.5" strokeLinejoin="round" />;
-      }
-      return (
-        <g fill={`url(#${gid})`} stroke={light} strokeWidth="1.2" strokeLinejoin="round">
-          <polygon points={starPoints(100, 72, 52, 22)} />
-          <polygon points={starPoints(52, 130, 37, 15)} />
-          <polygon points={starPoints(148, 130, 37, 15)} />
+        <g fill="none" stroke={stroke} strokeWidth="4" strokeLinejoin="round" strokeLinecap="round">
+          {Array.from({ length: chevrons }).map((_, i) => {
+            const y = topY + i * gap;
+            return <path key={i} d={`M44,${y} L100,${y - 44} L156,${y}`} />;
+          })}
+          {rank === 'B' && (
+            <path d={`M42,${botY + 22} Q100,${botY + 52} 158,${botY + 22}`} strokeWidth="3" />
+          )}
         </g>
-      );
-    }
+      </svg>
+    );
+  }
 
-    // ── King: crowns (S+ = monarch, ∞ = emperor with halo + sparkles) ──
-    const isApex = rank === '∞';
-    const centerTip = isApex ? 62 : 74;
+  // ── General: stars ─────────────────────────────────────────────────────────
+  if (GENERAL.includes(rank)) {
     return (
-      <g strokeLinejoin="round">
-        {isApex && (
+      <svg viewBox="0 0 200 200" style={{ width: '100%', height: 'auto' }} aria-hidden="true">
+        {rank === 'A' ? (
           <>
-            <circle cx="100" cy="118" r="94" fill="none" stroke={`url(#${gidSoft})`} strokeWidth="2.5" opacity="0.55" />
-            {[[100, 14], [22, 70], [178, 70]].map(([x, y], i) => (
-              <g key={i} fill={light} opacity="0.85">
-                <path d={`M${x},${y - 9} L${x + 2.5},${y - 2.5} L${x + 9},${y} L${x + 2.5},${y + 2.5} L${x},${y + 9} L${x - 2.5},${y + 2.5} L${x - 9},${y} L${x - 2.5},${y - 2.5} Z`} />
-              </g>
-            ))}
+            <polygon points={starPoints(100, 100, 78, 33)} fill={fill} />
+            <polygon points={starPoints(100, 100, 78, 33)} fill="none" stroke={stroke} strokeWidth="3" strokeLinejoin="round" />
+          </>
+        ) : (
+          <>
+            <polygon points={starPoints(100, 68, 52, 22)} fill={fill} />
+            <polygon points={starPoints(46, 136, 38, 16)} fill={fill} />
+            <polygon points={starPoints(154, 136, 38, 16)} fill={fill} />
+            <polygon points={starPoints(100, 68, 52, 22)} fill="none" stroke={stroke} strokeWidth="3" strokeLinejoin="round" />
+            <polygon points={starPoints(46, 136, 38, 16)} fill="none" stroke={stroke} strokeWidth="2.5" strokeLinejoin="round" />
+            <polygon points={starPoints(154, 136, 38, 16)} fill="none" stroke={stroke} strokeWidth="2.5" strokeLinejoin="round" />
           </>
         )}
-        {/* Crown body — zig-zag of spikes over a base band */}
-        <polygon
-          points={`44,150 56,98 78,128 100,${centerTip} 122,128 144,98 156,150`}
-          fill={`url(#${gid})`} stroke={light} strokeWidth="1.6" />
-        <rect x="42" y="150" width="116" height="22" rx="5" fill={`url(#${gid})`} stroke={light} strokeWidth="1.2" />
-        {/* Jewels on each spike tip */}
-        {[[56, 98], [100, centerTip], [144, 98]].map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r={i === 1 ? 8 : 6.5} fill={light} stroke={dark} strokeWidth="1" />
-        ))}
-        {/* Center band jewel */}
-        <circle cx="100" cy="161" r="6" fill={light} stroke={dark} strokeWidth="1" />
-      </g>
+      </svg>
     );
-  })();
+  }
 
+  // ── King: crown ────────────────────────────────────────────────────────────
+  const isApex   = rank === '∞';
+  const tipY     = isApex ? 58 : 72;
   return (
-    <svg viewBox="0 0 200 210" style={{ width: '100%', height: 'auto', overflow: 'visible' }} aria-hidden="true">
-      <defs>
-        <linearGradient id={gid} x1="0" y1="0" x2="0.85" y2="1">
-          <stop offset="0%"   stopColor={light} />
-          <stop offset="46%"  stopColor={color} />
-          <stop offset="100%" stopColor={dark} />
-        </linearGradient>
-        <linearGradient id={gidSoft} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%"   stopColor={light} stopOpacity="0.9" />
-          <stop offset="100%" stopColor={dark}  stopOpacity="0.15" />
-        </linearGradient>
-      </defs>
-      {body}
+    <svg viewBox="0 0 200 200" style={{ width: '100%', height: 'auto' }} aria-hidden="true">
+      {isApex && (
+        <>
+          <circle cx="100" cy="120" r="90" fill="none" stroke={fill} strokeWidth="3" opacity="0.6" />
+          {([[100, 18], [18, 82], [182, 82]] as [number,number][]).map(([x, y], i) => (
+            <circle key={i} cx={x} cy={y} r="5" fill={stroke} opacity="0.9" />
+          ))}
+        </>
+      )}
+      {/* Crown spikes */}
+      <polygon points={`40,158 54,96 76,128 100,${tipY} 124,128 146,96 160,158`} fill={fill} />
+      {/* Crown band */}
+      <rect x="38" y="158" width="124" height="20" rx="4" fill={fill} />
+      {/* Highlight stroke */}
+      <polygon points={`40,158 54,96 76,128 100,${tipY} 124,128 146,96 160,158`} fill="none" stroke={stroke} strokeWidth="3" strokeLinejoin="round" />
+      <rect x="38" y="158" width="124" height="20" rx="4" fill="none" stroke={stroke} strokeWidth="2.5" />
+      {/* Jewels */}
+      {([[54, 96], [100, tipY], [146, 96]] as [number,number][]).map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r={i === 1 ? 9 : 7} fill="rgba(255,255,255,0.85)" />
+      ))}
+      <circle cx="100" cy="168" r="6" fill="rgba(255,255,255,0.85)" />
     </svg>
   );
 }
@@ -558,7 +542,12 @@ export default function Me() {
         {/* Rank insignia — chevrons / stars / crown, centred behind content */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none"
           style={{ zIndex: 0 }}>
-          <div style={{ opacity: isLight ? 0.18 : 0.42, width: 'min(240px, 64%)', flexShrink: 0 }}>
+          <div style={{
+            opacity: isLight ? 0.28 : 0.68,
+            width: 'min(260px, 68%)',
+            flexShrink: 0,
+            filter: isLight ? 'none' : `drop-shadow(0 0 18px ${rankSolid}70)`,
+          }}>
             <RankInsignia rank={rank} color={rankSolid} />
           </div>
         </div>
