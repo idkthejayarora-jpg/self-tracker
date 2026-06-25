@@ -30,3 +30,5 @@ router.delete('/:id', (req, res) => {
   ).run(req.params.id, req.user.id);
   res.json({ ok: true });
 });
+
+module.exports = router;
