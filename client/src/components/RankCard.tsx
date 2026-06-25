@@ -94,14 +94,16 @@ export function getRankFinish(tier: string, color: string): RankFinish {
 }
 
 // ── Small reusable rank-card chrome (border + glow + foil overlay) ────────────
-export function RankFinishLayer({ finish }: { finish: RankFinish }) {
+// `disableSweep` suppresses the animated diagonal light streak (used on the hero
+// character card, which we keep fully static).
+export function RankFinishLayer({ finish, disableSweep = false }: { finish: RankFinish; disableSweep?: boolean }) {
   return (
     <>
       {finish.overlay && (
         <div className={`absolute inset-0 pointer-events-none ${finish.overlay.className ?? ''}`}
           style={{ ...finish.overlay.style, zIndex: 1, borderRadius: 'inherit' }} />
       )}
-      {finish.sweep && (
+      {finish.sweep && !disableSweep && (
         <div className="absolute inset-0 pointer-events-none foil-sweep overflow-hidden" style={{ zIndex: 2, borderRadius: 'inherit' }} />
       )}
     </>

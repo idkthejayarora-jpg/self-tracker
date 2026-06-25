@@ -3,7 +3,7 @@ import { Plus, X, ChevronUp, Trash2, Pencil, Check, Sparkles, Trophy, Star, Dumb
 import api from '../lib/api';
 import type { MeSummary, MeProfile, MeSkill, MeClaim, MeMentor, PointsLogEntry } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
-import { getRankFinish, RankFinishLayer, RankLadder } from '../components/RankCard';
+import { getRankFinish, RankLadder } from '../components/RankCard';
 
 // ── Count-up animation hook ───────────────────────────────────────────────────
 function useCountUp(target: number, duration = 900) {
@@ -114,38 +114,121 @@ function Chip({ label, color }: { label: string; color: string }) {
   );
 }
 
-// ── Brand of Sacrifice (Berserk) — accurate geometric form ───────────────────
-function BrandOfSacrifice({ color }: { color: string }) {
-  return (
-    <svg viewBox="0 0 200 308"
-      className="brand-breathe"
-      style={{
-        width: '100%',
-        maxWidth: 300,
-        height: 'auto',
-        color,
-        overflow: 'visible',
-        filter: 'none',
-      }}
-      aria-hidden="true">
-      <g stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="miter" fill="none">
-        {/* Upper diamond */}
-        <polygon points="100,58 165,120 100,178 35,120" />
-        {/* Lower diamond */}
-        <polygon points="100,178 165,236 100,294 35,236" />
-        {/* Vertical spine through both */}
-        <line x1="100" y1="58" x2="100" y2="294" />
-        {/* Horizontal equator — upper diamond */}
-        <line x1="35" y1="120" x2="165" y2="120" />
-        {/* Horizontal equator — lower diamond */}
-        <line x1="35" y1="236" x2="165" y2="236" />
-        {/* Trident — center prong */}
-        <line x1="100" y1="58" x2="100" y2="10" />
-        {/* Trident — left fork */}
-        <line x1="100" y1="38" x2="76" y2="22" />
-        {/* Trident — right fork */}
-        <line x1="100" y1="38" x2="124" y2="22" />
+// ── Hex shade helper — lighten (+) / darken (−) for metallic gradients ────────
+function shade(hex: string, amt: number): string {
+  const c = hex.replace('#', '');
+  const full = c.length === 3 ? c.split('').map(x => x + x).join('') : c;
+  const n = parseInt(full, 16);
+  const clamp = (v: number) => Math.max(0, Math.min(255, v));
+  const r = clamp((n >> 16) + amt);
+  const g = clamp(((n >> 8) & 0xff) + amt);
+  const b = clamp((n & 0xff) + amt);
+  return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+}
+
+// 5-pointed star polygon points (tip pointing up)
+function starPoints(cx: number, cy: number, R: number, r: number): string {
+  const pts: string[] = [];
+  for (let i = 0; i < 10; i++) {
+    const ang = ((-90 + i * 36) * Math.PI) / 180;
+    const rad = i % 2 === 0 ? R : r;
+    pts.push(`${(cx + rad * Math.cos(ang)).toFixed(1)},${(cy + rad * Math.sin(ang)).toFixed(1)}`);
+  }
+  return pts.join(' ');
+}
+
+// ── Rank insignia — gradient shapes that symbolise real military / royal ranks ─
+// Soldier (E·D·C·B) → chevrons · General (A·S) → stars · King (S+·∞) → crowns.
+// Each emblem is filled with a static metallic gradient of the rank colour.
+function RankInsignia({ rank, color }: { rank: string; color: string }) {
+  const gid     = `ins-${rank.replace(/[^a-z0-9]/gi, '') || 'x'}`;
+  const gidSoft = `${gid}-soft`;
+  const light = shade(color, 78);
+  const dark  = shade(color, -58);
+
+  const SOLDIER = ['E', 'D', 'C', 'B'];
+  const GENERAL = ['A', 'S'];
+
+  const body = (() => {
+    // ── Soldier: stacked chevrons (count grows with rank, B adds a rocker) ──
+    if (SOLDIER.includes(rank)) {
+      const idx = SOLDIER.indexOf(rank);                 // E0 D1 C2 B3
+      const chevrons = Math.min(idx + 1, 3);             // 1,2,3,3
+      const gap = 34;
+      const topY = 92 - ((chevrons - 1) * gap - 38) / 2;
+      const bottomY = topY + (chevrons - 1) * gap;
+      return (
+        <g fill="none" stroke={`url(#${gid})`} strokeWidth="21" strokeLinejoin="round" strokeLinecap="butt">
+          {Array.from({ length: chevrons }).map((_, i) => {
+            const y = topY + i * gap;
+            return <path key={i} d={`M48,${y} L100,${y - 38} L152,${y}`} />;
+          })}
+          {rank === 'B' && (
+            <path d={`M44,${bottomY + 20} Q100,${bottomY + 48} 156,${bottomY + 20}`}
+              strokeWidth="16" strokeLinecap="round" />
+          )}
+        </g>
+      );
+    }
+
+    // ── General: stars (A = single, S = three) ──
+    if (GENERAL.includes(rank)) {
+      if (rank === 'A') {
+        return <polygon points={starPoints(100, 100, 74, 31)} fill={`url(#${gid})`} stroke={light} strokeWidth="1.5" strokeLinejoin="round" />;
+      }
+      return (
+        <g fill={`url(#${gid})`} stroke={light} strokeWidth="1.2" strokeLinejoin="round">
+          <polygon points={starPoints(100, 72, 52, 22)} />
+          <polygon points={starPoints(52, 130, 37, 15)} />
+          <polygon points={starPoints(148, 130, 37, 15)} />
+        </g>
+      );
+    }
+
+    // ── King: crowns (S+ = monarch, ∞ = emperor with halo + sparkles) ──
+    const isApex = rank === '∞';
+    const centerTip = isApex ? 62 : 74;
+    return (
+      <g strokeLinejoin="round">
+        {isApex && (
+          <>
+            <circle cx="100" cy="118" r="94" fill="none" stroke={`url(#${gidSoft})`} strokeWidth="2.5" opacity="0.55" />
+            {[[100, 14], [22, 70], [178, 70]].map(([x, y], i) => (
+              <g key={i} fill={light} opacity="0.85">
+                <path d={`M${x},${y - 9} L${x + 2.5},${y - 2.5} L${x + 9},${y} L${x + 2.5},${y + 2.5} L${x},${y + 9} L${x - 2.5},${y + 2.5} L${x - 9},${y} L${x - 2.5},${y - 2.5} Z`} />
+              </g>
+            ))}
+          </>
+        )}
+        {/* Crown body — zig-zag of spikes over a base band */}
+        <polygon
+          points={`44,150 56,98 78,128 100,${centerTip} 122,128 144,98 156,150`}
+          fill={`url(#${gid})`} stroke={light} strokeWidth="1.6" />
+        <rect x="42" y="150" width="116" height="22" rx="5" fill={`url(#${gid})`} stroke={light} strokeWidth="1.2" />
+        {/* Jewels on each spike tip */}
+        {[[56, 98], [100, centerTip], [144, 98]].map(([x, y], i) => (
+          <circle key={i} cx={x} cy={y} r={i === 1 ? 8 : 6.5} fill={light} stroke={dark} strokeWidth="1" />
+        ))}
+        {/* Center band jewel */}
+        <circle cx="100" cy="161" r="6" fill={light} stroke={dark} strokeWidth="1" />
       </g>
+    );
+  })();
+
+  return (
+    <svg viewBox="0 0 200 210" style={{ width: '100%', height: 'auto', overflow: 'visible' }} aria-hidden="true">
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0.85" y2="1">
+          <stop offset="0%"   stopColor={light} />
+          <stop offset="46%"  stopColor={color} />
+          <stop offset="100%" stopColor={dark} />
+        </linearGradient>
+        <linearGradient id={gidSoft} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%"   stopColor={light} stopOpacity="0.9" />
+          <stop offset="100%" stopColor={dark}  stopOpacity="0.15" />
+        </linearGradient>
+      </defs>
+      {body}
     </svg>
   );
 }
@@ -468,19 +551,17 @@ export default function Me() {
           zIndex: 1,
         }}>
 
-        {/* Rank finish — foil / holographic / aurora overlay */}
-        <RankFinishLayer finish={finish} />
+        {/* Subtle top-edge glow — replaces the heavy foil overlay */}
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1, borderRadius: 'inherit',
+          background: `radial-gradient(ellipse 80% 40% at 50% 0%, ${rankSolid}18 0%, transparent 70%)` }} />
 
-        {/* Brand of Sacrifice — behind everything */}
+        {/* Rank insignia — chevrons / stars / crown, centred behind content */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none"
           style={{ zIndex: 0 }}>
-          <div style={{ opacity: isLight ? 0.18 : 0.55, width: 'min(260px, 68%)', flexShrink: 0 }}>
-            <BrandOfSacrifice color={rankSolid} />
+          <div style={{ opacity: isLight ? 0.18 : 0.42, width: 'min(240px, 64%)', flexShrink: 0 }}>
+            <RankInsignia rank={rank} color={rankSolid} />
           </div>
         </div>
-
-        {/* Shimmer sheen */}
-        <div className="shimmer-slide" style={{ zIndex: 2 }} />
 
         {/* Card content overlay */}
         <div className="relative flex flex-col items-center gap-3 px-4 py-6 sm:gap-4 sm:px-5 sm:py-8" style={{ zIndex: 3 }}>
