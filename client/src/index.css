@@ -843,9 +843,8 @@ html.light body::after { opacity: 0.05; }
 .nav-item { transition: background 0.15s, color 0.15s; }
 .nav-item:hover { background: var(--hov) !important; color: var(--t-head) !important; }
 
-/* Mobile offset */
-.mob-offset { margin-left: var(--sidebar-w); }
-@media (min-width: 768px) { .mob-offset { margin-left: 0; } }
+/* Mobile offset — icon strip removed, no left margin on mobile */
+.mob-offset { margin-left: 0; }
 
 /* Scrollbar hide */
 .hide-scroll { scrollbar-width: none; -ms-overflow-style: none; }
