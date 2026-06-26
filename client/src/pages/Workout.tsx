@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText, Dumbbell, CheckCircle2, RotateCcw, ArrowLeftRight } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, TrendingUp, AlertCircle, Pencil, X, Zap, FileText, Dumbbell, CheckCircle2, RotateCcw, ArrowLeftRight, SkipForward, TriangleAlert } from 'lucide-react';
 import PaperBanner from '../components/PaperBanner';
 import WorkoutAvatar from '../components/WorkoutAvatar';
 import { format, parseISO } from 'date-fns';
@@ -341,6 +341,37 @@ export default function Workout() {
 
   const [stats, setStats] = useState<{ weekly: { week: string; sessions: number }[]; pbs: { name: string; category: string; max_weight: number; max_reps: number }[] } | null>(null);
 
+  // ── Skip / justification tracking (localStorage, no backend needed) ──────────
+  interface SkipRecord { date: string; note: string }
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const [skipData, setSkipData] = useState<Record<number, SkipRecord>>(() => {
+    try { return JSON.parse(localStorage.getItem('ex_skips') || '{}'); } catch { return {}; }
+  });
+  const [skipOpen, setSkipOpen] = useState<Set<number>>(new Set());
+  const [skipDraft, setSkipDraft] = useState<Record<number, string>>({});
+
+  // An exercise is "triple" if it was skipped in a PREVIOUS session (date ≠ today)
+  function isTriple(exId: number) {
+    const r = skipData[exId];
+    return !!r && r.date !== todayStr;
+  }
+  function hasSkippedToday(exId: number) {
+    return skipData[exId]?.date === todayStr;
+  }
+  function commitSkip(exId: number) {
+    const note = skipDraft[exId]?.trim() || '';
+    const next = { ...skipData, [exId]: { date: todayStr, note } };
+    setSkipData(next);
+    localStorage.setItem('ex_skips', JSON.stringify(next));
+    setSkipOpen(s => { const n = new Set(s); n.delete(exId); return n; });
+  }
+  function clearSkip(exId: number) {
+    const next = { ...skipData };
+    delete next[exId];
+    setSkipData(next);
+    localStorage.setItem('ex_skips', JSON.stringify(next));
+  }
+
   // Plan state
   const [planDays, setPlanDays] = useState<PlanDay[]>([]);
   const [editingDayId, setEditingDayId] = useState<number | null>(null);
@@ -398,6 +429,7 @@ export default function Workout() {
   async function toggleToday(ex: TodayExercise) {
     if (!today?.day) return;
     const newDone = !ex.done;
+    if (newDone) clearSkip(ex.id); // reset skip streak when exercise is completed
     // optimistic
     setToday(t => (t && t.day) ? { ...t, day: { ...t.day, exercises: t.day.exercises.map(e => e.id === ex.id ? { ...e, done: newDone } : e) } } : t);
     try {
@@ -678,30 +710,109 @@ export default function Workout() {
                       </p>
                     )}
                     {day.exercises.map(ex => {
+                      const tripled = isTriple(ex.id);
+                      const skippedToday = hasSkippedToday(ex.id);
+                      const displaySets = tripled ? ex.sets * 3 : ex.sets;
+                      const accentCol = tripled && !ex.done ? '#cd5240' : day.color;
                       const meta =
                         ex.kind === 'timed'      ? 'cardio · timed'
-                        : ex.kind === 'bodyweight' ? `${ex.sets} × ${ex.reps} · bodyweight`
-                        : `${ex.sets} sets × ${ex.reps} reps`;
+                        : ex.kind === 'bodyweight' ? `${displaySets} × ${ex.reps} · bodyweight`
+                        : `${displaySets} sets × ${ex.reps} reps`;
                       return (
-                        <div key={ex.id}
-                          className={`flex items-center gap-3 px-4 py-3 tap exrow ${ex.done ? 'exrow-done' : ''}`}
-                          onClick={() => toggleToday(ex)}
-                          style={{ ['--exc' as string]: day.color }}>
-                          <CheckMark done={ex.done} />
-                          <div className="flex-1 min-w-0">
-                            <span className={`exname text-sm font-semibold ${ex.done ? 'is-done' : ''}`}>
-                              {ex.name}
-                            </span>
-                            <p className="text-[11px]" style={{ color: 'var(--t-faint)' }}>{meta}</p>
+                        <div key={ex.id}>
+                          {/* Triple penalty banner */}
+                          {tripled && !ex.done && (
+                            <div className="mx-3 mt-2.5 mb-0.5 px-3 py-2 rounded-xl flex items-center gap-2 text-xs font-bold"
+                              style={{ background: '#cd524015', border: '1px solid #cd524040', color: '#cd5240' }}>
+                              <TriangleAlert size={12} className="shrink-0" />
+                              <span>Missed last session — tripled today</span>
+                              <span className="ml-auto font-black text-[11px] px-2 py-0.5 rounded-full"
+                                style={{ background: '#cd524025', border: '1px solid #cd524050' }}>
+                                {ex.sets}→{displaySets} sets
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Main exercise row */}
+                          <div
+                            className={`flex items-center gap-3 px-4 py-3 tap exrow ${ex.done ? 'exrow-done' : ''}`}
+                            onClick={() => toggleToday(ex)}
+                            style={{ ['--exc' as string]: accentCol }}>
+                            <CheckMark done={ex.done} />
+                            <div className="flex-1 min-w-0">
+                              <span className={`exname text-sm font-semibold ${ex.done ? 'is-done' : ''}`}
+                                style={{ color: tripled && !ex.done ? '#cd5240' : undefined }}>
+                                {ex.name}
+                              </span>
+                              <p className="text-[11px]" style={{ color: tripled && !ex.done ? '#cd524070' : 'var(--t-faint)' }}>{meta}</p>
+                            </div>
+                            {ex.kind === 'timed' ? (
+                              <StatField value={ex.duration_min ? String(ex.duration_min) : ''} unit="min" color={accentCol} onSave={m => saveTodayDuration(ex, m)} />
+                            ) : ex.kind === 'weighted' ? (
+                              <StatField value={ex.weight || ''} unit="kg" color={accentCol} onSave={w => saveTodayWeight(ex, w)} />
+                            ) : (
+                              <span className="text-[10px] font-bold uppercase tracking-wider shrink-0 px-2 py-1 rounded-lg"
+                                style={{ color: 'var(--t-faint)', background: 'var(--s2)' }}>BW</span>
+                            )}
                           </div>
-                          {/* Right-side metric: minutes for timed, kg for weighted, nothing for bodyweight */}
-                          {ex.kind === 'timed' ? (
-                            <StatField value={ex.duration_min ? String(ex.duration_min) : ''} unit="min" color={day.color} onSave={m => saveTodayDuration(ex, m)} />
-                          ) : ex.kind === 'weighted' ? (
-                            <StatField value={ex.weight || ''} unit="kg" color={day.color} onSave={w => saveTodayWeight(ex, w)} />
-                          ) : (
-                            <span className="text-[10px] font-bold uppercase tracking-wider shrink-0 px-2 py-1 rounded-lg"
-                              style={{ color: 'var(--t-faint)', background: 'var(--s2)' }}>BW</span>
+
+                          {/* Skip note area — only for non-done exercises */}
+                          {!ex.done && (
+                            <div className="px-4 pb-2" onClick={e => e.stopPropagation()}>
+                              {skippedToday ? (
+                                /* Already skipped today — show committed note */
+                                <div className="flex items-start gap-2 px-3 py-2 rounded-xl text-xs"
+                                  style={{ background: '#cf8a3e0c', border: '1px solid #cf8a3e20' }}>
+                                  <SkipForward size={11} className="shrink-0 mt-0.5" style={{ color: '#cf8a3e' }} />
+                                  <span className="flex-1 italic" style={{ color: 'var(--t-muted)' }}>
+                                    {skipData[ex.id]?.note || 'Skipped — no reason given'}
+                                  </span>
+                                  <button className="shrink-0 tap" style={{ color: 'var(--t-faint)' }}
+                                    onClick={() => clearSkip(ex.id)}>
+                                    <X size={12} />
+                                  </button>
+                                </div>
+                              ) : skipOpen.has(ex.id) ? (
+                                /* Expanded: write justification */
+                                <div className="rounded-xl p-3 space-y-2"
+                                  style={{ background: 'var(--s2)', border: '1px solid var(--b)' }}>
+                                  <p className="text-[10px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--t-faint)' }}>
+                                    Why are you skipping?
+                                  </p>
+                                  <textarea
+                                    rows={2}
+                                    autoFocus
+                                    placeholder="e.g. shoulder pain, swapped to cable flies, out of time…"
+                                    value={skipDraft[ex.id] || ''}
+                                    onChange={e => setSkipDraft(d => ({ ...d, [ex.id]: e.target.value }))}
+                                    className="w-full rounded-lg px-2.5 py-2 text-xs resize-none focus:outline-none"
+                                    style={{ background: 'var(--s1)', color: 'var(--t-body)', border: '1px solid var(--b)' }}
+                                  />
+                                  <div className="flex gap-2 justify-end">
+                                    <button className="text-xs px-2 py-1 tap" style={{ color: 'var(--t-faint)' }}
+                                      onClick={() => setSkipOpen(s => { const n = new Set(s); n.delete(ex.id); return n; })}>
+                                      Cancel
+                                    </button>
+                                    <button
+                                      className="text-xs px-3 py-1 rounded-lg font-bold tap"
+                                      style={{ background: '#cd524018', color: '#cd5240', border: '1px solid #cd524035' }}
+                                      onClick={() => commitSkip(ex.id)}>
+                                      <SkipForward size={11} className="inline mr-1" />
+                                      Mark skipped
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                /* Collapsed: show "skip this" trigger */
+                                <button
+                                  className="flex items-center gap-1 text-[10px] tap px-1 py-0.5 rounded"
+                                  style={{ color: 'var(--t-faint)' }}
+                                  onClick={() => setSkipOpen(s => new Set(s).add(ex.id))}>
+                                  <SkipForward size={10} />
+                                  skip this
+                                </button>
+                              )}
+                            </div>
                           )}
                         </div>
                       );
