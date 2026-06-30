@@ -374,6 +374,19 @@ CREATE TABLE IF NOT EXISTS quotes (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ── Projects (task segmentation + progress rewards) ──────────────────────────
+CREATE TABLE IF NOT EXISTS projects (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name        TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  color       TEXT DEFAULT '#d97757',
+  icon        TEXT DEFAULT '📁',
+  status      TEXT DEFAULT 'active' CHECK(status IN ('active','done','archived')),
+  sort_order  INTEGER DEFAULT 0,
+  created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- ── Content Creator ───────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS content_niches (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,

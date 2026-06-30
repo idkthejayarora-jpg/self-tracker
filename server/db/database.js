@@ -54,6 +54,10 @@ addColumnIfMissing('tasks', 'is_recurring',     'INTEGER DEFAULT 0');
 addColumnIfMissing('tasks', 'recur_interval',   'TEXT');
 addColumnIfMissing('tasks', 'tags',             "TEXT DEFAULT '[]'");
 addColumnIfMissing('tasks', 'life_area_id',     'INTEGER REFERENCES life_areas(id)');
+addColumnIfMissing('tasks', 'project_id',       'INTEGER REFERENCES projects(id) ON DELETE SET NULL');
+
+// me_profile — prestige high-water mark for the rank pyramid
+addColumnIfMissing('me_profile', 'peak_merit', 'INTEGER DEFAULT 0');
 
 // reminders
 addColumnIfMissing('reminders', 'snoozed_until', 'DATETIME');

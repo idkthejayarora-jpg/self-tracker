@@ -37,7 +37,7 @@ router.get('/:id', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { title, description, due_date, due_time, priority, is_recurring, recur_interval, follow_up_date, tags, life_area_id } = req.body;
+  const { title, description, due_date, due_time, priority, is_recurring, recur_interval, follow_up_date, tags, life_area_id, project_id } = req.body;
   if (!title) return res.status(400).json({ error: 'Title required' });
 
   const uid = req.user.id;
@@ -52,13 +52,13 @@ router.post('/', (req, res) => {
 
   const params = [uid, title, description || null, due_date || null, due_time || null,
     priority || 'medium', is_recurring ? 1 : 0, recur_interval || null, follow_up_date || null,
-    JSON.stringify(tags || []), life_area_id || null];
+    JSON.stringify(tags || []), life_area_id || null, project_id || null];
 
-  console.log('[tasks POST] uid=%s title=%s priority=%s life_area_id=%s', uid, title, priority || 'medium', life_area_id || null);
+  console.log('[tasks POST] uid=%s title=%s priority=%s life_area_id=%s project_id=%s', uid, title, priority || 'medium', life_area_id || null, project_id || null);
 
   const result = db.prepare(`
-    INSERT INTO tasks (user_id, title, description, due_date, due_time, priority, is_recurring, recur_interval, follow_up_date, tags, life_area_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO tasks (user_id, title, description, due_date, due_time, priority, is_recurring, recur_interval, follow_up_date, tags, life_area_id, project_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(...params);
 
   res.status(201).json(db.prepare('SELECT * FROM tasks WHERE id = ?').get(result.lastInsertRowid));
@@ -84,6 +84,7 @@ router.patch('/:id', (req, res) => {
   const follow_up_date = has('follow_up_date')  ? (body.follow_up_date || null)     : task.follow_up_date;
   const tags           = has('tags')            ? JSON.stringify(body.tags || [])   : task.tags;
   const life_area_id   = has('life_area_id')    ? (body.life_area_id || null)       : task.life_area_id;
+  const project_id     = has('project_id')      ? (body.project_id || null)         : task.project_id;
 
   // Track deferred: pushing due_date forward on an overdue pending task
   let deferredCount = task.deferred_count;
@@ -120,10 +121,10 @@ router.patch('/:id', (req, res) => {
     UPDATE tasks SET
       title = ?, description = ?, due_date = ?, due_time = ?, priority = ?,
       status = ?, completed_at = ?, is_recurring = ?, recur_interval = ?,
-      follow_up_date = ?, deferred_count = ?, tags = ?, life_area_id = ?
+      follow_up_date = ?, deferred_count = ?, tags = ?, life_area_id = ?, project_id = ?
     WHERE id = ? AND user_id = ?
   `).run(title, description, due_date, due_time, priority, status, completedAt,
-    is_recurring, recur_interval, follow_up_date, deferredCount, tags, life_area_id,
+    is_recurring, recur_interval, follow_up_date, deferredCount, tags, life_area_id, project_id,
     req.params.id, req.user.id);
 
   if (justCompleted) {
@@ -134,6 +135,12 @@ router.patch('/:id', (req, res) => {
     awardPoints(req.user.id, 'task', 'complete', pts, task.id, task.title);
     applySkillXP(req.user.id, 'task',
       [task.title, priority === 'urgent' ? 'urgent' : '', 'focus','discipline']);
+
+    // Project task → award progress-milestone bonuses (25/50/75/100%)
+    if (project_id) {
+      try { require('./projects').awardProjectMilestones(req.user.id, project_id); }
+      catch (e) { console.error('[tasks] project milestone hook failed:', e.message); }
+    }
   }
 
   res.json(db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id));

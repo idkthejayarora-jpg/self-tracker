@@ -24,6 +24,27 @@ export interface Task {
   tags: string; // JSON string
   created_at: string;
   priority_score?: number;
+  life_area_id?: number | null;
+  project_id?: number | null;
+}
+
+export interface ProjectProgress {
+  total: number;
+  done: number;
+  pct: number;
+}
+
+export interface Project {
+  id: number;
+  user_id: number;
+  name: string;
+  description: string;
+  color: string;
+  icon: string;
+  status: 'active' | 'done' | 'archived';
+  sort_order: number;
+  created_at: string;
+  progress: ProjectProgress;
 }
 
 export interface JournalEntry {
@@ -231,8 +252,17 @@ export interface MeStats {
   creativity: number;
 }
 
+export interface RankInsignia {
+  shape: 'chevron' | 'star' | 'crown';
+  count: number;
+  bar: boolean;
+  ring: boolean;
+  crown: number;
+}
+
 export interface RankLadderEntry {
   rank: string;
+  code: string;
   cls: string;
   min: number;
   color: string;
@@ -240,18 +270,28 @@ export interface RankLadderEntry {
   label: string;
   desc: string;
   perks: string[];
+  insignia: RankInsignia;
+  league: string;
 }
 
 export interface MeSummary {
   profile: MeProfile;
   rank: string;
+  rankCode: string;
+  rankName: string;
   rankClass: string;
+  leagueLabel: string;
+  leagueRoman: string;
+  leagueSub: string;
   rankColor: string;
   rankLabel: string;
   rankDesc: string;
   rankTier: string;
   rankPerks: string[];
+  insignia: RankInsignia;
   meritScore: number;
+  currentForm: number;
+  peakMerit: number;
   meritBreakdown: {
     consistency: number;
     discipline: number;
@@ -259,7 +299,11 @@ export interface MeSummary {
     mastery: number;
     momentum: number;
   };
-  nextRank: { rank: string; rankClass?: string; min: number; color: string; label: string; tier?: string; perks?: string[] } | null;
+  nextRank: {
+    rank: string; code?: string; name?: string; rankClass?: string; league?: string;
+    min: number; color: string; label: string; tier?: string; perks?: string[];
+    insignia?: RankInsignia; formToGo?: number;
+  } | null;
   ranks: RankLadderEntry[];
   totalPoints: number;
   stats: MeStats;

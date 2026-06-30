@@ -19,24 +19,15 @@ interface DailyData {
 
 interface MeSummary {
   meritScore: number; rank: string; rankColor: string; rankLabel: string;
+  rankName?: string; leagueLabel?: string; peakMerit?: number;
   totalPoints: number;
+  nextRank?: { name?: string; label: string; min: number; color: string; formToGo?: number } | null;
   meritBreakdown?: { consistency: number; discipline: number; vitality: number; mastery: number; momentum: number };
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const ACCENT = '#c4a085';
-
-const RANK_TIERS = [
-  { rank: 'E',  min: 0,  next: 15,  color: '#a59785', label: 'Raw Recruit' },
-  { rank: 'D',  min: 15, next: 25,  color: '#b98a64', label: 'Foot Soldier' },
-  { rank: 'C',  min: 25, next: 35,  color: '#cf8a3e', label: 'Veteran Soldier' },
-  { rank: 'B',  min: 35, next: 50,  color: '#d4a27f', label: 'Elite Soldier' },
-  { rank: 'A',  min: 50, next: 65,  color: '#d97757', label: 'Battle Commander' },
-  { rank: 'S',  min: 65, next: 75,  color: '#c2553d', label: 'Supreme General' },
-  { rank: 'S+', min: 75, next: 90,  color: '#e08b4e', label: 'Shadow Monarch' },
-  { rank: '∞',  min: 90, next: 100, color: '#e8a87c', label: 'Absolute Ruler' },
-];
 
 const MOOD_LABELS = ['', 'ROUGH', 'LOW', 'OKAY', 'GOOD', 'GREAT'];
 const MOOD_COLORS = ['', '#cd5240', '#d97757', '#d9a066', '#cf8a3e', '#a97e5f'];
@@ -131,55 +122,62 @@ function RangePicker({ value, onChange }: { value: number; onChange: (v: number)
 
 function RankCard({ me }: { me: MeSummary | null }) {
   if (!me) return null;
-  const tier = RANK_TIERS.find(t => me.rank === t.rank) ?? RANK_TIERS[0];
-  const next = RANK_TIERS.find(t => t.min === tier.next);
-  const pct  = tier.next > tier.min
-    ? Math.min(100, Math.round(((me.meritScore - tier.min) / (tier.next - tier.min)) * 100))
-    : 100;
-  const bd   = me.meritBreakdown;
+  const color = me.rankColor || ACCENT;
+  const form  = me.meritScore;
+  const peak  = me.peakMerit ?? form;
+  const next  = me.nextRank;
+  const toGo  = next ? (next.formToGo ?? Math.max(0, next.min - form)) : 0;
+  const bd    = me.meritBreakdown;
 
   return (
-    <HudCard accent={tier.color}>
+    <HudCard accent={color}>
       <div className="px-4 py-4">
         <div className="flex items-center justify-between mb-3">
-          <div>
+          <div className="min-w-0">
             <p className="text-[9px] font-black tracking-[0.25em] font-mono mb-0.5"
-              style={{ color: tier.color, opacity: 0.55 }}>HUNTER_RANK://</p>
+              style={{ color, opacity: 0.55 }}>PEAK_RANK://</p>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-black font-mono leading-none"
-                style={{ color: tier.color, textShadow: 'none' }}>
+              <span className="text-3xl font-black font-mono leading-none"
+                style={{ color, textShadow: 'none' }}>
                 {me.rank}
               </span>
-              <span className="text-xs font-bold tracking-wide" style={{ color: 'var(--t-muted)' }}>
-                {tier.label}
+              <span className="text-xs font-bold tracking-wide truncate" style={{ color: 'var(--t-muted)' }}>
+                {me.rankName || me.rankLabel}
               </span>
             </div>
+            {me.leagueLabel && (
+              <p className="text-[9px] font-black tracking-[0.2em] mt-0.5" style={{ color, opacity: 0.5 }}>
+                {me.leagueLabel.toUpperCase()} LEAGUE
+              </p>
+            )}
           </div>
-          <div className="text-right">
+          <div className="text-right shrink-0">
             <p className="text-2xl font-black font-mono leading-none"
               style={{ color: 'var(--t-head)', textShadow: 'none' }}>
-              {me.meritScore}
+              {form}
               <span className="text-sm font-normal opacity-40">/100</span>
             </p>
             <p className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--t-faint)' }}>
-              merit score
+              current form
             </p>
           </div>
         </div>
 
-        {/* Progress bar to next rank */}
+        {/* Form bar with permanent peak high-water marker */}
         <div className="mb-3">
           <div className="flex justify-between text-[9px] font-mono mb-1" style={{ color: 'var(--t-faint)', opacity: 0.6 }}>
-            <span>{me.rank} · {tier.min}</span>
-            {next && <span>{next.rank} at {tier.next} · {tier.next - me.meritScore} to go</span>}
+            <span>peak {peak}</span>
+            {next && <span>{next.name || next.label} · push form +{toGo}</span>}
           </div>
-          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
+          <div className="relative h-2 rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
             <div className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${pct}%`, background: tier.color,
-                boxShadow: 'none' }} />
+              style={{ width: `${form}%`, background: color, boxShadow: 'none' }} />
+            {peak > form && (
+              <div className="absolute top-0 bottom-0" style={{ left: `calc(${peak}% - 1px)`, width: 2, background: '#fff', opacity: 0.8 }} />
+            )}
           </div>
-          <p className="text-[9px] font-mono mt-0.5 text-right" style={{ color: tier.color, opacity: 0.6 }}>
-            {pct}% to next rank
+          <p className="text-[9px] font-mono mt-0.5 text-right" style={{ color, opacity: 0.6 }}>
+            {next ? `+${toGo} form to rank up` : 'apex reached'}
           </p>
         </div>
 

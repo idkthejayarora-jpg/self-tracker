@@ -1,9 +1,13 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Plus, Check, Trash2, ChevronDown, ChevronUp, Zap, Pencil, Save, AlertCircle } from 'lucide-react';
+import { Plus, Check, Trash2, ChevronDown, ChevronUp, Zap, Pencil, Save, AlertCircle,
+  FolderKanban, FolderPlus, Trophy, ChevronRight, ListTodo } from 'lucide-react';
 import PaperBanner from '../components/PaperBanner';
 import api from '../lib/api';
 import { useSync } from '../hooks/useSync';
-import type { Task, TaskPriority, TaskStatus } from '../types';
+import type { Task, TaskPriority, TaskStatus, Project } from '../types';
+
+// Warm palette for project colour-coding
+const PROJECT_COLORS = ['#d97757', '#c2553d', '#e08b4e', '#d9a066', '#cf8a3e', '#b5764f', '#b3372e', '#e8a87c', '#a97e5f', '#a5a293'];
 
 const PRIORITY_COLOR: Record<string, { bg: string; text: string; border: string }> = {
   urgent: { bg: '#c2553d22', text: '#c2553d', border: '#c2553d44' },
@@ -36,11 +40,12 @@ interface TaskFormData {
   recur_interval: string;
   follow_up_date: string;
   life_area_id: number | null;
+  project_id: number | null;
 }
 
 function emptyForm(): TaskFormData {
   return { title: '', description: '', due_date: '', due_time: '',
-    priority: 'medium', is_recurring: false, recur_interval: 'daily', follow_up_date: '', life_area_id: null };
+    priority: 'medium', is_recurring: false, recur_interval: 'daily', follow_up_date: '', life_area_id: null, project_id: null };
 }
 
 export default function Tasks() {
@@ -59,6 +64,78 @@ export default function Tasks() {
   const [lifeAreas, setLifeAreas] = useState<LifeAreaOption[]>([]);
   const [showDone, setShowDone] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
+
+  // ── Projects ──────────────────────────────────────────────────────────────
+  const [view, setView] = useState<'tasks' | 'projects'>('tasks');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [showProjectForm, setShowProjectForm] = useState(false);
+  const [projName, setProjName] = useState('');
+  const [projColor, setProjColor] = useState(PROJECT_COLORS[0]);
+  const [projIcon, setProjIcon] = useState('📁');
+  const [projErr, setProjErr] = useState('');
+  const [savingProj, setSavingProj] = useState(false);
+  const [expandedProject, setExpandedProject] = useState<number | null>(null);
+  const [projectTasks, setProjectTasks] = useState<Record<number, Task[]>>({});
+  const [newProjTaskTitle, setNewProjTaskTitle] = useState('');
+
+  const fetchProjects = useCallback(async () => {
+    try { const r = await api.get<Project[]>('/projects'); setProjects(r.data); }
+    catch { /* keep stale list */ }
+  }, []);
+  useEffect(() => { fetchProjects(); }, [fetchProjects]);
+
+  async function loadProjectTasks(projectId: number) {
+    try {
+      const r = await api.get<Task[]>(`/projects/${projectId}/tasks`);
+      setProjectTasks(prev => ({ ...prev, [projectId]: r.data }));
+    } catch { setProjectTasks(prev => ({ ...prev, [projectId]: [] })); }
+  }
+
+  function toggleProject(id: number) {
+    if (expandedProject === id) { setExpandedProject(null); return; }
+    setExpandedProject(id);
+    setNewProjTaskTitle('');
+    if (!projectTasks[id]) loadProjectTasks(id);
+  }
+
+  async function createProject() {
+    if (!projName.trim()) return;
+    setSavingProj(true); setProjErr('');
+    try {
+      await api.post('/projects', { name: projName.trim(), color: projColor, icon: projIcon || '📁' });
+      setProjName(''); setProjColor(PROJECT_COLORS[0]); setProjIcon('📁');
+      setShowProjectForm(false);
+      await fetchProjects();
+    } catch (e: any) {
+      setProjErr(e?.response?.data?.error || 'Failed to create project');
+    } finally { setSavingProj(false); }
+  }
+
+  async function deleteProject(id: number) {
+    try {
+      await api.delete(`/projects/${id}`);
+      setProjects(prev => prev.filter(p => p.id !== id));
+      if (expandedProject === id) setExpandedProject(null);
+      await fetchTasks();
+    } catch { await fetchProjects(); }
+  }
+
+  async function addTaskToProject(projectId: number) {
+    if (!newProjTaskTitle.trim()) return;
+    try {
+      await api.post('/tasks', { title: newProjTaskTitle.trim(), priority: 'medium', tags: [], project_id: projectId });
+      setNewProjTaskTitle('');
+      await Promise.all([loadProjectTasks(projectId), fetchProjects()]);
+    } catch { /* surfaced via reload */ }
+  }
+
+  async function toggleProjectTask(projectId: number, task: Task) {
+    const newStatus: TaskStatus = task.status === 'completed' ? 'pending' : 'completed';
+    try {
+      await api.patch(`/tasks/${task.id}`, { status: newStatus });
+      await Promise.all([loadProjectTasks(projectId), fetchProjects(), fetchTasks()]);
+    } catch { await loadProjectTasks(projectId); }
+  }
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -99,10 +176,11 @@ export default function Tasks() {
         follow_up_date: form.follow_up_date || null,
         tags: [],
         life_area_id: form.life_area_id || null,
+        project_id: form.project_id || null,
       });
       setForm(emptyForm());
       setShowForm(false);
-      await fetchTasks();
+      await Promise.all([fetchTasks(), fetchProjects()]);
     } catch (e: any) {
       setFormErr(e?.response?.data?.error || e?.message || 'Failed to create task. Check your connection.');
     } finally {
@@ -189,17 +267,204 @@ export default function Tasks() {
 
       <div style={{ position: 'relative', zIndex: 1 }}>
 
-      <div className="flex justify-end">
-        <button
-          onClick={() => { setShowForm(s => !s); setForm(emptyForm()); setFormErr(''); }}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold tap"
-          style={{ background: `rgb(var(--accent-rgb) / 0.12)`, color: `rgb(var(--accent-rgb-light))` }}>
-          <Plus size={15} /> New task
-        </button>
+      {/* View switch + contextual action */}
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <div className="flex items-center gap-1 p-1 rounded-xl" style={{ background: 'var(--s2)', border: '1px solid var(--b)' }}>
+          {([
+            { key: 'tasks',    label: 'Missions', Icon: ListTodo },
+            { key: 'projects', label: 'Projects', Icon: FolderKanban },
+          ] as const).map(({ key, label, Icon }) => (
+            <button key={key} onClick={() => setView(key)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold tap transition-all"
+              style={view === key
+                ? { background: 'rgb(var(--accent-rgb))', color: '#fff' }
+                : { background: 'transparent', color: 'var(--t-faint)' }}>
+              <Icon size={14} /> {label}
+            </button>
+          ))}
+        </div>
+
+        {view === 'tasks' ? (
+          <button
+            onClick={() => { setShowForm(s => !s); setForm(emptyForm()); setFormErr(''); }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold tap shrink-0"
+            style={{ background: `rgb(var(--accent-rgb) / 0.12)`, color: `rgb(var(--accent-rgb-light))` }}>
+            <Plus size={15} /> New task
+          </button>
+        ) : (
+          <button
+            onClick={() => { setShowProjectForm(s => !s); setProjErr(''); }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold tap shrink-0"
+            style={{ background: `rgb(var(--accent-rgb) / 0.12)`, color: `rgb(var(--accent-rgb-light))` }}>
+            <FolderPlus size={15} /> New project
+          </button>
+        )}
       </div>
 
+      {/* ═══════════════════════════════ PROJECTS VIEW */}
+      {view === 'projects' && (
+        <div className="space-y-3">
+          {/* New project form */}
+          {showProjectForm && (
+            <div className="card px-4 py-4 space-y-3 scale-in">
+              <p className="text-sm font-semibold text-head">New project</p>
+              {projErr && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
+                  style={{ background: 'rgb(239 68 68 / 0.1)', color: '#e07b62' }}>
+                  <AlertCircle size={13} />{projErr}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <input
+                  value={projIcon}
+                  onChange={e => setProjIcon(e.target.value.slice(0, 2))}
+                  className="w-12 text-center rounded-lg px-2 py-2 text-lg border focus:outline-none"
+                  placeholder="📁" />
+                <input
+                  autoFocus
+                  value={projName}
+                  onChange={e => { setProjName(e.target.value); setProjErr(''); }}
+                  onKeyDown={e => e.key === 'Enter' && createProject()}
+                  placeholder="Project name (e.g. Launch the app)"
+                  className="flex-1 rounded-lg px-3 py-2 text-sm border focus:outline-none" />
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-bold tracking-wider" style={{ color: 'var(--t-faint)' }}>COLOUR</span>
+                {PROJECT_COLORS.map(c => (
+                  <button key={c} type="button" onClick={() => setProjColor(c)}
+                    className="w-5 h-5 rounded-full tap transition-transform"
+                    style={{ background: c, transform: projColor === c ? 'scale(1.25)' : undefined,
+                      boxShadow: projColor === c ? `0 0 0 2px var(--s1), 0 0 0 3.5px ${c}` : undefined }} />
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => { setShowProjectForm(false); setProjErr(''); }}
+                  className="flex-1 py-2 rounded-lg text-sm font-medium tap"
+                  style={{ background: 'var(--s3)', color: 'var(--t-dim)' }}>Cancel</button>
+                <button onClick={createProject} disabled={savingProj || !projName.trim()}
+                  className="flex-1 py-2 rounded-lg text-sm font-semibold tap disabled:opacity-50"
+                  style={{ background: `rgb(var(--accent-rgb))`, color: '#fff' }}>
+                  {savingProj ? 'Creating…' : 'Create project'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {projects.length === 0 && !showProjectForm && (
+            <div className="card py-12 text-center">
+              <FolderKanban size={26} className="mx-auto mb-2" style={{ color: 'var(--t-faint)', opacity: 0.4 }} />
+              <p className="text-sm font-medium" style={{ color: 'var(--t-dim)' }}>No projects yet</p>
+              <p className="text-xs mt-1" style={{ color: '#57544a' }}>Group related tasks — progress earns bonus points</p>
+            </div>
+          )}
+
+          {projects.map(project => {
+            const isOpen = expandedProject === project.id;
+            const { total, done, pct } = project.progress;
+            const ptasks = projectTasks[project.id] || [];
+            const isDone = project.status === 'done' || pct >= 100;
+            return (
+              <div key={project.id} className="card overflow-hidden"
+                style={{ borderLeft: `3px solid ${project.color}`, opacity: isDone ? 0.85 : 1 }}>
+                {/* Header */}
+                <div className="px-4 py-3 cursor-pointer" onClick={() => toggleProject(project.id)}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl leading-none shrink-0">{project.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-head truncate">{project.name}</p>
+                        {isDone && <Trophy size={13} style={{ color: project.color }} />}
+                      </div>
+                      <p className="text-[11px]" style={{ color: 'var(--t-faint)' }}>
+                        {done}/{total} task{total !== 1 ? 's' : ''} done
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-xl font-black leading-none" style={{ color: project.color }}>{pct}%</p>
+                    </div>
+                    <ChevronRight size={16} className="shrink-0 transition-transform"
+                      style={{ color: 'var(--t-faint)', transform: isOpen ? 'rotate(90deg)' : 'none' }} />
+                  </div>
+                  {/* Progress bar */}
+                  <div className="mt-2.5 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
+                    <div className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${pct}%`, background: project.color }} />
+                  </div>
+                  {/* Milestone ticks */}
+                  <div className="flex justify-between mt-1 px-0.5">
+                    {[25, 50, 75, 100].map(m => (
+                      <span key={m} className="text-[8px] font-bold tracking-wider"
+                        style={{ color: pct >= m ? project.color : 'var(--t-faint)', opacity: pct >= m ? 0.9 : 0.4 }}>
+                        {m === 100 ? '🏆' : `${m}%`}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Expanded — project tasks + add */}
+                {isOpen && (
+                  <div className="px-4 pb-4 pt-1 space-y-2" style={{ borderTop: '1px solid var(--b)' }}>
+                    {ptasks.length === 0 && (
+                      <p className="text-xs py-2 text-center" style={{ color: 'var(--t-faint)' }}>
+                        No tasks in this project yet
+                      </p>
+                    )}
+                    {ptasks.map(t => {
+                      const tc = PRIORITY_COLOR[t.priority] ?? PRIORITY_COLOR.medium;
+                      const completed = t.status === 'completed';
+                      return (
+                        <div key={t.id} className="flex items-center gap-2.5">
+                          <button onClick={() => toggleProjectTask(project.id, t)}
+                            className="flex items-center justify-center rounded-full border-2 tap shrink-0"
+                            style={{ width: 20, height: 20,
+                              background: completed ? project.color : 'transparent',
+                              borderColor: completed ? project.color : 'var(--b)' }}>
+                            {completed && <Check size={11} color="#fff" strokeWidth={3} />}
+                          </button>
+                          <span className="text-sm flex-1 min-w-0 truncate"
+                            style={{ color: 'var(--t-body)', textDecoration: completed ? 'line-through' : 'none', opacity: completed ? 0.5 : 1 }}>
+                            {t.title}
+                          </span>
+                          <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded shrink-0"
+                            style={{ background: tc.bg, color: tc.text, border: `1px solid ${tc.border}` }}>
+                            {t.priority}
+                          </span>
+                          <button onClick={() => deleteTask(t.id).then(() => loadProjectTasks(project.id)).then(fetchProjects)}
+                            className="p-1 tap shrink-0" style={{ color: '#57544a' }}>
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                    {/* Add task to project */}
+                    <div className="flex gap-2 pt-1">
+                      <input
+                        value={newProjTaskTitle}
+                        onChange={e => setNewProjTaskTitle(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && addTaskToProject(project.id)}
+                        placeholder="Add a task to this project…"
+                        className="flex-1 rounded-lg px-3 py-1.5 text-sm border focus:outline-none" />
+                      <button onClick={() => addTaskToProject(project.id)} disabled={!newProjTaskTitle.trim()}
+                        className="px-3 py-1.5 rounded-lg text-sm font-semibold tap disabled:opacity-40 shrink-0"
+                        style={{ background: `${project.color}20`, color: project.color, border: `1px solid ${project.color}40` }}>
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                    {/* Delete project */}
+                    <button onClick={() => deleteProject(project.id)}
+                      className="flex items-center gap-1.5 text-xs tap pt-1" style={{ color: '#57544a' }}>
+                      <Trash2 size={12} /> Delete project (keeps its tasks)
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Add task form */}
-      {showForm && (
+      {view === 'tasks' && showForm && (
         <div className="card px-4 py-4 space-y-3 scale-in">
           <p className="text-sm font-semibold text-head">New task</p>
 
@@ -242,6 +507,27 @@ export default function Tasks() {
                     className="text-xs px-2.5 py-1 rounded-full tap"
                     style={{ background: form.life_area_id === a.id ? `${a.color}20` : 'var(--s3)', color: form.life_area_id === a.id ? a.color : 'var(--t-faint)', border: `1px solid ${form.life_area_id === a.id ? a.color + '60' : 'transparent'}` }}>
                     {a.icon} {a.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {projects.length > 0 && (
+            <div>
+              <p className="text-[10px] mb-1 font-bold tracking-wider" style={{ color: 'var(--t-faint)' }}>PROJECT (optional)</p>
+              <div className="flex flex-wrap gap-1.5">
+                <button type="button"
+                  onClick={() => setForm(f => ({ ...f, project_id: null }))}
+                  className="text-xs px-2.5 py-1 rounded-full tap"
+                  style={{ background: form.project_id == null ? 'rgb(var(--accent-rgb)/0.15)' : 'var(--s3)', color: form.project_id == null ? 'rgb(var(--accent-rgb-light))' : 'var(--t-faint)', border: `1px solid ${form.project_id == null ? 'rgb(var(--accent-rgb)/0.4)' : 'transparent'}` }}>
+                  None
+                </button>
+                {projects.filter(p => p.status !== 'archived').map(p => (
+                  <button key={p.id} type="button"
+                    onClick={() => setForm(f => ({ ...f, project_id: f.project_id === p.id ? null : p.id }))}
+                    className="text-xs px-2.5 py-1 rounded-full tap"
+                    style={{ background: form.project_id === p.id ? `${p.color}20` : 'var(--s3)', color: form.project_id === p.id ? p.color : 'var(--t-faint)', border: `1px solid ${form.project_id === p.id ? p.color + '60' : 'transparent'}` }}>
+                    {p.icon} {p.name}
                   </button>
                 ))}
               </div>
@@ -309,6 +595,7 @@ export default function Tasks() {
         </div>
       )}
 
+      {view === 'tasks' && (<>
       {/* Filter bar */}
       <div className="flex items-center gap-1.5 flex-wrap">
         <button
@@ -618,6 +905,7 @@ export default function Tasks() {
         )}
 
       </div>{/* end task list */}
+      </>)}
 
       </div>{/* end zIndex wrapper */}
     </div>

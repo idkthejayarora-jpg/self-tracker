@@ -26,23 +26,18 @@ function useCountUp(target: number, duration = 900) {
 }
 
 
-const RANK_SOLID: Record<string, string> = {
-  E:    '#84816f',
-  D:    '#a97e5f',
-  C:    '#cf8a3e',
-  B:    '#d4a27f',
-  A:    '#d97757',
-  S:    '#cd5240',
-  'S+': '#d9a066',
-  '∞':  '#e8a87c',
+// League (class tier) display config — the 5 leagues of the Ascension Pyramid.
+const CLASS_CONFIG: Record<string, { label: string; sublabel: string; color: string; bgColor: string }> = {
+  ASH:     { label: 'ASH · LEAGUE I',     sublabel: 'Ground tier · the climb begins',   color: '#a5a293', bgColor: 'rgba(165,162,147,0.08)' },
+  IRON:    { label: 'IRON · LEAGUE II',   sublabel: 'Forged tier · tempered hard',      color: '#cf8a3e', bgColor: 'rgba(207,138,62,0.10)'  },
+  STORM:   { label: 'STORM · LEAGUE III', sublabel: 'Command tier · the ascent',        color: '#d97757', bgColor: 'rgba(217,119,87,0.10)'  },
+  RADIANT: { label: 'RADIANT · LEAGUE IV', sublabel: 'Luminary tier · the elite few',   color: '#e08b4e', bgColor: 'rgba(224,139,78,0.10)'  },
+  MYTHIC:  { label: 'MYTHIC · LEAGUE V',  sublabel: 'Apex tier · near-mythical',        color: '#e8a87c', bgColor: 'rgba(232,168,124,0.10)' },
 };
 
-// Class tier display config
-const CLASS_CONFIG: Record<string, { label: string; sublabel: string; color: string; bgColor: string }> = {
-  Soldier: { label: 'SOLDIER CLASS',  sublabel: '4 ranks · Ground tier',            color: '#a5a293', bgColor: 'rgba(165,162,147,0.08)' },
-  General: { label: 'GENERAL CLASS',  sublabel: '2 ranks · Command tier',           color: '#e59a7f', bgColor: 'rgba(229,154,127,0.10)'  },
-  King:    { label: 'KING CLASS',     sublabel: '2 ranks · Apex tier',              color: '#e0b27c', bgColor: 'rgba(224,178,124,0.10)'  },
-};
+// Fallback league inference from a rank code prefix (A/I/S/R/M/∞) when the API
+// hasn't sent rankClass yet.
+const CODE_TO_LEAGUE: Record<string, string> = { A: 'ASH', I: 'IRON', S: 'STORM', R: 'RADIANT', M: 'MYTHIC', '∞': 'MYTHIC' };
 
 // ── Stat config (7 stats — Creativity added) ─────────────────────────────────
 const STAT_CONFIG = [
@@ -125,91 +120,83 @@ function starPoints(cx: number, cy: number, R: number, r: number): string {
   return pts.join(' ');
 }
 
-// ── Rank insignia — shapes that symbolise real military / royal ranks ──────────
-// Soldier (E–B) → chevrons, General (A·S) → stars, King (S+·∞) → crowns.
-// Uses direct color fills + stroke outline — no SVG gradient refs (Safari-safe).
-function RankInsignia({ rank, color }: { rank: string; color: string }) {
-  const SOLDIER = ['E', 'D', 'C', 'B'];
-  const GENERAL = ['A', 'S'];
+// ── Rank insignia — shapes that climb the Ascension Pyramid ────────────────────
+// Driven by an insignia spec from the API so the 16 ranks stay in one source:
+//   chevron (Ash/Iron) · star (Storm/Radiant, ringed for Radiant) · crown (Mythic).
+// Direct color fills + stroke outline — no SVG gradient refs (Safari-safe).
+interface InsigniaSpec { shape: 'chevron' | 'star' | 'crown'; count: number; bar: boolean; ring: boolean; crown: number }
+
+function RankInsignia({ insignia, color }: { insignia: InsigniaSpec; color: string }) {
   const fill = color;
   const stroke = 'rgba(255,255,255,0.45)';
+  const { shape, count, bar, ring, crown } = insignia;
 
-  // ── Soldier: stacked chevrons ──────────────────────────────────────────────
-  if (SOLDIER.includes(rank)) {
-    const idx      = SOLDIER.indexOf(rank);       // E=0 D=1 C=2 B=3
-    const chevrons = Math.min(idx + 1, 3);        // 1, 2, 3, 3
-    const gap      = 38;
-    const topY     = 110 - ((chevrons - 1) * gap) / 2;
-    const botY     = topY + (chevrons - 1) * gap;
+  // ── Chevrons (Ash plain · Iron barred) ─────────────────────────────────────
+  if (shape === 'chevron') {
+    const chevrons = Math.max(1, Math.min(3, count));
+    const gap  = 36;
+    const topY = (bar ? 96 : 110) - ((chevrons - 1) * gap) / 2;
+    const botY = topY + (chevrons - 1) * gap;
+    const paths = Array.from({ length: chevrons }).map((_, i) => `M44,${topY + i * gap} L100,${topY + i * gap - 42} L156,${topY + i * gap}`);
     return (
       <svg viewBox="0 0 200 200" style={{ width: '100%', height: 'auto' }} aria-hidden="true">
         <g fill="none" stroke={fill} strokeWidth="22" strokeLinejoin="round" strokeLinecap="round">
-          {Array.from({ length: chevrons }).map((_, i) => {
-            const y = topY + i * gap;
-            return <path key={i} d={`M44,${y} L100,${y - 44} L156,${y}`} />;
-          })}
-          {rank === 'B' && (
-            <path d={`M42,${botY + 22} Q100,${botY + 52} 158,${botY + 22}`} strokeWidth="15" />
-          )}
+          {paths.map((d, i) => <path key={i} d={d} />)}
+          {bar && <path d={`M42,${botY + 30} Q100,${botY + 62} 158,${botY + 30}`} strokeWidth="16" />}
         </g>
         <g fill="none" stroke={stroke} strokeWidth="4" strokeLinejoin="round" strokeLinecap="round">
-          {Array.from({ length: chevrons }).map((_, i) => {
-            const y = topY + i * gap;
-            return <path key={i} d={`M44,${y} L100,${y - 44} L156,${y}`} />;
-          })}
-          {rank === 'B' && (
-            <path d={`M42,${botY + 22} Q100,${botY + 52} 158,${botY + 22}`} strokeWidth="3" />
-          )}
+          {paths.map((d, i) => <path key={i} d={d} />)}
+          {bar && <path d={`M42,${botY + 30} Q100,${botY + 62} 158,${botY + 30}`} strokeWidth="3" />}
         </g>
       </svg>
     );
   }
 
-  // ── General: stars ─────────────────────────────────────────────────────────
-  if (GENERAL.includes(rank)) {
+  // ── Stars (Storm plain · Radiant ringed) ───────────────────────────────────
+  if (shape === 'star') {
+    const stars = Math.max(1, Math.min(3, count));
+    const cfg = stars === 1
+      ? [{ cx: 100, cy: 100, R: 74, r: 31 }]
+      : stars === 2
+        ? [{ cx: 62, cy: 100, R: 50, r: 21 }, { cx: 138, cy: 100, R: 50, r: 21 }]
+        : [{ cx: 100, cy: 68, R: 50, r: 21 }, { cx: 48, cy: 138, R: 38, r: 16 }, { cx: 152, cy: 138, R: 38, r: 16 }];
     return (
       <svg viewBox="0 0 200 200" style={{ width: '100%', height: 'auto' }} aria-hidden="true">
-        {rank === 'A' ? (
+        {ring && (
           <>
-            <polygon points={starPoints(100, 100, 78, 33)} fill={fill} />
-            <polygon points={starPoints(100, 100, 78, 33)} fill="none" stroke={stroke} strokeWidth="3" strokeLinejoin="round" />
-          </>
-        ) : (
-          <>
-            <polygon points={starPoints(100, 68, 52, 22)} fill={fill} />
-            <polygon points={starPoints(46, 136, 38, 16)} fill={fill} />
-            <polygon points={starPoints(154, 136, 38, 16)} fill={fill} />
-            <polygon points={starPoints(100, 68, 52, 22)} fill="none" stroke={stroke} strokeWidth="3" strokeLinejoin="round" />
-            <polygon points={starPoints(46, 136, 38, 16)} fill="none" stroke={stroke} strokeWidth="2.5" strokeLinejoin="round" />
-            <polygon points={starPoints(154, 136, 38, 16)} fill="none" stroke={stroke} strokeWidth="2.5" strokeLinejoin="round" />
+            <circle cx="100" cy="100" r="94" fill="none" stroke={fill} strokeWidth="3" opacity="0.55" />
+            <circle cx="100" cy="100" r="86" fill="none" stroke={stroke} strokeWidth="1.5" opacity="0.5" />
+            {([[100, 8], [8, 100], [192, 100], [100, 192]] as [number, number][]).map(([x, y], i) => (
+              <circle key={i} cx={x} cy={y} r="4" fill={fill} opacity="0.8" />
+            ))}
           </>
         )}
+        {cfg.map((s, i) => <polygon key={`f${i}`} points={starPoints(s.cx, s.cy, s.R, s.r)} fill={fill} />)}
+        {cfg.map((s, i) => <polygon key={`s${i}`} points={starPoints(s.cx, s.cy, s.R, s.r)} fill="none" stroke={stroke} strokeWidth="2.5" strokeLinejoin="round" />)}
       </svg>
     );
   }
 
-  // ── King: crown ────────────────────────────────────────────────────────────
-  const isApex   = rank === '∞';
-  const tipY     = isApex ? 58 : 72;
+  // ── Crown (Mythic — ornateness climbs with `crown` 0→3) ────────────────────
+  const tipY = crown >= 3 ? 56 : 70;
   return (
     <svg viewBox="0 0 200 200" style={{ width: '100%', height: 'auto' }} aria-hidden="true">
-      {isApex && (
-        <>
-          <circle cx="100" cy="120" r="90" fill="none" stroke={fill} strokeWidth="3" opacity="0.6" />
-          {([[100, 18], [18, 82], [182, 82]] as [number,number][]).map(([x, y], i) => (
-            <circle key={i} cx={x} cy={y} r="5" fill={stroke} opacity="0.9" />
-          ))}
-        </>
-      )}
+      {/* Halo rings — appear from crown ≥1, double at ≥3 */}
+      {crown >= 1 && <circle cx="100" cy="118" r="92" fill="none" stroke={fill} strokeWidth="3" opacity="0.5" />}
+      {crown >= 3 && <circle cx="100" cy="118" r="82" fill="none" stroke={stroke} strokeWidth="1.5" opacity="0.5" />}
+      {/* Sparkle glyphs — from crown ≥2 */}
+      {crown >= 2 && ([[100, 14], [22, 70], [178, 70]] as [number, number][]).map(([x, y], i) => (
+        <polygon key={i} points={starPoints(x, y, 9, 3.5)} fill={stroke} opacity="0.85" />
+      ))}
       {/* Crown spikes */}
       <polygon points={`40,158 54,96 76,128 100,${tipY} 124,128 146,96 160,158`} fill={fill} />
       {/* Crown band */}
       <rect x="38" y="158" width="124" height="20" rx="4" fill={fill} />
-      {/* Highlight stroke */}
+      {/* Highlight strokes */}
       <polygon points={`40,158 54,96 76,128 100,${tipY} 124,128 146,96 160,158`} fill="none" stroke={stroke} strokeWidth="3" strokeLinejoin="round" />
       <rect x="38" y="158" width="124" height="20" rx="4" fill="none" stroke={stroke} strokeWidth="2.5" />
       {/* Jewels */}
-      {([[54, 96], [100, tipY], [146, 96]] as [number,number][]).map(([x, y], i) => (
+      {([[54, 96], [100, tipY], [146, 96]] as [number, number][]).map(([x, y], i) => (
         <circle key={i} cx={x} cy={y} r={i === 1 ? 9 : 7} fill="rgba(255,255,255,0.85)" />
       ))}
       <circle cx="100" cy="168" r="6" fill="rgba(255,255,255,0.85)" />
@@ -481,23 +468,19 @@ export default function Me() {
     </div>
   );
 
-  const { profile, rank, rankClass, rankColor, rankLabel, rankDesc, rankTier, rankPerks, meritScore, meritBreakdown, nextRank, ranks, totalPoints, stats, skills, claims, mentors } = data;
+  const { profile, rank, rankClass, rankColor, rankName, rankLabel, rankDesc, rankTier, rankPerks, insignia, meritScore, peakMerit, meritBreakdown, nextRank, ranks, totalPoints, stats, skills, claims, mentors } = data;
   const activeClaims = claims.filter(c => c.status === 'active');
   const claimedList  = claims.filter(c => c.status === 'claimed');
-  const autoSolid    = RANK_SOLID[rank] ?? rankColor;
-  // Custom color from palette picker (shared with sidebar via localStorage)
-  const rankSolid    = customRankColor ?? autoSolid;
-  // Premium card finish for this rank — escalates E → ∞
+  // Custom color from palette picker (shared with sidebar via localStorage);
+  // otherwise the rank's own colour (server authoritative).
+  const rankSolid    = customRankColor ?? rankColor;
+  // Premium card finish for this rank — escalates Ash → Apex
   const finish       = getRankFinish(rankTier, rankSolid);
 
-  // Infer class from rank if API hasn't sent rankClass yet (backwards compat)
-  const RANK_TO_CLASS: Record<string, string> = {
-    E: 'Soldier', D: 'Soldier', C: 'Soldier', B: 'Soldier',
-    A: 'General', S: 'General',
-    'S+': 'King', '∞': 'King',
-  };
-  const effectiveClass = rankClass || RANK_TO_CLASS[rank] || 'Soldier';
+  const effectiveClass = rankClass || CODE_TO_LEAGUE[rank?.[0]] || 'ASH';
   const classCfg = CLASS_CONFIG[effectiveClass];
+  const peak = peakMerit ?? meritScore;
+  const titleName = rankName || rankLabel;
 
   // ── Form field style shorthand
   const ff = 'w-full rounded-xl px-3 py-2 text-sm focus:outline-none';
@@ -548,7 +531,7 @@ export default function Me() {
             flexShrink: 0,
             filter: isLight ? 'none' : `drop-shadow(0 0 18px ${rankSolid}70)`,
           }}>
-            <RankInsignia rank={rank} color={rankSolid} />
+            <RankInsignia insignia={insignia ?? { shape: 'chevron', count: 1, bar: false, ring: false, crown: 0 }} color={rankSolid} />
           </div>
         </div>
 
@@ -591,7 +574,7 @@ export default function Me() {
                   '--rg': rankSolid,
                 } as React.CSSProperties}>
                 <span className="ring-ping ring-ping-2" style={{ color: rankSolid }} />
-                {rank} RANK
+                <span style={{ opacity: 0.6, marginRight: 6 }}>{rank}</span>{titleName}
               </button>
               <span className="font-mono text-[11px] font-bold tabular-nums"
                 style={{ color: rankSolid, textShadow: 'none' }}>
@@ -645,16 +628,26 @@ export default function Me() {
           {/* Merit score panel */}
           <div className="glass w-full max-w-sm rounded-xl px-4 py-3 space-y-2"
             style={{ border: `1px solid ${rankSolid}25` }}>
-            {/* Total merit bar */}
+            {/* Current form bar — with a permanent peak high-water marker */}
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--t-muted)' }}>MERIT SCORE</span>
+              <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--t-muted)' }}>CURRENT FORM</span>
               <span className="font-black font-mono text-sm tabular-nums" style={{ color: rankSolid, textShadow: 'none' }}>
                 {animatedMerit}<span className="text-[10px] font-normal opacity-50">/100</span>
               </span>
             </div>
-            <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
+            <div className="relative h-2 rounded-full overflow-hidden" style={{ background: 'var(--s3)' }}>
               <div className="h-full rounded-full transition-all duration-700 bar-fill"
                 style={{ width: `${meritScore}%`, background: rankSolid, boxShadow: 'none' }} />
+              {/* Peak high-water mark — your title is locked to this, even if form dips */}
+              {peak > meritScore && (
+                <div className="absolute top-0 bottom-0" title={`Peak form ${peak}`}
+                  style={{ left: `calc(${peak}% - 1px)`, width: 2, background: '#ffffff', opacity: 0.85 }} />
+              )}
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[9px]" style={{ color: 'var(--t-faint)' }}>
+                Peak <span className="font-bold" style={{ color: rankSolid }}>{peak}</span> · title locked to your best
+              </span>
             </div>
             {/* Breakdown — 5 pillars: Consistency/Discipline/Vitality/Mastery/Momentum */}
             <div className="grid grid-cols-5 gap-1.5 pt-1">
@@ -694,18 +687,22 @@ export default function Me() {
               </div>
             )}
 
-            {/* Next rank progress + what it unlocks */}
-            {nextRank && (
+            {/* Next rank — you only rise by cracking a NEW peak */}
+            {nextRank ? (
               <p className="text-[10px] text-center pt-0.5" style={{ color: 'var(--t-faint)' }}>
                 Next:&nbsp;
-                <span style={{ color: nextRank.color, fontWeight: 700 }}>{nextRank.rank} RANK</span>
+                <span style={{ color: nextRank.color, fontWeight: 700 }}>{nextRank.name || nextRank.label}</span>
                 {nextRank.rankClass && nextRank.rankClass !== rankClass && (
                   <span className="font-black ml-1"
                     style={{ color: CLASS_CONFIG[nextRank.rankClass]?.color ?? nextRank.color }}>
-                    · {nextRank.rankClass.toUpperCase()} CLASS ↑
+                    · {(nextRank.league || nextRank.rankClass).toUpperCase()} LEAGUE ↑
                   </span>
                 )}
-                <span className="opacity-60"> — {nextRank.min - meritScore} merit to go</span>
+                <span className="opacity-60"> — push form +{nextRank.formToGo ?? Math.max(0, nextRank.min - meritScore)} to claim it</span>
+              </p>
+            ) : (
+              <p className="text-[10px] text-center pt-0.5 font-bold" style={{ color: rankSolid }}>
+                ✦ Apex reached — you stand at the summit of the pyramid
               </p>
             )}
           </div>
@@ -761,10 +758,10 @@ export default function Me() {
           <div className="flex items-center gap-2 mb-2.5 px-1">
             <Trophy size={13} style={{ color: rankSolid }} />
             <p className="text-[10px] font-bold tracking-[0.15em]" style={{ color: 'var(--t-faint)' }}>
-              RANK LADDER — CLIMB FOR BETTER CARDS &amp; PERKS
+              THE ASCENSION PYRAMID — 16 RANKS · 5 LEAGUES
             </p>
           </div>
-          <RankLadder ranks={ranks} currentRank={rank} merit={meritScore} />
+          <RankLadder ranks={ranks} currentRank={rank} merit={peak} />
         </div>
       )}
 

@@ -31,11 +31,6 @@ const NAV = [
   { to: '/quotes',    icon: Flame,           label: 'Wall of Fire', color: '#e08b4e' },
 ];
 
-const RANK_COLORS: Record<string, string> = {
-  E: '#a59785', D: '#b98a64', C: '#cf8a3e', B: '#d4a27f',
-  A: '#d97757', S: '#c2553d', 'S+': '#e08b4e', '∞': '#e8a87c',
-};
-
 function hexToRgb(hex: string): string {
   const clean = hex.replace('#', '');
   const r = parseInt(clean.slice(0, 2), 16);
@@ -49,6 +44,8 @@ interface MeSnap {
   rankClass: string;
   rankColor: string;
   rankLabel: string;
+  rankName?: string;
+  leagueLabel?: string;
   meritScore: number;
   profile: { avatar_emoji: string; character_name: string };
 }
@@ -289,7 +286,7 @@ export default function Layout() {
     api.get('/quotes').then(r => setQuotes(r.data)).catch(() => {});
   }, []);
 
-  const rankColor = me ? (RANK_COLORS[me.rank] ?? '#d97757') : '#d97757';
+  const rankColor = me?.rankColor || '#d97757';
 
   useEffect(() => {
     document.documentElement.style.setProperty('--rank-rgb', hexToRgb(rankColor));
@@ -548,18 +545,15 @@ export default function Layout() {
           {/* Rank + name */}
           <div className="flex items-center gap-2 min-w-0">
             <div className="flex flex-col items-start shrink-0">
-              {(() => {
-                const R2C: Record<string,string> = {E:'Soldier',D:'Soldier',C:'Soldier',B:'Soldier',A:'General',S:'General','S+':'King','∞':'King'};
-                const cls = me?.rankClass || (me?.rank ? R2C[me.rank] : null);
-                if (!cls) return null;
-                return (
-                  <span className="text-[7px] font-black tracking-[0.2em] leading-none mb-0.5"
-                    style={{ color: rankColor, opacity: 0.7 }}>{cls.toUpperCase()}</span>
-                );
-              })()}
+              {(me?.leagueLabel || me?.rankClass) && (
+                <span className="text-[7px] font-black tracking-[0.2em] leading-none mb-0.5"
+                  style={{ color: rankColor, opacity: 0.7 }}>
+                  {(me.leagueLabel || me.rankClass).toUpperCase()}
+                </span>
+              )}
               <span className="text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full"
                 style={{ background: `${rankColor}20`, color: rankColor, border: `1px solid ${rankColor}40` }}>
-                {me?.rank || 'E'} RANK
+                {me?.rank || 'A1'} RANK
               </span>
             </div>
             <span className="text-[13px] font-bold text-head truncate">
