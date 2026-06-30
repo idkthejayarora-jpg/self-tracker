@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Wallet, Plus, Trash2, ChevronLeft, ChevronRight, Target, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
+import { Wallet, Plus, Trash2, ChevronLeft, ChevronRight, Target, TrendingUp, TrendingDown, AlertCircle, RotateCcw, X } from 'lucide-react';
 import PaperBanner from '../components/PaperBanner';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import api from '../lib/api';
@@ -64,6 +64,9 @@ export default function Finance() {
   const [savingGoal, setSavingGoal] = useState(false);
   const [goalErr, setGoalErr] = useState('');
   const [loadErr, setLoadErr] = useState('');
+
+  const [showReset, setShowReset] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -155,6 +158,19 @@ export default function Finance() {
     }
   };
 
+  const doReset = async (scope: 'month' | 'all' | 'everything') => {
+    setResetting(true);
+    try {
+      await api.post('/finance/reset', { scope, month });
+      setShowReset(false);
+      await load();
+    } catch (e: any) {
+      alert(e?.response?.data?.error || 'Failed to reset finances');
+    } finally {
+      setResetting(false);
+    }
+  };
+
   const catChartData = (summary?.categories ?? [])
     .map(c => ({ name: c.category, income: c.income, expense: c.expense }))
     .filter(c => c.income > 0 || c.expense > 0)
@@ -192,6 +208,11 @@ export default function Finance() {
         <button onClick={() => shiftMonth(-1)} className="tap" style={{ color: 'var(--t-dim)' }}><ChevronLeft size={16} /></button>
         <span className="text-sm font-semibold text-head">{monthLabel}</span>
         <button onClick={() => shiftMonth(1)} className="tap" style={{ color: 'var(--t-dim)' }}><ChevronRight size={16} /></button>
+        <button onClick={() => setShowReset(true)}
+          className="ml-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold tap"
+          style={{ background: 'rgb(205 82 64 / 0.1)', color: '#cd5240', border: '1px solid rgb(205 82 64 / 0.2)' }}>
+          <RotateCcw size={12} /> Reset
+        </button>
       </div>
 
       {loadErr && (
@@ -469,6 +490,74 @@ export default function Finance() {
       )}
 
       </div>{/* end relative zIndex wrapper */}
+
+      {/* Reset confirmation modal */}
+      {showReset && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}
+          onClick={() => !resetting && setShowReset(false)}>
+          <div className="scale-in w-full max-w-sm rounded-2xl p-5 space-y-4"
+            style={{ background: 'var(--s2)', border: '1px solid var(--bh)', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: 'rgb(205 82 64 / 0.12)', border: '1px solid rgb(205 82 64 / 0.25)' }}>
+                  <RotateCcw size={15} style={{ color: '#cd5240' }} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-head text-sm">Reset finances</h3>
+                  <p className="text-[11px]" style={{ color: 'var(--t-faint)' }}>This can't be undone</p>
+                </div>
+              </div>
+              <button onClick={() => setShowReset(false)} disabled={resetting}
+                className="tap w-7 h-7 flex items-center justify-center rounded-lg shrink-0"
+                style={{ color: 'var(--t-faint)', background: 'var(--s3)', border: '1px solid var(--b)' }}>
+                <X size={13} />
+              </button>
+            </div>
+
+            <p className="text-xs" style={{ color: 'var(--t-muted)' }}>Choose what to clear:</p>
+
+            <div className="space-y-2">
+              {/* This month */}
+              <button onClick={() => doReset('month')} disabled={resetting}
+                className="w-full text-left px-3 py-2.5 rounded-xl tap disabled:opacity-50"
+                style={{ background: 'var(--s3)', border: '1px solid var(--b)' }}>
+                <p className="text-sm font-semibold text-head">This month only</p>
+                <p className="text-[11px]" style={{ color: 'var(--t-faint)' }}>
+                  Delete {entries.length} transaction{entries.length !== 1 ? 's' : ''} from {monthLabel} · keeps goals
+                </p>
+              </button>
+
+              {/* All transactions */}
+              <button onClick={() => doReset('all')} disabled={resetting}
+                className="w-full text-left px-3 py-2.5 rounded-xl tap disabled:opacity-50"
+                style={{ background: 'var(--s3)', border: '1px solid var(--b)' }}>
+                <p className="text-sm font-semibold text-head">All transactions</p>
+                <p className="text-[11px]" style={{ color: 'var(--t-faint)' }}>
+                  Delete every transaction across all months · keeps goals
+                </p>
+              </button>
+
+              {/* Everything */}
+              <button onClick={() => doReset('everything')} disabled={resetting}
+                className="w-full text-left px-3 py-2.5 rounded-xl tap disabled:opacity-50"
+                style={{ background: 'rgb(205 82 64 / 0.1)', border: '1px solid rgb(205 82 64 / 0.3)' }}>
+                <p className="text-sm font-semibold" style={{ color: '#cd5240' }}>Everything</p>
+                <p className="text-[11px]" style={{ color: '#cd524099' }}>
+                  Delete all transactions <span className="font-semibold">and</span> all savings goals
+                </p>
+              </button>
+            </div>
+
+            {resetting && (
+              <p className="text-[11px] text-center" style={{ color: 'var(--t-faint)' }}>Resetting…</p>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

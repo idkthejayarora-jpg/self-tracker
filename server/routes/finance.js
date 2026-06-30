@@ -34,6 +34,32 @@ router.delete('/entries/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// POST /reset — wipe finance data. scope: 'month' | 'all' | 'everything'
+// 'month' clears one month's transactions; 'all' clears every transaction;
+// 'everything' also clears savings goals. Finance data feeds no points/rank
+// state, so this is self-contained.
+router.post('/reset', (req, res) => {
+  const uid = req.user.id;
+  const { scope = 'month', month } = req.body;
+  let entriesDeleted = 0, goalsDeleted = 0;
+
+  if (scope === 'month') {
+    const m = month || new Date().toISOString().slice(0, 7);
+    entriesDeleted = db.prepare('DELETE FROM finance_entries WHERE user_id = ? AND date LIKE ?').run(uid, `${m}%`).changes;
+  } else if (scope === 'all') {
+    entriesDeleted = db.prepare('DELETE FROM finance_entries WHERE user_id = ?').run(uid).changes;
+  } else if (scope === 'everything') {
+    db.transaction(() => {
+      entriesDeleted = db.prepare('DELETE FROM finance_entries WHERE user_id = ?').run(uid).changes;
+      goalsDeleted   = db.prepare('DELETE FROM finance_goals WHERE user_id = ?').run(uid).changes;
+    })();
+  } else {
+    return res.status(400).json({ error: 'Invalid scope' });
+  }
+
+  res.json({ ok: true, entriesDeleted, goalsDeleted });
+});
+
 // GET /summary?month=YYYY-MM
 router.get('/summary', (req, res) => {
   const month = req.query.month || new Date().toISOString().slice(0, 7);
