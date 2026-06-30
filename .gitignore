@@ -9,3 +9,7 @@ client/dist/
 *.db
 *.db-shm
 *.db-wal
+
+# macOS
+.DS_Store
+**/.DS_Store
